@@ -20,6 +20,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `currency_id`
   - [x] `opening_balance` (saldo początkowe)
   - [x] `current_balance` (saldo bieżące — aktualizowane)
+  - [ ] `type` (enum; MVP: `Ror`, `Savings`)
+  - [ ] `bank` (enum; MVP: `BnpParibas`, `MBank`, `Cash`)
   - [x] soft delete (żeby po “usunięciu konta” transakcje zostawały, ale były read-only)
 - [x] Dodać encję transakcji:
   - [x] `account_id`, `user_id` (lub inny jednoznaczny mechanizm izolacji)
@@ -53,8 +55,10 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Lista kont (z walutą i bieżącym saldem).
 - [x] Dodanie konta:
   - [x] Walidacje: nazwa wymagana; saldo początkowe liczba; waluta wybieralna, ale na MVP dostępna tylko PLN.
+  - [ ] Walidacje: `bank` i `type` wymagane i ograniczone do listy (enum).
 - [x] Edycja konta:
   - [x] Zmiana nazwy, salda początkowego.
+  - [ ] Zmiana `bank` i `type` (jeśli dopuszczalne w MVP) + konsekwencje dla importu (bank wynika z konta).
   - [x] Zdefiniować wpływ zmiany salda początkowego na `current_balance` (rekomendacja: przeliczyć różnicą). 
 - [x] Usuwanie konta:
   - [x] Soft delete konta.
@@ -105,11 +109,11 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ### 6) Import — flow: upload → mapowanie → preview → commit
 
 #### 6.1 Kontrakty i UI flow
-- [ ] Ekran wyboru konta + banku.
+- [ ] Ekran wyboru konta (bank wynika z konta i jest wyświetlany).
 - [ ] Upload CSV/XLSX.
 - [ ] Ekran mapowania kolumn:
   - [ ] Wymagane: data, kwota, opis, subject
-  - [ ] Zapisywanie mapowania per user + bank (profil)
+  - [ ] Zapisywanie mapowania per user + bank konta (profil)
 - [ ] Ekran preview:
   - [ ] Lista/widok próbki danych + podsumowanie: `rows_total`, `rows_skipped_duplicate`, `rows_failed_validation`, `rows_will_import`
   - [ ] Informacja, że duplikaty zawsze będą pominięte
@@ -147,11 +151,20 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 7) Adaptery banków + profile mapowań
+- [ ] Zdefiniować listę banków (enum/slug): `BnpParibas`, `MBank`, `Cash` (Gotówka).
+- [ ] Ikony banków:
+  - [ ] Dodać assets dla `BnpParibas`, `MBank`, `Cash`
+  - [ ] Mapowanie ikon po slugu `bank` w UI
 - [ ] Zdefiniować interfejs “BankAdapter”:
   - [ ] identyfikator banku (`bank_key`)
   - [ ] ekstrakcja `subject`
   - [ ] ewentualne pre-processing `description` (tylko jeśli wymagane)
 - [ ] Mechanizm rejestracji adapterów + fallback “Generic”.
+- [ ] Resolver adaptera po `Account.bank` (bank nie wybierany osobno w imporcie).
+- [ ] Implementacje adapterów (MVP):
+  - [ ] `BnpParibas`
+  - [ ] `MBank`
+  - [ ] `Cash` (konto gotówkowe; import niewspierany lub ograniczony — decyzja produktowa/techniczna)
 - [ ] Model “ImportProfile” per user + bank:
   - [ ] przechowywanie mapowania kolumn
   - [ ] możliwość nadpisania / aktualizacji
@@ -164,7 +177,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [ ] Transakcje: `transaction_create_opened`, `transaction_created`, `transaction_updated`, `transaction_deleted`
 - [ ] Lista: `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
 - [ ] Transfer: `transfer_created`, `transfer_failed_validation`
-- [ ] Import: `import_started`, `import_preview_generated`, `import_completed`, `import_failed`, `import_bank_selected`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`
+- [ ] Import: `import_started`, `import_preview_generated`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account` (opcjonalnie)
 
 ---
 
