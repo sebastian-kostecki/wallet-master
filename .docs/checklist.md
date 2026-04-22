@@ -50,19 +50,19 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 3) Konta — API/CRUD + UI
-- [ ] Lista kont (z walutą i bieżącym saldem).
-- [ ] Dodanie konta:
-  - [ ] Walidacje: nazwa wymagana; saldo początkowe liczba; waluta wybieralna, ale na MVP dostępna tylko PLN.
-- [ ] Edycja konta:
-  - [ ] Zmiana nazwy, salda początkowego.
-  - [ ] Zdefiniować wpływ zmiany salda początkowego na `current_balance` (rekomendacja: przeliczyć różnicą). 
-- [ ] Usuwanie konta:
-  - [ ] Soft delete konta.
+- [x] Lista kont (z walutą i bieżącym saldem).
+- [x] Dodanie konta:
+  - [x] Walidacje: nazwa wymagana; saldo początkowe liczba; waluta wybieralna, ale na MVP dostępna tylko PLN.
+- [x] Edycja konta:
+  - [x] Zmiana nazwy, salda początkowego.
+  - [x] Zdefiniować wpływ zmiany salda początkowego na `current_balance` (rekomendacja: przeliczyć różnicą). 
+- [x] Usuwanie konta:
+  - [x] Soft delete konta.
   - [ ] Zablokować edycję/usuwanie transakcji na usuniętym koncie (UI + backend).
   - [ ] Zablokować import i transfer dla usuniętego konta (UI + backend).
-- [ ] Korekta salda:
-  - [ ] Akcja “Ustaw saldo” (manual adjustment).
-  - [ ] Audit trail minimalny (kto/kiedy/stara→nowa wartość).
+- [x] Korekta salda:
+  - [x] Akcja “Ustaw saldo” (manual adjustment).
+  - [x] Audit trail minimalny (kto/kiedy/stara→nowa wartość).
 
 ---
 

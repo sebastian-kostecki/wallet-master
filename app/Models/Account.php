@@ -59,4 +59,12 @@ final class Account extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /**
+     * @return HasMany<AccountBalanceAdjustment, $this>
+     */
+    public function balanceAdjustments(): HasMany
+    {
+        return $this->hasMany(AccountBalanceAdjustment::class);
+    }
 }
