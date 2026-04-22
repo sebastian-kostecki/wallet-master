@@ -14,31 +14,31 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 1) Model danych + migracje
-- [ ] Dodać encję waluty (MVP: rekord `PLN`), żeby w przyszłości dodać kolejne waluty.
-- [ ] Dodać encję konta:
-  - [ ] `name`
-  - [ ] `currency_id`
-  - [ ] `opening_balance` (saldo początkowe)
-  - [ ] `current_balance` (saldo bieżące — aktualizowane)
-  - [ ] soft delete (żeby po “usunięciu konta” transakcje zostawały, ale były read-only)
-- [ ] Dodać encję transakcji:
-  - [ ] `account_id`, `user_id` (lub inny jednoznaczny mechanizm izolacji)
-  - [ ] `date` (data bez czasu)
-  - [ ] `amount` jako **decimal** (ujemne dla wydatków, dodatnie dla przychodów)
-  - [ ] `type` (income/expense/transfer) — utrzymywane mimo znaku kwoty
-  - [ ] `description`
-  - [ ] `subject` (nadawca/odbiorca)
-  - [ ] `currency_id` (na MVP zawsze PLN, ale pole istnieje)
-  - [ ] `transfer_id` (nullable; łączy 2 transakcje transferu)
-  - [ ] `import_id` (nullable; powiązanie z importem)
-- [ ] Dodać encje importu + mapowania per bank:
-  - [ ] `imports`: `user_id`, `account_id`, `bank_key`/`bank_name`, status, liczniki (`rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`)
-  - [ ] `import_profiles` (per user + bank): zapis mapowania kolumn + wersjonowanie (opcjonalnie)
-- [ ] Indeksy:
-  - [ ] `transactions(account_id, date)`
-  - [ ] `transactions(user_id, date)`
-  - [ ] `transactions(transfer_id)`
-  - [ ] Indeks/unikalność deduplikacji (jeśli możliwe): `account_id + date + amount + normalized_description` (wymaga pola lub generowanej kolumny)
+- [x] Dodać encję waluty (MVP: rekord `PLN`), żeby w przyszłości dodać kolejne waluty.
+- [x] Dodać encję konta:
+  - [x] `name`
+  - [x] `currency_id`
+  - [x] `opening_balance` (saldo początkowe)
+  - [x] `current_balance` (saldo bieżące — aktualizowane)
+  - [x] soft delete (żeby po “usunięciu konta” transakcje zostawały, ale były read-only)
+- [x] Dodać encję transakcji:
+  - [x] `account_id`, `user_id` (lub inny jednoznaczny mechanizm izolacji)
+  - [x] `date` (data bez czasu)
+  - [x] `amount` jako **decimal** (ujemne dla wydatków, dodatnie dla przychodów)
+  - [x] `type` (income/expense/transfer) — utrzymywane mimo znaku kwoty
+  - [x] `description`
+  - [x] `subject` (nadawca/odbiorca)
+  - [x] `currency_id` (na MVP zawsze PLN, ale pole istnieje)
+  - [x] `transfer_id` (nullable; łączy 2 transakcje transferu)
+  - [x] `import_id` (nullable; powiązanie z importem)
+- [x] Dodać encje importu + mapowania per bank:
+  - [x] `imports`: `user_id`, `account_id`, `bank_key`/`bank_name`, status, liczniki (`rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`)
+  - [x] `import_profiles` (per user + bank): zapis mapowania kolumn + wersjonowanie (opcjonalnie) — na MVP mapowanie trzymamy w `imports.mapping` (JSON), bez osobnej tabeli
+- [x] Indeksy:
+  - [x] `transactions(account_id, date)`
+  - [x] `transactions(user_id, date)`
+  - [x] `transactions(transfer_id)`
+  - [x] Indeks/unikalność deduplikacji (jeśli możliwe): `account_id + date + amount + normalized_description` (wymaga pola lub generowanej kolumny)
 
 ---
 
