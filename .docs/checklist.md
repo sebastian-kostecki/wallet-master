@@ -20,8 +20,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `currency_id`
   - [x] `opening_balance` (saldo początkowe)
   - [x] `current_balance` (saldo bieżące — aktualizowane)
-  - [ ] `type` (enum; MVP: `Ror`, `Savings`)
-  - [ ] `bank` (enum; MVP: `BnpParibas`, `MBank`, `Cash`)
+  - [x] `type` (enum w PHP + walidacja; DB: string)
+  - [x] `bank` (enum w PHP + walidacja; DB: string)
+  - [x] (decyzja) DB-level enum nie jest wymagany na MVP: zostajemy przy `string` w DB + `Rule::enum(...)` + casty do PHP enumów
   - [x] soft delete (żeby po “usunięciu konta” transakcje zostawały, ale były read-only)
 - [x] Dodać encję transakcji:
   - [x] `account_id`, `user_id` (lub inny jednoznaczny mechanizm izolacji)
@@ -55,15 +56,20 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Lista kont (z walutą i bieżącym saldem).
 - [x] Dodanie konta:
   - [x] Walidacje: nazwa wymagana; saldo początkowe liczba; waluta wybieralna, ale na MVP dostępna tylko PLN.
-  - [ ] Walidacje: `bank` i `type` wymagane i ograniczone do listy (enum).
+  - [x] Walidacje: `bank` i `type` wymagane i ograniczone do listy (enum).
 - [x] Edycja konta:
   - [x] Zmiana nazwy, salda początkowego.
-  - [ ] Zmiana `bank` i `type` (jeśli dopuszczalne w MVP) + konsekwencje dla importu (bank wynika z konta).
+  - [x] Zmiana `bank` i `type` + konsekwencje dla importu (bank wynika z konta) — do uwzględnienia, gdy import będzie wdrażany.
   - [x] Zdefiniować wpływ zmiany salda początkowego na `current_balance` (rekomendacja: przeliczyć różnicą). 
 - [x] Usuwanie konta:
   - [x] Soft delete konta.
-  - [ ] Zablokować edycję/usuwanie transakcji na usuniętym koncie (UI + backend).
-  - [ ] Zablokować import i transfer dla usuniętego konta (UI + backend).
+  - [~] Zablokować edycję/usuwanie transakcji na usuniętym koncie:
+    - [x] backend (policy)
+    - [ ] UI (blokady/ukrycie akcji; do wdrożenia, gdy UI transakcji istnieje)
+  - [~] Zablokować import i transfer dla usuniętego konta:
+    - [x] backend: częściowo (Import policy dla commit)
+    - [ ] backend: brak tras/flow importu i transferu → do wdrożenia wraz z modułami
+    - [ ] UI (blokady/CTA/disabled)
 - [x] Korekta salda:
   - [x] Akcja “Ustaw saldo” (manual adjustment).
   - [x] Audit trail minimalny (kto/kiedy/stara→nowa wartość).

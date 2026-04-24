@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Middleware\EnsureAccountIsActive;
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\User;
