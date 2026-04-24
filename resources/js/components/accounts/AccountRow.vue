@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Pencil, Scale, Trash2 } from 'lucide-vue-next';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Coins, Pencil, Trash2 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
 type Currency = {
@@ -62,35 +63,68 @@ const { t } = useI18n();
             </div>
 
             <div class="ml-auto flex items-center gap-1">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    type="button"
-                    :aria-label="t('actions.edit')"
-                    @click="$emit('edit', account.id)"
-                >
-                    <Pencil class="h-4 w-4" />
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    type="button"
-                    :aria-label="t('actions.setBalance')"
-                    :disabled="adjustDisabled"
-                    @click="$emit('adjustBalance', account.id)"
-                >
-                    <Scale class="h-4 w-4" />
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    type="button"
-                    :aria-label="t('accounts.card.deleteAria')"
-                    :disabled="deleteDisabled"
-                    @click="$emit('delete', account.id)"
-                >
-                    <Trash2 class="h-4 w-4" />
-                </Button>
+                <TooltipProvider :delay-duration="0">
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                :aria-label="t('actions.edit')"
+                                @click="$emit('edit', account.id)"
+                            >
+                                <Pencil class="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{{ t('actions.edit') }}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider :delay-duration="0">
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <span class="inline-flex">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    type="button"
+                                    :aria-label="t('actions.setBalance')"
+                                    :disabled="adjustDisabled"
+                                    @click="$emit('adjustBalance', account.id)"
+                                >
+                                    <Coins class="h-4 w-4" />
+                                </Button>
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{{ t('actions.setBalance') }}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider :delay-duration="0">
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <span class="inline-flex">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    type="button"
+                                    :aria-label="t('accounts.card.deleteAria')"
+                                    :disabled="deleteDisabled"
+                                    @click="$emit('delete', account.id)"
+                                >
+                                    <Trash2 class="h-4 w-4" />
+                                </Button>
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{{ t('accounts.card.deleteAria') }}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </div>
         </div>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Trash2 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
@@ -58,15 +59,26 @@ defineEmits<{
                 </div>
             </div>
 
-            <button
-                type="button"
-                class="rounded-md p-2 text-muted-foreground hover:text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                :disabled="deleteDisabled"
-                @click="$emit('delete', account.id)"
-                :aria-label="t('accounts.card.deleteAria')"
-            >
-                <Trash2 class="h-4 w-4" />
-            </button>
+            <TooltipProvider :delay-duration="0">
+                <Tooltip>
+                    <TooltipTrigger>
+                        <span class="inline-flex">
+                            <button
+                                type="button"
+                                class="rounded-md p-2 text-muted-foreground hover:text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                :disabled="deleteDisabled"
+                                @click="$emit('delete', account.id)"
+                                :aria-label="t('accounts.card.deleteAria')"
+                            >
+                                <Trash2 class="h-4 w-4" />
+                            </button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{{ t('accounts.card.deleteAria') }}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         </div>
 
         <div class="mt-4 flex items-end justify-between gap-4">

@@ -3,6 +3,11 @@
     "index": {
       "title": "Accounts",
       "addAccount": "Add account",
+      "view": {
+        "toggleAria": "Toggle accounts view",
+        "grid": "Grid",
+        "list": "List"
+      },
       "empty": {
         "message": "You don't have any accounts yet.",
         "cta": "Add your first account"
