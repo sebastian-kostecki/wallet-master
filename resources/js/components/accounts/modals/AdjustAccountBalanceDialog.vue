@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { normalizeAmount } from '@/lib/money';
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -36,10 +37,6 @@ const form = useForm<{ new_balance: string }>({
 const adjustmentConfirmed = ref(false);
 
 const checkboxId = computed(() => `adjustment_confirmed_${props.accountId ?? 'none'}`);
-
-function normalizeAmount(input: string) {
-    return input.replace(/\s/g, '').replace(',', '.');
-}
 
 const canSubmit = computed(() => {
     return props.accountId !== null && form.new_balance.length > 0 && adjustmentConfirmed.value;

@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
+import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
+import FormField from '@/components/forms/FormField.vue';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { displayAmount, normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 type Option = {
     value: string;
@@ -39,6 +40,14 @@ const props = defineProps<{
     accountTypes: Option[];
 }>();
 
+const bankOptions = computed<DropdownOption<string>[]>(() => {
+    return props.banks.map((b) => ({ value: b.value, label: b.label }));
+});
+
+const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
+    return props.accountTypes.map((a) => ({ value: a.value, label: a.label }));
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Konta',
@@ -62,14 +71,6 @@ function formatMoney(value: string) {
     }
 
     return money.format(parsed);
-}
-
-function normalizeAmount(input: string) {
-    return input.replace(/\s/g, '').replace(',', '.');
-}
-
-function displayAmount(input: string) {
-    return input.replace('.', ',');
 }
 
 const form = useForm({
@@ -107,50 +108,38 @@ const adjustProcessing = ref(false);
             <div class="grid gap-6 lg:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                     <form @submit.prevent="submit" class="grid gap-6">
-                        <div class="grid gap-2">
-                            <Label for="name">Nazwa</Label>
+                        <FormField for-id="name" label="Nazwa" :error="form.errors.name">
                             <Input id="name" v-model="form.name" required />
-                            <InputError :message="form.errors.name" />
-                        </div>
+                        </FormField>
 
-                        <div class="grid gap-2">
-                            <Label for="bank">Bank</Label>
-                            <select
+                        <FormField for-id="bank" label="Bank" :error="form.errors.bank">
+                            <DropdownSelect
                                 id="bank"
-                                v-model="form.bank"
-                                class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                required
-                            >
-                                <option v-for="bank in banks" :key="bank.value" :value="bank.value">
-                                    {{ bank.label }}
-                                </option>
-                            </select>
-                            <InputError :message="form.errors.bank" />
-                        </div>
+                                :model-value="form.bank"
+                                :options="bankOptions"
+                                placeholder="Wybierz bank"
+                                :disabled="form.processing"
+                                @update:model-value="(value) => (form.bank = value)"
+                            />
+                        </FormField>
 
-                        <div class="grid gap-2">
-                            <Label for="type">Typ konta</Label>
-                            <select
+                        <FormField for-id="type" label="Typ konta" :error="form.errors.type">
+                            <DropdownSelect
                                 id="type"
-                                v-model="form.type"
-                                class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                required
-                            >
-                                <option v-for="accountType in accountTypes" :key="accountType.value" :value="accountType.value">
-                                    {{ accountType.label }}
-                                </option>
-                            </select>
-                            <InputError :message="form.errors.type" />
-                        </div>
+                                :model-value="form.type"
+                                :options="accountTypeOptions"
+                                placeholder="Wybierz typ konta"
+                                :disabled="form.processing"
+                                @update:model-value="(value) => (form.type = value)"
+                            />
+                        </FormField>
 
-                        <div class="grid gap-2">
-                            <Label for="opening_balance">Saldo początkowe</Label>
+                        <FormField for-id="opening_balance" label="Saldo początkowe" :error="form.errors.opening_balance">
                             <Input id="opening_balance" inputmode="decimal" v-model="form.opening_balance" />
-                            <InputError :message="form.errors.opening_balance" />
                             <p class="text-xs text-muted-foreground">
                                 Zmiana salda początkowego przeliczy saldo bieżące o różnicę.
                             </p>
-                        </div>
+                        </FormField>
 
                         <Button type="submit" :disabled="form.processing">Zapisz zmiany</Button>
                     </form>
