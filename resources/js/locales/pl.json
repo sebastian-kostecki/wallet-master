@@ -3,6 +3,11 @@
     "index": {
       "title": "Konta",
       "addAccount": "Dodaj konto",
+      "view": {
+        "toggleAria": "Przełącz widok listy kont",
+        "grid": "Siatka",
+        "list": "Lista"
+      },
       "empty": {
         "message": "Nie masz jeszcze żadnych kont.",
         "cta": "Dodaj pierwsze konto"

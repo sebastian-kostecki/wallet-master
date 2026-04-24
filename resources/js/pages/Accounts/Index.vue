@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { buttonVariants } from '@/components/ui/button';
 import AccountsSummaryCard from '@/components/accounts/AccountsSummaryCard.vue';
 import AccountCard from '@/components/accounts/AccountCard.vue';
+import AccountRow from '@/components/accounts/AccountRow.vue';
+import AccountsViewToggle from '@/components/accounts/AccountsViewToggle.vue';
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -10,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { PiggyBank, Wallet } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type Currency = {
@@ -73,6 +75,21 @@ function goToEditAccount(accountId: number) {
     router.visit(route('accounts.edit', accountId));
 }
 
+type AccountsViewMode = 'grid' | 'list';
+const viewMode = ref<AccountsViewMode>('grid');
+
+onMounted(() => {
+    const saved = localStorage.getItem('accounts.viewMode');
+    if (saved === 'grid' || saved === 'list') {
+        viewMode.value = saved;
+    }
+});
+
+function setViewMode(mode: AccountsViewMode) {
+    viewMode.value = mode;
+    localStorage.setItem('accounts.viewMode', mode);
+}
+
 const adjustingAccountId = ref<number | null>(null);
 const selectedAccount = computed(() => props.accounts.find((a) => a.id === adjustingAccountId.value) ?? null);
 const adjustDialogOpen = ref(false);
@@ -112,8 +129,27 @@ function openDeleteDialog(accountId: number) {
                 <Link :href="route('accounts.create')" :class="cn(buttonVariants({}), 'mt-4')">{{ t('accounts.index.empty.cta') }}</Link>
             </div>
 
-            <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div v-else class="flex items-center justify-end">
+                <AccountsViewToggle :model-value="viewMode" @update:model-value="setViewMode" />
+            </div>
+
+            <div v-if="viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <AccountCard
+                    v-for="account in accounts"
+                    :key="account.id"
+                    :account="account"
+                    :format-money="formatMoney"
+                    :account-type-icon="resolveAccountTypeIcon(account.type)"
+                    :delete-disabled="deleteProcessing"
+                    :adjust-disabled="adjustProcessing"
+                    @delete="openDeleteDialog"
+                    @edit="goToEditAccount"
+                    @adjust-balance="openAdjustBalance"
+                />
+            </div>
+
+            <div v-else class="flex flex-col gap-2">
+                <AccountRow
                     v-for="account in accounts"
                     :key="account.id"
                     :account="account"
