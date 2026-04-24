@@ -67,7 +67,7 @@ class AccountController extends Controller
             );
         });
 
-        return Inertia::render('Accounts/Index', [
+        return Inertia::render('accounts/Index', [
             'accounts' => $accounts,
         ]);
     }
@@ -78,7 +78,7 @@ class AccountController extends Controller
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'symbol', 'precision']);
 
-        return Inertia::render('Accounts/Create', [
+        return Inertia::render('accounts/Create', [
             'currencies' => $currencies,
             ...$this->enumOptions(),
         ]);
@@ -106,7 +106,7 @@ class AccountController extends Controller
     {
         $account->loadMissing(['currency:id,code,symbol,precision']);
 
-        return Inertia::render('Accounts/Edit', [
+        return Inertia::render('accounts/Edit', [
             'account' => $account->only(['id', 'name', 'opening_balance', 'current_balance', 'currency_id', 'bank', 'type'])
                 + [
                     'currency' => $account->currency?->only(['id', 'code', 'symbol', 'precision']),
