@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 type Currency = {
     symbol: string | null;
@@ -24,6 +25,8 @@ defineProps<{
     deleteDisabled: boolean;
     adjustDisabled: boolean;
 }>();
+
+const { t } = useI18n();
 
 defineEmits<{
     delete: [accountId: number];
@@ -60,7 +63,7 @@ defineEmits<{
                 class="rounded-md p-2 text-muted-foreground hover:text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 :disabled="deleteDisabled"
                 @click="$emit('delete', account.id)"
-                aria-label="Usuń konto"
+                :aria-label="t('accounts.card.deleteAria')"
             >
                 <Trash2 class="h-4 w-4" />
             </button>
@@ -68,13 +71,15 @@ defineEmits<{
 
         <div class="mt-4 flex items-end justify-between gap-4">
             <div>
-                <p class="text-xs text-muted-foreground">Saldo bieżące</p>
-                <p class="mt-1 text-lg font-semibold tabular-nums">{{ formatMoney(account.current_balance) }} {{ account.currency.symbol ?? 'zł' }}</p>
+                <p class="text-xs text-muted-foreground">{{ t('accounts.card.currentBalance') }}</p>
+                <p class="mt-1 text-lg font-semibold tabular-nums">
+                    {{ formatMoney(account.current_balance) }} {{ account.currency.symbol ?? t('currency.defaultSymbol') }}
+                </p>
             </div>
 
             <div class="flex gap-2">
-                <Button variant="secondary" @click="$emit('edit', account.id)">Edytuj</Button>
-                <Button variant="outline" :disabled="adjustDisabled" @click="$emit('adjustBalance', account.id)">Ustaw saldo</Button>
+                <Button variant="secondary" @click="$emit('edit', account.id)">{{ t('actions.edit') }}</Button>
+                <Button variant="outline" :disabled="adjustDisabled" @click="$emit('adjustBalance', account.id)">{{ t('actions.setBalance') }}</Button>
             </div>
         </div>
     </div>

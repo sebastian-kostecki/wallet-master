@@ -6,19 +6,9 @@ import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { initializeTheme } from './composables/useAppearance';
-
-// Extend ImportMeta interface for Vite...
-declare module 'vite/client' {
-    interface ImportMetaEnv {
-        readonly VITE_APP_NAME: string;
-        [key: string]: string | boolean | undefined;
-    }
-
-    interface ImportMeta {
-        readonly env: ImportMetaEnv;
-        readonly glob: <T>(pattern: string) => Record<string, () => Promise<T>>;
-    }
-}
+import { i18n } from './i18n';
+import type { SupportedLocale } from './i18n';
+import { supportedLocales } from './i18n';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -26,8 +16,15 @@ createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob<DefineComponent>('./pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
+        const initialLocale = (props.initialPage.props.locale as string | undefined) ?? 'pl';
+        const resolvedLocale: SupportedLocale = supportedLocales.includes(initialLocale as SupportedLocale)
+            ? (initialLocale as SupportedLocale)
+            : 'pl';
+        i18n.global.locale.value = resolvedLocale;
+
         createApp({ render: () => h(App, props) })
             .use(plugin)
+            .use(i18n)
             .use(ZiggyVue)
             .mount(el);
     },

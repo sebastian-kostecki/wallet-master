@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 type Currency = {
     code: string;
@@ -14,6 +15,8 @@ type Account = {
 const props = defineProps<{
     accounts: Account[];
 }>();
+
+const { t } = useI18n();
 
 const money = new Intl.NumberFormat('pl-PL', {
     minimumFractionDigits: 2,
@@ -43,26 +46,26 @@ const invalidBalancesCount = computed(() => parsedBalances.value.filter((b) => b
 
 const totalBalance = computed(() => parsedBalances.value.reduce((sum, b) => sum + (b.value ?? 0), 0));
 
-const formattedTotal = computed(() => `${money.format(totalBalance.value)} zł`);
+const formattedTotal = computed(() => `${money.format(totalBalance.value)} ${t('currency.defaultSymbol')}`);
 </script>
 
 <template>
     <Card>
         <CardHeader>
-            <CardTitle>Podsumowanie</CardTitle>
-            <CardDescription>Suma sald wszystkich kont w PLN.</CardDescription>
+            <CardTitle>{{ t('accounts.summary.title') }}</CardTitle>
+            <CardDescription>{{ t('accounts.summary.description') }}</CardDescription>
         </CardHeader>
 
         <CardContent class="grid gap-3">
             <div>
-                <p class="text-xs text-muted-foreground">Suma sald (PLN)</p>
+                <p class="text-xs text-muted-foreground">{{ t('accounts.summary.totalPln') }}</p>
                 <p class="mt-1 text-2xl font-semibold tabular-nums">{{ formattedTotal }}</p>
             </div>
 
             <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <p>Liczba kont (PLN): {{ accountsInPln.length }}</p>
-                <p v-if="invalidBalancesCount > 0">Niektóre salda pominięto w sumie.</p>
-                <p v-else-if="accountsInPln.length === 0">Dodaj konto, aby zobaczyć podsumowanie.</p>
+                <p>{{ t('accounts.summary.countPln', { count: accountsInPln.length }) }}</p>
+                <p v-if="invalidBalancesCount > 0">{{ t('accounts.summary.invalidSkipped') }}</p>
+                <p v-else-if="accountsInPln.length === 0">{{ t('accounts.summary.addToSeeSummary') }}</p>
             </div>
         </CardContent>
     </Card>

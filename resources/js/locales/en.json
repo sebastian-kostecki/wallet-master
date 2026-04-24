@@ -1,0 +1,48 @@
+{
+  "accounts": {
+    "index": {
+      "title": "Accounts",
+      "addAccount": "Add account",
+      "empty": {
+        "message": "You don't have any accounts yet.",
+        "cta": "Add your first account"
+      }
+    },
+    "summary": {
+      "title": "Summary",
+      "description": "Sum of balances for all PLN accounts.",
+      "totalPln": "Total balance (PLN)",
+      "countPln": "Number of accounts (PLN): {count}",
+      "invalidSkipped": "Some balances were skipped in the total.",
+      "addToSeeSummary": "Add an account to see the summary."
+    },
+    "card": {
+      "deleteAria": "Delete account",
+      "currentBalance": "Current balance"
+    },
+    "adjust": {
+      "title": "Set balance",
+      "description": "This will set the current balance to the provided value. Transaction history will not be changed.",
+      "newBalanceLabel": "New balance",
+      "newBalancePlaceholder": "e.g. 1234.56",
+      "confirmLabel": "I understand this operation does not change transaction history.",
+      "confirmHint": "Use only to correct the current balance."
+    },
+    "delete": {
+      "title": "Delete account?",
+      "description": "The account will be removed from the list. Transactions will remain in history, but will be read-only.",
+      "currentBalanceLine": "Current balance: {amount} {symbol}",
+      "confirm": "Delete account"
+    }
+  },
+  "actions": {
+    "edit": "Edit",
+    "setBalance": "Set balance",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "currency": {
+    "defaultSymbol": "zł"
+  }
+}
+

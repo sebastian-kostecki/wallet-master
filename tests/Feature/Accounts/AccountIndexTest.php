@@ -58,6 +58,7 @@ test('users see only their own accounts', function () {
     $response->assertDontSee('Account B');
 
     $response->assertInertia(fn (Assert $page) => $page
+        ->where('locale', app()->getLocale())
         ->has('accounts', 2)
         ->where('accounts.0.id', $cashAccount->id)
         ->where('accounts.0.bank_icon_url', null)

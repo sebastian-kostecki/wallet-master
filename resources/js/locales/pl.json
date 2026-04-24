@@ -1,0 +1,48 @@
+{
+  "accounts": {
+    "index": {
+      "title": "Konta",
+      "addAccount": "Dodaj konto",
+      "empty": {
+        "message": "Nie masz jeszcze żadnych kont.",
+        "cta": "Dodaj pierwsze konto"
+      }
+    },
+    "summary": {
+      "title": "Podsumowanie",
+      "description": "Suma sald wszystkich kont w PLN.",
+      "totalPln": "Suma sald (PLN)",
+      "countPln": "Liczba kont (PLN): {count}",
+      "invalidSkipped": "Niektóre salda pominięto w sumie.",
+      "addToSeeSummary": "Dodaj konto, aby zobaczyć podsumowanie."
+    },
+    "card": {
+      "deleteAria": "Usuń konto",
+      "currentBalance": "Saldo bieżące"
+    },
+    "adjust": {
+      "title": "Ustaw saldo",
+      "description": "Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.",
+      "newBalanceLabel": "Nowe saldo",
+      "newBalancePlaceholder": "np. 1234,56",
+      "confirmLabel": "Rozumiem, że ta operacja nie zmienia historii transakcji.",
+      "confirmHint": "Używaj tylko do korekty salda bieżącego."
+    },
+    "delete": {
+      "title": "Usunąć konto?",
+      "description": "Konto zostanie usunięte z listy. Transakcje pozostaną w historii, ale będą tylko do odczytu.",
+      "currentBalanceLine": "Saldo bieżące: {amount} {symbol}",
+      "confirm": "Usuń konto"
+    }
+  },
+  "actions": {
+    "edit": "Edytuj",
+    "setBalance": "Ustaw saldo",
+    "cancel": "Anuluj",
+    "save": "Zapisz"
+  },
+  "currency": {
+    "defaultSymbol": "zł"
+  }
+}
+

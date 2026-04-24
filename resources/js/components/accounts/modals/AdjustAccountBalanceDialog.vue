@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const props = withDefaults(
     defineProps<{
@@ -25,6 +26,8 @@ const emit = defineEmits<{
     processing: [processing: boolean];
     success: [];
 }>();
+
+const { t } = useI18n();
 
 const form = useForm<{ new_balance: string }>({
     new_balance: '',
@@ -85,14 +88,14 @@ function submit() {
     <Dialog :open="open" @update:open="(value) => emit('update:open', value)">
         <DialogContent v-if="accountId !== null">
             <DialogHeader>
-                <DialogTitle>Ustaw saldo</DialogTitle>
-                <DialogDescription>Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.</DialogDescription>
+                <DialogTitle>{{ t('accounts.adjust.title') }}</DialogTitle>
+                <DialogDescription>{{ t('accounts.adjust.description') }}</DialogDescription>
             </DialogHeader>
 
             <form @submit.prevent="submit" class="grid gap-4">
                 <div class="grid gap-2">
-                    <Label for="new_balance">Nowe saldo</Label>
-                    <Input id="new_balance" inputmode="decimal" v-model="form.new_balance" placeholder="np. 1234,56" />
+                    <Label for="new_balance">{{ t('accounts.adjust.newBalanceLabel') }}</Label>
+                    <Input id="new_balance" inputmode="decimal" v-model="form.new_balance" :placeholder="t('accounts.adjust.newBalancePlaceholder')" />
                     <InputError :message="form.errors.new_balance" />
                 </div>
 
@@ -104,13 +107,13 @@ function submit() {
                         @update:checked="(value) => (adjustmentConfirmed = value === true)"
                     />
                     <div class="grid gap-1 leading-tight">
-                        <Label :for="checkboxId" class="cursor-pointer"> Rozumiem, że ta operacja nie zmienia historii transakcji. </Label>
-                        <p class="text-xs text-muted-foreground">Używaj tylko do korekty salda bieżącego.</p>
+                        <Label :for="checkboxId" class="cursor-pointer">{{ t('accounts.adjust.confirmLabel') }}</Label>
+                        <p class="text-xs text-muted-foreground">{{ t('accounts.adjust.confirmHint') }}</p>
                     </div>
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="!canSubmit || disabled || form.processing">Zapisz</Button>
+                    <Button type="submit" :disabled="!canSubmit || disabled || form.processing">{{ t('actions.save') }}</Button>
                 </DialogFooter>
             </form>
         </DialogContent>

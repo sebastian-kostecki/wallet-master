@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const props = withDefaults(
     defineProps<{
@@ -28,6 +29,8 @@ const emit = defineEmits<{
     processing: [processing: boolean];
     success: [];
 }>();
+
+const { t } = useI18n();
 
 const form = useForm({});
 
@@ -58,22 +61,27 @@ function destroy() {
     <Dialog :open="open" @update:open="(value) => emit('update:open', value)">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Usunąć konto?</DialogTitle>
-                <DialogDescription>Konto zostanie usunięte z listy. Transakcje pozostaną w historii, ale będą tylko do odczytu.</DialogDescription>
+                <DialogTitle>{{ t('accounts.delete.title') }}</DialogTitle>
+                <DialogDescription>{{ t('accounts.delete.description') }}</DialogDescription>
             </DialogHeader>
 
             <div v-if="accountName" class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
                 <p class="font-medium">{{ accountName }}</p>
                 <p v-if="currentBalance !== null" class="mt-1 text-muted-foreground">
-                    Saldo bieżące: {{ formatMoney(currentBalance) }} {{ currencySymbol ?? 'zł' }}
+                    {{
+                        t('accounts.delete.currentBalanceLine', {
+                            amount: formatMoney(currentBalance),
+                            symbol: currencySymbol ?? t('currency.defaultSymbol'),
+                        })
+                    }}
                 </p>
             </div>
 
             <DialogFooter>
                 <DialogClose as-child>
-                    <Button type="button" variant="secondary">Anuluj</Button>
+                    <Button type="button" variant="secondary">{{ t('actions.cancel') }}</Button>
                 </DialogClose>
-                <Button type="button" variant="destructive" :disabled="disabled || form.processing" @click="destroy">Usuń konto</Button>
+                <Button type="button" variant="destructive" :disabled="disabled || form.processing" @click="destroy">{{ t('accounts.delete.confirm') }}</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
