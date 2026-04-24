@@ -10,6 +10,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { Check, ChevronDown } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 type Currency = {
     id: number;
@@ -32,18 +33,20 @@ const props = defineProps<{
     accountTypes: Option[];
 }>();
 
+const { t } = useI18n();
+
 const initialCurrencyId = computed(() => props.currencies[0]?.id ?? null);
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Konta',
+        title: t('accounts.index.title'),
         href: '/accounts',
     },
     {
-        title: 'Dodaj konto',
+        title: t('accounts.create.title'),
         href: '/accounts/create',
     },
-];
+]);
 
 const form = useForm<{
     name: string;
@@ -75,11 +78,11 @@ function submit() {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Dodaj konto" />
+        <Head :title="t('accounts.create.title')" />
 
         <template #headerActions>
             <Button variant="secondary" as-child>
-                <Link :href="route('accounts.index')">Wróć</Link>
+                <Link :href="route('accounts.index')">{{ t('accounts.create.back') }}</Link>
             </Button>
         </template>
 
@@ -87,13 +90,19 @@ function submit() {
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form @submit.prevent="submit" class="grid gap-6">
                     <div class="grid gap-2">
-                        <Label for="name">Nazwa</Label>
-                        <Input id="name" v-model="form.name" required autofocus placeholder="np. Konto główne" />
+                        <Label for="name">{{ t('accounts.create.fields.name.label') }}</Label>
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            required
+                            autofocus
+                            :placeholder="t('accounts.create.fields.name.placeholder')"
+                        />
                         <InputError :message="form.errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="bank">Bank</Label>
+                        <Label for="bank">{{ t('accounts.create.fields.bank.label') }}</Label>
                         <DropdownMenu>
                             <DropdownMenuTrigger as-child>
                                 <Button
@@ -113,7 +122,7 @@ function submit() {
                                         />
                                         <Icon v-else name="landmark" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                                         <span class="truncate text-left">
-                                            {{ selectedBank?.label ?? 'Wybierz bank' }}
+                                            {{ selectedBank?.label ?? t('accounts.create.fields.bank.placeholder') }}
                                         </span>
                                     </span>
                                     <ChevronDown class="h-4 w-4 shrink-0 opacity-60" aria-hidden="true" />
@@ -145,7 +154,7 @@ function submit() {
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="type">Typ konta</Label>
+                        <Label for="type">{{ t('accounts.create.fields.type.label') }}</Label>
                         <DropdownMenu>
                             <DropdownMenuTrigger as-child>
                                 <Button
@@ -162,7 +171,7 @@ function submit() {
                                             aria-hidden="true"
                                         />
                                         <span class="truncate text-left">
-                                            {{ selectedAccountType?.label ?? 'Wybierz typ konta' }}
+                                            {{ selectedAccountType?.label ?? t('accounts.create.fields.type.placeholder') }}
                                         </span>
                                     </span>
                                     <ChevronDown class="h-4 w-4 shrink-0 opacity-60" aria-hidden="true" />
@@ -191,7 +200,7 @@ function submit() {
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="currency">Waluta</Label>
+                        <Label for="currency">{{ t('accounts.create.fields.currency.label') }}</Label>
                         <DropdownMenu>
                             <DropdownMenuTrigger as-child>
                                 <Button
@@ -207,7 +216,7 @@ function submit() {
                                             <template v-if="selectedCurrency">
                                                 {{ selectedCurrency.code }} — {{ selectedCurrency.name }}
                                             </template>
-                                            <template v-else>Wybierz walutę</template>
+                                            <template v-else>{{ t('accounts.create.fields.currency.placeholder') }}</template>
                                         </span>
                                     </span>
                                     <ChevronDown class="h-4 w-4 shrink-0 opacity-60" aria-hidden="true" />
@@ -231,14 +240,19 @@ function submit() {
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="opening_balance">Saldo początkowe</Label>
-                        <Input id="opening_balance" inputmode="decimal" v-model="form.opening_balance" placeholder="np. 1000,00" />
+                        <Label for="opening_balance">{{ t('accounts.create.fields.openingBalance.label') }}</Label>
+                        <Input
+                            id="opening_balance"
+                            inputmode="decimal"
+                            v-model="form.opening_balance"
+                            :placeholder="t('accounts.create.fields.openingBalance.placeholder')"
+                        />
                         <InputError :message="form.errors.opening_balance" />
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <Button type="submit" :disabled="form.processing">Zapisz</Button>
-                        <p class="text-sm text-muted-foreground">W MVP saldo bieżące startuje od salda początkowego.</p>
+                        <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        <p class="text-sm text-muted-foreground">{{ t('accounts.create.openingBalanceHint') }}</p>
                     </div>
                 </form>
             </div>

@@ -13,6 +13,33 @@
         "cta": "Add your first account"
       }
     },
+    "create": {
+      "title": "Add account",
+      "back": "Back",
+      "fields": {
+        "name": {
+          "label": "Name",
+          "placeholder": "e.g. Main account"
+        },
+        "bank": {
+          "label": "Bank",
+          "placeholder": "Select bank"
+        },
+        "type": {
+          "label": "Account type",
+          "placeholder": "Select account type"
+        },
+        "currency": {
+          "label": "Currency",
+          "placeholder": "Select currency"
+        },
+        "openingBalance": {
+          "label": "Opening balance",
+          "placeholder": "e.g. 1000.00"
+        }
+      },
+      "openingBalanceHint": "In the MVP, the current balance starts from the opening balance."
+    },
     "summary": {
       "title": "Summary",
       "description": "Sum of balances for all PLN accounts.",
