@@ -16,17 +16,28 @@ use Inertia\Response;
 class AccountController extends Controller
 {
     /**
-     * @return array<string, array<int, array{value: string, label: string}>>
+     * @return array<string, array<int, array{value: string, label: string, icon_url?: string|null, icon_name?: string|null}>>
      */
     private function enumOptions(): array
     {
         return [
             'banks' => array_map(
-                fn (Bank $bank): array => ['value' => $bank->value, 'label' => $bank->label()],
+                fn (Bank $bank): array => [
+                    'value' => $bank->value,
+                    'label' => $bank->label(),
+                    'icon_url' => $bank === Bank::Cash ? null : asset("icons/banks/{$bank->value}.jpeg"),
+                ],
                 Bank::cases(),
             ),
             'accountTypes' => array_map(
-                fn (AccountType $type): array => ['value' => $type->value, 'label' => $type->label()],
+                fn (AccountType $type): array => [
+                    'value' => $type->value,
+                    'label' => $type->label(),
+                    'icon_name' => match ($type) {
+                        AccountType::Ror => 'wallet',
+                        AccountType::Savings => 'piggyBank',
+                    },
+                ],
                 AccountType::cases(),
             ),
         ];
@@ -63,26 +74,20 @@ class AccountController extends Controller
 
     public function create(): Response
     {
-        $pln = Currency::query()
-            ->where('code', 'PLN')
-            ->firstOrFail(['id', 'code', 'name', 'symbol', 'precision']);
+        $currencies = Currency::query()
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'symbol', 'precision']);
 
         return Inertia::render('Accounts/Create', [
-            'currencies' => [$pln],
+            'currencies' => $currencies,
             ...$this->enumOptions(),
         ]);
     }
 
     public function store(StoreAccountRequest $request): RedirectResponse
     {
-        $plnId = Currency::query()
-            ->where('code', 'PLN')
-            ->firstOrFail(['id'])
-            ->id;
-
         $data = $request->validated();
         $data['user_id'] = $request->user()->id;
-        $data['currency_id'] = $plnId;
 
         $account = Account::query()->create([
             'user_id' => $data['user_id'],
