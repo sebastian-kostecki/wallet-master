@@ -15,7 +15,7 @@ type Account = {
     bank: string;
     bank_icon_url: string | null;
     type: string;
-    type_label: string;
+    type_label_key: string;
     currency: Currency;
 };
 
@@ -52,7 +52,7 @@ const { t } = useI18n();
 
             <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-medium">{{ account.name }}</p>
-                <p class="mt-1 truncate text-xs text-muted-foreground">{{ account.type_label }}</p>
+                <p class="mt-1 truncate text-xs text-muted-foreground">{{ t(account.type_label_key) }}</p>
             </div>
 
             <div class="hidden text-right sm:block">

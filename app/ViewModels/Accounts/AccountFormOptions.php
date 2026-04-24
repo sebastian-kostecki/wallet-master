@@ -9,8 +9,8 @@ final class AccountFormOptions
 {
     /**
      * @return array{
-     *   banks: array<int, array{value: string, label: string, icon_url: string|null}>,
-     *   accountTypes: array<int, array{value: string, label: string, icon_name: string}>,
+     *   banks: array<int, array{value: string, label_key: string, icon_url: string|null}>,
+     *   accountTypes: array<int, array{value: string, label_key: string, icon_name: string}>,
      * }
      */
     public function toArray(): array
@@ -19,7 +19,7 @@ final class AccountFormOptions
             'banks' => array_map(
                 fn (Bank $bank): array => [
                     'value' => $bank->value,
-                    'label' => $bank->label(),
+                    'label_key' => $bank->labelKey(),
                     'icon_url' => $bank === Bank::Cash ? null : asset("icons/banks/{$bank->value}.jpeg"),
                 ],
                 Bank::cases(),
@@ -27,9 +27,9 @@ final class AccountFormOptions
             'accountTypes' => array_map(
                 fn (AccountType $type): array => [
                     'value' => $type->value,
-                    'label' => $type->label(),
+                    'label_key' => $type->labelKey(),
                     'icon_name' => match ($type) {
-                        AccountType::Ror => 'wallet',
+                        AccountType::Checking => 'wallet',
                         AccountType::Savings => 'piggyBank',
                     },
                 ],

@@ -29,7 +29,7 @@ type Account = {
     bank: string;
     bank_icon_url: string | null;
     type: string;
-    type_label: string;
+    type_label_key: string;
     currency: Currency;
 };
 
@@ -62,7 +62,7 @@ function formatMoney(value: string) {
 
 const accountTypeIcon = computed(() => {
     return {
-        ror: Wallet,
+        checking: Wallet,
         savings: PiggyBank,
     } as const;
 });

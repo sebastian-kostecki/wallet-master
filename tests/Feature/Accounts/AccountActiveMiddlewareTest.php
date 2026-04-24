@@ -28,7 +28,7 @@ test('active account passes middleware', function () {
         'currency_id' => $plnId,
         'name' => 'Active',
         'bank' => Bank::Cash,
-        'type' => AccountType::Ror,
+        'type' => AccountType::Checking,
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);
@@ -47,7 +47,7 @@ test('deleted account is blocked by middleware', function () {
         'currency_id' => $plnId,
         'name' => 'Deleted',
         'bank' => Bank::Cash,
-        'type' => AccountType::Ror,
+        'type' => AccountType::Checking,
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);

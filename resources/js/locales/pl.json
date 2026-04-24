@@ -71,6 +71,17 @@
       "description": "Konto zostanie usunięte z listy. Transakcje pozostaną w historii, ale będą tylko do odczytu.",
       "currentBalanceLine": "Saldo bieżące: {amount} {symbol}",
       "confirm": "Usuń konto"
+    },
+    "enums": {
+      "accountType": {
+        "checking": "Rozliczeniowe",
+        "savings": "Oszczędnościowe"
+      },
+      "bank": {
+        "bnp-paribas": "BNP Paribas",
+        "mbank": "mBank",
+        "cash": "Gotówka"
+      }
     }
   },
   "actions": {

@@ -10,13 +10,9 @@ enum Bank: string
     case MBank = 'mbank';
     case Cash = 'cash';
 
-    public function label(): string
+    public function labelKey(): string
     {
-        return match ($this) {
-            self::BnpParibas => 'BNP Paribas',
-            self::MBank => 'mBank',
-            self::Cash => 'Gotówka',
-        };
+        return "accounts.enums.bank.{$this->value}";
     }
 
     public function supportsImport(): bool

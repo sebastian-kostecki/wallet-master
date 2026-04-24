@@ -6,14 +6,11 @@ namespace App\Enums;
 
 enum AccountType: string
 {
-    case Ror = 'ror';
+    case Checking = 'checking';
     case Savings = 'savings';
 
-    public function label(): string
+    public function labelKey(): string
     {
-        return match ($this) {
-            self::Ror => 'ROR',
-            self::Savings => 'Oszczędnościowe',
-        };
+        return "accounts.enums.accountType.{$this->value}";
     }
 }

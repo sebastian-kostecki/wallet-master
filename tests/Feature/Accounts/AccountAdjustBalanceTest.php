@@ -21,7 +21,7 @@ test('user can set current balance and adjustment is audited', function () {
         'currency_id' => $plnId,
         'name' => 'Account',
         'bank' => Bank::Cash,
-        'type' => AccountType::Ror,
+        'type' => AccountType::Checking,
         'opening_balance' => 100,
         'current_balance' => 130,
     ]);
@@ -55,7 +55,7 @@ test('user cannot adjust balance for someone elses account', function () {
         'currency_id' => $plnId,
         'name' => 'Account',
         'bank' => Bank::Cash,
-        'type' => AccountType::Ror,
+        'type' => AccountType::Checking,
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);

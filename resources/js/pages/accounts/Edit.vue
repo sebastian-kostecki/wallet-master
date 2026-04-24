@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 
 type Option = {
     value: string;
-    label: string;
+    label_key: string;
 };
 
 type Currency = {
@@ -44,11 +44,11 @@ const props = defineProps<{
 const { t, locale } = useI18n();
 
 const bankOptions = computed<DropdownOption<string>[]>(() => {
-    return props.banks.map((b) => ({ value: b.value, label: b.label }));
+    return props.banks.map((b) => ({ value: b.value, label: t(b.label_key) }));
 });
 
 const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
-    return props.accountTypes.map((a) => ({ value: a.value, label: a.label }));
+    return props.accountTypes.map((a) => ({ value: a.value, label: t(a.label_key) }));
 });
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [

@@ -21,7 +21,7 @@ type Currency = {
 
 type Option = {
     value: string;
-    label: string;
+    label_key: string;
     icon_url?: string | null;
     icon_name?: string | null;
 };
@@ -69,11 +69,11 @@ function resolveBankIconUrl(bankValue: string): string | null {
 }
 
 const bankOptions = computed<DropdownOption<string>[]>(() => {
-    return props.banks.map((b) => ({ value: b.value, label: b.label }));
+    return props.banks.map((b) => ({ value: b.value, label: t(b.label_key) }));
 });
 
 const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
-    return props.accountTypes.map((a) => ({ value: a.value, label: a.label }));
+    return props.accountTypes.map((a) => ({ value: a.value, label: t(a.label_key) }));
 });
 
 const currencyOptions = computed<DropdownOption<number>[]>(() => {
@@ -130,7 +130,7 @@ function submit() {
                                 <img
                                     v-if="selectedBank?.icon_url"
                                     :src="selectedBank.icon_url"
-                                    :alt="selectedBank.label"
+                                    :alt="t(selectedBank.label_key)"
                                     class="h-5 w-5 shrink-0 rounded object-contain"
                                     loading="lazy"
                                 />

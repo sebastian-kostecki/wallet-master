@@ -71,6 +71,17 @@
       "description": "The account will be removed from the list. Transactions will remain in history, but will be read-only.",
       "currentBalanceLine": "Current balance: {amount} {symbol}",
       "confirm": "Delete account"
+    },
+    "enums": {
+      "accountType": {
+        "checking": "Checking account",
+        "savings": "Savings account"
+      },
+      "bank": {
+        "bnp-paribas": "BNP Paribas",
+        "mbank": "mBank",
+        "cash": "Cash"
+      }
     }
   },
   "actions": {

@@ -18,7 +18,7 @@ test('user can update account name and opening balance and current balance chang
         'currency_id' => $plnId,
         'name' => 'Old name',
         'bank' => 'cash',
-        'type' => 'ror',
+        'type' => 'checking',
         'opening_balance' => 100,
         'current_balance' => 130,
     ]);

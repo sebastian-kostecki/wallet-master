@@ -15,7 +15,7 @@ type Account = {
     bank: string;
     bank_icon_url: string | null;
     type: string;
-    type_label: string;
+    type_label_key: string;
     currency: Currency;
 };
 
@@ -55,7 +55,7 @@ defineEmits<{
                     <div class="flex items-center gap-2">
                         <p class="truncate text-sm font-medium">{{ account.name }}</p>
                     </div>
-                    <p class="mt-1 truncate text-xs text-muted-foreground">{{ account.type_label }}</p>
+                    <p class="mt-1 truncate text-xs text-muted-foreground">{{ t(account.type_label_key) }}</p>
                 </div>
             </div>
 

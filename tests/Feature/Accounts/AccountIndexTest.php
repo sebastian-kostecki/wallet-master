@@ -25,7 +25,7 @@ test('users see only their own accounts', function () {
         'currency_id' => $plnId,
         'name' => 'Cash Account',
         'bank' => 'cash',
-        'type' => 'ror',
+        'type' => 'checking',
         'opening_balance' => 100,
         'current_balance' => 100,
     ]);
@@ -35,7 +35,7 @@ test('users see only their own accounts', function () {
         'currency_id' => $plnId,
         'name' => 'mBank Account',
         'bank' => 'mbank',
-        'type' => 'ror',
+        'type' => 'checking',
         'opening_balance' => 50,
         'current_balance' => 50,
     ]);
@@ -45,7 +45,7 @@ test('users see only their own accounts', function () {
         'currency_id' => $plnId,
         'name' => 'Account B',
         'bank' => 'cash',
-        'type' => 'ror',
+        'type' => 'checking',
         'opening_balance' => 200,
         'current_balance' => 200,
     ]);
@@ -62,10 +62,10 @@ test('users see only their own accounts', function () {
         ->has('accounts', 2)
         ->where('accounts.0.id', $cashAccount->id)
         ->where('accounts.0.bank_icon_url', null)
-        ->where('accounts.0.type_label', 'ROR')
+        ->where('accounts.0.type_label_key', 'accounts.enums.accountType.checking')
         ->where('accounts.1.id', $mBankAccount->id)
         ->where('accounts.1.bank_icon_url', asset('icons/banks/mbank.jpeg'))
-        ->where('accounts.1.type_label', 'ROR')
+        ->where('accounts.1.type_label_key', 'accounts.enums.accountType.checking')
     );
 
     expect($cashAccount->fresh())->not->toBeNull();
@@ -81,7 +81,7 @@ test('soft deleted accounts are not listed', function () {
         'currency_id' => $plnId,
         'name' => 'Active',
         'bank' => 'cash',
-        'type' => 'ror',
+        'type' => 'checking',
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);
@@ -91,7 +91,7 @@ test('soft deleted accounts are not listed', function () {
         'currency_id' => $plnId,
         'name' => 'Deleted',
         'bank' => 'cash',
-        'type' => 'ror',
+        'type' => 'checking',
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);

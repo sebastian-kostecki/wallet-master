@@ -27,7 +27,7 @@ class AccountController extends Controller
             ->orderBy('name')
             ->get(['id', 'currency_id', 'name', 'current_balance', 'bank', 'type']);
 
-        $accounts->each->append(['bank_icon_url', 'type_label']);
+        $accounts->each->append(['bank_icon_url', 'type_label_key']);
 
         return Inertia::render('accounts/Index', [
             'accounts' => $accounts,
