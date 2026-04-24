@@ -13,6 +13,12 @@
         "cta": "Add your first account"
       }
     },
+    "edit": {
+      "title": "Edit account",
+      "back": "Back",
+      "deleteAction": "Delete account",
+      "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference."
+    },
     "create": {
       "title": "Add account",
       "back": "Back",

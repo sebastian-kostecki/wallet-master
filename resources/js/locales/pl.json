@@ -13,6 +13,12 @@
         "cta": "Dodaj pierwsze konto"
       }
     },
+    "edit": {
+      "title": "Edytuj konto",
+      "back": "Wróć",
+      "deleteAction": "Usuń konto",
+      "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę."
+    },
     "create": {
       "title": "Dodaj konto",
       "back": "Wróć",

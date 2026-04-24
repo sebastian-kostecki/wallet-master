@@ -10,6 +10,7 @@ import { displayAmount, normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 type Option = {
     value: string;
@@ -40,6 +41,8 @@ const props = defineProps<{
     accountTypes: Option[];
 }>();
 
+const { t, locale } = useI18n();
+
 const bankOptions = computed<DropdownOption<string>[]>(() => {
     return props.banks.map((b) => ({ value: b.value, label: b.label }));
 });
@@ -48,20 +51,24 @@ const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
     return props.accountTypes.map((a) => ({ value: a.value, label: a.label }));
 });
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Konta',
+        title: t('accounts.index.title'),
         href: '/accounts',
     },
     {
-        title: 'Edytuj konto',
+        title: t('accounts.edit.title'),
         href: `/accounts/${props.account.id}/edit`,
     },
-];
+]);
 
-const money = new Intl.NumberFormat('pl-PL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+const money = computed(() => {
+    const resolvedLocale = locale.value === 'pl' ? 'pl-PL' : 'en-US';
+
+    return new Intl.NumberFormat(resolvedLocale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
 });
 
 function formatMoney(value: string) {
@@ -70,7 +77,7 @@ function formatMoney(value: string) {
         return value;
     }
 
-    return money.format(parsed);
+    return money.value.format(parsed);
 }
 
 const form = useForm({
@@ -94,64 +101,72 @@ const adjustProcessing = ref(false);
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head title="Edytuj konto" />
+        <Head :title="t('accounts.edit.title')" />
 
         <template #headerActions>
             <Button variant="secondary" as-child>
-                <Link :href="route('accounts.index')">Wróć</Link>
+                <Link :href="route('accounts.index')">{{ t('accounts.edit.back') }}</Link>
             </Button>
 
-            <Button variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">Usuń konto</Button>
+            <Button variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
+                {{ t('accounts.edit.deleteAction') }}
+            </Button>
         </template>
 
         <div class="flex flex-col gap-6 p-4">
             <div class="grid gap-6 lg:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                     <form @submit.prevent="submit" class="grid gap-6">
-                        <FormField for-id="name" label="Nazwa" :error="form.errors.name">
+                        <FormField for-id="name" :label="t('accounts.create.fields.name.label')" :error="form.errors.name">
                             <Input id="name" v-model="form.name" required />
                         </FormField>
 
-                        <FormField for-id="bank" label="Bank" :error="form.errors.bank">
+                        <FormField for-id="bank" :label="t('accounts.create.fields.bank.label')" :error="form.errors.bank">
                             <DropdownSelect
                                 id="bank"
                                 :model-value="form.bank"
                                 :options="bankOptions"
-                                placeholder="Wybierz bank"
+                                :placeholder="t('accounts.create.fields.bank.placeholder')"
                                 :disabled="form.processing"
                                 @update:model-value="(value) => (form.bank = value)"
                             />
                         </FormField>
 
-                        <FormField for-id="type" label="Typ konta" :error="form.errors.type">
+                        <FormField for-id="type" :label="t('accounts.create.fields.type.label')" :error="form.errors.type">
                             <DropdownSelect
                                 id="type"
                                 :model-value="form.type"
                                 :options="accountTypeOptions"
-                                placeholder="Wybierz typ konta"
+                                :placeholder="t('accounts.create.fields.type.placeholder')"
                                 :disabled="form.processing"
                                 @update:model-value="(value) => (form.type = value)"
                             />
                         </FormField>
 
-                        <FormField for-id="opening_balance" label="Saldo początkowe" :error="form.errors.opening_balance">
+                        <FormField
+                            for-id="opening_balance"
+                            :label="t('accounts.create.fields.openingBalance.label')"
+                            :error="form.errors.opening_balance"
+                        >
                             <Input id="opening_balance" inputmode="decimal" v-model="form.opening_balance" />
                             <p class="text-xs text-muted-foreground">
-                                Zmiana salda początkowego przeliczy saldo bieżące o różnicę.
+                                {{ t('accounts.edit.openingBalanceHint') }}
                             </p>
                         </FormField>
 
-                        <Button type="submit" :disabled="form.processing">Zapisz zmiany</Button>
+                        <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
                     </form>
                 </div>
 
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <p class="text-xs text-muted-foreground">Saldo bieżące</p>
+                    <p class="text-xs text-muted-foreground">{{ t('accounts.card.currentBalance') }}</p>
                     <p class="mt-2 text-2xl font-semibold tabular-nums">
-                        {{ formatMoney(account.current_balance) }} {{ account.currency?.symbol ?? 'zł' }}
+                        {{ formatMoney(account.current_balance) }} {{ account.currency?.symbol ?? t('currency.defaultSymbol') }}
                     </p>
 
-                    <Button class="mt-4" variant="outline" :disabled="adjustProcessing" @click="adjustDialogOpen = true">Ustaw saldo</Button>
+                    <Button class="mt-4" variant="outline" :disabled="adjustProcessing" @click="adjustDialogOpen = true">
+                        {{ t('actions.setBalance') }}
+                    </Button>
                 </div>
             </div>
         </div>
