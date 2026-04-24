@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { buttonVariants } from '@/components/ui/button';
 import AccountsSummaryCard from '@/components/accounts/AccountsSummaryCard.vue';
+import AccountCard from '@/components/accounts/AccountCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { PiggyBank, Trash2, Wallet } from 'lucide-vue-next';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { PiggyBank, Wallet } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 type Currency = {
@@ -28,6 +29,7 @@ type Account = {
     bank: string;
     bank_icon_url: string | null;
     type: string;
+    type_label: string;
     currency: Currency;
 };
 
@@ -67,9 +69,14 @@ function resolveAccountTypeIcon(type: string) {
     return accountTypeIcon.value[type as keyof typeof accountTypeIcon.value] ?? Wallet;
 }
 
+function goToEditAccount(accountId: number) {
+    router.visit(route('accounts.edit', accountId));
+}
+
 const adjustingAccountId = ref<number | null>(null);
 const selectedAccount = computed(() => props.accounts.find((a) => a.id === adjustingAccountId.value) ?? null);
 const adjustmentConfirmed = ref(false);
+const adjustDialogOpen = ref(false);
 
 const adjustForm = useForm<{ new_balance: string }>({
     new_balance: '',
@@ -84,6 +91,7 @@ function openAdjustBalance(accountId: number) {
     adjustmentConfirmed.value = false;
     adjustForm.clearErrors();
     adjustForm.new_balance = selectedAccount.value?.current_balance ?? '';
+    adjustDialogOpen.value = true;
 }
 
 function normalizeAmount(input: string) {
@@ -102,6 +110,7 @@ function submitAdjustment() {
             adjustForm.reset();
             adjustingAccountId.value = null;
             adjustmentConfirmed.value = false;
+            adjustDialogOpen.value = false;
         },
     });
 }
@@ -150,112 +159,56 @@ function destroyAccount() {
             </div>
 
             <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <div
+                <AccountCard
                     v-for="account in accounts"
                     :key="account.id"
-                    class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
-                >
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-2">
-                                <img
-                                    v-if="account.bank_icon_url"
-                                    :src="account.bank_icon_url"
-                                    :alt="account.bank"
-                                    class="h-5 w-5 shrink-0"
-                                    loading="lazy"
-                                />
-                                <component :is="resolveAccountTypeIcon(account.type)" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                                <p class="truncate text-sm font-medium">{{ account.name }}</p>
-                            </div>
-                            <p class="mt-1 text-xs text-muted-foreground">{{ account.currency.code }}</p>
-                        </div>
-
-                        <button
-                            type="button"
-                            class="rounded-md p-2 text-muted-foreground hover:text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            :disabled="deleteForm.processing"
-                            @click="openDeleteDialog(account.id)"
-                            aria-label="Usuń konto"
-                        >
-                            <Trash2 class="h-4 w-4" />
-                        </button>
-                    </div>
-
-                    <div class="mt-4 flex items-end justify-between gap-4">
-                        <div>
-                            <p class="text-xs text-muted-foreground">Saldo bieżące</p>
-                            <p class="mt-1 text-lg font-semibold tabular-nums">
-                                {{ formatMoney(account.current_balance) }} {{ account.currency.symbol ?? 'zł' }}
-                            </p>
-                        </div>
-
-                        <div class="flex gap-2">
-                            <Button variant="secondary" as-child>
-                                <Link :href="route('accounts.edit', account.id)">Edytuj</Link>
-                            </Button>
-
-                            <Dialog>
-                                <DialogTrigger as-child>
-                                    <Button
-                                        variant="outline"
-                                        @click="openAdjustBalance(account.id)"
-                                        :disabled="adjustForm.processing"
-                                    >
-                                        Ustaw saldo
-                                    </Button>
-                                </DialogTrigger>
-
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Ustaw saldo</DialogTitle>
-                                        <DialogDescription>
-                                            Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.
-                                        </DialogDescription>
-                                    </DialogHeader>
-
-                                    <form @submit.prevent="submitAdjustment" class="grid gap-4">
-                                        <div class="grid gap-2">
-                                            <Label for="new_balance">Nowe saldo</Label>
-                                            <Input
-                                                id="new_balance"
-                                                inputmode="decimal"
-                                                v-model="adjustForm.new_balance"
-                                                placeholder="np. 1234,56"
-                                            />
-                                            <InputError :message="adjustForm.errors.new_balance" />
-                                        </div>
-
-                                        <div class="flex items-start gap-3 rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
-                                            <Checkbox
-                                                :id="`adjustment_confirmed_${adjustingAccountId ?? 'none'}`"
-                                                :checked="adjustmentConfirmed"
-                                                :disabled="adjustForm.processing"
-                                                @update:checked="(value) => (adjustmentConfirmed = value === true)"
-                                            />
-                                            <div class="grid gap-1 leading-tight">
-                                                <Label :for="`adjustment_confirmed_${adjustingAccountId ?? 'none'}`" class="cursor-pointer">
-                                                    Rozumiem, że ta operacja nie zmienia historii transakcji.
-                                                </Label>
-                                                <p class="text-xs text-muted-foreground">
-                                                    Używaj tylko do korekty salda bieżącego.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <DialogFooter>
-                                            <Button type="submit" :disabled="!canSubmitAdjustment || adjustForm.processing">
-                                                Zapisz
-                                            </Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                    </div>
-                </div>
+                    :account="account"
+                    :format-money="formatMoney"
+                    :account-type-icon="resolveAccountTypeIcon(account.type)"
+                    :delete-disabled="deleteForm.processing"
+                    :adjust-disabled="adjustForm.processing"
+                    @delete="openDeleteDialog"
+                    @edit="goToEditAccount"
+                    @adjust-balance="openAdjustBalance"
+                />
             </div>
         </div>
+
+        <Dialog v-model:open="adjustDialogOpen">
+            <DialogContent v-if="adjustingAccountId !== null">
+                <DialogHeader>
+                    <DialogTitle>Ustaw saldo</DialogTitle>
+                    <DialogDescription>Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.</DialogDescription>
+                </DialogHeader>
+
+                <form @submit.prevent="submitAdjustment" class="grid gap-4">
+                    <div class="grid gap-2">
+                        <Label for="new_balance">Nowe saldo</Label>
+                        <Input id="new_balance" inputmode="decimal" v-model="adjustForm.new_balance" placeholder="np. 1234,56" />
+                        <InputError :message="adjustForm.errors.new_balance" />
+                    </div>
+
+                    <div class="flex items-start gap-3 rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
+                        <Checkbox
+                            :id="`adjustment_confirmed_${adjustingAccountId ?? 'none'}`"
+                            :checked="adjustmentConfirmed"
+                            :disabled="adjustForm.processing"
+                            @update:checked="(value) => (adjustmentConfirmed = value === true)"
+                        />
+                        <div class="grid gap-1 leading-tight">
+                            <Label :for="`adjustment_confirmed_${adjustingAccountId ?? 'none'}`" class="cursor-pointer">
+                                Rozumiem, że ta operacja nie zmienia historii transakcji.
+                            </Label>
+                            <p class="text-xs text-muted-foreground">Używaj tylko do korekty salda bieżącego.</p>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="submit" :disabled="!canSubmitAdjustment || adjustForm.processing">Zapisz</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
 
         <Dialog v-model:open="deleteDialogOpen">
             <DialogContent>

@@ -61,8 +61,10 @@ test('users see only their own accounts', function () {
         ->has('accounts', 2)
         ->where('accounts.0.id', $cashAccount->id)
         ->where('accounts.0.bank_icon_url', null)
+        ->where('accounts.0.type_label', 'ROR')
         ->where('accounts.1.id', $mBankAccount->id)
         ->where('accounts.1.bank_icon_url', asset('icons/banks/mbank.jpeg'))
+        ->where('accounts.1.type_label', 'ROR')
     );
 
     expect($cashAccount->fresh())->not->toBeNull();

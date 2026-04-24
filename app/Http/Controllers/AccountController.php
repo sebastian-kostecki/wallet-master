@@ -47,6 +47,14 @@ class AccountController extends Controller
             ->get(['id', 'currency_id', 'name', 'current_balance', 'bank', 'type']);
 
         $accounts->each->append('bank_icon_url');
+        $accounts->each(function (Account $account): void {
+            $type = $account->type;
+
+            $account->setAttribute(
+                'type_label',
+                $type instanceof AccountType ? $type->label() : (AccountType::tryFrom($type)?->label() ?? $type),
+            );
+        });
 
         return Inertia::render('Accounts/Index', [
             'accounts' => $accounts,
