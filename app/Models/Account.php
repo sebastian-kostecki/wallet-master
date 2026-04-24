@@ -34,6 +34,21 @@ final class Account extends Model
         return asset("icons/banks/{$bank->value}.jpeg");
     }
 
+    public function getTypeLabelAttribute(): string
+    {
+        $type = $this->type;
+
+        if ($type instanceof AccountType) {
+            return $type->label();
+        }
+
+        if (is_string($type)) {
+            return AccountType::tryFrom($type)?->label() ?? $type;
+        }
+
+        return (string) $type;
+    }
+
     /**
      * @return array<string, string>
      */

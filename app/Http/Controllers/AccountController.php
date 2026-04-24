@@ -2,47 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\AccountType;
-use App\Enums\Bank;
+use App\Actions\Accounts\UpdateAccountDetails;
 use App\Http\Requests\StoreAccountRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Account;
 use App\Models\Currency;
+use App\ViewModels\Accounts\AccountFormOptions;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AccountController extends Controller
 {
-    /**
-     * @return array<string, array<int, array{value: string, label: string, icon_url?: string|null, icon_name?: string|null}>>
-     */
-    private function enumOptions(): array
-    {
-        return [
-            'banks' => array_map(
-                fn (Bank $bank): array => [
-                    'value' => $bank->value,
-                    'label' => $bank->label(),
-                    'icon_url' => $bank === Bank::Cash ? null : asset("icons/banks/{$bank->value}.jpeg"),
-                ],
-                Bank::cases(),
-            ),
-            'accountTypes' => array_map(
-                fn (AccountType $type): array => [
-                    'value' => $type->value,
-                    'label' => $type->label(),
-                    'icon_name' => match ($type) {
-                        AccountType::Ror => 'wallet',
-                        AccountType::Savings => 'piggyBank',
-                    },
-                ],
-                AccountType::cases(),
-            ),
-        ];
-    }
-
     public function __construct()
     {
         $this->authorizeResource(Account::class, 'account');
@@ -52,27 +23,18 @@ class AccountController extends Controller
     {
         $accounts = Account::query()
             ->whereBelongsTo(auth()->user())
-            ->whereNull('deleted_at')
             ->with(['currency:id,code,symbol,precision'])
             ->orderBy('name')
             ->get(['id', 'currency_id', 'name', 'current_balance', 'bank', 'type']);
 
-        $accounts->each->append('bank_icon_url');
-        $accounts->each(function (Account $account): void {
-            $type = $account->type;
-
-            $account->setAttribute(
-                'type_label',
-                $type instanceof AccountType ? $type->label() : (AccountType::tryFrom($type)?->label() ?? $type),
-            );
-        });
+        $accounts->each->append(['bank_icon_url', 'type_label']);
 
         return Inertia::render('accounts/Index', [
             'accounts' => $accounts,
         ]);
     }
 
-    public function create(): Response
+    public function create(AccountFormOptions $options): Response
     {
         $currencies = Currency::query()
             ->orderBy('code')
@@ -80,7 +42,7 @@ class AccountController extends Controller
 
         return Inertia::render('accounts/Create', [
             'currencies' => $currencies,
-            ...$this->enumOptions(),
+            ...$options->toArray(),
         ]);
     }
 
@@ -102,7 +64,7 @@ class AccountController extends Controller
         return to_route('accounts.edit', $account);
     }
 
-    public function edit(Account $account): Response
+    public function edit(Account $account, AccountFormOptions $options): Response
     {
         $account->loadMissing(['currency:id,code,symbol,precision']);
 
@@ -111,42 +73,19 @@ class AccountController extends Controller
                 + [
                     'currency' => $account->currency?->only(['id', 'code', 'symbol', 'precision']),
                 ],
-            ...$this->enumOptions(),
+            ...$options->toArray(),
         ]);
     }
 
-    public function update(UpdateAccountRequest $request, Account $account): RedirectResponse
+    public function update(UpdateAccountRequest $request, Account $account, UpdateAccountDetails $updater): RedirectResponse
     {
-        $this->authorize('update', $account);
-
-        $validated = $request->validated();
-
-        DB::transaction(function () use ($account, $validated): void {
-            $locked = Account::query()
-                ->whereKey($account->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $oldOpening = (string) $locked->opening_balance;
-            $newOpening = (string) $validated['opening_balance'];
-
-            $delta = bcsub($newOpening, $oldOpening, 2);
-
-            $locked->name = $validated['name'];
-            $locked->bank = $validated['bank'];
-            $locked->type = $validated['type'];
-            $locked->opening_balance = $validated['opening_balance'];
-            $locked->current_balance = bcadd((string) $locked->current_balance, $delta, 2);
-            $locked->save();
-        });
+        $updater->handle($account, $request->validated());
 
         return to_route('accounts.edit', $account);
     }
 
     public function destroy(Account $account): RedirectResponse
     {
-        $this->authorize('delete', $account);
-
         $account->delete();
 
         return to_route('accounts.index');
