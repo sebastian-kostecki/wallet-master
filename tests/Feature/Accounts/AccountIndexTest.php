@@ -4,6 +4,7 @@ use App\Models\Account;
 use App\Models\Currency;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
@@ -19,18 +20,32 @@ test('users see only their own accounts', function () {
     $userA = User::factory()->create();
     $userB = User::factory()->create();
 
-    $accountA = Account::query()->create([
+    $cashAccount = Account::query()->create([
         'user_id' => $userA->id,
         'currency_id' => $plnId,
-        'name' => 'Account A',
+        'name' => 'Cash Account',
+        'bank' => 'cash',
+        'type' => 'ror',
         'opening_balance' => 100,
         'current_balance' => 100,
+    ]);
+
+    $mBankAccount = Account::query()->create([
+        'user_id' => $userA->id,
+        'currency_id' => $plnId,
+        'name' => 'mBank Account',
+        'bank' => 'mbank',
+        'type' => 'ror',
+        'opening_balance' => 50,
+        'current_balance' => 50,
     ]);
 
     Account::query()->create([
         'user_id' => $userB->id,
         'currency_id' => $plnId,
         'name' => 'Account B',
+        'bank' => 'cash',
+        'type' => 'ror',
         'opening_balance' => 200,
         'current_balance' => 200,
     ]);
@@ -38,10 +53,19 @@ test('users see only their own accounts', function () {
     $response = $this->actingAs($userA)->get('/accounts');
     $response->assertOk();
 
-    $response->assertSee('Account A');
+    $response->assertSee('Cash Account');
+    $response->assertSee('mBank Account');
     $response->assertDontSee('Account B');
 
-    expect($accountA->fresh())->not->toBeNull();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->has('accounts', 2)
+        ->where('accounts.0.id', $cashAccount->id)
+        ->where('accounts.0.bank_icon_url', null)
+        ->where('accounts.1.id', $mBankAccount->id)
+        ->where('accounts.1.bank_icon_url', asset('icons/banks/mbank.jpeg'))
+    );
+
+    expect($cashAccount->fresh())->not->toBeNull();
 });
 
 test('soft deleted accounts are not listed', function () {
@@ -53,6 +77,8 @@ test('soft deleted accounts are not listed', function () {
         'user_id' => $user->id,
         'currency_id' => $plnId,
         'name' => 'Active',
+        'bank' => 'cash',
+        'type' => 'ror',
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);
@@ -61,6 +87,8 @@ test('soft deleted accounts are not listed', function () {
         'user_id' => $user->id,
         'currency_id' => $plnId,
         'name' => 'Deleted',
+        'bank' => 'cash',
+        'type' => 'ror',
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);

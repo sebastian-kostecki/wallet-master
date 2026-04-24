@@ -17,6 +17,8 @@ test('user can update account name and opening balance and current balance chang
         'user_id' => $user->id,
         'currency_id' => $plnId,
         'name' => 'Old name',
+        'bank' => 'cash',
+        'type' => 'ror',
         'opening_balance' => 100,
         'current_balance' => 130,
     ]);
@@ -25,6 +27,8 @@ test('user can update account name and opening balance and current balance chang
         ->actingAs($user)
         ->patch("/accounts/{$account->id}", [
             'name' => 'New name',
+            'bank' => 'mbank',
+            'type' => 'savings',
             'opening_balance' => 120,
         ]);
 
@@ -33,6 +37,8 @@ test('user can update account name and opening balance and current balance chang
     $account->refresh();
 
     expect($account->name)->toBe('New name');
+    expect($account->bank->value)->toBe('mbank');
+    expect($account->type->value)->toBe('savings');
     expect($account->opening_balance)->toBe('120.00');
     expect($account->current_balance)->toBe('150.00'); // +20 delta
 });

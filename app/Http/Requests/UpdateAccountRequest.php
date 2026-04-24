@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AccountType;
+use App\Enums\Bank;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAccountRequest extends FormRequest
 {
@@ -24,6 +27,8 @@ class UpdateAccountRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:120'],
+            'bank' => ['required', Rule::enum(Bank::class)],
+            'type' => ['required', Rule::enum(AccountType::class)],
             'opening_balance' => ['required', 'numeric'],
         ];
     }

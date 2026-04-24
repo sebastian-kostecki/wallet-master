@@ -10,6 +10,11 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
+type Option = {
+    value: string;
+    label: string;
+};
+
 type Currency = {
     id: number;
     code: string;
@@ -20,6 +25,8 @@ type Currency = {
 type Account = {
     id: number;
     name: string;
+    bank: string;
+    type: string;
     currency_id: number;
     opening_balance: string;
     current_balance: string;
@@ -28,6 +35,8 @@ type Account = {
 
 const props = defineProps<{
     account: Account;
+    banks: Option[];
+    accountTypes: Option[];
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -65,6 +74,8 @@ function displayAmount(input: string) {
 
 const form = useForm({
     name: props.account.name,
+    bank: props.account.bank,
+    type: props.account.type,
     opening_balance: displayAmount(props.account.opening_balance),
 });
 
@@ -152,6 +163,36 @@ function submitAdjustment() {
                             <Label for="name">Nazwa</Label>
                             <Input id="name" v-model="form.name" required />
                             <InputError :message="form.errors.name" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="bank">Bank</Label>
+                            <select
+                                id="bank"
+                                v-model="form.bank"
+                                class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                required
+                            >
+                                <option v-for="bank in banks" :key="bank.value" :value="bank.value">
+                                    {{ bank.label }}
+                                </option>
+                            </select>
+                            <InputError :message="form.errors.bank" />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="type">Typ konta</Label>
+                            <select
+                                id="type"
+                                v-model="form.type"
+                                class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                required
+                            >
+                                <option v-for="accountType in accountTypes" :key="accountType.value" :value="accountType.value">
+                                    {{ accountType.label }}
+                                </option>
+                            </select>
+                            <InputError :message="form.errors.type" />
                         </div>
 
                         <div class="grid gap-2">

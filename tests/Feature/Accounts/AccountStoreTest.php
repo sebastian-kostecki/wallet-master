@@ -17,6 +17,8 @@ test('user can create an account and current balance equals opening balance', fu
         ->actingAs($user)
         ->post('/accounts', [
             'name' => 'Konto testowe',
+            'bank' => 'cash',
+            'type' => 'ror',
             'currency_id' => $plnId,
             'opening_balance' => 123.45,
         ]);
@@ -26,6 +28,8 @@ test('user can create an account and current balance equals opening balance', fu
     $account = Account::query()->where('user_id', $user->id)->first();
 
     expect($account)->not->toBeNull();
+    expect($account->bank->value)->toBe('cash');
+    expect($account->type->value)->toBe('ror');
     expect($account->opening_balance)->toBe('123.45');
     expect($account->current_balance)->toBe('123.45');
 });
@@ -38,9 +42,45 @@ test('account name is required', function () {
         ->actingAs($user)
         ->post('/accounts', [
             'name' => '',
+            'bank' => 'cash',
+            'type' => 'ror',
             'currency_id' => $plnId,
             'opening_balance' => 0,
         ]);
 
     $response->assertSessionHasErrors('name');
+});
+
+test('account bank is required', function () {
+    $user = User::factory()->create();
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+
+    $response = $this
+        ->actingAs($user)
+        ->post('/accounts', [
+            'name' => 'Konto testowe',
+            'bank' => '',
+            'type' => 'ror',
+            'currency_id' => $plnId,
+            'opening_balance' => 0,
+        ]);
+
+    $response->assertSessionHasErrors('bank');
+});
+
+test('account type is required', function () {
+    $user = User::factory()->create();
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+
+    $response = $this
+        ->actingAs($user)
+        ->post('/accounts', [
+            'name' => 'Konto testowe',
+            'bank' => 'cash',
+            'type' => '',
+            'currency_id' => $plnId,
+            'opening_balance' => 0,
+        ]);
+
+    $response->assertSessionHasErrors('type');
 });

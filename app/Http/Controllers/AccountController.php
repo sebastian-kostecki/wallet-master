@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccountType;
+use App\Enums\Bank;
 use App\Http\Requests\StoreAccountRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Account;
@@ -13,6 +15,23 @@ use Inertia\Response;
 
 class AccountController extends Controller
 {
+    /**
+     * @return array<string, array<int, array{value: string, label: string}>>
+     */
+    private function enumOptions(): array
+    {
+        return [
+            'banks' => array_map(
+                fn (Bank $bank): array => ['value' => $bank->value, 'label' => $bank->label()],
+                Bank::cases(),
+            ),
+            'accountTypes' => array_map(
+                fn (AccountType $type): array => ['value' => $type->value, 'label' => $type->label()],
+                AccountType::cases(),
+            ),
+        ];
+    }
+
     public function __construct()
     {
         $this->authorizeResource(Account::class, 'account');
@@ -25,7 +44,9 @@ class AccountController extends Controller
             ->whereNull('deleted_at')
             ->with(['currency:id,code,symbol,precision'])
             ->orderBy('name')
-            ->get(['id', 'currency_id', 'name', 'current_balance']);
+            ->get(['id', 'currency_id', 'name', 'current_balance', 'bank', 'type']);
+
+        $accounts->each->append('bank_icon_url');
 
         return Inertia::render('Accounts/Index', [
             'accounts' => $accounts,
@@ -40,6 +61,7 @@ class AccountController extends Controller
 
         return Inertia::render('Accounts/Create', [
             'currencies' => [$pln],
+            ...$this->enumOptions(),
         ]);
     }
 
@@ -58,6 +80,8 @@ class AccountController extends Controller
             'user_id' => $data['user_id'],
             'currency_id' => $data['currency_id'],
             'name' => $data['name'],
+            'bank' => $data['bank'],
+            'type' => $data['type'],
             'opening_balance' => $data['opening_balance'],
             'current_balance' => $data['opening_balance'],
         ]);
@@ -70,10 +94,11 @@ class AccountController extends Controller
         $account->loadMissing(['currency:id,code,symbol,precision']);
 
         return Inertia::render('Accounts/Edit', [
-            'account' => $account->only(['id', 'name', 'opening_balance', 'current_balance', 'currency_id'])
+            'account' => $account->only(['id', 'name', 'opening_balance', 'current_balance', 'currency_id', 'bank', 'type'])
                 + [
                     'currency' => $account->currency?->only(['id', 'code', 'symbol', 'precision']),
                 ],
+            ...$this->enumOptions(),
         ]);
     }
 
@@ -95,6 +120,8 @@ class AccountController extends Controller
             $delta = bcsub($newOpening, $oldOpening, 2);
 
             $locked->name = $validated['name'];
+            $locked->bank = $validated['bank'];
+            $locked->type = $validated['type'];
             $locked->opening_balance = $validated['opening_balance'];
             $locked->current_balance = bcadd((string) $locked->current_balance, $delta, 2);
             $locked->save();

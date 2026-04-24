@@ -17,6 +17,8 @@ test('user can soft delete account', function () {
         'user_id' => $user->id,
         'currency_id' => $plnId,
         'name' => 'To delete',
+        'bank' => 'cash',
+        'type' => 'ror',
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);

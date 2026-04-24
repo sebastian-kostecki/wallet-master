@@ -16,8 +16,15 @@ type Currency = {
     precision: number;
 };
 
+type Option = {
+    value: string;
+    label: string;
+};
+
 const props = defineProps<{
     currencies: Currency[];
+    banks: Option[];
+    accountTypes: Option[];
 }>();
 
 const pln = computed(() => props.currencies[0]);
@@ -35,10 +42,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const form = useForm<{
     name: string;
+    bank: string;
+    type: string;
     currency_id: number | null;
     opening_balance: string;
 }>({
     name: '',
+    bank: props.banks[0]?.value ?? '',
+    type: props.accountTypes[0]?.value ?? '',
     currency_id: pln.value?.id ?? null,
     opening_balance: '0,00',
 });
@@ -70,6 +81,36 @@ function submit() {
                         <Label for="name">Nazwa</Label>
                         <Input id="name" v-model="form.name" required autofocus placeholder="np. Konto główne" />
                         <InputError :message="form.errors.name" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="bank">Bank</Label>
+                        <select
+                            id="bank"
+                            v-model="form.bank"
+                            class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            required
+                        >
+                            <option v-for="bank in banks" :key="bank.value" :value="bank.value">
+                                {{ bank.label }}
+                            </option>
+                        </select>
+                        <InputError :message="form.errors.bank" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="type">Typ konta</Label>
+                        <select
+                            id="type"
+                            v-model="form.type"
+                            class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            required
+                        >
+                            <option v-for="accountType in accountTypes" :key="accountType.value" :value="accountType.value">
+                                {{ accountType.label }}
+                            </option>
+                        </select>
+                        <InputError :message="form.errors.type" />
                     </div>
 
                     <div class="grid gap-2">

@@ -5,11 +5,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { buttonVariants } from '@/components/ui/button';
 import AccountsSummaryCard from '@/components/accounts/AccountsSummaryCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { Trash2 } from 'lucide-vue-next';
+import { PiggyBank, Trash2, Wallet } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 type Currency = {
@@ -23,6 +25,9 @@ type Account = {
     id: number;
     name: string;
     current_balance: string;
+    bank: string;
+    bank_icon_url: string | null;
+    type: string;
     currency: Currency;
 };
 
@@ -49,6 +54,17 @@ function formatMoney(value: string) {
     }
 
     return money.format(parsed);
+}
+
+const accountTypeIcon = computed(() => {
+    return {
+        ror: Wallet,
+        savings: PiggyBank,
+    } as const;
+});
+
+function resolveAccountTypeIcon(type: string) {
+    return accountTypeIcon.value[type as keyof typeof accountTypeIcon.value] ?? Wallet;
 }
 
 const adjustingAccountId = ref<number | null>(null);
@@ -130,9 +146,7 @@ function destroyAccount() {
 
             <div v-if="accounts.length === 0" class="rounded-xl border border-sidebar-border/70 p-8 text-center dark:border-sidebar-border">
                 <p class="text-sm text-muted-foreground">Nie masz jeszcze żadnych kont.</p>
-                <Button as-child class="mt-4">
-                    <Link :href="route('accounts.create')">Dodaj pierwsze konto</Link>
-                </Button>
+                <Link :href="route('accounts.create')" :class="cn(buttonVariants({}), 'mt-4')">Dodaj pierwsze konto</Link>
             </div>
 
             <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -143,7 +157,17 @@ function destroyAccount() {
                 >
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
-                            <p class="truncate text-sm font-medium">{{ account.name }}</p>
+                            <div class="flex items-center gap-2">
+                                <img
+                                    v-if="account.bank_icon_url"
+                                    :src="account.bank_icon_url"
+                                    :alt="account.bank"
+                                    class="h-5 w-5 shrink-0"
+                                    loading="lazy"
+                                />
+                                <component :is="resolveAccountTypeIcon(account.type)" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                <p class="truncate text-sm font-medium">{{ account.name }}</p>
+                            </div>
                             <p class="mt-1 text-xs text-muted-foreground">{{ account.currency.code }}</p>
                         </div>
 
