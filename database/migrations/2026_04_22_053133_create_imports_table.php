@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('account_id')->constrained()->restrictOnDelete();
-            $table->string('bank_key', 50);
             $table->string('status', 20)->default('draft');
             $table->unsignedInteger('rows_total')->default(0);
             $table->unsignedInteger('rows_imported')->default(0);

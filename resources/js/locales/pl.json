@@ -1,0 +1,97 @@
+{
+  "accounts": {
+    "index": {
+      "title": "Konta",
+      "addAccount": "Dodaj konto",
+      "view": {
+        "toggleAria": "Przełącz widok listy kont",
+        "grid": "Siatka",
+        "list": "Lista"
+      },
+      "empty": {
+        "message": "Nie masz jeszcze żadnych kont.",
+        "cta": "Dodaj pierwsze konto"
+      }
+    },
+    "edit": {
+      "title": "Edytuj konto",
+      "back": "Wróć",
+      "deleteAction": "Usuń konto",
+      "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę."
+    },
+    "create": {
+      "title": "Dodaj konto",
+      "back": "Wróć",
+      "fields": {
+        "name": {
+          "label": "Nazwa",
+          "placeholder": "np. Konto główne"
+        },
+        "bank": {
+          "label": "Bank",
+          "placeholder": "Wybierz bank"
+        },
+        "type": {
+          "label": "Typ konta",
+          "placeholder": "Wybierz typ konta"
+        },
+        "currency": {
+          "label": "Waluta",
+          "placeholder": "Wybierz walutę"
+        },
+        "openingBalance": {
+          "label": "Saldo początkowe",
+          "placeholder": "np. 1000,00"
+        }
+      },
+      "openingBalanceHint": "W MVP saldo bieżące startuje od salda początkowego."
+    },
+    "summary": {
+      "title": "Podsumowanie",
+      "description": "Suma sald wszystkich kont w PLN.",
+      "totalPln": "Suma sald (PLN)",
+      "countPln": "Liczba kont (PLN): {count}",
+      "invalidSkipped": "Niektóre salda pominięto w sumie.",
+      "addToSeeSummary": "Dodaj konto, aby zobaczyć podsumowanie."
+    },
+    "card": {
+      "deleteAria": "Usuń konto",
+      "currentBalance": "Saldo bieżące"
+    },
+    "adjust": {
+      "title": "Ustaw saldo",
+      "description": "Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.",
+      "newBalanceLabel": "Nowe saldo",
+      "newBalancePlaceholder": "np. 1234,56",
+      "confirmLabel": "Rozumiem, że ta operacja nie zmienia historii transakcji.",
+      "confirmHint": "Używaj tylko do korekty salda bieżącego."
+    },
+    "delete": {
+      "title": "Usunąć konto?",
+      "description": "Konto zostanie usunięte z listy. Transakcje pozostaną w historii, ale będą tylko do odczytu.",
+      "currentBalanceLine": "Saldo bieżące: {amount} {symbol}",
+      "confirm": "Usuń konto"
+    },
+    "enums": {
+      "accountType": {
+        "checking": "Rozliczeniowe",
+        "savings": "Oszczędnościowe"
+      },
+      "bank": {
+        "bnp-paribas": "BNP Paribas",
+        "mbank": "mBank",
+        "cash": "Gotówka"
+      }
+    }
+  },
+  "actions": {
+    "edit": "Edytuj",
+    "setBalance": "Ustaw saldo",
+    "cancel": "Anuluj",
+    "save": "Zapisz"
+  },
+  "currency": {
+    "defaultSymbol": "zł"
+  }
+}
+

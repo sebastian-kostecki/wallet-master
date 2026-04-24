@@ -55,7 +55,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 ## Frontend Bundling
 
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
+- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `./vendor/bin/sail npm run build`, `./vendor/bin/sail npm run dev`, or `./vendor/bin/sail composer run dev`. Ask them.
 
 ## Documentation Files
 
@@ -64,6 +64,18 @@ This project has domain-specific skills available. You MUST activate the relevan
 ## Replies
 
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
+
+## Command execution (Laravel Sail)
+
+- Prefer running project commands inside Laravel Sail whenever available.
+- Use `./vendor/bin/sail` for PHP/Artisan/Composer/NPM, unless the user explicitly requests host execution.
+- Examples:
+  - `./vendor/bin/sail artisan migrate`
+  - `./vendor/bin/sail artisan test --compact`
+  - `./vendor/bin/sail composer install`
+  - `./vendor/bin/sail npm install`
+  - `./vendor/bin/sail npm run dev`
+  - `./vendor/bin/sail node`
 
 === boost rules ===
 

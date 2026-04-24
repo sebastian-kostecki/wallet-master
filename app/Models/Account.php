@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AccountType;
+use App\Enums\Bank;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,12 +19,44 @@ final class Account extends Model
 
     protected $guarded = [];
 
+    public function getBankIconUrlAttribute(): ?string
+    {
+        $bank = $this->bank;
+
+        if (! $bank instanceof Bank) {
+            return null;
+        }
+
+        if ($bank === Bank::Cash) {
+            return null;
+        }
+
+        return asset("icons/banks/{$bank->value}.jpeg");
+    }
+
+    public function getTypeLabelKeyAttribute(): string
+    {
+        $type = $this->type;
+
+        if ($type instanceof AccountType) {
+            return $type->labelKey();
+        }
+
+        if (is_string($type)) {
+            return AccountType::tryFrom($type)?->labelKey() ?? $type;
+        }
+
+        return (string) $type;
+    }
+
     /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
+            'bank' => Bank::class,
+            'type' => AccountType::class,
             'opening_balance' => 'decimal:2',
             'current_balance' => 'decimal:2',
         ];
@@ -58,5 +92,13 @@ final class Account extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * @return HasMany<AccountBalanceAdjustment, $this>
+     */
+    public function balanceAdjustments(): HasMany
+    {
+        return $this->hasMany(AccountBalanceAdjustment::class);
     }
 }

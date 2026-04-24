@@ -2,6 +2,8 @@
 
 ## Glossary (spójne pojęcia)
 - **Konto**: konto bankowe użytkownika w aplikacji (nazwa, waluta, saldo).
+- **Typ konta**: klasyfikacja konta (enum) opisująca przeznaczenie konta (np. ROR, oszczędnościowe).
+- **Bank**: instytucja/źródło wyciągu przypisane do konta. W MVP wspieramy: **BNP Paribas**, **mBank** oraz specjalny “bank” **Gotówka** (dla kont gotówkowych).
 - **Transakcja**: pojedynczy zapis finansowy przypisany do konta (przychód/wydatek lub element transferu).
 - **Transfer**: akcja tworząca **2 transakcje** (wydatek na koncie źródłowym + przychód na koncie docelowym) powiązane ze sobą.
 - **Import**: proces wczytania transakcji z pliku CSV/XLSX z mapowaniem kolumn i podglądem.
@@ -90,7 +92,7 @@ Rejestracja → utworzenie konta → “Dodaj transakcję” → zapis → trans
 - Walidacja błędów (np. brak daty/kwoty) → inline error → użytkownik poprawia → zapis.
 
 ### Journey B — Import wyciągu z banku (happy path)
-Wejście w Import → wybór konta → upload CSV/XLSX → wybór banku i mapowanie kolumn → preview → zapis importu → duplikaty pominięte → lista transakcji uzupełniona → saldo zaktualizowane.
+Wejście w Import → wybór konta → upload CSV/XLSX → mapowanie kolumn (z podpowiedzią per bank konta) → preview → zapis importu → duplikaty pominięte → lista transakcji uzupełniona → saldo zaktualizowane.
 
 **Alternatywy (krytyczne)**
 - Plik ma niepoprawne dane → błędy walidacji w preview → użytkownik poprawia mapowanie lub przerywa import.
@@ -145,7 +147,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Priorytet**: Must
 - **Acceptance Criteria (Given/When/Then)**
   - Given zalogowany użytkownik  
-    When doda konto z nazwą, walutą=PLN, saldem początkowym  
+    When doda konto z nazwą, walutą=PLN, saldem początkowym, typem konta i bankiem  
     Then konto pojawia się na liście, a saldo jest ustawione.
   - Given konto użytkownika  
     When edytuje nazwę/saldo początkowe  
@@ -153,8 +155,19 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Edge cases**
   - Nazwa pusta/zbyt długa.
   - Waluta w MVP ograniczona do PLN w UI, ale istnieje jako encja (tabela) dla przyszłej rozbudowy. **[Assumption]**
+  - Typ konta i bank muszą pochodzić z dozwolonej listy (enum).
 - **Telemetry/Events**
   - `account_created`, `account_updated`, `account_deleted`
+
+**Wymagane pola konta (MVP)**
+- `name` (string)
+- `currency` (MVP: PLN w UI)
+- `opening_balance` (decimal)
+- `type` (enum, MVP): `Ror`, `Savings` (możliwe dopisanie kolejnych w przyszłości)
+- `bank` (enum, MVP): `BnpParibas`, `MBank`, `Cash`
+
+**Ikony banków**
+- Każdy bank w MVP ma mieć ikonę (asset) mapowaną po wartości `bank` (slug/enum). Ikony dostarczysz.
 
 #### FR-K2 Usunięcie konta nie usuwa transakcji i blokuje edycję
 - **Opis**: po usunięciu konta transakcje pozostają widoczne, ale bez możliwości edycji/usuwania.
@@ -299,13 +312,19 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Opis**: użytkownik może zapisać i ponownie użyć mapowania “per bank”; system ma przewidziane miejsce na logikę bankowo-specyficzną (np. ekstrakcja `subject` z opisu).
 - **Priorytet**: Must
 - **Acceptance Criteria (Given/When/Then)**
-  - Given użytkownik importował wcześniej z banku X  
-    When wybierze bank X  
-    Then mapowanie podpowiada się automatycznie.
+  - Given użytkownik importował wcześniej na koncie w banku X  
+    When wybierze to konto w imporcie  
+    Then mapowanie dla banku X podpowiada się automatycznie.
 - **Edge cases**
   - Zmiana formatu pliku banku: możliwość aktualizacji mapowania.
 - **Telemetry/Events**
-  - `import_bank_selected`, `import_mapping_reused`, `import_mapping_saved`
+  - `import_mapping_reused`, `import_mapping_saved`
+  - `import_bank_resolved_from_account` (wartość banku z konta) **[Assumption]**
+
+**Doprecyzowanie (MVP)**
+- Bank importu wynika z wybranego konta: `Account.bank` jest obowiązkowy, więc w imporcie nie wybiera się banku osobno (UI może go wyświetlić).
+- Mapowanie może być zapisywane i proponowane na podstawie banku konta (i opcjonalnie wersji formatu).
+- Logika “per bank” obejmuje m.in.: parsowanie dat/kwot, normalizację opisu, ekstrakcję `subject`, dodatkowe reguły deduplikacji.
 
 **Options + Recommendation + Rationale**
 - **Opcja 1**: tylko “szablony mapowania” w DB (konfigurowalne przez usera).
@@ -321,7 +340,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Auth**: Logowanie, Rejestracja, Reset hasła.
 - **Konta**: Lista kont, Dodaj konto, Edytuj konto.
 - **Transakcje**: Lista transakcji (filtry/sort/paginacja/podsumowanie), Dodaj transakcję, Edytuj transakcję, Dodaj transfer.
-- **Import**: Wybór konta + banku, Upload pliku, Mapowanie, Preview, Podsumowanie importu.
+- **Import**: Wybór konta, Upload pliku, Mapowanie (z podpowiedzią per bank konta), Preview, Podsumowanie importu.
 
 ### Mapa nawigacji
 - Konta
@@ -372,6 +391,17 @@ Integracje zewnętrzne: brak (import plików tylko lokalny upload).
 Wymagania dot. kontraktów (na poziomie PRD):
 - Import rekomendowany jako proces 2-etapowy: `preview` (walidacja + dedupe) → `commit` (zapis). **[Assumption]**
 
+### Architektura importu “per bank” (adaptery)
+Cel: umożliwić dodawanie kolejnych banków bez zmian w core importu.
+
+- **Źródło prawdy dla banków**: enum `Bank` (MVP: `BnpParibas`, `MBank`, `Cash`).
+- **Resolver parsera**: wybór implementacji na podstawie `Account.bank` (a nie wyboru banku w imporcie).
+- **Kontrakt parsera (przykładowo)**:
+  - `parse(...)` / `normalizeRow(...)` — mapuje surowy wiersz + mapping na ustandaryzowany rekord transakcji (`date`, `amount`, `description`, `subject`).
+  - parser może zawierać reguły specyficzne dla banku (format daty/kwoty, czyszczenie opisu, ekstrakcja `subject`).
+- **Dodawanie nowego banku**: dopisanie wartości w enum + nowa implementacja parsera + podpięcie w resolverze + dodanie ikony.
+- **Gotówka (`Cash`)**: konto istnieje normalnie; import może być niewspierany albo ograniczony (decyzja implementacyjna), ale architektura powinna to obsłużyć czytelnym komunikatem.
+
 ---
 
 ## 12. Data Model (produktowo)
@@ -384,6 +414,8 @@ Kluczowe encje i relacje:
 - **Account**
   - należy do User
   - ma Currency, saldo początkowe, saldo bieżące
+  - ma: `type` (enum, MVP: `Ror`, `Savings`)
+  - ma: `bank` (enum, MVP: `BnpParibas`, `MBank`, `Cash`)
   - ma 0..N Transactions
   - może być “usunięte” (soft delete) → transakcje read-only
 - **Transaction**
@@ -395,7 +427,8 @@ Kluczowe encje i relacje:
   - metadata importu: `import_id` **[Assumption]**
 - **Import**
   - należy do User i Account
-  - ma status, liczniki wierszy (imported/skipped/failed), bank, mapowanie.
+  - ma status, liczniki wierszy (imported/skipped/failed), mapowanie.
+  - opcjonalnie: `bank` jako snapshot w momencie importu (żeby historia importu była stabilna nawet gdy user zmieni bank konta w przyszłości). **[Assumption]**
 - **Bank / ImportProfile**
   - per-user zapis mapowań “per bank” (bank + mapping + wersja). **[Assumption]**
 
@@ -459,6 +492,7 @@ Plan komunikacji i supportu (minimum):
 ## 16. Dependencies
 - Dostarczenie przykładowych plików CSV/XLSX dla banków (od Ciebie).
 - Lista banków wspieranych “na start” (priorytet).
+- Dostarczenie ikon banków (assets) dla wartości `bank` w MVP: BNP Paribas, mBank, Gotówka.
 - Środowisko wysyłki maili (dev: Mailpit; produkcja: SMTP). **[Assumption]**
 
 ---

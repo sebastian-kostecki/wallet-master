@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('currency_id')->constrained()->restrictOnDelete();
+            $table->string('bank', 50);
+            $table->string('type', 30);
             $table->string('name', 120);
             $table->decimal('opening_balance', 20, 2)->default(0);
             $table->decimal('current_balance', 20, 2)->default(0);
@@ -22,6 +24,8 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['user_id', 'deleted_at']);
+            $table->index(['user_id', 'bank']);
+            $table->index(['user_id', 'type']);
         });
     }
 

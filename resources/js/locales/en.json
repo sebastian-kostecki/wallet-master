@@ -1,0 +1,97 @@
+{
+  "accounts": {
+    "index": {
+      "title": "Accounts",
+      "addAccount": "Add account",
+      "view": {
+        "toggleAria": "Toggle accounts view",
+        "grid": "Grid",
+        "list": "List"
+      },
+      "empty": {
+        "message": "You don't have any accounts yet.",
+        "cta": "Add your first account"
+      }
+    },
+    "edit": {
+      "title": "Edit account",
+      "back": "Back",
+      "deleteAction": "Delete account",
+      "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference."
+    },
+    "create": {
+      "title": "Add account",
+      "back": "Back",
+      "fields": {
+        "name": {
+          "label": "Name",
+          "placeholder": "e.g. Main account"
+        },
+        "bank": {
+          "label": "Bank",
+          "placeholder": "Select bank"
+        },
+        "type": {
+          "label": "Account type",
+          "placeholder": "Select account type"
+        },
+        "currency": {
+          "label": "Currency",
+          "placeholder": "Select currency"
+        },
+        "openingBalance": {
+          "label": "Opening balance",
+          "placeholder": "e.g. 1000.00"
+        }
+      },
+      "openingBalanceHint": "In the MVP, the current balance starts from the opening balance."
+    },
+    "summary": {
+      "title": "Summary",
+      "description": "Sum of balances for all PLN accounts.",
+      "totalPln": "Total balance (PLN)",
+      "countPln": "Number of accounts (PLN): {count}",
+      "invalidSkipped": "Some balances were skipped in the total.",
+      "addToSeeSummary": "Add an account to see the summary."
+    },
+    "card": {
+      "deleteAria": "Delete account",
+      "currentBalance": "Current balance"
+    },
+    "adjust": {
+      "title": "Set balance",
+      "description": "This will set the current balance to the provided value. Transaction history will not be changed.",
+      "newBalanceLabel": "New balance",
+      "newBalancePlaceholder": "e.g. 1234.56",
+      "confirmLabel": "I understand this operation does not change transaction history.",
+      "confirmHint": "Use only to correct the current balance."
+    },
+    "delete": {
+      "title": "Delete account?",
+      "description": "The account will be removed from the list. Transactions will remain in history, but will be read-only.",
+      "currentBalanceLine": "Current balance: {amount} {symbol}",
+      "confirm": "Delete account"
+    },
+    "enums": {
+      "accountType": {
+        "checking": "Checking account",
+        "savings": "Savings account"
+      },
+      "bank": {
+        "bnp-paribas": "BNP Paribas",
+        "mbank": "mBank",
+        "cash": "Cash"
+      }
+    }
+  },
+  "actions": {
+    "edit": "Edit",
+    "setBalance": "Set balance",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "currency": {
+    "defaultSymbol": "zł"
+  }
+}
+
