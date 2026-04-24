@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\AccountType;
+use App\Enums\Bank;
 use App\Models\Account;
 use App\Models\AccountBalanceAdjustment;
 use App\Models\Currency;
@@ -18,6 +20,8 @@ test('user can set current balance and adjustment is audited', function () {
         'user_id' => $user->id,
         'currency_id' => $plnId,
         'name' => 'Account',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Ror,
         'opening_balance' => 100,
         'current_balance' => 130,
     ]);
@@ -50,6 +54,8 @@ test('user cannot adjust balance for someone elses account', function () {
         'user_id' => $owner->id,
         'currency_id' => $plnId,
         'name' => 'Account',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Ror,
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);

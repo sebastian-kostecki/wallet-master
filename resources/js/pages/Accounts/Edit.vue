@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
+import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 
 type Option = {
     value: string;
@@ -84,34 +84,11 @@ function submit() {
     form.patch(route('accounts.update', props.account.id));
 }
 
-const deleteForm = useForm({});
 const deleteDialogOpen = ref(false);
+const deleteProcessing = ref(false);
 
-function destroyAccount() {
-    deleteForm.delete(route('accounts.destroy', props.account.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            deleteDialogOpen.value = false;
-        },
-    });
-}
-
-const adjustForm = useForm<{ new_balance: string }>({
-    new_balance: displayAmount(props.account.current_balance),
-});
-
-const adjustmentConfirmed = ref(false);
-const canSubmitAdjustment = computed(() => adjustForm.new_balance.length > 0 && adjustmentConfirmed.value);
-
-function submitAdjustment() {
-    adjustForm.new_balance = normalizeAmount(adjustForm.new_balance);
-    adjustForm.patch(route('accounts.balance.update', props.account.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            adjustmentConfirmed.value = false;
-        },
-    });
-}
+const adjustDialogOpen = ref(false);
+const adjustProcessing = ref(false);
 </script>
 
 <template>
@@ -123,36 +100,7 @@ function submitAdjustment() {
                 <Link :href="route('accounts.index')">Wróć</Link>
             </Button>
 
-            <Dialog v-model:open="deleteDialogOpen">
-                <DialogTrigger as-child>
-                    <Button variant="destructive" :disabled="deleteForm.processing">Usuń konto</Button>
-                </DialogTrigger>
-
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Usunąć konto?</DialogTitle>
-                        <DialogDescription>
-                            Konto zostanie usunięte z listy. Transakcje pozostaną w historii, ale będą tylko do odczytu.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
-                        <p class="font-medium">{{ account.name }}</p>
-                        <p class="mt-1 text-muted-foreground">
-                            Saldo bieżące: {{ formatMoney(account.current_balance) }} {{ account.currency?.symbol ?? 'zł' }}
-                        </p>
-                    </div>
-
-                    <DialogFooter>
-                        <DialogClose as-child>
-                            <Button type="button" variant="secondary">Anuluj</Button>
-                        </DialogClose>
-                        <Button type="button" variant="destructive" :disabled="deleteForm.processing" @click="destroyAccount">
-                            Usuń konto
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <Button variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">Usuń konto</Button>
         </template>
 
         <div class="flex flex-col gap-6 p-4">
@@ -214,54 +162,27 @@ function submitAdjustment() {
                         {{ formatMoney(account.current_balance) }} {{ account.currency?.symbol ?? 'zł' }}
                     </p>
 
-                    <Dialog>
-                        <DialogTrigger as-child>
-                            <Button class="mt-4" variant="outline" :disabled="adjustForm.processing" @click="adjustmentConfirmed = false">
-                                Ustaw saldo
-                            </Button>
-                        </DialogTrigger>
-
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Ustaw saldo</DialogTitle>
-                                <DialogDescription>
-                                    Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.
-                                </DialogDescription>
-                            </DialogHeader>
-
-                            <form @submit.prevent="submitAdjustment" class="grid gap-4">
-                                <div class="grid gap-2">
-                                    <Label for="new_balance">Nowe saldo</Label>
-                                    <Input id="new_balance" inputmode="decimal" v-model="adjustForm.new_balance" />
-                                    <InputError :message="adjustForm.errors.new_balance" />
-                                </div>
-
-                                <div class="flex items-start gap-3 rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
-                                    <Checkbox
-                                        id="adjustment_confirmed"
-                                        :checked="adjustmentConfirmed"
-                                        :disabled="adjustForm.processing"
-                                        @update:checked="(value) => (adjustmentConfirmed = value === true)"
-                                    />
-                                    <div class="grid gap-1 leading-tight">
-                                        <Label for="adjustment_confirmed" class="cursor-pointer">
-                                            Rozumiem, że ta operacja nie zmienia historii transakcji.
-                                        </Label>
-                                        <p class="text-xs text-muted-foreground">
-                                            Używaj tylko do korekty salda bieżącego.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <DialogFooter>
-                                    <Button type="submit" :disabled="!canSubmitAdjustment || adjustForm.processing">Zapisz</Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                    <Button class="mt-4" variant="outline" :disabled="adjustProcessing" @click="adjustDialogOpen = true">Ustaw saldo</Button>
                 </div>
             </div>
         </div>
+
+        <AdjustAccountBalanceDialog
+            v-model:open="adjustDialogOpen"
+            :account-id="account.id"
+            :initial-new-balance="displayAmount(account.current_balance)"
+            @processing="(value) => (adjustProcessing = value)"
+        />
+
+        <DeleteAccountDialog
+            v-model:open="deleteDialogOpen"
+            :account-id="account.id"
+            :account-name="account.name"
+            :current-balance="account.current_balance"
+            :currency-symbol="account.currency?.symbol ?? null"
+            :format-money="formatMoney"
+            @processing="(value) => (deleteProcessing = value)"
+        />
     </AppLayout>
 </template>
 

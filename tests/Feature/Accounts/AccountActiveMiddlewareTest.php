@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Enums\AccountType;
+use App\Enums\Bank;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\User;
@@ -25,6 +27,8 @@ test('active account passes middleware', function () {
         'user_id' => $user->id,
         'currency_id' => $plnId,
         'name' => 'Active',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Ror,
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);
@@ -42,6 +46,8 @@ test('deleted account is blocked by middleware', function () {
         'user_id' => $user->id,
         'currency_id' => $plnId,
         'name' => 'Deleted',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Ror,
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);
