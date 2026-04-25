@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Currency;
 use App\Models\Transaction;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Database\Seeders\CurrencySeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -105,4 +106,119 @@ test('date range is validated', function () {
         ->actingAs($user)
         ->get('/transactions?from=20-04-2026&to=10-04-2026')
         ->assertSessionHasErrors('from');
+});
+
+test('defaults to this month when date range is missing', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 4, 25, 12, 0, 0));
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'A',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-03-31',
+        'amount' => 100,
+        'type' => 'income',
+        'description' => 'March income',
+        'subject' => null,
+        'normalized_description' => 'march income',
+        'dedupe_hash' => md5('2026-03-31|100.00|march income', true),
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-04-10',
+        'amount' => 50,
+        'type' => 'income',
+        'description' => 'April income',
+        'subject' => null,
+        'normalized_description' => 'april income',
+        'dedupe_hash' => md5('2026-04-10|50.00|april income', true),
+    ]);
+
+    $response = $this->actingAs($user)->get('/transactions');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('transactions/Index', false)
+        ->where('filters.from', '01-04-2026')
+        ->where('filters.to', '25-04-2026')
+        ->has('transactions.data', 1)
+        ->where('summary.total_income', '50.00')
+        ->where('summary.total_expense', '0.00')
+    );
+
+    CarbonImmutable::setTestNow();
+});
+
+test('can request all time transactions when clearing date range', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 4, 25, 12, 0, 0));
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'A',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-03-31',
+        'amount' => 100,
+        'type' => 'income',
+        'description' => 'March income',
+        'subject' => null,
+        'normalized_description' => 'march income',
+        'dedupe_hash' => md5('2026-03-31|100.00|march income', true),
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-04-10',
+        'amount' => 50,
+        'type' => 'income',
+        'description' => 'April income',
+        'subject' => null,
+        'normalized_description' => 'april income',
+        'dedupe_hash' => md5('2026-04-10|50.00|april income', true),
+    ]);
+
+    $response = $this->actingAs($user)->get('/transactions?all_time=1');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('transactions/Index', false)
+        ->where('filters.all_time', true)
+        ->where('filters.from', null)
+        ->where('filters.to', null)
+        ->has('transactions.data', 2)
+        ->where('summary.total_income', '150.00')
+        ->where('summary.total_expense', '0.00')
+    );
+
+    CarbonImmutable::setTestNow();
 });

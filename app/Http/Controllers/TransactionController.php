@@ -28,9 +28,24 @@ final class TransactionController extends Controller
     {
         $validated = $request->validated();
 
+        $allTime = isset($validated['all_time']) ? (bool) $validated['all_time'] : false;
         $accountId = isset($validated['account_id']) ? (int) $validated['account_id'] : null;
-        $from = isset($validated['from']) ? CarbonImmutable::createFromFormat('d-m-Y', $validated['from'])->toDateString() : null;
-        $to = isset($validated['to']) ? CarbonImmutable::createFromFormat('d-m-Y', $validated['to'])->toDateString() : null;
+
+        $hasFrom = isset($validated['from']);
+        $hasTo = isset($validated['to']);
+
+        $fromInput = $hasFrom ? (string) $validated['from'] : null; // d-m-Y
+        $toInput = $hasTo ? (string) $validated['to'] : null; // d-m-Y
+
+        if (! $hasFrom && ! $hasTo && ! $allTime) {
+            $today = CarbonImmutable::today();
+            $fromInput = $today->startOfMonth()->format('d-m-Y');
+            $toInput = $today->format('d-m-Y');
+        }
+
+        $from = $fromInput !== null ? CarbonImmutable::createFromFormat('d-m-Y', $fromInput)->toDateString() : null;
+        $to = $toInput !== null ? CarbonImmutable::createFromFormat('d-m-Y', $toInput)->toDateString() : null;
+
         $sort = isset($validated['sort']) ? (string) $validated['sort'] : 'date';
         $direction = isset($validated['direction']) ? (string) $validated['direction'] : 'desc';
 
@@ -84,9 +99,10 @@ final class TransactionController extends Controller
         return Inertia::render('transactions/Index', [
             'accounts' => $accounts,
             'filters' => [
+                'all_time' => $allTime,
                 'account_id' => $accountId,
-                'from' => $validated['from'] ?? null,
-                'to' => $validated['to'] ?? null,
+                'from' => $fromInput,
+                'to' => $toInput,
                 'sort' => $sort,
                 'direction' => $direction,
             ],

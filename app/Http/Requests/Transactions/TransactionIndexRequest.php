@@ -38,6 +38,7 @@ final class TransactionIndexRequest extends FormRequest
             );
 
         return [
+            'all_time' => ['nullable', 'boolean'],
             'account_id' => [
                 'nullable',
                 'integer',

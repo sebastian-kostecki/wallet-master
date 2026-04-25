@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TransactionsIndexFilters from '@/components/transactions/TransactionsIndexFilters.vue';
+import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -61,6 +61,7 @@ type Paginator<T> = {
 };
 
 type Filters = {
+    all_time?: boolean;
     account_id: number | null;
     from: string | null; // DD-MM-YYYY
     to: string | null; // DD-MM-YYYY
@@ -197,14 +198,15 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
         <Head :title="t('transactions.index.title')" />
 
         <template #headerActions>
-            <Button as-child>
-                <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
-            </Button>
+            <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                <TransactionsIndexHeaderFilters :accounts="accounts" :filters="filters" :server-errors="serverErrors" :is-loading="isLoading" />
+                <Button as-child class="sm:shrink-0">
+                    <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
+                </Button>
+            </div>
         </template>
 
         <div class="flex flex-col gap-6 p-4">
-            <TransactionsIndexFilters :accounts="accounts" :filters="filters" :server-errors="serverErrors" :is-loading="isLoading" />
-
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                     <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.income') }}</p>
