@@ -265,8 +265,8 @@ const hasActiveFilters = computed(() => {
     return Boolean(localAccountId.value !== null || localFrom.value.trim() !== '' || localTo.value.trim() !== '');
 });
 
-const isFirstUseEmpty = computed(() => props.transactions.meta?.total === 0 && !hasActiveFilters.value);
-const isFilteredEmpty = computed(() => props.transactions.meta?.total === 0 && hasActiveFilters.value);
+const isFirstUseEmpty = computed(() => props.transactions.total === 0 && !hasActiveFilters.value);
+const isFilteredEmpty = computed(() => props.transactions.total === 0 && hasActiveFilters.value);
 
 function directionIcon() {
     return localDirection.value === 'asc' ? ArrowUp : ArrowDown;
@@ -564,7 +564,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                     <div class="border-t border-sidebar-border/70 p-4 dark:border-sidebar-border">
                         <div class="hidden sm:flex flex-wrap items-center justify-between gap-3">
                             <div class="text-xs text-muted-foreground">
-                                {{ t('transactions.index.pagination.pageOf', { page: transactions.meta?.current_page, pages: transactions.meta?.last_page }) }}
+                                {{ t('transactions.index.pagination.pageOf', { page: transactions.current_page, pages: transactions.last_page }) }}
                             </div>
                             <nav class="flex flex-wrap items-center gap-1" :aria-label="t('transactions.index.pagination.aria')">
                                 <Link
@@ -585,19 +585,19 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                         </div>
 
                         <div class="sm:hidden flex items-center justify-between gap-3">
-                            <Button variant="secondary" size="sm" as-child :disabled="transactions.meta?.current_page <= 1">
+                            <Button variant="secondary" size="sm" as-child :disabled="transactions.current_page <= 1">
                                 <Link :href="transactions.links[0]?.url ?? ''" :preserve-scroll="true">
                                     {{ t('transactions.index.pagination.prev') }}
                                 </Link>
                             </Button>
                             <p class="text-xs text-muted-foreground">
-                                {{ t('transactions.index.pagination.pageOf', { page: transactions.meta?.current_page, pages: transactions.meta?.last_page }) }}
+                                {{ t('transactions.index.pagination.pageOf', { page: transactions.current_page, pages: transactions.last_page }) }}
                             </p>
                             <Button
                                 variant="secondary"
                                 size="sm"
                                 as-child
-                                :disabled="transactions.meta?.current_page >= transactions.meta?.last_page"
+                                :disabled="transactions.current_page >= transactions.last_page"
                             >
                                 <Link :href="transactions.links[transactions.links.length - 1]?.url ?? ''" :preserve-scroll="true">
                                     {{ t('transactions.index.pagination.next') }}
