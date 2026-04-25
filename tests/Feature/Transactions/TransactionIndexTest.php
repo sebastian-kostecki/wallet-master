@@ -22,6 +22,7 @@ test('users can filter by account and date range, sort, and see summary', functi
     CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 4, 12, 12, 0, 0));
 
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $plnSymbol = Currency::query()->whereKey($plnId)->value('symbol');
     $user = User::factory()->create();
 
     $accountA = Account::query()->create([
@@ -99,6 +100,8 @@ test('users can filter by account and date range, sort, and see summary', functi
         ->where('transactions.data.0.date_relative', '1 dzień temu')
         ->where('transactions.data.0.account.type_label_key', 'accounts.enums.accountType.checking')
         ->where('transactions.data.0.account.bank_icon_url', fn (mixed $value) => is_string($value) && str_contains($value, '/icons/banks/mbank.jpeg'))
+        ->where('transactions.data.0.account.currency.symbol', $plnSymbol)
+        ->where('accounts.0.currency.symbol', $plnSymbol)
         ->where('summary.total_income', '100.00')
         ->where('summary.total_expense', '25.00')
     );

@@ -17,6 +17,9 @@ type Account = {
     type: string;
     type_label_key: string;
     bank_icon_url: string | null;
+    currency?: {
+        symbol: string | null;
+    } | null;
 };
 
 type Currency = {
@@ -114,6 +117,10 @@ function toNumber(value: string | number): number {
 
 function formatAmount(value: string | number): string {
     return money.value.format(toNumber(value));
+}
+
+function formatCurrencySymbol(account: Account | null): string {
+    return account?.currency?.symbol ?? t('currency.defaultSymbol');
 }
 
 function formatDateIsoToDots(input: string): string {
@@ -240,6 +247,23 @@ function directionIcon() {
 const summaryIncome = computed(() => formatAmount(props.summary.total_income));
 const summaryExpense = computed(() => formatAmount(props.summary.total_expense));
 
+const selectedAccount = computed(() => {
+    const accountId = props.filters.account_id;
+    if (accountId === null) {
+        return null;
+    }
+
+    return props.accounts.find((a) => a.id === accountId) ?? null;
+});
+
+const summaryCurrencySymbol = computed(() => {
+    if (props.filters.account_id === null) {
+        return t('currency.defaultSymbol');
+    }
+
+    return formatCurrencySymbol(selectedAccount.value);
+});
+
 const serverErrors = computed<Record<string, string>>(() => page.props.errors ?? {});
 </script>
 
@@ -262,7 +286,9 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                     <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.income') }}</p>
                     <div class="mt-2">
                         <Skeleton v-if="isLoading" class="h-8 w-40" />
-                        <p v-else class="text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">+{{ summaryIncome }}</p>
+                        <p v-else class="text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                            +{{ summaryIncome }} {{ summaryCurrencySymbol }}
+                        </p>
                     </div>
                 </div>
 
@@ -270,7 +296,9 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                     <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.expense') }}</p>
                     <div class="mt-2">
                         <Skeleton v-if="isLoading" class="h-8 w-40" />
-                        <p v-else class="text-2xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">-{{ summaryExpense }}</p>
+                        <p v-else class="text-2xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+                            -{{ summaryExpense }} {{ summaryCurrencySymbol }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -431,6 +459,7 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                             "
                                         >
                                             {{ toNumber(tx.amount) >= 0 ? '+' : '-' }}{{ formatAmount(Math.abs(toNumber(tx.amount))) }}
+                                            {{ formatCurrencySymbol(tx.account) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-right">
@@ -484,6 +513,7 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                             "
                                         >
                                             {{ toNumber(tx.amount) >= 0 ? '+' : '-' }}{{ formatAmount(Math.abs(toNumber(tx.amount))) }}
+                                            {{ formatCurrencySymbol(tx.account) }}
                                         </p>
                                         <div class="mt-2">
                                             <TooltipProvider v-if="tx.account" :delay-duration="0">

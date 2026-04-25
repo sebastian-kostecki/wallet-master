@@ -70,7 +70,8 @@ final class TransactionController extends Controller
 
         $transactions = (clone $baseQuery)
             ->with([
-                'account:id,name,bank,type',
+                'account:id,name,bank,type,currency_id,bank_icon_url',
+                'account.currency:id,symbol',
                 'currency:id,code,symbol,precision',
             ])
             ->when($sort === 'amount', fn (Builder $q) => $q->orderBy('amount', $direction)->orderBy('date', 'desc')->orderBy('id', 'desc'))
@@ -114,6 +115,9 @@ final class TransactionController extends Controller
                         'type' => $account->type?->value ?? (string) $account->type,
                         'type_label_key' => $account->type_label_key,
                         'bank_icon_url' => $account->bank_icon_url,
+                        'currency' => $account->currency !== null ? [
+                            'symbol' => $account->currency->symbol,
+                        ] : null,
                     ] : null,
                     'currency' => $currency !== null ? [
                         'id' => $currency->id,
@@ -133,7 +137,8 @@ final class TransactionController extends Controller
         $accounts = Account::query()
             ->whereBelongsTo($request->user())
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->with(['currency:id,symbol'])
+            ->get(['id', 'name', 'currency_id']);
 
         return Inertia::render('transactions/Index', [
             'accounts' => $accounts,
