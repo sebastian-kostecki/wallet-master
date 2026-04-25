@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Actions\Transactions\DeleteTransaction;
 use App\Actions\Transactions\StoreTransaction;
 use App\Actions\Transactions\UpdateTransaction;
-use App\Http\Requests\StoreTransactionRequest;
-use App\Http\Requests\TransactionIndexRequest;
-use App\Http\Requests\UpdateTransactionRequest;
+use App\Http\Requests\Transactions\StoreTransactionRequest;
+use App\Http\Requests\Transactions\TransactionIndexRequest;
+use App\Http\Requests\Transactions\UpdateTransactionRequest;
 use App\Models\Account;
 use App\Models\Transaction;
 use Carbon\CarbonImmutable;
@@ -24,9 +24,9 @@ final class TransactionController extends Controller
         $this->authorizeResource(Transaction::class, 'transaction');
     }
 
-    public function index(Request $request): Response
+    public function index(TransactionIndexRequest $request): Response
     {
-        $validated = [];
+        $validated = $request->validated();
 
         $accountId = isset($validated['account_id']) ? (int) $validated['account_id'] : null;
         $from = isset($validated['from']) ? CarbonImmutable::createFromFormat('d-m-Y', $validated['from'])->toDateString() : null;
@@ -39,15 +39,17 @@ final class TransactionController extends Controller
             ->when($accountId !== null, fn (Builder $q) => $q->where('account_id', $accountId))
             ->when(
                 $from !== null && $to !== null,
-                fn (Builder $q) => $q->whereBetween('date', [$from, $to])
+                fn (Builder $q) => $q
+                    ->whereDate('date', '>=', $from)
+                    ->whereDate('date', '<=', $to)
             )
             ->when(
                 $from !== null && $to === null,
-                fn (Builder $q) => $q->where('date', '>=', $from)
+                fn (Builder $q) => $q->whereDate('date', '>=', $from)
             )
             ->when(
                 $to !== null && $from === null,
-                fn (Builder $q) => $q->where('date', '<=', $to)
+                fn (Builder $q) => $q->whereDate('date', '<=', $to)
             );
 
         $transactions = (clone $baseQuery)

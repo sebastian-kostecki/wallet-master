@@ -86,7 +86,7 @@ test('users can filter by account and date range, sort, and see summary', functi
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->where('component', 'transactions/Index')
+        ->component('transactions/Index', false)
         ->where('filters.account_id', $accountA->id)
         ->where('filters.from', '10-04-2026')
         ->where('filters.to', '11-04-2026')
@@ -106,4 +106,3 @@ test('date range is validated', function () {
         ->get('/transactions?from=20-04-2026&to=10-04-2026')
         ->assertSessionHasErrors('from');
 });
-

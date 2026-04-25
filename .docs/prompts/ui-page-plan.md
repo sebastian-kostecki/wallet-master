@@ -13,9 +13,40 @@ Kontekst produktu (musisz uwzględnić)
 
 Wejście (użytkownik poda)
 
-• Nazwa strony/flow do zaprojektowania: <TU_WSTAW_NAZWĘ_STRONY> (np. „Lista transakcji”, „Dodaj transfer”, „Import: mapowanie”, „Import: preview”, „Lista kont”, „Dodaj transakcję”).
-• Cel użytkownika na tej stronie: <CEL>
-• Dane/propsy dostępne z backendu (jeśli znane): <DANE>
+• Nazwa strony/flow do zaprojektowania:
+<target>
+#### FR-T1 CRUD transakcji (przychód/wydatek)
+- **Opis**: dodawanie, edycja, usuwanie transakcji na koncie.
+- **Priorytet**: Must
+- **Acceptance Criteria (Given/When/Then)**
+   - Given konto aktywne  
+     When użytkownik doda transakcję z datą, kwotą, opisem, subject (opcjonalnie)  
+     Then transakcja pojawia się na liście i wpływa na saldo (ujemna kwota zmniejsza saldo, dodatnia zwiększa).
+   - Given istniejąca transakcja  
+     When użytkownik edytuje jej pola  
+     Then zmiany zapisują się i saldo jest zaktualizowane.
+- **Edge cases**
+   - Transakcja na usuniętym koncie: brak możliwości edycji/usuwania.
+   - Kwota = 0: niedozwolona. **[Assumption]**
+   - Data w przyszłości: dozwolona. **[Assumption]**
+- **Telemetry/Events**
+   - `transaction_created`, `transaction_updated`, `transaction_deleted`
+
+#### FR-T2 Lista transakcji + filtry/sort/paginacja + podsumowanie
+- **Opis**: lista z filtrowaniem po koncie i przedziale dat, sort po dacie/kwocie, paginacja, suma wpływów i wydatków w okresie.
+- **Priorytet**: Must
+- **Acceptance Criteria (Given/When/Then)**
+   - Given lista transakcji  
+     When użytkownik ustawi filtr dat i konto  
+     Then widzi tylko pasujące transakcje oraz podsumowanie wpływów i wydatków dla tego zakresu.
+- **Edge cases**
+   - Brak wyników: empty state.
+   - Zakres dat od>do: walidacja.
+- **Telemetry/Events**
+   - `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
+</target>
+• Cel użytkownika na tej stronie: pokazać listę transakcji,
+• Dane/propsy dostępne z backendu (jeśli znane): @/app/http/controllers/TransactionController.php
 
 
 Output (wymagany format)
