@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import FormField from '@/components/forms/FormField.vue';
+import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -163,23 +163,21 @@ const serverToError = computed(() => props.serverErrors.to);
                 </FormField>
 
                 <FormField for-id="from" :label="t('transactions.index.filters.from')" :error="localErrors.from ?? serverFromError">
-                    <Input
+                    <DatePickerInput
                         id="from"
                         v-model="localFrom"
-                        inputmode="numeric"
-                        placeholder="DD-MM-YYYY"
                         :disabled="isLoading"
+                        @change="applyFilters"
                         @blur="applyFilters"
                     />
                 </FormField>
 
                 <FormField for-id="to" :label="t('transactions.index.filters.to')" :error="localErrors.to ?? serverToError">
-                    <Input
+                    <DatePickerInput
                         id="to"
                         v-model="localTo"
-                        inputmode="numeric"
-                        placeholder="DD-MM-YYYY"
                         :disabled="isLoading"
+                        @change="applyFilters"
                         @blur="applyFilters"
                     />
                 </FormField>
