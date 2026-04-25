@@ -52,7 +52,15 @@ type PaginatorMeta = {
 type Paginator<T> = {
     data: T[];
     links: PaginatorLink[];
-    meta: PaginatorMeta;
+    /**
+     * Backend returns a "flattened" paginator shape (current_page/last_page/total on root),
+     * but some Laravel pagination payloads also include `meta`.
+     */
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    meta?: PaginatorMeta;
 };
 
 type Filters = {
@@ -73,7 +81,7 @@ const props = defineProps<{
     };
 }>();
 
-const page = usePage<{ errors: Record<string, string> }>();
+const page = usePage<{ errors?: Record<string, string> }>();
 const { t, locale } = useI18n();
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
@@ -119,9 +127,8 @@ function formatDateIsoToPl(input: string): string {
 }
 
 const currentSearch = computed(() => {
-    const url = (usePage() as any).url as string;
-    const idx = url.indexOf('?');
-    return idx >= 0 ? url.slice(idx) : '';
+    const idx = page.url.indexOf('?');
+    return idx >= 0 ? page.url.slice(idx) : '';
 });
 
 const hasImportRoute = computed(() => {
@@ -275,7 +282,7 @@ function directionIcon() {
 const summaryIncome = computed(() => formatAmount(props.summary.total_income));
 const summaryExpense = computed(() => formatAmount(props.summary.total_expense));
 
-const serverErrors = computed(() => (page.props as any).errors as Record<string, string>);
+const serverErrors = computed<Record<string, string>>(() => page.props.errors ?? {});
 </script>
 
 <template>
@@ -299,15 +306,11 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                                 :options="accountOptions"
                                 :placeholder="t('transactions.index.filters.account.all')"
                                 :disabled="isLoading"
-                                @update:model-value="(value) => (localAccountId = value)"
+                                @update:model-value="(value: any) => (localAccountId = value)"
                             />
                         </FormField>
 
-                        <FormField
-                            for-id="from"
-                            :label="t('transactions.index.filters.from')"
-                            :error="localErrors.from ?? serverErrors.from"
-                        >
+                        <FormField for-id="from" :label="t('transactions.index.filters.from')" :error="localErrors.from ?? serverErrors.from">
                             <Input
                                 id="from"
                                 v-model="localFrom"
@@ -338,7 +341,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                                     :model-value="localSort"
                                     :options="sortOptions"
                                     :disabled="isLoading"
-                                    @update:model-value="(value) => ((localSort = value), applyFilters())"
+                                    @update:model-value="(value: any) => ((localSort = value), applyFilters())"
                                 />
                             </FormField>
 
@@ -348,7 +351,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                                     :model-value="localDirection"
                                     :options="directionOptions"
                                     :disabled="isLoading"
-                                    @update:model-value="(value) => ((localDirection = value), applyFilters())"
+                                    @update:model-value="(value: any) => ((localDirection = value), applyFilters())"
                                 />
                             </FormField>
                         </div>
@@ -374,9 +377,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                     <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.income') }}</p>
                     <div class="mt-2">
                         <Skeleton v-if="isLoading" class="h-8 w-40" />
-                        <p v-else class="text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                            +{{ summaryIncome }}
-                        </p>
+                        <p v-else class="text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">+{{ summaryIncome }}</p>
                     </div>
                 </div>
 
@@ -384,9 +385,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                     <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.expense') }}</p>
                     <div class="mt-2">
                         <Skeleton v-if="isLoading" class="h-8 w-40" />
-                        <p v-else class="text-2xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">
-                            -{{ summaryExpense }}
-                        </p>
+                        <p v-else class="text-2xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">-{{ summaryExpense }}</p>
                     </div>
                 </div>
             </div>
@@ -471,16 +470,13 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                                     :key="tx.id"
                                     class="border-b border-sidebar-border/50 last:border-b-0 dark:border-sidebar-border"
                                 >
-                                    <td class="px-6 py-4 whitespace-nowrap tabular-nums">
+                                    <td class="whitespace-nowrap px-6 py-4 tabular-nums">
                                         {{ formatDateIsoToPl(tx.date) }}
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-2">
                                             <span>{{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}</span>
-                                            <span
-                                                v-if="!tx.account"
-                                                class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                                            >
+                                            <span v-if="!tx.account" class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                                                 {{ t('transactions.index.readOnly.badge') }}
                                             </span>
                                         </div>
@@ -491,7 +487,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                                     <td class="px-6 py-4 text-muted-foreground">
                                         {{ tx.subject ?? '—' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap tabular-nums">
+                                    <td class="whitespace-nowrap px-6 py-4 tabular-nums">
                                         <span
                                             :class="
                                                 cn(
@@ -527,13 +523,10 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="text-sm font-medium">{{ tx.description }}</p>
-                                        <p class="mt-1 text-xs text-muted-foreground tabular-nums">{{ formatDateIsoToPl(tx.date) }}</p>
+                                        <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToPl(tx.date) }}</p>
                                         <p class="mt-1 text-xs text-muted-foreground">
                                             {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
-                                            <span
-                                                v-if="!tx.account"
-                                                class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
-                                            >
+                                            <span v-if="!tx.account" class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                                                 {{ t('transactions.index.readOnly.badge') }}
                                             </span>
                                         </p>
@@ -562,7 +555,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                     </div>
 
                     <div class="border-t border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                        <div class="hidden sm:flex flex-wrap items-center justify-between gap-3">
+                        <div class="hidden flex-wrap items-center justify-between gap-3 sm:flex">
                             <div class="text-xs text-muted-foreground">
                                 {{ t('transactions.index.pagination.pageOf', { page: transactions.current_page, pages: transactions.last_page }) }}
                             </div>
@@ -584,7 +577,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                             </nav>
                         </div>
 
-                        <div class="sm:hidden flex items-center justify-between gap-3">
+                        <div class="flex items-center justify-between gap-3 sm:hidden">
                             <Button variant="secondary" size="sm" as-child :disabled="transactions.current_page <= 1">
                                 <Link :href="transactions.links[0]?.url ?? ''" :preserve-scroll="true">
                                     {{ t('transactions.index.pagination.prev') }}
@@ -593,12 +586,7 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
                             <p class="text-xs text-muted-foreground">
                                 {{ t('transactions.index.pagination.pageOf', { page: transactions.current_page, pages: transactions.last_page }) }}
                             </p>
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                as-child
-                                :disabled="transactions.current_page >= transactions.last_page"
-                            >
+                            <Button variant="secondary" size="sm" as-child :disabled="transactions.current_page >= transactions.last_page">
                                 <Link :href="transactions.links[transactions.links.length - 1]?.url ?? ''" :preserve-scroll="true">
                                     {{ t('transactions.index.pagination.next') }}
                                 </Link>
@@ -610,4 +598,3 @@ const serverErrors = computed(() => (page.props as any).errors as Record<string,
         </div>
     </AppLayout>
 </template>
-
