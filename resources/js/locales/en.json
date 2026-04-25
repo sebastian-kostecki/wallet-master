@@ -146,7 +146,8 @@
         "aria": "Pagination",
         "prev": "Previous",
         "next": "Next",
-        "pageOf": "Page {page} of {pages}"
+        "pageOf": "Page {page} of {pages}",
+        "perPageLabel": "Items per page"
       },
       "a11y": {
         "sortByDate": "Sort by date",

@@ -96,6 +96,7 @@ test('users can filter by account and date range, sort, and see summary', functi
         ->where('filters.to', '11-04-2026')
         ->where('filters.sort', 'amount')
         ->where('filters.direction', 'asc')
+        ->where('filters.per_page', 15)
         ->has('transactions.data', 2)
         ->where('transactions.data.0.date_relative', '1 dzień temu')
         ->where('transactions.data.0.account.type_label_key', 'accounts.enums.accountType.checking')
@@ -167,6 +168,7 @@ test('defaults to this month when date range is missing', function () {
         ->component('transactions/Index', false)
         ->where('filters.from', '01-04-2026')
         ->where('filters.to', '25-04-2026')
+        ->where('filters.per_page', 15)
         ->has('transactions.data', 1)
         ->where('summary.total_income', '50.00')
         ->where('summary.total_expense', '0.00')
@@ -225,10 +227,63 @@ test('can request all time transactions when clearing date range', function () {
         ->where('filters.all_time', true)
         ->where('filters.from', null)
         ->where('filters.to', null)
+        ->where('filters.per_page', 15)
         ->has('transactions.data', 2)
         ->where('summary.total_income', '150.00')
         ->where('summary.total_expense', '0.00')
     );
 
     CarbonImmutable::setTestNow();
+});
+
+test('users can change per-page size', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 4, 25, 12, 0, 0));
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'A',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    foreach (range(1, 30) as $i) {
+        Transaction::query()->create([
+            'user_id' => $user->id,
+            'account_id' => $account->id,
+            'currency_id' => $plnId,
+            'date' => '2026-04-10',
+            'amount' => $i,
+            'type' => 'income',
+            'description' => 'Tx '.$i,
+            'subject' => null,
+            'normalized_description' => 'tx '.$i,
+            'dedupe_hash' => md5('2026-04-10|'.$i.'.00|tx '.$i, true),
+        ]);
+    }
+
+    $response = $this->actingAs($user)->get('/transactions?per_page=25&all_time=1');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('transactions/Index', false)
+        ->where('filters.per_page', 25)
+        ->has('transactions.data', 25)
+    );
+
+    CarbonImmutable::setTestNow();
+});
+
+test('per-page size is validated', function () {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->get('/transactions?per_page=9999')
+        ->assertSessionHasErrors('per_page');
 });

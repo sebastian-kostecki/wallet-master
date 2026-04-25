@@ -49,6 +49,7 @@ final class TransactionIndexRequest extends FormRequest
             'sort' => ['nullable', 'string', 'in:date,amount'],
             'direction' => ['nullable', 'string', 'in:asc,desc'],
             'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', Rule::in([15, 25, 50, 100])],
         ];
     }
 }

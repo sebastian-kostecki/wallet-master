@@ -146,7 +146,8 @@
         "aria": "Paginacja",
         "prev": "Poprzednia",
         "next": "Następna",
-        "pageOf": "Strona {page} z {pages}"
+        "pageOf": "Strona {page} z {pages}",
+        "perPageLabel": "Na stronę"
       },
       "a11y": {
         "sortByDate": "Sortuj po dacie",

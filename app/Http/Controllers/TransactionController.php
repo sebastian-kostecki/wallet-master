@@ -31,6 +31,7 @@ final class TransactionController extends Controller
 
         $allTime = isset($validated['all_time']) ? (bool) $validated['all_time'] : false;
         $accountId = isset($validated['account_id']) ? (int) $validated['account_id'] : null;
+        $perPage = isset($validated['per_page']) ? (int) $validated['per_page'] : 15;
 
         $hasFrom = isset($validated['from']);
         $hasTo = isset($validated['to']);
@@ -70,13 +71,13 @@ final class TransactionController extends Controller
 
         $transactions = (clone $baseQuery)
             ->with([
-                'account:id,name,bank,type,currency_id,bank_icon_url',
+                'account:id,name,bank,type,currency_id',
                 'account.currency:id,symbol',
                 'currency:id,code,symbol,precision',
             ])
             ->when($sort === 'amount', fn (Builder $q) => $q->orderBy('amount', $direction)->orderBy('date', 'desc')->orderBy('id', 'desc'))
             ->when($sort !== 'amount', fn (Builder $q) => $q->orderBy('date', $direction)->orderBy('id', 'desc'))
-            ->paginate(15, [
+            ->paginate($perPage, [
                 'id',
                 'account_id',
                 'currency_id',
@@ -149,6 +150,7 @@ final class TransactionController extends Controller
                 'to' => $toInput,
                 'sort' => $sort,
                 'direction' => $direction,
+                'per_page' => $perPage,
             ],
             'transactions' => $transactions,
             'summary' => [

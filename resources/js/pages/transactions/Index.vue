@@ -3,6 +3,7 @@ import TransactionsIndexHeaderFilters from '@/components/transactions/Transactio
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import PaginationBar from '@/components/pagination/PaginationBar.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -76,6 +77,7 @@ type Filters = {
     to: string | null; // DD-MM-YYYY
     sort: 'date' | 'amount' | string;
     direction: 'asc' | 'desc' | string;
+    per_page?: number;
 };
 
 const props = defineProps<{
@@ -538,44 +540,18 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                     </div>
 
                     <div class="border-t border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                        <div class="hidden flex-wrap items-center justify-between gap-3 sm:flex">
-                            <div class="text-xs text-muted-foreground">
-                                {{ t('transactions.index.pagination.pageOf', { page: transactions.current_page, pages: transactions.last_page }) }}
-                            </div>
-                            <nav class="flex flex-wrap items-center gap-1" :aria-label="t('transactions.index.pagination.aria')">
-                                <Link
-                                    v-for="link in transactions.links"
-                                    :key="link.label"
-                                    :href="link.url ?? ''"
-                                    :preserve-scroll="true"
-                                    :class="
-                                        cn(
-                                            'rounded-md px-3 py-1 text-sm',
-                                            link.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted',
-                                            !link.url ? 'pointer-events-none opacity-50' : '',
-                                        )
-                                    "
-                                >
-                                    <span v-html="link.label" />
-                                </Link>
-                            </nav>
-                        </div>
-
-                        <div class="flex items-center justify-between gap-3 sm:hidden">
-                            <Button variant="secondary" size="sm" as-child :disabled="transactions.current_page <= 1">
-                                <Link :href="transactions.links[0]?.url ?? ''" :preserve-scroll="true">
-                                    {{ t('transactions.index.pagination.prev') }}
-                                </Link>
-                            </Button>
-                            <p class="text-xs text-muted-foreground">
-                                {{ t('transactions.index.pagination.pageOf', { page: transactions.current_page, pages: transactions.last_page }) }}
-                            </p>
-                            <Button variant="secondary" size="sm" as-child :disabled="transactions.current_page >= transactions.last_page">
-                                <Link :href="transactions.links[transactions.links.length - 1]?.url ?? ''" :preserve-scroll="true">
-                                    {{ t('transactions.index.pagination.next') }}
-                                </Link>
-                            </Button>
-                        </div>
+                        <PaginationBar
+                            :paginator="transactions"
+                            :query="{
+                                account_id: filters.account_id ?? undefined,
+                                all_time: filters.all_time ? 1 : undefined,
+                                from: filters.from ?? undefined,
+                                to: filters.to ?? undefined,
+                                sort: filters.sort ?? 'date',
+                                direction: filters.direction ?? 'desc',
+                                per_page: filters.per_page ?? undefined,
+                            }"
+                        />
                     </div>
                 </div>
             </div>

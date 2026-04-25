@@ -2,7 +2,6 @@
 import DateRangePickerInput from '@/components/forms/DateRangePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -19,6 +18,7 @@ type Filters = {
     to: string | null; // DD-MM-YYYY
     sort: 'date' | 'amount' | string;
     direction: 'asc' | 'desc' | string;
+    per_page?: number;
 };
 
 const props = defineProps<{
@@ -92,6 +92,7 @@ function buildQuery() {
         to: isAllTime.value ? undefined : trimmedTo || undefined,
         sort: props.filters.sort ?? 'date',
         direction: props.filters.direction ?? 'desc',
+        per_page: props.filters.per_page ?? undefined,
         page: undefined,
     };
 }
