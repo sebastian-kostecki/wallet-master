@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { Input } from '@/components/ui/input';
-import { computed } from 'vue';
+import { Button } from '@/components/ui/button';
+import Calendar from '@/components/ui/calendar/Calendar.vue';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { Calendar as CalendarIcon, X } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
     id?: string;
@@ -44,6 +48,8 @@ function isoToDdMmYyyy(value: string): string {
     return `${dd}-${mm}-${yyyy}`;
 }
 
+const open = ref(false);
+
 const isoValue = computed<string>({
     get() {
         return ddMmYyyyToIso(props.modelValue);
@@ -52,15 +58,57 @@ const isoValue = computed<string>({
         emit('update:modelValue', isoToDdMmYyyy(nextIso));
     },
 });
+
+const displayValue = computed(() => props.modelValue.trim());
+
+function clear() {
+    emit('update:modelValue', '');
+    emit('change');
+}
+
+function onSelect(nextIso: string) {
+    isoValue.value = nextIso;
+    emit('change');
+    open.value = false;
+}
 </script>
 
 <template>
-    <Input
-        :id="id"
-        v-model="isoValue"
-        type="date"
-        :disabled="disabled"
-        @change="emit('change')"
-        @blur="emit('blur')"
-    />
+    <Popover v-model:open="open">
+        <PopoverTrigger as-child>
+            <Button
+                :id="id"
+                type="button"
+                variant="outline"
+                :disabled="disabled"
+                :class="
+                    cn(
+                        'h-10 w-full justify-between px-3 text-left font-normal',
+                        !displayValue ? 'text-muted-foreground' : '',
+                    )
+                "
+                @blur="emit('blur')"
+            >
+                <span class="truncate">
+                    {{ displayValue || '—' }}
+                </span>
+                <span class="ml-2 inline-flex items-center gap-1">
+                    <button
+                        v-if="displayValue && !disabled"
+                        type="button"
+                        class="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
+                        :aria-label="'Clear date'"
+                        @click.stop="clear"
+                    >
+                        <X class="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <CalendarIcon class="h-4 w-4 opacity-70" aria-hidden="true" />
+                </span>
+            </Button>
+        </PopoverTrigger>
+
+        <PopoverContent class="p-3" align="start">
+            <Calendar :model-value="isoValue" @update:model-value="onSelect" />
+        </PopoverContent>
+    </Popover>
 </template>

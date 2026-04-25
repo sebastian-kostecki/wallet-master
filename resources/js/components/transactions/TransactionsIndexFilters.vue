@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FormField from '@/components/forms/FormField.vue';
-import DatePickerInput from '@/components/forms/DatePickerInput.vue';
+import DateRangePickerInput from '@/components/forms/DateRangePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -162,23 +162,17 @@ const serverToError = computed(() => props.serverErrors.to);
                     />
                 </FormField>
 
-                <FormField for-id="from" :label="t('transactions.index.filters.from')" :error="localErrors.from ?? serverFromError">
-                    <DatePickerInput
-                        id="from"
-                        v-model="localFrom"
+                <FormField
+                    for-id="date_range"
+                    :label="`${t('transactions.index.filters.from')} — ${t('transactions.index.filters.to')}`"
+                    :error="localErrors.from ?? serverFromError ?? localErrors.to ?? serverToError"
+                >
+                    <DateRangePickerInput
+                        id="date_range"
+                        v-model:from="localFrom"
+                        v-model:to="localTo"
                         :disabled="isLoading"
                         @change="applyFilters"
-                        @blur="applyFilters"
-                    />
-                </FormField>
-
-                <FormField for-id="to" :label="t('transactions.index.filters.to')" :error="localErrors.to ?? serverToError">
-                    <DatePickerInput
-                        id="to"
-                        v-model="localTo"
-                        :disabled="isLoading"
-                        @change="applyFilters"
-                        @blur="applyFilters"
                     />
                 </FormField>
             </div>

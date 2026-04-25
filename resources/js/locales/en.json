@@ -108,6 +108,10 @@
         "errors": {
           "dateRange": "The “From” date cannot be later than the “To” date.",
           "dateFormat": "Enter a date in DD-MM-YYYY format."
+        },
+        "presets": {
+          "thisMonth": "This month",
+          "last7Days": "Last 7 days"
         }
       },
       "sort": {

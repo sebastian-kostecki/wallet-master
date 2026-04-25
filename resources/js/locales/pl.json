@@ -108,6 +108,10 @@
         "errors": {
           "dateRange": "Data „Od” nie może być późniejsza niż „Do”.",
           "dateFormat": "Podaj datę w formacie DD-MM-YYYY."
+        },
+        "presets": {
+          "thisMonth": "Ten miesiąc",
+          "last7Days": "Ostatnie 7 dni"
         }
       },
       "sort": {
