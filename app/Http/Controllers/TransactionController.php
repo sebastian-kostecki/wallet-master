@@ -11,6 +11,7 @@ use App\Http\Requests\Transactions\UpdateTransactionRequest;
 use App\Models\Account;
 use App\Models\Transaction;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -69,7 +70,7 @@ final class TransactionController extends Controller
 
         $transactions = (clone $baseQuery)
             ->with([
-                'account:id,name',
+                'account:id,name,bank,type',
                 'currency:id,code,symbol,precision',
             ])
             ->when($sort === 'amount', fn (Builder $q) => $q->orderBy('amount', $direction)->orderBy('date', 'desc')->orderBy('id', 'desc'))
@@ -83,7 +84,45 @@ final class TransactionController extends Controller
                 'type',
                 'description',
                 'subject',
+                'transfer_id',
             ])
+            ->through(function (Transaction $transaction): array {
+                $date = $transaction->date;
+                $dateIso = $date instanceof CarbonInterface ? $date->toDateString() : (string) $date;
+
+                $dateRelative = CarbonImmutable::parse($dateIso)
+                    ->locale(app()->getLocale())
+                    ->diffForHumans();
+
+                $account = $transaction->account;
+                $currency = $transaction->currency;
+
+                return [
+                    'id' => $transaction->id,
+                    'account_id' => $transaction->account_id,
+                    'currency_id' => $transaction->currency_id,
+                    'date' => $dateIso,
+                    'date_relative' => $dateRelative,
+                    'amount' => $transaction->amount,
+                    'type' => $transaction->type,
+                    'description' => $transaction->description,
+                    'subject' => $transaction->subject,
+                    'transfer_id' => $transaction->transfer_id,
+                    'account' => $account !== null ? [
+                        'id' => $account->id,
+                        'name' => $account->name,
+                        'type' => $account->type?->value ?? (string) $account->type,
+                        'type_label_key' => $account->type_label_key,
+                        'bank_icon_url' => $account->bank_icon_url,
+                    ] : null,
+                    'currency' => $currency !== null ? [
+                        'id' => $currency->id,
+                        'code' => $currency->code,
+                        'symbol' => $currency->symbol,
+                        'precision' => $currency->precision,
+                    ] : null,
+                ];
+            })
             ->withQueryString();
 
         $summary = (clone $baseQuery)

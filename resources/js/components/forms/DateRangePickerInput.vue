@@ -77,10 +77,20 @@ const displayValue = computed(() => {
     return `${f} — ${t}`;
 });
 
+const isClearDisabled = computed(() => Boolean(props.disabled) || displayValue.value === '');
+
 function clear() {
     emit('update:from', '');
     emit('update:to', '');
     emit('change');
+}
+
+function onClearClick() {
+    if (isClearDisabled.value) {
+        return;
+    }
+
+    clear();
 }
 
 function setFromToIso(start: string, end: string) {
@@ -176,11 +186,16 @@ function applyPresetLast7Days() {
                 </span>
                 <span class="ml-2 inline-flex items-center gap-1">
                     <button
-                        v-if="displayValue && !disabled"
                         type="button"
-                        class="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
+                        :disabled="isClearDisabled"
+                        :class="
+                            cn(
+                                'inline-flex h-7 w-7 items-center justify-center rounded',
+                                isClearDisabled ? 'cursor-not-allowed opacity-40' : 'hover:bg-muted',
+                            )
+                        "
                         :aria-label="'Clear date range'"
-                        @click.stop="clear"
+                        @click.stop="onClearClick"
                     >
                         <X class="h-4 w-4" aria-hidden="true" />
                     </button>

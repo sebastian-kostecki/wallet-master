@@ -19,6 +19,8 @@ test('guests are redirected to login', function () {
 });
 
 test('users can filter by account and date range, sort, and see summary', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 4, 12, 12, 0, 0));
+
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -26,7 +28,7 @@ test('users can filter by account and date range, sort, and see summary', functi
         'user_id' => $user->id,
         'currency_id' => $plnId,
         'name' => 'A',
-        'bank' => Bank::Cash,
+        'bank' => Bank::MBank,
         'type' => AccountType::Checking,
         'opening_balance' => 0,
         'current_balance' => 0,
@@ -94,9 +96,14 @@ test('users can filter by account and date range, sort, and see summary', functi
         ->where('filters.sort', 'amount')
         ->where('filters.direction', 'asc')
         ->has('transactions.data', 2)
+        ->where('transactions.data.0.date_relative', '1 dzień temu')
+        ->where('transactions.data.0.account.type_label_key', 'accounts.enums.accountType.checking')
+        ->where('transactions.data.0.account.bank_icon_url', fn (mixed $value) => is_string($value) && str_contains($value, '/icons/banks/mbank.jpeg'))
         ->where('summary.total_income', '100.00')
         ->where('summary.total_expense', '25.00')
     );
+
+    CarbonImmutable::setTestNow();
 });
 
 test('date range is validated', function () {

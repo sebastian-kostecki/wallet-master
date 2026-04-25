@@ -2,17 +2,21 @@
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-vue-next';
+import { ArrowDown, ArrowDownLeft, ArrowRightLeft, ArrowUp, ArrowUpDown, ArrowUpRight, Pencil, PiggyBank, Wallet } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type Account = {
     id: number;
     name: string;
+    type: string;
+    type_label_key: string;
+    bank_icon_url: string | null;
 };
 
 type Currency = {
@@ -25,10 +29,12 @@ type Currency = {
 type Transaction = {
     id: number;
     date: string; // YYYY-MM-DD
+    date_relative: string;
     amount: string | number;
     type: 'income' | 'expense' | string;
     description: string;
     subject: string | null;
+    transfer_id: string | null;
     account: Account | null;
     currency: Currency | null;
 };
@@ -110,7 +116,7 @@ function formatAmount(value: string | number): string {
     return money.value.format(toNumber(value));
 }
 
-function formatDateIsoToPl(input: string): string {
+function formatDateIsoToDots(input: string): string {
     const parts = input.split('-');
     if (parts.length !== 3) {
         return input;
@@ -121,7 +127,51 @@ function formatDateIsoToPl(input: string): string {
         return input;
     }
 
-    return `${dd}-${mm}-${yyyy}`;
+    return `${dd}.${mm}.${yyyy}`;
+}
+
+type TransactionIconVariant = 'internal' | 'expense' | 'income';
+
+function transactionVariant(tx: Transaction): TransactionIconVariant {
+    if (tx.transfer_id) {
+        return 'internal';
+    }
+
+    return tx.type === 'expense' ? 'expense' : 'income';
+}
+
+function transactionIcon(tx: Transaction) {
+    const variant = transactionVariant(tx);
+
+    if (variant === 'internal') {
+        return {
+            component: ArrowRightLeft,
+            containerClass: 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400',
+        } as const;
+    }
+
+    if (variant === 'expense') {
+        return {
+            component: ArrowDownLeft,
+            containerClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400',
+        } as const;
+    }
+
+    return {
+        component: ArrowUpRight,
+        containerClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400',
+    } as const;
+}
+
+const accountTypeIcons = computed(() => {
+    return {
+        checking: Wallet,
+        savings: PiggyBank,
+    } as const;
+});
+
+function resolveAccountTypeIcon(type: string) {
+    return accountTypeIcons.value[type as keyof typeof accountTypeIcons.value] ?? Wallet;
 }
 
 const currentSearch = computed(() => {
@@ -278,9 +328,8 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                             />
                                         </button>
                                     </th>
-                                    <th class="px-6 py-3">{{ t('transactions.index.table.account') }}</th>
                                     <th class="px-6 py-3">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="px-6 py-3">{{ t('transactions.index.table.subject') }}</th>
+                                    <th class="px-6 py-3">{{ t('transactions.index.table.account') }}</th>
                                     <th class="px-6 py-3">
                                         <button
                                             class="inline-flex items-center gap-2 hover:text-foreground"
@@ -306,21 +355,69 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                     class="border-b border-sidebar-border/50 last:border-b-0 dark:border-sidebar-border"
                                 >
                                     <td class="whitespace-nowrap px-6 py-4 tabular-nums">
-                                        {{ formatDateIsoToPl(tx.date) }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-2">
-                                            <span>{{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}</span>
-                                            <span v-if="!tx.account" class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                                                {{ t('transactions.index.readOnly.badge') }}
-                                            </span>
+                                        <div class="text-sm font-medium text-foreground">
+                                            {{ formatDateIsoToDots(tx.date) }}
+                                        </div>
+                                        <div class="mt-0.5 text-xs text-muted-foreground">
+                                            {{ tx.date_relative }}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        {{ tx.description }}
+                                        <div class="flex min-w-0 items-center gap-3">
+                                            <div
+                                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                                :class="transactionIcon(tx).containerClass"
+                                                aria-hidden="true"
+                                            >
+                                                <component :is="transactionIcon(tx).component" class="h-4 w-4" />
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <p class="truncate text-sm font-medium text-foreground" style="max-width: 420px">
+                                                    {{ tx.subject ?? '—' }}
+                                                </p>
+                                                <p class="mt-0.5 truncate text-xs text-muted-foreground">
+                                                    {{ tx.description }}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-4 text-muted-foreground">
-                                        {{ tx.subject ?? '—' }}
+                                    <td class="px-6 py-4">
+                                        <div class="flex min-w-0 items-center gap-2">
+                                            <div class="shrink-0">
+                                                <img
+                                                    v-if="tx.account?.bank_icon_url"
+                                                    :src="tx.account.bank_icon_url"
+                                                    :alt="tx.account.name"
+                                                    class="h-9 w-9 rounded-lg object-contain"
+                                                    loading="lazy"
+                                                />
+                                                <component
+                                                    v-else-if="tx.account"
+                                                    :is="resolveAccountTypeIcon(tx.account.type)"
+                                                    class="h-9 w-9 text-muted-foreground"
+                                                    aria-hidden="true"
+                                                />
+                                                <div v-else class="h-9 w-9 rounded-lg bg-muted" aria-hidden="true" />
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-2">
+                                                    <p class="truncate text-sm font-medium">
+                                                        {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
+                                                    </p>
+                                                    <span
+                                                        v-if="!tx.account"
+                                                        class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                                                    >
+                                                        {{ t('transactions.index.readOnly.badge') }}
+                                                    </span>
+                                                </div>
+                                                <p v-if="tx.account" class="mt-0.5 truncate text-xs text-muted-foreground">
+                                                    {{ t(tx.account.type_label_key) }}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 tabular-nums">
                                         <span
@@ -337,14 +434,23 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                        <Button v-if="tx.account" variant="secondary" size="sm" as-child>
-                                            <Link
-                                                :href="route('transactions.edit', tx.id) + currentSearch"
-                                                :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
-                                            >
-                                                {{ t('actions.edit') }}
-                                            </Link>
-                                        </Button>
+                                        <TooltipProvider v-if="tx.account" :delay-duration="0">
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Button variant="ghost" size="icon" as-child>
+                                                        <Link
+                                                            :href="route('transactions.edit', tx.id) + currentSearch"
+                                                            :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
+                                                        >
+                                                            <Pencil class="h-4 w-4" aria-hidden="true" />
+                                                        </Link>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>{{ t('actions.edit') }}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                         <span v-else class="text-xs text-muted-foreground">{{ t('transactions.index.readOnly.noActions') }}</span>
                                     </td>
                                 </tr>
@@ -358,7 +464,8 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="text-sm font-medium">{{ tx.description }}</p>
-                                        <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToPl(tx.date) }}</p>
+                                        <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToDots(tx.date) }}</p>
+                                        <p class="mt-0.5 text-xs text-muted-foreground">{{ tx.date_relative }}</p>
                                         <p class="mt-1 text-xs text-muted-foreground">
                                             {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
                                             <span v-if="!tx.account" class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
@@ -379,9 +486,20 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                             {{ toNumber(tx.amount) >= 0 ? '+' : '-' }}{{ formatAmount(Math.abs(toNumber(tx.amount))) }}
                                         </p>
                                         <div class="mt-2">
-                                            <Button v-if="tx.account" variant="secondary" size="sm" as-child>
-                                                <Link :href="route('transactions.edit', tx.id) + currentSearch">{{ t('actions.edit') }}</Link>
-                                            </Button>
+                                            <TooltipProvider v-if="tx.account" :delay-duration="0">
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <Button variant="ghost" size="icon" as-child>
+                                                            <Link :href="route('transactions.edit', tx.id) + currentSearch" :aria-label="t('actions.edit')">
+                                                                <Pencil class="h-4 w-4" aria-hidden="true" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{{ t('actions.edit') }}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
                                         </div>
                                     </div>
                                 </div>
