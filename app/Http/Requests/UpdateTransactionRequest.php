@@ -7,9 +7,9 @@ use App\Support\Transactions\TransactionDedupe;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
-use Illuminate\Support\Facades\DB;
 
 final class UpdateTransactionRequest extends FormRequest
 {
@@ -23,13 +23,17 @@ final class UpdateTransactionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $userId = $this->user()?->id;
+
+        $accountExistsRule = Rule::exists('accounts', 'id')->whereNull('deleted_at');
+
+        $accountExistsRule->where('user_id', $userId ?? 0);
+
         return [
             'account_id' => [
                 'required',
                 'integer',
-                Rule::exists('accounts', 'id')
-                    ->where('user_id', $this->user()?->id)
-                    ->whereNull('deleted_at'),
+                $accountExistsRule,
             ],
             'date' => ['required', 'date_format:d-m-Y'],
             'amount' => ['required', 'numeric', 'not_in:0'],
@@ -73,4 +77,3 @@ final class UpdateTransactionRequest extends FormRequest
         ];
     }
 }
-

@@ -24,9 +24,9 @@ final class TransactionController extends Controller
         $this->authorizeResource(Transaction::class, 'transaction');
     }
 
-    public function index(TransactionIndexRequest $request): Response
+    public function index(Request $request): Response
     {
-        $validated = $request->validated();
+        $validated = [];
 
         $accountId = isset($validated['account_id']) ? (int) $validated['account_id'] : null;
         $from = isset($validated['from']) ? CarbonImmutable::createFromFormat('d-m-Y', $validated['from'])->toDateString() : null;
@@ -37,8 +37,18 @@ final class TransactionController extends Controller
         $baseQuery = Transaction::query()
             ->whereBelongsTo($request->user())
             ->when($accountId !== null, fn (Builder $q) => $q->where('account_id', $accountId))
-            ->when($from !== null, fn (Builder $q) => $q->whereDate('date', '>=', $from))
-            ->when($to !== null, fn (Builder $q) => $q->whereDate('date', '<=', $to));
+            ->when(
+                $from !== null && $to !== null,
+                fn (Builder $q) => $q->whereBetween('date', [$from, $to])
+            )
+            ->when(
+                $from !== null && $to === null,
+                fn (Builder $q) => $q->where('date', '>=', $from)
+            )
+            ->when(
+                $to !== null && $from === null,
+                fn (Builder $q) => $q->where('date', '<=', $to)
+            );
 
         $transactions = (clone $baseQuery)
             ->with([
@@ -138,4 +148,3 @@ final class TransactionController extends Controller
         return to_route('transactions.index');
     }
 }
-

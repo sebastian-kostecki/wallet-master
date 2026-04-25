@@ -90,6 +90,82 @@
     "cancel": "Anuluj",
     "save": "Zapisz"
   },
+  "transactions": {
+    "index": {
+      "title": "Transakcje",
+      "addTransaction": "Dodaj transakcję",
+      "filters": {
+        "account": {
+          "label": "Konto",
+          "all": "Wszystkie konta"
+        },
+        "from": "Od",
+        "to": "Do",
+        "sort": "Sortuj",
+        "direction": "Kierunek",
+        "apply": "Zastosuj",
+        "clear": "Wyczyść filtry",
+        "errors": {
+          "dateRange": "Data „Od” nie może być późniejsza niż „Do”.",
+          "dateFormat": "Podaj datę w formacie DD-MM-YYYY."
+        }
+      },
+      "sort": {
+        "date": "Data",
+        "amount": "Kwota",
+        "asc": "Rosnąco",
+        "desc": "Malejąco"
+      },
+      "summary": {
+        "income": "Wpływy",
+        "expense": "Wydatki"
+      },
+      "table": {
+        "date": "Data",
+        "account": "Konto",
+        "description": "Opis",
+        "subject": "Subject",
+        "amount": "Kwota",
+        "actions": "Akcje"
+      },
+      "readOnly": {
+        "badge": "Tylko odczyt",
+        "deletedAccount": "Usunięte konto",
+        "noActions": "Brak akcji"
+      },
+      "empty": {
+        "filtered": "Brak transakcji dla wybranych filtrów.",
+        "firstUse": "Nie masz jeszcze żadnych transakcji.",
+        "import": "Zaimportuj plik"
+      },
+      "pagination": {
+        "aria": "Paginacja",
+        "prev": "Poprzednia",
+        "next": "Następna",
+        "pageOf": "Strona {page} z {pages}"
+      },
+      "a11y": {
+        "sortByDate": "Sortuj po dacie",
+        "sortByAmount": "Sortuj po kwocie",
+        "edit": "Edytuj transakcję: {description}"
+      }
+    },
+    "create": {
+      "title": "Dodaj transakcję",
+      "back": "Wróć"
+    },
+    "edit": {
+      "title": "Edytuj transakcję",
+      "back": "Wróć"
+    },
+    "form": {
+      "account": "Konto",
+      "date": "Data",
+      "amount": "Kwota",
+      "description": "Opis",
+      "subject": "Subject"
+    }
+  },
   "currency": {
     "defaultSymbol": "zł"
   }

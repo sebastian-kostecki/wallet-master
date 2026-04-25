@@ -16,16 +16,37 @@ final class TransactionIndexRequest extends FormRequest
     }
 
     /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'from.date_format' => 'Podaj datę w formacie DD-MM-YYYY.',
+            'to.date_format' => 'Podaj datę w formacie DD-MM-YYYY.',
+        ];
+    }
+
+    /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
+        $userId = $this->user()?->id;
+
+        $accountExistsRule = Rule::exists('accounts', 'id')->whereNull('deleted_at');
+
+        $accountExistsRule->where('user_id', $userId ?? 0);
+
         return [
-            'account_id' => ['nullable', 'integer', Rule::exists('accounts', 'id')->where('user_id', $this->user()?->id)],
+            'account_id' => [
+                'nullable',
+                'integer',
+                $accountExistsRule,
+            ],
             'from' => ['nullable', 'date_format:d-m-Y'],
             'to' => ['nullable', 'date_format:d-m-Y'],
-            'sort' => ['nullable', 'string', Rule::in(['date', 'amount'])],
-            'direction' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
+            'sort' => ['nullable', 'string', 'in:date,amount'],
+            'direction' => ['nullable', 'string', 'in:asc,desc'],
             'page' => ['nullable', 'integer', 'min:1'],
         ];
     }
@@ -52,10 +73,9 @@ final class TransactionIndexRequest extends FormRequest
                 $toDate = CarbonImmutable::createFromFormat('d-m-Y', $to);
 
                 if ($fromDate->greaterThan($toDate)) {
-                    $validator->errors()->add('from', 'The start date must be before or equal to the end date.');
+                    $validator->errors()->add('from', 'Data „Od” nie może być późniejsza niż „Do”.');
                 }
             },
         ];
     }
 }
-
