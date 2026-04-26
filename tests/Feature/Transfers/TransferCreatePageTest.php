@@ -1,0 +1,56 @@
+<?php
+
+use App\Enums\AccountType;
+use App\Enums\Bank;
+use App\Models\Account;
+use App\Models\Currency;
+use App\Models\User;
+use Database\Seeders\CurrencySeeder;
+use Inertia\Testing\AssertableInertia as Assert;
+
+beforeEach(function () {
+    $this->seed(CurrencySeeder::class);
+});
+
+test('guest is redirected to login', function () {
+    $this->get('/transfers/create')->assertRedirect('/login');
+});
+
+test('page renders and includes active + deleted accounts', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $active = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Active',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $deleted = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Deleted',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+    $deleted->delete();
+
+    $response = $this->actingAs($user)->get('/transfers/create');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('transfers/Create', false)
+        ->has('accounts', 2)
+        ->where('accounts.0.id', $active->id)
+        ->where('accounts.0.is_deleted', false)
+        ->where('accounts.1.id', $deleted->id)
+        ->where('accounts.1.is_deleted', true)
+    );
+});
+

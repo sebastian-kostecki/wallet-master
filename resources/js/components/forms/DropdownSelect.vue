@@ -7,6 +7,7 @@ import { computed } from 'vue';
 export type DropdownOption<TValue extends string | number> = {
     value: TValue;
     label: string;
+    disabled?: boolean;
 };
 
 const props = withDefaults(
@@ -69,6 +70,7 @@ const triggerClass = computed(() => {
                 v-for="option in props.options"
                 :key="String(option.value)"
                 class="cursor-pointer justify-between"
+                :disabled="Boolean(option.disabled)"
                 @select="() => emit('update:modelValue', option.value)"
             >
                 <span class="flex min-w-0 items-center gap-2">

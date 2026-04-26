@@ -94,6 +94,7 @@
         "index": {
             "title": "Transactions",
             "addTransaction": "Add transaction",
+            "addTransfer": "Transfer",
             "filters": {
                 "account": {
                     "label": "Account",
@@ -184,8 +185,29 @@
         }
     },
     "transfers": {
+        "create": {
+            "title": "Transfer",
+            "description": "Move funds between your own accounts. We'll create two linked transactions with the same date.",
+            "empty": "To make a transfer, add at least two accounts."
+        },
+        "form": {
+            "fromAccount": "From account",
+            "toAccount": "To account",
+            "selectPlaceholder": "Select an account",
+            "amount": "Amount",
+            "amountPlaceholder": "e.g. 120.50",
+            "date": "Date",
+            "descriptionOptional": "Description (optional)",
+            "hint": "We'll save an expense on the source account and an income on the destination account.",
+            "sameAccountError": "Choose a different destination account than the source account.",
+            "deletedNotice": "This account is deleted — transfers are blocked.",
+            "deletedSuffix": "deleted",
+            "submit": "Make transfer",
+            "saving": "Saving…"
+        },
         "toast": {
-            "created": "Transfer created"
+            "created": "Transfer saved.",
+            "genericError": "We couldn't make the transfer. Please try again."
         }
     },
     "currency": {

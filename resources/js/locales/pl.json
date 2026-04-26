@@ -94,6 +94,7 @@
         "index": {
             "title": "Transakcje",
             "addTransaction": "Dodaj transakcję",
+            "addTransfer": "Transfer",
             "filters": {
                 "account": {
                     "label": "Konto",
@@ -185,8 +186,29 @@
         }
     },
     "transfers": {
+        "create": {
+            "title": "Transfer",
+            "description": "Przenieś środki między własnymi kontami. Utworzymy dwie powiązane transakcje z tą samą datą.",
+            "empty": "Aby wykonać transfer, dodaj co najmniej dwa konta."
+        },
+        "form": {
+            "fromAccount": "Konto źródłowe",
+            "toAccount": "Konto docelowe",
+            "selectPlaceholder": "Wybierz konto",
+            "amount": "Kwota",
+            "amountPlaceholder": "np. 120,50",
+            "date": "Data",
+            "descriptionOptional": "Opis (opcjonalnie)",
+            "hint": "Zapiszemy wydatek na koncie źródłowym i przychód na koncie docelowym.",
+            "sameAccountError": "Wybierz inne konto docelowe niż źródłowe.",
+            "deletedNotice": "To konto jest usunięte — transfer jest zablokowany.",
+            "deletedSuffix": "usunięte",
+            "submit": "Wykonaj transfer",
+            "saving": "Zapisywanie…"
+        },
         "toast": {
-            "created": "Transfer utworzony"
+            "created": "Transfer zapisany.",
+            "genericError": "Nie udało się wykonać transferu. Spróbuj ponownie."
         }
     },
     "currency": {

@@ -276,9 +276,14 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
         <template #headerActions>
             <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <TransactionsIndexHeaderFilters :accounts="accounts" :filters="filters" :server-errors="serverErrors" :is-loading="isLoading" />
-                <Button as-child class="sm:shrink-0">
-                    <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
-                </Button>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+                    <Button variant="secondary" as-child class="sm:shrink-0">
+                        <Link :href="route('transfers.create') + currentSearch">{{ t('transactions.index.addTransfer') }}</Link>
+                    </Button>
+                    <Button as-child class="sm:shrink-0">
+                        <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
+                    </Button>
+                </div>
             </div>
         </template>
 
