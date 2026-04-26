@@ -27,7 +27,7 @@ const props = withDefaults(
         preserveScroll?: boolean;
     }>(),
     {
-        perPageOptions: () => [15, 25, 50, 100],
+        perPageOptions: () => [10, 25, 50, 100],
         preserveScroll: true,
     },
 );

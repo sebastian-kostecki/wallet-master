@@ -192,7 +192,13 @@ final class TransactionController extends Controller
         $accounts = Account::query()
             ->whereBelongsTo($request->user())
             ->orderBy('name')
-            ->get(['id', 'name', 'currency_id']);
+            ->get(['id', 'name', 'currency_id', 'bank'])
+            ->map(fn (Account $account) => [
+                'id' => $account->id,
+                'name' => $account->name,
+                'currency_id' => $account->currency_id,
+                'bank_icon_url' => $account->bank_icon_url,
+            ]);
 
         return Inertia::render('transactions/Edit', [
             'transaction' => $transaction->only(['id', 'account_id', 'date', 'amount', 'description', 'subject'])

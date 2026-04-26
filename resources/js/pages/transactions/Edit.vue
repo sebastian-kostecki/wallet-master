@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import FormField from '@/components/forms/FormField.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ type Account = {
     id: number;
     name: string;
     currency_id: number;
+    bank_icon_url: string | null;
 };
 
 type Transaction = {
@@ -39,7 +41,10 @@ const currentSearch = computed(() => {
 });
 
 function isoToDdMmYyyy(input: string): string {
-    const parts = input.split('-');
+    const trimmed = input.trim();
+    const datePart = /^\d{4}-\d{2}-\d{2}/.test(trimmed) ? trimmed.slice(0, 10) : trimmed;
+
+    const parts = datePart.split('-');
     if (parts.length !== 3) {
         return input;
     }
@@ -60,6 +65,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 ]);
 
 const accountOptions = computed<DropdownOption<number>[]>(() => props.accounts.map((a) => ({ value: a.id, label: a.name })));
+const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
 
 const form = useForm<{
     account_id: number;
@@ -73,6 +79,10 @@ const form = useForm<{
     amount: displayAmount(props.transaction.amount),
     description: props.transaction.description,
     subject: props.transaction.subject ?? '',
+});
+
+const selectedAccount = computed(() => {
+    return accountsById.value.get(form.account_id) ?? null;
 });
 
 function submit() {
@@ -99,25 +109,65 @@ function submit() {
                             id="account_id"
                             :model-value="form.account_id"
                             :options="accountOptions"
+                            :placeholder="t('transactions.form.account')"
                             :disabled="form.processing || accounts.length === 0"
                             @update:model-value="(value) => (form.account_id = value)"
-                        />
+                        >
+                            <template #trigger-leading>
+                                <span v-if="selectedAccount" class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
+                                    <img
+                                        v-if="selectedAccount.bank_icon_url"
+                                        :src="selectedAccount.bank_icon_url"
+                                        :alt="selectedAccount.name"
+                                        class="h-5 w-5 object-cover"
+                                    />
+                                    <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                        {{ selectedAccount.name.charAt(0).toUpperCase() }}
+                                    </span>
+                                </span>
+                            </template>
+
+                            <template #option-leading="{ option }">
+                                <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
+                                    <img
+                                        v-if="accountsById.get(option.value)?.bank_icon_url"
+                                        :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
+                                        :alt="accountsById.get(option.value)?.name ?? ''"
+                                        class="h-5 w-5 object-cover"
+                                    />
+                                    <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                        {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                    </span>
+                                </span>
+                            </template>
+                        </DropdownSelect>
                     </FormField>
 
                     <FormField for-id="date" :label="t('transactions.form.date')" :error="form.errors.date">
-                        <Input id="date" v-model="form.date" inputmode="numeric" placeholder="DD-MM-YYYY" :disabled="form.processing" />
+                        <DatePickerInput
+                            id="date"
+                            :model-value="form.date"
+                            :disabled="form.processing"
+                            @update:model-value="(value) => (form.date = value)"
+                        />
                     </FormField>
 
                     <FormField for-id="amount" :label="t('transactions.form.amount')" :error="form.errors.amount">
                         <Input id="amount" v-model="form.amount" inputmode="decimal" :disabled="form.processing" />
                     </FormField>
 
-                    <FormField for-id="description" :label="t('transactions.form.description')" :error="form.errors.description">
-                        <Input id="description" v-model="form.description" :disabled="form.processing" />
-                    </FormField>
-
                     <FormField for-id="subject" :label="t('transactions.form.subject')" :error="form.errors.subject">
                         <Input id="subject" v-model="form.subject" :disabled="form.processing" />
+                    </FormField>
+
+                    <FormField for-id="description" :label="t('transactions.form.description')" :error="form.errors.description">
+                        <textarea
+                            id="description"
+                            v-model="form.description"
+                            :disabled="form.processing"
+                            rows="4"
+                            class="flex min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        />
                     </FormField>
 
                     <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
