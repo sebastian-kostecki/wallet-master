@@ -99,17 +99,17 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 5) Transfer — jedna akcja → 2 transakcje
-- [ ] UI “Transfer”:
-  - [ ] Konto źródłowe != konto docelowe
-  - [ ] Użytkownik wpisuje kwotę dodatnią, system zapisuje `-X` i `+X` (walidacja wejścia)
-  - [ ] Data wspólna
-  - [ ] Opis (wspólny) + subject (opcjonalny)
-- [ ] Backend:
-  - [ ] Utworzyć 2 transakcje w jednej transakcji DB
-  - [ ] Ustawić `transfer_id` (wspólny identyfikator)
-  - [ ] Zaktualizować saldo obu kont
-- [ ] Blokady:
-  - [ ] Transfer do/z usuniętego konta niedozwolony
+- [~] UI “Transfer”:
+  - [x] Konto źródłowe != konto docelowe
+  - [x] Użytkownik wpisuje kwotę dodatnią, system zapisuje `-X` i `+X` (walidacja wejścia)
+  - [x] Data wspólna
+  - [ ] Opis (wspólny) + subject (opcjonalny) — brak pola `subject` w UI; backend zapisuje `subject = null`
+- [x] Backend:
+  - [x] Utworzyć 2 transakcje w jednej transakcji DB
+  - [x] Ustawić `transfer_id` (wspólny identyfikator)
+  - [x] Zaktualizować saldo obu kont
+- [x] Blokady:
+  - [x] Transfer do/z usuniętego konta niedozwolony
 
 ---
 
