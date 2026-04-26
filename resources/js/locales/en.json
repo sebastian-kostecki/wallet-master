@@ -1,178 +1,181 @@
 {
-  "accounts": {
-    "index": {
-      "title": "Accounts",
-      "addAccount": "Add account",
-      "view": {
-        "toggleAria": "Toggle accounts view",
-        "grid": "Grid",
-        "list": "List"
-      },
-      "empty": {
-        "message": "You don't have any accounts yet.",
-        "cta": "Add your first account"
-      }
-    },
-    "edit": {
-      "title": "Edit account",
-      "back": "Back",
-      "deleteAction": "Delete account",
-      "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference."
-    },
-    "create": {
-      "title": "Add account",
-      "back": "Back",
-      "fields": {
-        "name": {
-          "label": "Name",
-          "placeholder": "e.g. Main account"
+    "accounts": {
+        "index": {
+            "title": "Accounts",
+            "addAccount": "Add account",
+            "view": {
+                "toggleAria": "Toggle accounts view",
+                "grid": "Grid",
+                "list": "List"
+            },
+            "empty": {
+                "message": "You don't have any accounts yet.",
+                "cta": "Add your first account"
+            }
         },
-        "bank": {
-          "label": "Bank",
-          "placeholder": "Select bank"
+        "edit": {
+            "title": "Edit account",
+            "back": "Back",
+            "deleteAction": "Delete account",
+            "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference."
         },
-        "type": {
-          "label": "Account type",
-          "placeholder": "Select account type"
+        "create": {
+            "title": "Add account",
+            "back": "Back",
+            "fields": {
+                "name": {
+                    "label": "Name",
+                    "placeholder": "e.g. Main account"
+                },
+                "bank": {
+                    "label": "Bank",
+                    "placeholder": "Select bank"
+                },
+                "type": {
+                    "label": "Account type",
+                    "placeholder": "Select account type"
+                },
+                "currency": {
+                    "label": "Currency",
+                    "placeholder": "Select currency"
+                },
+                "openingBalance": {
+                    "label": "Opening balance",
+                    "placeholder": "e.g. 1000.00"
+                }
+            },
+            "openingBalanceHint": "In the MVP, the current balance starts from the opening balance."
         },
-        "currency": {
-          "label": "Currency",
-          "placeholder": "Select currency"
+        "summary": {
+            "title": "Summary",
+            "description": "Sum of balances for all PLN accounts.",
+            "totalPln": "Total balance (PLN)",
+            "countPln": "Number of accounts (PLN): {count}",
+            "invalidSkipped": "Some balances were skipped in the total.",
+            "addToSeeSummary": "Add an account to see the summary."
         },
-        "openingBalance": {
-          "label": "Opening balance",
-          "placeholder": "e.g. 1000.00"
+        "card": {
+            "deleteAria": "Delete account",
+            "currentBalance": "Current balance"
+        },
+        "adjust": {
+            "title": "Set balance",
+            "description": "This will set the current balance to the provided value. Transaction history will not be changed.",
+            "newBalanceLabel": "New balance",
+            "newBalancePlaceholder": "e.g. 1234.56",
+            "confirmLabel": "I understand this operation does not change transaction history.",
+            "confirmHint": "Use only to correct the current balance."
+        },
+        "delete": {
+            "title": "Delete account?",
+            "description": "The account will be removed from the list. Transactions will remain in history, but will be read-only.",
+            "currentBalanceLine": "Current balance: {amount} {symbol}",
+            "confirm": "Delete account"
+        },
+        "enums": {
+            "accountType": {
+                "checking": "Checking account",
+                "savings": "Savings account"
+            },
+            "bank": {
+                "bnp-paribas": "BNP Paribas",
+                "mbank": "mBank",
+                "cash": "Cash"
+            }
         }
-      },
-      "openingBalanceHint": "In the MVP, the current balance starts from the opening balance."
     },
-    "summary": {
-      "title": "Summary",
-      "description": "Sum of balances for all PLN accounts.",
-      "totalPln": "Total balance (PLN)",
-      "countPln": "Number of accounts (PLN): {count}",
-      "invalidSkipped": "Some balances were skipped in the total.",
-      "addToSeeSummary": "Add an account to see the summary."
+    "actions": {
+        "edit": "Edit",
+        "setBalance": "Set balance",
+        "cancel": "Cancel",
+        "save": "Save"
     },
-    "card": {
-      "deleteAria": "Delete account",
-      "currentBalance": "Current balance"
-    },
-    "adjust": {
-      "title": "Set balance",
-      "description": "This will set the current balance to the provided value. Transaction history will not be changed.",
-      "newBalanceLabel": "New balance",
-      "newBalancePlaceholder": "e.g. 1234.56",
-      "confirmLabel": "I understand this operation does not change transaction history.",
-      "confirmHint": "Use only to correct the current balance."
-    },
-    "delete": {
-      "title": "Delete account?",
-      "description": "The account will be removed from the list. Transactions will remain in history, but will be read-only.",
-      "currentBalanceLine": "Current balance: {amount} {symbol}",
-      "confirm": "Delete account"
-    },
-    "enums": {
-      "accountType": {
-        "checking": "Checking account",
-        "savings": "Savings account"
-      },
-      "bank": {
-        "bnp-paribas": "BNP Paribas",
-        "mbank": "mBank",
-        "cash": "Cash"
-      }
-    }
-  },
-  "actions": {
-    "edit": "Edit",
-    "setBalance": "Set balance",
-    "cancel": "Cancel",
-    "save": "Save"
-  },
-  "transactions": {
-    "index": {
-      "title": "Transactions",
-      "addTransaction": "Add transaction",
-      "filters": {
-        "account": {
-          "label": "Account",
-          "all": "All accounts"
+    "transactions": {
+        "index": {
+            "title": "Transactions",
+            "addTransaction": "Add transaction",
+            "filters": {
+                "account": {
+                    "label": "Account",
+                    "all": "All accounts"
+                },
+                "from": "From",
+                "to": "To",
+                "sort": "Sort",
+                "direction": "Direction",
+                "apply": "Apply",
+                "clear": "Clear filters",
+                "errors": {
+                    "dateRange": "The “From” date cannot be later than the “To” date.",
+                    "dateFormat": "Enter a date in DD-MM-YYYY format."
+                },
+                "presets": {
+                    "thisMonth": "This month",
+                    "last7Days": "Last 7 days"
+                }
+            },
+            "sort": {
+                "date": "Date",
+                "amount": "Amount",
+                "asc": "Ascending",
+                "desc": "Descending"
+            },
+            "summary": {
+                "income": "Income",
+                "expense": "Expenses"
+            },
+            "table": {
+                "date": "Date",
+                "account": "Account",
+                "description": "Description",
+                "subject": "Subject",
+                "amount": "Amount",
+                "actions": "Actions"
+            },
+            "readOnly": {
+                "badge": "Read-only",
+                "deletedAccount": "Deleted account",
+                "noActions": "No actions"
+            },
+            "empty": {
+                "filtered": "No transactions match your filters.",
+                "firstUse": "You don't have any transactions yet.",
+                "import": "Import file"
+            },
+            "pagination": {
+                "aria": "Pagination",
+                "prev": "Previous",
+                "next": "Next",
+                "pageOf": "Page {page} of {pages}",
+                "perPageLabel": "Items per page"
+            },
+            "a11y": {
+                "sortByDate": "Sort by date",
+                "sortByAmount": "Sort by amount",
+                "edit": "Edit transaction: {description}"
+            }
         },
-        "from": "From",
-        "to": "To",
-        "sort": "Sort",
-        "direction": "Direction",
-        "apply": "Apply",
-        "clear": "Clear filters",
-        "errors": {
-          "dateRange": "The “From” date cannot be later than the “To” date.",
-          "dateFormat": "Enter a date in DD-MM-YYYY format."
+        "create": {
+            "title": "Add transaction",
+            "back": "Back"
         },
-        "presets": {
-          "thisMonth": "This month",
-          "last7Days": "Last 7 days"
+        "edit": {
+            "title": "Edit transaction",
+            "back": "Back"
+        },
+        "form": {
+            "account": "Account",
+            "date": "Date",
+            "amount": "Amount",
+            "description": "Description",
+            "subject": "Subject"
+        },
+        "types": {
+            "income": "Income",
+            "expense": "Expense"
         }
-      },
-      "sort": {
-        "date": "Date",
-        "amount": "Amount",
-        "asc": "Ascending",
-        "desc": "Descending"
-      },
-      "summary": {
-        "income": "Income",
-        "expense": "Expenses"
-      },
-      "table": {
-        "date": "Date",
-        "account": "Account",
-        "description": "Description",
-        "subject": "Subject",
-        "amount": "Amount",
-        "actions": "Actions"
-      },
-      "readOnly": {
-        "badge": "Read-only",
-        "deletedAccount": "Deleted account",
-        "noActions": "No actions"
-      },
-      "empty": {
-        "filtered": "No transactions match your filters.",
-        "firstUse": "You don't have any transactions yet.",
-        "import": "Import file"
-      },
-      "pagination": {
-        "aria": "Pagination",
-        "prev": "Previous",
-        "next": "Next",
-        "pageOf": "Page {page} of {pages}",
-        "perPageLabel": "Items per page"
-      },
-      "a11y": {
-        "sortByDate": "Sort by date",
-        "sortByAmount": "Sort by amount",
-        "edit": "Edit transaction: {description}"
-      }
     },
-    "create": {
-      "title": "Add transaction",
-      "back": "Back"
-    },
-    "edit": {
-      "title": "Edit transaction",
-      "back": "Back"
-    },
-    "form": {
-      "account": "Account",
-      "date": "Date",
-      "amount": "Amount",
-      "description": "Description",
-      "subject": "Subject"
+    "currency": {
+        "defaultSymbol": "zł"
     }
-  },
-  "currency": {
-    "defaultSymbol": "zł"
-  }
 }
-

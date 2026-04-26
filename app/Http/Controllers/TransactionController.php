@@ -165,7 +165,13 @@ final class TransactionController extends Controller
         $accounts = Account::query()
             ->whereBelongsTo($request->user())
             ->orderBy('name')
-            ->get(['id', 'name', 'currency_id']);
+            ->get(['id', 'name', 'currency_id', 'bank'])
+            ->map(fn (Account $account) => [
+                'id' => $account->id,
+                'name' => $account->name,
+                'currency_id' => $account->currency_id,
+                'bank_icon_url' => $account->bank_icon_url,
+            ]);
 
         return Inertia::render('transactions/Create', [
             'accounts' => $accounts,
@@ -174,9 +180,9 @@ final class TransactionController extends Controller
 
     public function store(StoreTransactionRequest $request, StoreTransaction $store): RedirectResponse
     {
-        $transaction = $store->handle($request->user(), $request->validated());
+        $store->handle($request->user(), $request->validated());
 
-        return to_route('transactions.edit', $transaction);
+        return to_route('transactions.index');
     }
 
     public function edit(Transaction $transaction, Request $request): Response
