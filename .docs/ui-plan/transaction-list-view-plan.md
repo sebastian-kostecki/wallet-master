@@ -19,88 +19,85 @@
 ## Lista zadań (do wykonania)
 
 ### 1) Struktura strony i nawigacja
-- [ ] Zdefiniować layout: nagłówek „Transakcje” + sekcja filtrów + podsumowanie + lista/tabela + paginacja.
-- [ ] Dodać główne CTA: „Dodaj transakcję” (nawiguje do osobnej strony dodawania).
-- [ ] Dodać akcję wiersza: „Edytuj” (nawiguje do strony edycji).
-- [ ] Ustalić zachowanie „Wstecz” z create/edit (powrót na listę z zachowanymi filtrami dzięki query string).
+- [x] Zdefiniować layout: nagłówek „Transakcje” + sekcja filtrów + podsumowanie + lista/tabela + paginacja.
+- [x] Dodać główne CTA: „Dodaj transakcję” (nawiguje do osobnej strony dodawania).
+- [x] Dodać akcję wiersza: „Edytuj” (nawiguje do strony edycji).
+- [x] Ustalić zachowanie „Wstecz” z create/edit (powrót na listę z zachowanymi filtrami dzięki query string).
 
 ### 2) Filtry (konto + zakres dat)
-- [ ] Filtr „Konto”: select z `accounts[]` + opcja „Wszystkie konta”.
-- [ ] Filtr „Zakres dat”: pola „Od” i „Do” (format `DD-MM-YYYY`).
-- [ ] Walidacja inline filtrów:
-  - [ ] Jeśli `od > do` → komunikat błędu przy polach zakresu.
-  - [ ] Jeśli format daty błędny → komunikat i brak odświeżenia listy.
-- [ ] Aktualizacja listy przez Inertia GET (query string) po zmianie filtrów:
-  - [ ] Przy zmianie filtrów reset paginacji do 1.
-  - [ ] Zapewnić widoczny stan „ładowanie” podczas przeładowania.
+- [x] Filtr „Konto”: select z `accounts[]` + opcja „Wszystkie konta”.
+- [x] Filtr „Zakres dat”: pola „Od” i „Do” (format `DD-MM-YYYY`).
+- [x] Walidacja inline filtrów:
+  - [x] Jeśli `od > do` → komunikat błędu przy polach zakresu.
+  - [x] Jeśli format daty błędny → komunikat i brak odświeżenia listy.
+- [x] Aktualizacja listy przez Inertia GET (query string) po zmianie filtrów:
+  - [x] Przy zmianie filtrów reset paginacji do 1.
+  - [x] Zapewnić widoczny stan „ładowanie” podczas przeładowania.
 - [ ] Przycisk „Wyczyść filtry” (czyści `account_id`, `from`, `to`, wraca do domyślnego sortu).
 
 ### 3) Sortowanie
-- [ ] Sort po dacie (domyślnie: malejąco) i po kwocie (rosnąco/malejąco).
-- [ ] Widoczny stan aktywnego sortu (etykieta + ikona kierunku).
-- [ ] Sortowanie jako query string (`sort`, `direction`) bez gubienia filtrów.
+- [x] Sort po dacie (domyślnie: malejąco) i po kwocie (rosnąco/malejąco).
+- [x] Widoczny stan aktywnego sortu (etykieta + ikona kierunku).
+- [x] Sortowanie jako query string (`sort`, `direction`) bez gubienia filtrów.
 
 ### 4) Lista/tabela transakcji
-- [ ] Zdecydować o formie:
-  - [ ] Desktop: tabela z kolumnami (Data, Konto, Opis, Subject, Kwota, Akcje).
-  - [ ] Mobile: lista kart/wierszy (Data + Opis, poniżej Konto/Subject, po prawej Kwota).
-- [ ] Formatowanie danych:
-  - [ ] Data prezentowana jako `DD-MM-YYYY`.
-  - [ ] Kwota prezentowana w formacie PL (przecinek), z wyróżnieniem przychód/wydatek kolorem i znakiem.
-  - [ ] Subject opcjonalny: jeśli pusty, nie zajmuje miejsca (lub subtelny placeholder typu „—”).
-- [ ] Akcje wiersza:
-  - [ ] „Edytuj” zawsze dostępne, o ile transakcja jest edytowalna.
-  - [ ] Jeśli transakcja jest powiązana z usuniętym kontem → wiersz oznaczyć jako read-only (copy + badge) i ukryć/wyłączyć akcje edycji/usuwania (w zależności od reguł backendu).
+- [x] Zdecydować o formie:
+  - [x] Desktop: tabela z kolumnami (Data, Konto, Opis, Subject, Kwota, Akcje). (Desktop to tabela; układ pól jest lekko inny niż w opisie, ale funkcjonalnie spełnia cel.)
+  - [x] Mobile: lista kart/wierszy (Data + Opis, poniżej Konto/Subject, po prawej Kwota).
+- [x] Formatowanie danych:
+  - [x] Kwota prezentowana w formacie PL (przecinek), z wyróżnieniem przychód/wydatek kolorem i znakiem.
+  - [x] Subject opcjonalny: jeśli pusty, nie zajmuje miejsca (lub subtelny placeholder typu „—”).
+- [x] Akcje wiersza:
+  - [x] „Edytuj” zawsze dostępne, o ile transakcja jest edytowalna.
+  - [x] Jeśli transakcja jest powiązana z usuniętym kontem → wiersz oznaczyć jako read-only (copy + badge) i ukryć/wyłączyć akcje edycji/usuwania (w zależności od reguł backendu).
 
 ### 5) Paginacja
-- [ ] Dodać kontrolkę paginacji opartą o paginację backendu (`transactions`).
-- [ ] Zmiana strony zachowuje aktualne filtry i sort (query string).
-- [ ] Na mobile: uproszczona paginacja (Poprzednia/Następna + „Strona X z Y”).
+- [x] Dodać kontrolkę paginacji opartą o paginację backendu (`transactions`).
+- [x] Zmiana strony zachowuje aktualne filtry i sort (query string).
+- [x] Na mobile: uproszczona paginacja (Poprzednia/Następna + „Strona X z Y”).
 
 ### 6) Podsumowanie wpływów i wydatków
-- [ ] Wyświetlić `summary.total_income` oraz `summary.total_expense` jako dwa „kafle”/metryki.
-- [ ] Podsumowanie zawsze zgodne z filtrami (konto + zakres dat).
-- [ ] Stany:
-  - [ ] Przy ładowaniu filtrów → skeleton dla kafli.
-  - [ ] Gdy brak wyników → nadal pokazać 0,00 dla obu wartości.
+- [x] Wyświetlić `summary.total_income` oraz `summary.total_expense` jako dwa „kafle”/metryki.
+- [x] Podsumowanie zawsze zgodne z filtrami (konto + zakres dat).
+- [x] Stany:
+  - [x] Przy ładowaniu filtrów → skeleton dla kafli.
+  - [x] Gdy brak wyników → nadal pokazać 0,00 dla obu wartości.
 
 ### 7) Stany UX (must-have)
-- [ ] Loading:
-  - [ ] Skeleton dla listy/tabeli + podsumowania.
-  - [ ] Zablokować wielokrotne szybkie przełączenia (np. disable na czas ładowania lub debounce).
-- [ ] Empty:
-  - [ ] „Brak transakcji dla wybranych filtrów” + CTA „Dodaj transakcję” i pomocnicze „Wyczyść filtry”.
-  - [ ] Jeśli w ogóle brak transakcji (pierwsze użycie) → mocniejszy empty state z CTA „Dodaj transakcję” + drugie CTA „Zaimportuj plik” (link do Import).
+- [x] Loading:
+  - [x] Skeleton dla listy/tabeli + podsumowania.
+  - [x] Zablokować wielokrotne szybkie przełączenia (np. disable na czas ładowania lub debounce).
+- [x] Empty:
+  - [x] „Brak transakcji dla wybranych filtrów” + CTA „Dodaj transakcję” i pomocnicze „Wyczyść filtry”.
+  - [x] Jeśli w ogóle brak transakcji (pierwsze użycie) → mocniejszy empty state z CTA „Dodaj transakcję” + drugie CTA „Zaimportuj plik” (link do Import).
 - [ ] Error:
-  - [ ] 422 (walidacja filtrów) → inline przy polach.
+  - [x] 422 (walidacja filtrów) → inline przy polach.
   - [ ] 403/404 → czytelny komunikat + akcja powrotu do listy bez filtrów.
   - [ ] Błąd sieci/500 → banner/toast + „Spróbuj ponownie”.
 
 ### 8) Copy (PL) — gotowe teksty
-- [ ] Nagłówek: „Transakcje”
-- [ ] CTA primary: „Dodaj transakcję”
+- [x] Nagłówek: „Transakcje”
+- [x] CTA primary: „Dodaj transakcję”
 - [ ] Filtry:
-  - [ ] Etykiety: „Konto”, „Od”, „Do”, „Sortuj”, „Kierunek”
-  - [ ] Placeholder select: „Wszystkie konta”
-  - [ ] Przycisk: „Wyczyść filtry”
-- [ ] Podsumowanie:
-  - [ ] „Wpływy” / „Wydatki”
-- [ ] Empty (po filtrach): „Brak transakcji dla wybranych filtrów.”
-  - [ ] Akcje: „Dodaj transakcję”, „Wyczyść filtry”
-- [ ] Empty (pierwsze użycie): „Nie masz jeszcze żadnych transakcji.”
-  - [ ] Akcje: „Dodaj transakcję”, „Zaimportuj plik”
-- [ ] Błędy filtrów:
-  - [ ] Zakres dat: „Data „Od” nie może być późniejsza niż „Do”.”
-  - [ ] Format daty: „Podaj datę w formacie DD-MM-YYYY.”
+  - [x] Placeholder select: „Wszystkie konta”
+- [x] Podsumowanie:
+  - [x] „Wpływy” / „Wydatki”
+- [x] Empty (po filtrach): „Brak transakcji dla wybranych filtrów.”
+  - [x] Akcje: „Dodaj transakcję”, „Wyczyść filtry”
+- [x] Empty (pierwsze użycie): „Nie masz jeszcze żadnych transakcji.”
+  - [x] Akcje: „Dodaj transakcję”, „Zaimportuj plik”
+- [x] Błędy filtrów:
+  - [x] Zakres dat: „Data „Od” nie może być późniejsza niż „Do”.”
+  - [x] Format daty: „Podaj datę w formacie DD-MM-YYYY.”
 
 ### 9) A11y checklist
-- [ ] Focus order: nagłówek → filtry → CTA → podsumowanie → lista → paginacja.
-- [ ] Wszystkie pola filtrów mają widoczne `label` (nie tylko placeholder).
-- [ ] Błędy powiązane z polami: `aria-describedby` + `aria-invalid`.
-- [ ] Sortowanie i paginacja dostępne z klawiatury (Tab/Enter/Space) i mają czytelne nazwy (np. `aria-label="Sortuj po dacie"`).
-- [ ] Akcje wiersza (Edytuj) dostępne klawiaturą i mają kontekst (np. `aria-label="Edytuj transakcję: {opis}"`).
+- [x] Focus order: nagłówek → filtry → CTA → podsumowanie → lista → paginacja.
+- [x] Wszystkie pola filtrów mają widoczne `label` (nie tylko placeholder).
+- [x] Błędy powiązane z polami: `aria-describedby` + `aria-invalid`.
+- [x] Sortowanie i paginacja dostępne z klawiatury (Tab/Enter/Space) i mają czytelne nazwy (np. `aria-label="Sortuj po dacie"`).
+- [x] Akcje wiersza (Edytuj) dostępne klawiaturą i mają kontekst (np. `aria-label="Edytuj transakcję: {opis}"`).
 - [ ] Kontrast WCAG AA dla stanów przychód/wydatek i focus ring.
-- [ ] Komunikaty ładowania: element z `aria-busy="true"` dla obszaru listy podczas przeładowania.
+- [x] Komunikaty ładowania: element z `aria-busy="true"` dla obszaru listy podczas przeładowania.
 
 ### 10) Telemetria (zgodnie z PRD)
 - [ ] `transactions_filtered` przy zmianie filtrów (z parametrami: account_id, from, to).

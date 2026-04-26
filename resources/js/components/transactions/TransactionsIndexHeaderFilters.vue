@@ -181,6 +181,10 @@ watch(
 
 const serverFromError = computed(() => props.serverErrors.from);
 const serverToError = computed(() => props.serverErrors.to);
+
+const errorId = 'transactions-filters-error';
+const errorMessage = computed(() => localErrors.value.from ?? serverFromError.value ?? localErrors.value.to ?? serverToError.value ?? '');
+const hasError = computed(() => errorMessage.value.trim() !== '');
 </script>
 
 <template>
@@ -193,17 +197,31 @@ const serverToError = computed(() => props.serverErrors.to);
                     :options="accountOptions"
                     :placeholder="t('transactions.index.filters.account.all')"
                     :disabled="isLoading"
+                    :aria-label="t('transactions.index.filters.account.label')"
+                    :aria-invalid="hasError"
+                    :aria-describedby="hasError ? errorId : undefined"
                     @update:model-value="(value: any) => (localAccountId = value)"
                 />
             </div>
 
             <div class="min-w-56 sm:min-w-64">
-                <DateRangePickerInput id="date_range" v-model:from="localFrom" v-model:to="localTo" :disabled="isLoading" @change="applyFiltersNow" />
+                <DateRangePickerInput
+                    id="date_range"
+                    v-model:from="localFrom"
+                    v-model:to="localTo"
+                    :disabled="isLoading"
+                    :aria-label="`${t('transactions.index.filters.from')} / ${t('transactions.index.filters.to')}`"
+                    :aria-invalid="hasError"
+                    :aria-describedby="hasError ? errorId : undefined"
+                    @change="applyFiltersNow"
+                />
             </div>
         </div>
 
-        <div v-if="(localErrors.from ?? serverFromError) || (localErrors.to ?? serverToError)" class="sm:ml-auto">
-            <InputError :message="localErrors.from ?? serverFromError ?? localErrors.to ?? serverToError" />
+        <div v-if="hasError" class="sm:ml-auto">
+            <div :id="errorId">
+                <InputError :message="errorMessage" />
+            </div>
         </div>
     </div>
 </template>

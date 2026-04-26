@@ -10,6 +10,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { toast } from 'vue-sonner';
 
 type Account = {
     id: number;
@@ -94,7 +95,17 @@ function applyAmountSign(amount: string): string {
 function submit() {
     form.amount = normalizeAmount(form.amount);
     form.amount = applyAmountSign(form.amount);
-    form.post(route('transactions.store'));
+    form.post(route('transactions.store'), {
+        onSuccess: () => {},
+        onError: (errors) => {
+            if (Object.keys(errors).length > 0) {
+                return;
+            }
+
+            toast.dismiss();
+            toast.error(t('transactions.toast.genericError'));
+        },
+    });
 }
 </script>
 

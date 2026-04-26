@@ -112,6 +112,9 @@
                 "presets": {
                     "thisMonth": "Ten miesiąc",
                     "last7Days": "Ostatnie 7 dni"
+                },
+                "a11y": {
+                    "clearDateRange": "Wyczyść zakres dat"
                 }
             },
             "sort": {
@@ -174,6 +177,11 @@
         "types": {
             "income": "Przychód",
             "expense": "Wydatek"
+        },
+        "toast": {
+            "created": "Transakcja dodana",
+            "updated": "Transakcja zaktualizowana",
+            "genericError": "Nie udało się zapisać zmian. Spróbuj ponownie."
         }
     },
     "currency": {

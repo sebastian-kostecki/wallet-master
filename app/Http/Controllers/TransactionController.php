@@ -182,7 +182,10 @@ final class TransactionController extends Controller
     {
         $store->handle($request->user(), $request->validated());
 
-        return to_route('transactions.index');
+        return to_route('transactions.index')->with('toast', [
+            'type' => 'success',
+            'message_key' => 'transactions.toast.created',
+        ]);
     }
 
     public function edit(Transaction $transaction, Request $request): Response
@@ -214,7 +217,10 @@ final class TransactionController extends Controller
     {
         $update->handle($transaction, $request->validated());
 
-        return to_route('transactions.edit', $transaction);
+        return to_route('transactions.edit', $transaction)->with('toast', [
+            'type' => 'success',
+            'message_key' => 'transactions.toast.updated',
+        ]);
     }
 
     public function destroy(Transaction $transaction, DeleteTransaction $delete): RedirectResponse

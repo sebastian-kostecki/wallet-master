@@ -12,6 +12,9 @@ const props = defineProps<{
     from: string; // DD-MM-YYYY or ''
     to: string; // DD-MM-YYYY or ''
     disabled?: boolean;
+    ariaInvalid?: boolean;
+    ariaDescribedby?: string;
+    ariaLabelledby?: string;
 }>();
 
 const emit = defineEmits<{
@@ -173,6 +176,9 @@ function applyPresetLast7Days() {
                 type="button"
                 variant="outline"
                 :disabled="disabled"
+                :aria-invalid="ariaInvalid ? 'true' : undefined"
+                :aria-describedby="ariaDescribedby"
+                :aria-labelledby="ariaLabelledby"
                 :class="
                     cn(
                         'h-10 w-full justify-between px-3 text-left font-normal',
@@ -194,7 +200,7 @@ function applyPresetLast7Days() {
                                 isClearDisabled ? 'cursor-not-allowed opacity-40' : 'hover:bg-muted',
                             )
                         "
-                        :aria-label="'Clear date range'"
+                        :aria-label="t('transactions.index.filters.a11y.clearDateRange')"
                         @click.stop="onClearClick"
                     >
                         <X class="h-4 w-4" aria-hidden="true" />

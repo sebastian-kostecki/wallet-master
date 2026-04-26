@@ -17,10 +17,14 @@ const props = withDefaults(
         placeholder: string;
         disabled?: boolean;
         size?: 'sm' | 'md';
+        ariaInvalid?: boolean;
+        ariaDescribedby?: string;
+        ariaLabelledby?: string;
     }>(),
     {
         disabled: false,
         size: 'md',
+        ariaInvalid: false,
     },
 );
 
@@ -46,6 +50,9 @@ const triggerClass = computed(() => {
                 variant="outline"
                 :class="['w-full justify-between', triggerClass]"
                 :disabled="props.disabled"
+                :aria-invalid="props.ariaInvalid ? 'true' : undefined"
+                :aria-describedby="props.ariaDescribedby"
+                :aria-labelledby="props.ariaLabelledby"
             >
                 <span class="flex min-w-0 items-center gap-2">
                     <slot name="trigger-leading" :selected="selected" />

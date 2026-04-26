@@ -112,6 +112,9 @@
                 "presets": {
                     "thisMonth": "This month",
                     "last7Days": "Last 7 days"
+                },
+                "a11y": {
+                    "clearDateRange": "Clear date range"
                 }
             },
             "sort": {
@@ -173,6 +176,11 @@
         "types": {
             "income": "Income",
             "expense": "Expense"
+        },
+        "toast": {
+            "created": "Transaction added",
+            "updated": "Transaction updated",
+            "genericError": "We couldn't save your changes. Please try again."
         }
     },
     "currency": {

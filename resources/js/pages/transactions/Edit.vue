@@ -10,6 +10,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { toast } from 'vue-sonner';
 
 type Account = {
     id: number;
@@ -87,7 +88,17 @@ const selectedAccount = computed(() => {
 
 function submit() {
     form.amount = normalizeAmount(form.amount);
-    form.put(route('transactions.update', props.transaction.id));
+    form.put(route('transactions.update', props.transaction.id), {
+        onSuccess: () => {},
+        onError: (errors) => {
+            if (Object.keys(errors).length > 0) {
+                return;
+            }
+
+            toast.dismiss();
+            toast.error(t('transactions.toast.genericError'));
+        },
+    });
 }
 </script>
 
