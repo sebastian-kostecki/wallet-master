@@ -183,6 +183,11 @@
             "genericError": "We couldn't save your changes. Please try again."
         }
     },
+    "transfers": {
+        "toast": {
+            "created": "Transfer created"
+        }
+    },
     "currency": {
         "defaultSymbol": "zł"
     }

@@ -184,6 +184,11 @@
             "genericError": "Nie udało się zapisać zmian. Spróbuj ponownie."
         }
     },
+    "transfers": {
+        "toast": {
+            "created": "Transfer utworzony"
+        }
+    },
     "currency": {
         "defaultSymbol": "zł"
     }
