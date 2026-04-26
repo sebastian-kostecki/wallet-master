@@ -4,16 +4,16 @@
 
 ## Application
 
-| Area | Tech |
-|------|------|
-| Backend | Laravel 13, PHP `^8.2` (Sail runtime: PHP 8.5), Inertia Laravel v2, Ziggy, Tinker, `laravel/mcp` |
-| Frontend | Vue 3 + TypeScript, Inertia Vue v2, Vite 6, Tailwind 3 + PostCSS |
-| UI entrypoints | `resources/js/app.ts` · pages `resources/js/pages/**/*.vue` · `@` → `resources/js` |
-| UI libs | Headless UI, Radix Vue, Lucide, VueUse, CVA / clsx / tailwind-merge |
-| Auth | Laravel session auth, `App\Http\Controllers\Auth\*` (Inertia starter; no Fortify in `composer.json`) |
-| DB | Default: **SQLite** (`database/database.sqlite`). With Sail: typically **MySQL**, DNS host **`mysql`**. |
-| Queues | Default: **`database`**; with Sail you can switch to **Redis** (`redis`) by changing `QUEUE_CONNECTION`. |
-| Static analysis | Larastan (PHPStan) `larastan/larastan` `^3.0` |
+| Area            | Tech                                                                                              |
+|-----------------|---------------------------------------------------------------------------------------------------|
+| Backend         | Laravel 13, PHP `^8.5`, Inertia Laravel v2, Ziggy, Tinker, `laravel/mcp`                          |
+| Frontend        | Vue 3 + TypeScript, Inertia Vue v2, Vite 6, Tailwind 3 + PostCSS                                  |
+| UI entrypoints  | `resources/js/app.ts` · pages `resources/js/pages/**/*.vue` · `@` → `resources/js`                |
+| UI libs         | Headless UI, Radix Vue, Lucide, VueUse, CVA / clsx / tailwind-merge                               |
+| Auth            | Laravel session auth, `App\Http\Controllers\Auth\*` (Inertia starter; no Fortify in `composer.json`) |
+| DB              | **MySQL**, DNS host **`mysql`**.                                                         |
+| Queues          | **Redis** (`redis`).                                                |
+| Static analysis | Larastan (PHPStan) `larastan/larastan` `^3.0`                                                     |
 
 ## Laravel Sail — `compose.yaml`
 
