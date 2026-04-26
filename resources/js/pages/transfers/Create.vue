@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowRightLeft, AlertTriangle } from 'lucide-vue-next';
+import { AlertTriangle } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
@@ -18,6 +18,7 @@ type Account = {
     name: string;
     currency_id: number;
     is_deleted: boolean;
+    bank_icon_url: string | null;
 };
 
 const props = defineProps<{
@@ -55,6 +56,8 @@ const accountOptions = computed<DropdownOption<number>[]>(() =>
     })),
 );
 
+const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
+
 function todayDdMmYyyy(): string {
     const now = new Date();
     const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
@@ -84,7 +87,6 @@ const form = useForm<{
 });
 
 const formErrorId = 'transfer-form-error';
-const hasFormError = computed(() => Boolean(form.hasErrors && !form.errors.from_account_id && !form.errors.to_account_id && !form.errors.date && !form.errors.amount));
 
 const fromAccount = computed(() => props.accounts.find((a) => a.id === form.from_account_id) ?? null);
 const toAccount = computed(() => props.accounts.find((a) => a.id === form.to_account_id) ?? null);
@@ -122,102 +124,169 @@ function submit() {
         </template>
 
         <div class="flex flex-col gap-6 p-4">
-            <div class="max-w-2xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                <div class="flex items-start gap-3">
-                    <div class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
-                        <ArrowRightLeft class="h-4 w-4" aria-hidden="true" />
+            <div class="grid gap-6 lg:grid-cols-2">
+                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                    <div v-if="!canTransfer" class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 text-sm dark:border-sidebar-border">
+                        <p class="text-muted-foreground">{{ t('transfers.create.empty') }}</p>
+                        <div class="mt-4">
+                            <Button as-child>
+                                <Link :href="route('accounts.create')">{{ t('accounts.index.addAccount') }}</Link>
+                            </Button>
+                        </div>
                     </div>
-                    <div class="min-w-0">
-                        <h1 class="text-lg font-semibold">{{ t('transfers.create.title') }}</h1>
-                        <p class="mt-1 text-sm text-muted-foreground">
+
+                    <form v-else @submit.prevent="submit" class="grid gap-6" :aria-busy="form.processing ? 'true' : 'false'">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <FormField for-id="from_account_id" :label="t('transfers.form.fromAccount')" :error="form.errors.from_account_id">
+                                <DropdownSelect
+                                    id="from_account_id"
+                                    :model-value="form.from_account_id"
+                                    :options="accountOptions"
+                                    :placeholder="t('transfers.form.selectPlaceholder')"
+                                    :disabled="form.processing"
+                                    :aria-invalid="Boolean(form.errors.from_account_id || (isSameAccount && form.to_account_id !== null))"
+                                    :aria-describedby="form.errors.from_account_id ? 'from_account_id-error' : undefined"
+                                    @update:model-value="(value) => (form.from_account_id = value)"
+                                >
+                                    <template #trigger-leading>
+                                        <span
+                                            v-if="fromAccount"
+                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted"
+                                            aria-hidden="true"
+                                        >
+                                            <img
+                                                v-if="fromAccount.bank_icon_url"
+                                                :src="fromAccount.bank_icon_url"
+                                                :alt="fromAccount.name"
+                                                class="h-5 w-5 object-cover"
+                                            />
+                                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                {{ fromAccount.name.charAt(0).toUpperCase() }}
+                                            </span>
+                                        </span>
+                                    </template>
+
+                                    <template #option-leading="{ option }">
+                                        <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted" aria-hidden="true">
+                                            <img
+                                                v-if="accountsById.get(option.value)?.bank_icon_url"
+                                                :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
+                                                :alt="accountsById.get(option.value)?.name ?? ''"
+                                                class="h-5 w-5 object-cover"
+                                            />
+                                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                            </span>
+                                        </span>
+                                    </template>
+                                </DropdownSelect>
+                                <div v-if="fromAccount?.is_deleted" class="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
+                                    <AlertTriangle class="mt-0.5 h-4 w-4" aria-hidden="true" />
+                                    <span>{{ t('transfers.form.deletedNotice') }}</span>
+                                </div>
+                            </FormField>
+
+                            <FormField for-id="to_account_id" :label="t('transfers.form.toAccount')" :error="form.errors.to_account_id">
+                                <DropdownSelect
+                                    id="to_account_id"
+                                    :model-value="form.to_account_id"
+                                    :options="accountOptions"
+                                    :placeholder="t('transfers.form.selectPlaceholder')"
+                                    :disabled="form.processing"
+                                    :aria-invalid="Boolean(form.errors.to_account_id || isSameAccount)"
+                                    :aria-describedby="form.errors.to_account_id ? 'to_account_id-error' : isSameAccount ? formErrorId : undefined"
+                                    @update:model-value="(value) => (form.to_account_id = value)"
+                                >
+                                    <template #trigger-leading>
+                                        <span v-if="toAccount" class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted" aria-hidden="true">
+                                            <img v-if="toAccount.bank_icon_url" :src="toAccount.bank_icon_url" :alt="toAccount.name" class="h-5 w-5 object-cover" />
+                                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                {{ toAccount.name.charAt(0).toUpperCase() }}
+                                            </span>
+                                        </span>
+                                    </template>
+
+                                    <template #option-leading="{ option }">
+                                        <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted" aria-hidden="true">
+                                            <img
+                                                v-if="accountsById.get(option.value)?.bank_icon_url"
+                                                :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
+                                                :alt="accountsById.get(option.value)?.name ?? ''"
+                                                class="h-5 w-5 object-cover"
+                                            />
+                                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                            </span>
+                                        </span>
+                                    </template>
+                                </DropdownSelect>
+                                <div v-if="toAccount?.is_deleted" class="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
+                                    <AlertTriangle class="mt-0.5 h-4 w-4" aria-hidden="true" />
+                                    <span>{{ t('transfers.form.deletedNotice') }}</span>
+                                </div>
+                            </FormField>
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <FormField for-id="amount" :label="t('transfers.form.amount')" :error="form.errors.amount">
+                                <Input
+                                    id="amount"
+                                    v-model="form.amount"
+                                    inputmode="decimal"
+                                    :disabled="form.processing"
+                                    :placeholder="t('transfers.form.amountPlaceholder')"
+                                />
+                            </FormField>
+
+                            <FormField for-id="date" :label="t('transfers.form.date')" :error="form.errors.date">
+                                <DatePickerInput
+                                    id="date"
+                                    :model-value="form.date"
+                                    :disabled="form.processing"
+                                    @update:model-value="(value) => (form.date = value)"
+                                />
+                            </FormField>
+                        </div>
+
+                        <FormField for-id="description" :label="t('transfers.form.descriptionOptional')" :error="form.errors.description">
+                            <textarea
+                                id="description"
+                                v-model="form.description"
+                                :disabled="form.processing"
+                                rows="3"
+                                class="flex min-h-[84px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                            />
+                        </FormField>
+
+                        <div v-if="isSameAccount" :id="formErrorId" class="text-sm text-rose-600 dark:text-rose-400">
+                            {{ t('transfers.form.sameAccountError') }}
+                        </div>
+
+                        <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button type="submit" :disabled="form.processing || isSameAccount">
+                                {{ form.processing ? t('transfers.form.saving') : t('transfers.form.submit') }}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                    <h2 class="text-base font-semibold">{{ t('transfers.create.title') }}</h2>
+                    <div class="mt-3 grid gap-3 text-sm text-muted-foreground">
+                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
                             {{ t('transfers.create.description') }}
-                        </p>
+                        </div>
+                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                            {{ t('transfers.form.hint') }}
+                        </div>
+                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                            {{ t('transfers.form.sameAccountError') }}
+                        </div>
+                        <div v-if="!canTransfer" class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                            {{ t('transfers.create.empty') }}
+                        </div>
                     </div>
                 </div>
-
-                <div v-if="!canTransfer" class="mt-6 rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 text-sm dark:border-sidebar-border">
-                    <p class="text-muted-foreground">{{ t('transfers.create.empty') }}</p>
-                    <div class="mt-4">
-                        <Button as-child>
-                            <Link :href="route('accounts.create')">{{ t('accounts.index.addAccount') }}</Link>
-                        </Button>
-                    </div>
-                </div>
-
-                <form v-else @submit.prevent="submit" class="mt-6 grid gap-6" :aria-busy="form.processing ? 'true' : 'false'">
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <FormField for-id="from_account_id" :label="t('transfers.form.fromAccount')" :error="form.errors.from_account_id">
-                            <DropdownSelect
-                                id="from_account_id"
-                                :model-value="form.from_account_id"
-                                :options="accountOptions"
-                                :placeholder="t('transfers.form.selectPlaceholder')"
-                                :disabled="form.processing"
-                                :aria-invalid="Boolean(form.errors.from_account_id || (isSameAccount && form.to_account_id !== null))"
-                                :aria-describedby="form.errors.from_account_id ? 'from_account_id-error' : undefined"
-                                @update:model-value="(value) => (form.from_account_id = value)"
-                            />
-                            <div v-if="fromAccount?.is_deleted" class="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
-                                <AlertTriangle class="mt-0.5 h-4 w-4" aria-hidden="true" />
-                                <span>{{ t('transfers.form.deletedNotice') }}</span>
-                            </div>
-                        </FormField>
-
-                        <FormField for-id="to_account_id" :label="t('transfers.form.toAccount')" :error="form.errors.to_account_id">
-                            <DropdownSelect
-                                id="to_account_id"
-                                :model-value="form.to_account_id"
-                                :options="accountOptions"
-                                :placeholder="t('transfers.form.selectPlaceholder')"
-                                :disabled="form.processing"
-                                :aria-invalid="Boolean(form.errors.to_account_id || isSameAccount)"
-                                :aria-describedby="form.errors.to_account_id ? 'to_account_id-error' : isSameAccount ? formErrorId : undefined"
-                                @update:model-value="(value) => (form.to_account_id = value)"
-                            />
-                            <div v-if="toAccount?.is_deleted" class="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
-                                <AlertTriangle class="mt-0.5 h-4 w-4" aria-hidden="true" />
-                                <span>{{ t('transfers.form.deletedNotice') }}</span>
-                            </div>
-                        </FormField>
-                    </div>
-
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <FormField for-id="amount" :label="t('transfers.form.amount')" :error="form.errors.amount">
-                            <Input id="amount" v-model="form.amount" inputmode="decimal" :disabled="form.processing" :placeholder="t('transfers.form.amountPlaceholder')" />
-                        </FormField>
-
-                        <FormField for-id="date" :label="t('transfers.form.date')" :error="form.errors.date">
-                            <DatePickerInput id="date" :model-value="form.date" :disabled="form.processing" @update:model-value="(value) => (form.date = value)" />
-                        </FormField>
-                    </div>
-
-                    <FormField for-id="description" :label="t('transfers.form.descriptionOptional')" :error="form.errors.description">
-                        <textarea
-                            id="description"
-                            v-model="form.description"
-                            :disabled="form.processing"
-                            rows="3"
-                            class="flex min-h-[84px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                        />
-                    </FormField>
-
-                    <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 text-sm text-muted-foreground dark:border-sidebar-border">
-                        {{ t('transfers.form.hint') }}
-                    </div>
-
-                    <div v-if="isSameAccount" :id="formErrorId" class="text-sm text-rose-600 dark:text-rose-400">
-                        {{ t('transfers.form.sameAccountError') }}
-                    </div>
-
-                    <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                        <Button variant="secondary" as-child :disabled="form.processing">
-                            <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
-                        </Button>
-                        <Button type="submit" :disabled="form.processing || isSameAccount">
-                            {{ form.processing ? t('transfers.form.saving') : t('transfers.form.submit') }}
-                        </Button>
-                    </div>
-                </form>
             </div>
         </div>
     </AppLayout>

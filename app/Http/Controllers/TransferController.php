@@ -19,12 +19,13 @@ final class TransferController extends Controller
             ->withTrashed()
             ->whereBelongsTo($request->user())
             ->orderBy('name')
-            ->get(['id', 'name', 'currency_id', 'deleted_at'])
+            ->get(['id', 'name', 'currency_id', 'bank', 'deleted_at'])
             ->map(fn (Account $account) => [
                 'id' => $account->id,
                 'name' => $account->name,
                 'currency_id' => $account->currency_id,
                 'is_deleted' => $account->trashed(),
+                'bank_icon_url' => $account->bank_icon_url,
             ]);
 
         return Inertia::render('transfers/Create', [

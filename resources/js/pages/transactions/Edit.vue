@@ -108,81 +108,100 @@ function submit() {
 
         <template #headerActions>
             <Button variant="secondary" as-child>
-                <Link :href="route('transactions.index') + currentSearch">{{ t('transactions.edit.back') }}</Link>
+                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
             </Button>
         </template>
 
         <div class="flex flex-col gap-6 p-4">
-            <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                <form @submit.prevent="submit" class="grid gap-6">
-                    <FormField for-id="account_id" :label="t('transactions.form.account')" :error="form.errors.account_id">
-                        <DropdownSelect
-                            id="account_id"
-                            :model-value="form.account_id"
-                            :options="accountOptions"
-                            :placeholder="t('transactions.form.account')"
-                            :disabled="form.processing || accounts.length === 0"
-                            @update:model-value="(value) => (form.account_id = value)"
-                        >
-                            <template #trigger-leading>
-                                <span v-if="selectedAccount" class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
-                                    <img
-                                        v-if="selectedAccount.bank_icon_url"
-                                        :src="selectedAccount.bank_icon_url"
-                                        :alt="selectedAccount.name"
-                                        class="h-5 w-5 object-cover"
-                                    />
-                                    <span v-else class="text-[10px] font-semibold text-muted-foreground">
-                                        {{ selectedAccount.name.charAt(0).toUpperCase() }}
+            <div class="grid gap-6 lg:grid-cols-2">
+                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                    <form @submit.prevent="submit" class="grid gap-6" :aria-busy="form.processing ? 'true' : 'false'">
+                        <FormField for-id="account_id" :label="t('transactions.form.account')" :error="form.errors.account_id">
+                            <DropdownSelect
+                                id="account_id"
+                                :model-value="form.account_id"
+                                :options="accountOptions"
+                                :placeholder="t('transactions.form.account')"
+                                :disabled="form.processing || accounts.length === 0"
+                                @update:model-value="(value) => (form.account_id = value)"
+                            >
+                                <template #trigger-leading>
+                                    <span v-if="selectedAccount" class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
+                                        <img
+                                            v-if="selectedAccount.bank_icon_url"
+                                            :src="selectedAccount.bank_icon_url"
+                                            :alt="selectedAccount.name"
+                                            class="h-5 w-5 object-cover"
+                                        />
+                                        <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                            {{ selectedAccount.name.charAt(0).toUpperCase() }}
+                                        </span>
                                     </span>
-                                </span>
-                            </template>
+                                </template>
 
-                            <template #option-leading="{ option }">
-                                <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
-                                    <img
-                                        v-if="accountsById.get(option.value)?.bank_icon_url"
-                                        :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
-                                        :alt="accountsById.get(option.value)?.name ?? ''"
-                                        class="h-5 w-5 object-cover"
-                                    />
-                                    <span v-else class="text-[10px] font-semibold text-muted-foreground">
-                                        {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                <template #option-leading="{ option }">
+                                    <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
+                                        <img
+                                            v-if="accountsById.get(option.value)?.bank_icon_url"
+                                            :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
+                                            :alt="accountsById.get(option.value)?.name ?? ''"
+                                            class="h-5 w-5 object-cover"
+                                        />
+                                        <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                            {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                        </span>
                                     </span>
-                                </span>
-                            </template>
-                        </DropdownSelect>
-                    </FormField>
+                                </template>
+                            </DropdownSelect>
+                        </FormField>
 
-                    <FormField for-id="date" :label="t('transactions.form.date')" :error="form.errors.date">
-                        <DatePickerInput
-                            id="date"
-                            :model-value="form.date"
-                            :disabled="form.processing"
-                            @update:model-value="(value) => (form.date = value)"
-                        />
-                    </FormField>
+                        <FormField for-id="date" :label="t('transactions.form.date')" :error="form.errors.date">
+                            <DatePickerInput
+                                id="date"
+                                :model-value="form.date"
+                                :disabled="form.processing"
+                                @update:model-value="(value) => (form.date = value)"
+                            />
+                        </FormField>
 
-                    <FormField for-id="amount" :label="t('transactions.form.amount')" :error="form.errors.amount">
-                        <Input id="amount" v-model="form.amount" inputmode="decimal" :disabled="form.processing" />
-                    </FormField>
+                        <FormField for-id="amount" :label="t('transactions.form.amount')" :error="form.errors.amount">
+                            <Input id="amount" v-model="form.amount" inputmode="decimal" :disabled="form.processing" />
+                        </FormField>
 
-                    <FormField for-id="subject" :label="t('transactions.form.subject')" :error="form.errors.subject">
-                        <Input id="subject" v-model="form.subject" :disabled="form.processing" />
-                    </FormField>
+                        <FormField for-id="subject" :label="t('transactions.form.subject')" :error="form.errors.subject">
+                            <Input id="subject" v-model="form.subject" :disabled="form.processing" />
+                        </FormField>
 
-                    <FormField for-id="description" :label="t('transactions.form.description')" :error="form.errors.description">
-                        <textarea
-                            id="description"
-                            v-model="form.description"
-                            :disabled="form.processing"
-                            rows="4"
-                            class="flex min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                        />
-                    </FormField>
+                        <FormField for-id="description" :label="t('transactions.form.description')" :error="form.errors.description">
+                            <textarea
+                                id="description"
+                                v-model="form.description"
+                                :disabled="form.processing"
+                                rows="4"
+                                class="flex min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                            />
+                        </FormField>
 
-                    <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
-                </form>
+                        <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                            <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                    <h2 class="text-base font-semibold">{{ t('transactions.edit.hints.title') }}</h2>
+                    <div class="mt-3 grid gap-3 text-sm text-muted-foreground">
+                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                            {{ t('transactions.edit.hints.scope') }}
+                        </div>
+                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                            {{ t('transactions.edit.hints.amount') }}
+                        </div>
+                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                            {{ t('transactions.edit.hints.save') }}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>

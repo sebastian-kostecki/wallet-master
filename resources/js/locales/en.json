@@ -161,11 +161,23 @@
         },
         "create": {
             "title": "Add transaction",
-            "back": "Back"
+            "back": "Back",
+            "hints": {
+                "title": "Tips",
+                "type": "Choose “Income” or “Expense”. This affects the amount sign.",
+                "amount": "You can enter decimals. For expenses we'll store the amount as negative.",
+                "description": "A clear description makes it easier to find the transaction later."
+            }
         },
         "edit": {
             "title": "Edit transaction",
-            "back": "Back"
+            "back": "Back",
+            "hints": {
+                "title": "Info",
+                "scope": "You're editing an existing transaction — changes will be reflected in history.",
+                "amount": "Double-check the amount sign (+/−). It affects the account balance.",
+                "save": "After saving, you'll be taken back to the transactions list."
+            }
         },
         "form": {
             "account": "Account",

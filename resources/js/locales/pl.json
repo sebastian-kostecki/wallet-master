@@ -161,11 +161,23 @@
         },
         "create": {
             "title": "Dodaj transakcję",
-            "back": "Wróć"
+            "back": "Wróć",
+            "hints": {
+                "title": "Wskazówki",
+                "type": "Wybierz „Przychód” lub „Wydatek”. To wpływa na znak kwoty.",
+                "amount": "Kwota może być wpisana z przecinkiem. Dla wydatku zostanie zapisana jako ujemna.",
+                "description": "Opis pomaga szybciej znaleźć transakcję w historii."
+            }
         },
         "edit": {
             "title": "Edytuj transakcję",
-            "back": "Wróć"
+            "back": "Wróć",
+            "hints": {
+                "title": "Informacje",
+                "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
+                "amount": "Sprawdź znak kwoty (plus/minus). To wpływa na saldo konta.",
+                "save": "Po zapisaniu wrócisz do listy transakcji."
+            }
         },
         "form": {
             "account": "Konto",

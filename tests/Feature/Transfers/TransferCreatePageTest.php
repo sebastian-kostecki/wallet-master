@@ -49,8 +49,9 @@ test('page renders and includes active + deleted accounts', function () {
         ->has('accounts', 2)
         ->where('accounts.0.id', $active->id)
         ->where('accounts.0.is_deleted', false)
+        ->where('accounts.0.bank_icon_url', $active->bank_icon_url)
         ->where('accounts.1.id', $deleted->id)
         ->where('accounts.1.is_deleted', true)
+        ->where('accounts.1.bank_icon_url', $deleted->bank_icon_url)
     );
 });
-
