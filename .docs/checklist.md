@@ -65,7 +65,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Soft delete konta.
   - [~] Zablokować edycję/usuwanie transakcji na usuniętym koncie:
     - [x] backend (policy)
-    - [ ] UI (blokady/ukrycie akcji; do wdrożenia, gdy UI transakcji istnieje)
+    - [x] UI (blokady/ukrycie akcji)
   - [~] Zablokować import i transfer dla usuniętego konta:
     - [x] backend: częściowo (Import policy dla commit)
     - [ ] backend: brak tras/flow importu i transferu → do wdrożenia wraz z modułami
@@ -77,38 +77,39 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 4) Transakcje — API/CRUD + UI
-- [ ] Lista transakcji:
-  - [ ] Filtry: konto, zakres dat
-  - [ ] Sort: data/kwota
-  - [ ] Paginacja (backend)
-  - [ ] Podsumowanie zakresu: suma wpływów i wydatków (oddzielnie)
-  - [ ] Empty state + CTA
-- [ ] Dodanie transakcji:
-  - [ ] Pola: data (DD-MM-YYYY), kwota (decimal), opis, subject (opcjonalny)
-  - [ ] Ustalenie typu na podstawie znaku kwoty (ujemna=wydatek, dodatnia=przychód)
-  - [ ] Walidacje: kwota != 0; konto nieusunięte
-  - [ ] Aktualizacja `current_balance` konta deltą kwoty
-- [ ] Edycja transakcji:
-  - [ ] Zmiana pól i przeliczenie delty salda (stara kwota → nowa kwota)
-  - [ ] Blokada edycji dla transakcji na usuniętym koncie
-- [ ] Usuwanie transakcji:
-  - [ ] Aktualizacja salda deltą (odwrócenie wpływu)
-  - [ ] Blokada usuwania dla transakcji na usuniętym koncie
+- [x] Lista transakcji:
+  - [x] Filtry: konto, zakres dat
+  - [x] Sort: data/kwota
+  - [x] Paginacja (backend)
+  - [x] Podsumowanie zakresu: suma wpływów i wydatków (oddzielnie)
+  - [x] Empty state + CTA
+- [x] Dodanie transakcji:
+  - [x] Pola: data (DD-MM-YYYY), kwota (decimal), opis, subject (opcjonalny)
+  - [x] Ustalenie typu na podstawie znaku kwoty (ujemna=wydatek, dodatnia=przychód)
+  - [x] Walidacje: kwota != 0; konto nieusunięte
+  - [x] Aktualizacja `current_balance` konta deltą kwoty
+- [x] Edycja transakcji:
+  - [x] Zmiana pól i przeliczenie delty salda (stara kwota → nowa kwota)
+  - [x] Blokada edycji dla transakcji na usuniętym koncie
+- [~] Usuwanie transakcji:
+  - [x] Aktualizacja salda deltą (odwrócenie wpływu)
+  - [x] Blokada usuwania dla transakcji na usuniętym koncie
+  - [ ] UI: akcja usuwania (np. na ekranie edycji lub w tabeli)
 
 ---
 
 ### 5) Transfer — jedna akcja → 2 transakcje
-- [ ] UI “Transfer”:
-  - [ ] Konto źródłowe != konto docelowe
-  - [ ] Użytkownik wpisuje kwotę dodatnią, system zapisuje `-X` i `+X` (walidacja wejścia)
-  - [ ] Data wspólna
-  - [ ] Opis (wspólny) + subject (opcjonalny)
-- [ ] Backend:
-  - [ ] Utworzyć 2 transakcje w jednej transakcji DB
-  - [ ] Ustawić `transfer_id` (wspólny identyfikator)
-  - [ ] Zaktualizować saldo obu kont
-- [ ] Blokady:
-  - [ ] Transfer do/z usuniętego konta niedozwolony
+- [~] UI “Transfer”:
+  - [x] Konto źródłowe != konto docelowe
+  - [x] Użytkownik wpisuje kwotę dodatnią, system zapisuje `-X` i `+X` (walidacja wejścia)
+  - [x] Data wspólna
+  - [ ] Opis (wspólny) + subject (opcjonalny) — brak pola `subject` w UI; backend zapisuje `subject = null`
+- [x] Backend:
+  - [x] Utworzyć 2 transakcje w jednej transakcji DB
+  - [x] Ustawić `transfer_id` (wspólny identyfikator)
+  - [x] Zaktualizować saldo obu kont
+- [x] Blokady:
+  - [x] Transfer do/z usuniętego konta niedozwolony
 
 ---
 

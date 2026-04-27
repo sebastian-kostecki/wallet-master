@@ -7,6 +7,7 @@ import { computed } from 'vue';
 export type DropdownOption<TValue extends string | number> = {
     value: TValue;
     label: string;
+    disabled?: boolean;
 };
 
 const props = withDefaults(
@@ -16,9 +17,15 @@ const props = withDefaults(
         options: DropdownOption<TValue>[];
         placeholder: string;
         disabled?: boolean;
+        size?: 'sm' | 'md';
+        ariaInvalid?: boolean;
+        ariaDescribedby?: string;
+        ariaLabelledby?: string;
     }>(),
     {
         disabled: false,
+        size: 'md',
+        ariaInvalid: false,
     },
 );
 
@@ -29,12 +36,25 @@ const emit = defineEmits<{
 const selected = computed(() => {
     return props.options.find((o) => o.value === props.modelValue) ?? null;
 });
+
+const triggerClass = computed(() => {
+    return props.size === 'sm' ? 'h-9 px-2 text-sm' : 'h-10 px-3';
+});
 </script>
 
 <template>
     <DropdownMenu>
         <DropdownMenuTrigger as-child>
-            <Button :id="props.id" type="button" variant="outline" class="h-10 w-full justify-between px-3" :disabled="props.disabled">
+            <Button
+                :id="props.id"
+                type="button"
+                variant="outline"
+                :class="['w-full justify-between', triggerClass]"
+                :disabled="props.disabled"
+                :aria-invalid="props.ariaInvalid ? 'true' : undefined"
+                :aria-describedby="props.ariaDescribedby"
+                :aria-labelledby="props.ariaLabelledby"
+            >
                 <span class="flex min-w-0 items-center gap-2">
                     <slot name="trigger-leading" :selected="selected" />
                     <span class="truncate text-left">
@@ -50,6 +70,7 @@ const selected = computed(() => {
                 v-for="option in props.options"
                 :key="String(option.value)"
                 class="cursor-pointer justify-between"
+                :disabled="Boolean(option.disabled)"
                 @select="() => emit('update:modelValue', option.value)"
             >
                 <span class="flex min-w-0 items-center gap-2">

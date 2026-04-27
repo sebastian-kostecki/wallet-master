@@ -1,97 +1,229 @@
 {
-  "accounts": {
-    "index": {
-      "title": "Konta",
-      "addAccount": "Dodaj konto",
-      "view": {
-        "toggleAria": "Przełącz widok listy kont",
-        "grid": "Siatka",
-        "list": "Lista"
-      },
-      "empty": {
-        "message": "Nie masz jeszcze żadnych kont.",
-        "cta": "Dodaj pierwsze konto"
-      }
-    },
-    "edit": {
-      "title": "Edytuj konto",
-      "back": "Wróć",
-      "deleteAction": "Usuń konto",
-      "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę."
-    },
-    "create": {
-      "title": "Dodaj konto",
-      "back": "Wróć",
-      "fields": {
-        "name": {
-          "label": "Nazwa",
-          "placeholder": "np. Konto główne"
+    "accounts": {
+        "index": {
+            "title": "Konta",
+            "addAccount": "Dodaj konto",
+            "view": {
+                "toggleAria": "Przełącz widok listy kont",
+                "grid": "Siatka",
+                "list": "Lista"
+            },
+            "empty": {
+                "message": "Nie masz jeszcze żadnych kont.",
+                "cta": "Dodaj pierwsze konto"
+            }
         },
-        "bank": {
-          "label": "Bank",
-          "placeholder": "Wybierz bank"
+        "edit": {
+            "title": "Edytuj konto",
+            "back": "Wróć",
+            "deleteAction": "Usuń konto",
+            "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę."
         },
-        "type": {
-          "label": "Typ konta",
-          "placeholder": "Wybierz typ konta"
+        "create": {
+            "title": "Dodaj konto",
+            "back": "Wróć",
+            "fields": {
+                "name": {
+                    "label": "Nazwa",
+                    "placeholder": "np. Konto główne"
+                },
+                "bank": {
+                    "label": "Bank",
+                    "placeholder": "Wybierz bank"
+                },
+                "type": {
+                    "label": "Typ konta",
+                    "placeholder": "Wybierz typ konta"
+                },
+                "currency": {
+                    "label": "Waluta",
+                    "placeholder": "Wybierz walutę"
+                },
+                "openingBalance": {
+                    "label": "Saldo początkowe",
+                    "placeholder": "np. 1000,00"
+                }
+            },
+            "openingBalanceHint": "W MVP saldo bieżące startuje od salda początkowego."
         },
-        "currency": {
-          "label": "Waluta",
-          "placeholder": "Wybierz walutę"
+        "summary": {
+            "title": "Podsumowanie",
+            "description": "Suma sald wszystkich kont w PLN.",
+            "totalPln": "Suma sald (PLN)",
+            "countPln": "Liczba kont (PLN): {count}",
+            "invalidSkipped": "Niektóre salda pominięto w sumie.",
+            "addToSeeSummary": "Dodaj konto, aby zobaczyć podsumowanie."
         },
-        "openingBalance": {
-          "label": "Saldo początkowe",
-          "placeholder": "np. 1000,00"
+        "card": {
+            "deleteAria": "Usuń konto",
+            "currentBalance": "Saldo bieżące"
+        },
+        "adjust": {
+            "title": "Ustaw saldo",
+            "description": "Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.",
+            "newBalanceLabel": "Nowe saldo",
+            "newBalancePlaceholder": "np. 1234,56",
+            "confirmLabel": "Rozumiem, że ta operacja nie zmienia historii transakcji.",
+            "confirmHint": "Używaj tylko do korekty salda bieżącego."
+        },
+        "delete": {
+            "title": "Usunąć konto?",
+            "description": "Konto zostanie usunięte z listy. Transakcje pozostaną w historii, ale będą tylko do odczytu.",
+            "currentBalanceLine": "Saldo bieżące: {amount} {symbol}",
+            "confirm": "Usuń konto"
+        },
+        "enums": {
+            "accountType": {
+                "checking": "Rozliczeniowe",
+                "savings": "Oszczędnościowe"
+            },
+            "bank": {
+                "bnp-paribas": "BNP Paribas",
+                "mbank": "mBank",
+                "cash": "Gotówka"
+            }
         }
-      },
-      "openingBalanceHint": "W MVP saldo bieżące startuje od salda początkowego."
     },
-    "summary": {
-      "title": "Podsumowanie",
-      "description": "Suma sald wszystkich kont w PLN.",
-      "totalPln": "Suma sald (PLN)",
-      "countPln": "Liczba kont (PLN): {count}",
-      "invalidSkipped": "Niektóre salda pominięto w sumie.",
-      "addToSeeSummary": "Dodaj konto, aby zobaczyć podsumowanie."
+    "actions": {
+        "edit": "Edytuj",
+        "setBalance": "Ustaw saldo",
+        "cancel": "Anuluj",
+        "save": "Zapisz"
     },
-    "card": {
-      "deleteAria": "Usuń konto",
-      "currentBalance": "Saldo bieżące"
+    "transactions": {
+        "index": {
+            "title": "Transakcje",
+            "addTransaction": "Dodaj transakcję",
+            "addTransfer": "Transfer",
+            "filters": {
+                "account": {
+                    "label": "Konto",
+                    "all": "Wszystkie konta"
+                },
+                "from": "Od",
+                "to": "Do",
+                "sort": "Sortuj",
+                "direction": "Kierunek",
+                "apply": "Zastosuj",
+                "clear": "Wyczyść filtry",
+                "errors": {
+                    "dateRange": "Data „Od” nie może być późniejsza niż „Do”.",
+                    "dateFormat": "Podaj datę w formacie DD-MM-YYYY."
+                },
+                "presets": {
+                    "thisMonth": "Ten miesiąc",
+                    "last7Days": "Ostatnie 7 dni"
+                },
+                "a11y": {
+                    "clearDateRange": "Wyczyść zakres dat"
+                }
+            },
+            "sort": {
+                "date": "Data",
+                "amount": "Kwota",
+                "asc": "Rosnąco",
+                "desc": "Malejąco"
+            },
+            "summary": {
+                "income": "Wpływy",
+                "expense": "Wydatki"
+            },
+            "table": {
+                "date": "Data",
+                "account": "Konto",
+                "description": "Opis",
+                "subject": "Subject",
+                "amount": "Kwota",
+                "actions": "Akcje"
+            },
+            "readOnly": {
+                "badge": "Tylko odczyt",
+                "deletedAccount": "Usunięte konto",
+                "noActions": "Brak akcji"
+            },
+            "empty": {
+                "filtered": "Brak transakcji dla wybranych filtrów.",
+                "firstUse": "Nie masz jeszcze żadnych transakcji.",
+                "import": "Zaimportuj plik"
+            },
+            "pagination": {
+                "aria": "Paginacja",
+                "prev": "Poprzednia",
+                "next": "Następna",
+                "pageOf": "Strona {page} z {pages}",
+                "perPageLabel": "Na stronę"
+            },
+            "a11y": {
+                "sortByDate": "Sortuj po dacie",
+                "sortByAmount": "Sortuj po kwocie",
+                "edit": "Edytuj transakcję: {description}"
+            }
+        },
+        "create": {
+            "title": "Dodaj transakcję",
+            "back": "Wróć",
+            "hints": {
+                "title": "Wskazówki",
+                "type": "Wybierz „Przychód” lub „Wydatek”. To wpływa na znak kwoty.",
+                "amount": "Kwota może być wpisana z przecinkiem. Dla wydatku zostanie zapisana jako ujemna.",
+                "description": "Opis pomaga szybciej znaleźć transakcję w historii."
+            }
+        },
+        "edit": {
+            "title": "Edytuj transakcję",
+            "back": "Wróć",
+            "hints": {
+                "title": "Informacje",
+                "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
+                "amount": "Sprawdź znak kwoty (plus/minus). To wpływa na saldo konta.",
+                "save": "Po zapisaniu wrócisz do listy transakcji."
+            }
+        },
+        "form": {
+            "account": "Konto",
+            "date": "Data",
+            "amount": "Kwota",
+            "description": "Opis",
+            "subject": "Nadawca/Odbiorca",
+            "type": "Typ"
+        },
+        "types": {
+            "income": "Przychód",
+            "expense": "Wydatek"
+        },
+        "toast": {
+            "created": "Transakcja dodana",
+            "updated": "Transakcja zaktualizowana",
+            "genericError": "Nie udało się zapisać zmian. Spróbuj ponownie."
+        }
     },
-    "adjust": {
-      "title": "Ustaw saldo",
-      "description": "Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.",
-      "newBalanceLabel": "Nowe saldo",
-      "newBalancePlaceholder": "np. 1234,56",
-      "confirmLabel": "Rozumiem, że ta operacja nie zmienia historii transakcji.",
-      "confirmHint": "Używaj tylko do korekty salda bieżącego."
+    "transfers": {
+        "create": {
+            "title": "Transfer",
+            "description": "Przenieś środki między własnymi kontami. Utworzymy dwie powiązane transakcje z tą samą datą.",
+            "empty": "Aby wykonać transfer, dodaj co najmniej dwa konta."
+        },
+        "form": {
+            "fromAccount": "Konto źródłowe",
+            "toAccount": "Konto docelowe",
+            "selectPlaceholder": "Wybierz konto",
+            "amount": "Kwota",
+            "amountPlaceholder": "np. 120,50",
+            "date": "Data",
+            "descriptionOptional": "Opis (opcjonalnie)",
+            "hint": "Zapiszemy wydatek na koncie źródłowym i przychód na koncie docelowym.",
+            "sameAccountError": "Wybierz inne konto docelowe niż źródłowe.",
+            "deletedNotice": "To konto jest usunięte — transfer jest zablokowany.",
+            "deletedSuffix": "usunięte",
+            "submit": "Wykonaj transfer",
+            "saving": "Zapisywanie…"
+        },
+        "toast": {
+            "created": "Transfer zapisany.",
+            "genericError": "Nie udało się wykonać transferu. Spróbuj ponownie."
+        }
     },
-    "delete": {
-      "title": "Usunąć konto?",
-      "description": "Konto zostanie usunięte z listy. Transakcje pozostaną w historii, ale będą tylko do odczytu.",
-      "currentBalanceLine": "Saldo bieżące: {amount} {symbol}",
-      "confirm": "Usuń konto"
-    },
-    "enums": {
-      "accountType": {
-        "checking": "Rozliczeniowe",
-        "savings": "Oszczędnościowe"
-      },
-      "bank": {
-        "bnp-paribas": "BNP Paribas",
-        "mbank": "mBank",
-        "cash": "Gotówka"
-      }
+    "currency": {
+        "defaultSymbol": "zł"
     }
-  },
-  "actions": {
-    "edit": "Edytuj",
-    "setBalance": "Ustaw saldo",
-    "cancel": "Anuluj",
-    "save": "Zapisz"
-  },
-  "currency": {
-    "defaultSymbol": "zł"
-  }
 }
-
