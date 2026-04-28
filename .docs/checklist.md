@@ -113,20 +113,20 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ---
 
-### 6) Import — flow: upload → mapowanie → preview → commit
+### 6) Import — flow: z widoku transakcji → wybór konta → upload → mapowanie → auto-commit → wynik
 
 #### 6.1 Kontrakty i UI flow
-- [ ] Ekran wyboru konta (bank wynika z konta i jest wyświetlany).
-- [ ] Upload CSV/XLSX.
-- [ ] Ekran mapowania kolumn:
+- [ ] Entry point: przycisk “Import” na widoku transakcji (modal/wizard).
+- [ ] Modal krok 1: wybór konta (bank wynika z konta i jest wyświetlany).
+- [ ] Modal krok 2: upload CSV/XLSX.
+- [ ] Modal krok 3: mapowanie kolumn:
   - [ ] Wymagane: data, kwota, opis, subject
-  - [ ] Zapisywanie mapowania per user + bank konta (profil)
-- [ ] Ekran preview:
-  - [ ] Lista/widok próbki danych + podsumowanie: `rows_total`, `rows_skipped_duplicate`, `rows_failed_validation`, `rows_will_import`
-  - [ ] Informacja, że duplikaty zawsze będą pominięte
-- [ ] Commit importu:
-  - [ ] Zapis tylko poprawnych, nie-duplikatowych wierszy
-  - [ ] Podsumowanie końcowe
+  - [ ] Zapisywanie mapowania per user + bank konta (profil) i automatyczne podpowiadanie
+- [ ] Auto-commit importu (bez preview):
+  - [ ] Walidacja + dedupe + zapis w jednej akcji
+  - [ ] Podsumowanie końcowe: `rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`
+- [ ] Widok wyniku:
+  - [ ] CTA “Pokaż zaimportowane” (filtr po `import_id`) **[Recommendation]**
 
 #### 6.2 Parsowanie i walidacja
 - [ ] CSV:
@@ -149,11 +149,20 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [ ] `case-fold` (np. lowercase)
   - [ ] standaryzacja whitespace (wielokrotne spacje → jedna)
 - [ ] Duplikat = identyczne: `date + amount + normalized_description` na tym samym `account_id`
-- [ ] Preview i commit używają tej samej logiki dedupe (żadnych rozjazdów).
+- [ ] Import używa tej samej logiki dedupe niezależnie od banku (adapter może dostarczyć wstępnie oczyszczony opis).
 
 #### 6.4 Salda po imporcie
 - [ ] Dla każdego zaimportowanego wiersza zastosować aktualizację `current_balance` deltą `amount`.
 - [ ] Zabezpieczyć przed podwójnym zapisem (idempotencja importu przez `import_id` + dedupe).
+
+#### 6.5 Enrichment `subject`/`description` z “pamięci” (Typesense)
+- [ ] Dodać “surowy opis z wyciągu” do transakcji/importu (np. `raw_statement_description`) i przechowywać go dla transakcji z importu.
+- [ ] Typesense collection “pamięci” (per user + bank):
+  - [ ] Klucze normalizacyjne (strict/relaxed) dla `raw_statement_description`
+  - [ ] Przechowywane wartości: `learned_subject`, `learned_description`, `updated_at`, opcjonalnie `times_used`
+- [ ] Import: dla każdej transakcji spróbować dopasować pamięć po `raw_statement_description` i uzupełnić `subject`/`description` (z progiem pewności; brak trafienia → fallback).
+- [ ] Edycja transakcji: jeżeli transakcja pochodzi z importu i user zmieni `subject` i/lub `description`, wykonać upsert do pamięci w Typesense.
+- [ ] Izolacja danych: pamięć musi być ściśle per user (bez możliwości dopasowań między użytkownikami).
 
 ---
 
