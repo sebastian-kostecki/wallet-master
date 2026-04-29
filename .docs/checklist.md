@@ -35,7 +35,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `transfer_id` (nullable; łączy 2 transakcje transferu)
   - [x] `import_id` (nullable; powiązanie z importem)
 - [x] Dodać encje importu + mapowania per bank:
-  - [x] `imports`: `user_id`, `account_id`, `bank_key`/`bank_name`, status, liczniki (`rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`)
+  - [x] `imports`: `user_id`, `account_id`, status, liczniki (`rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`)
+  - [ ] `imports.details` (JSON): metadane techniczne (`mapping_used`, `source_file`, `parser`, `diagnostics`)
   - [x] `import_profiles` (per user + bank): zapis mapowania kolumn + wersjonowanie (opcjonalnie) — na MVP mapowanie trzymamy w `imports.mapping` (JSON), bez osobnej tabeli
 - [x] Indeksy:
   - [x] `transactions(account_id, date)`
@@ -120,17 +121,21 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [ ] Modal krok 1: wybór konta (bank wynika z konta i jest wyświetlany).
 - [ ] Modal krok 2: upload CSV/XLSX.
 - [ ] Modal krok 3: mapowanie kolumn:
-  - [ ] Wymagane: data, kwota, opis, subject
+  - [ ] Wymagane: data, kwota, opis
+  - [ ] Opcjonalne: `subject`
+  - [ ] Mapowanie po nazwach nagłówków (headers zawsze obecne)
   - [ ] Zapisywanie mapowania per user + bank konta (profil) i automatyczne podpowiadanie
 - [ ] Auto-commit importu (bez preview):
   - [ ] Walidacja + dedupe + zapis w jednej akcji
+  - [ ] Blokada ponownego commitu tego samego importu (gdy status != `draft`)
   - [ ] Podsumowanie końcowe: `rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`
 - [ ] Widok wyniku:
-  - [ ] CTA “Pokaż zaimportowane” (filtr po `import_id`) **[Recommendation]**
+  - [ ] Po commit redirect do strony transakcji
+  - [ ] Informacyjna lista błędnych/skipowanych pozycji dla bieżącego importu (bez retencji pełnych surowych wierszy)
 
 #### 6.2 Parsowanie i walidacja
 - [ ] CSV:
-  - [ ] Obsłużyć separator `;` i `,` (minimum) **[Assumption]**
+  - [ ] Autodetekcja separatora
   - [ ] Obsłużyć kwoty z `,` i `.` (wejście)
 - [ ] XLSX:
   - [ ] Importować pierwszy arkusz
@@ -152,15 +157,21 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [ ] Import używa tej samej logiki dedupe niezależnie od banku (adapter może dostarczyć wstępnie oczyszczony opis).
 
 #### 6.4 Salda po imporcie
-- [ ] Dla każdego zaimportowanego wiersza zastosować aktualizację `current_balance` deltą `amount`.
+- [ ] Agregować sumę kwot tylko dla faktycznie utworzonych transakcji (`imported_amount_sum`).
+- [ ] Wykonać jedną aktualizację `current_balance` po przetworzeniu importu.
 - [ ] Zabezpieczyć przed podwójnym zapisem (idempotencja importu przez `import_id` + dedupe).
+
+#### 6.5a Realtime status importu (MVP)
+- [ ] Włączyć aktualizację statusu importu przez Reverb (`queued` → `processing` → `committed|failed`).
+- [ ] Zostawić polling jako fallback na wypadek zerwania połączenia realtime.
+- [ ] Event `import.updated` z payloadem statusu i liczników `rows_*`.
 
 #### 6.5 Enrichment `subject`/`description` z “pamięci” (Typesense)
 - [ ] Dodać “surowy opis z wyciągu” do transakcji/importu (np. `raw_statement_description`) i przechowywać go dla transakcji z importu.
 - [ ] Typesense collection “pamięci” (per user + bank):
   - [ ] Klucze normalizacyjne (strict/relaxed) dla `raw_statement_description`
-  - [ ] Przechowywane wartości: `learned_subject`, `learned_description`, `updated_at`, opcjonalnie `times_used`
-- [ ] Import: dla każdej transakcji spróbować dopasować pamięć po `raw_statement_description` i uzupełnić `subject`/`description` (z progiem pewności; brak trafienia → fallback).
+  - [ ] Przechowywane wartości: `learned_subject`, `learned_description`, `updated_at`
+- [ ] Import: dla każdej transakcji spróbować dopasować pamięć po `raw_statement_description` i auto-uzupełnić `subject`/`description` (best-effort; brak trafienia lub brak Typesense → fallback).
 - [ ] Edycja transakcji: jeżeli transakcja pochodzi z importu i user zmieni `subject` i/lub `description`, wykonać upsert do pamięci w Typesense.
 - [ ] Izolacja danych: pamięć musi być ściśle per user (bez możliwości dopasowań między użytkownikami).
 
@@ -193,7 +204,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [ ] Transakcje: `transaction_create_opened`, `transaction_created`, `transaction_updated`, `transaction_deleted`
 - [ ] Lista: `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
 - [ ] Transfer: `transfer_created`, `transfer_failed_validation`
-- [ ] Import: `import_started`, `import_preview_generated`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account` (opcjonalnie)
+- [ ] Import: `import_started`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account` (opcjonalnie), `import.updated` (realtime)
 
 ---
 
@@ -227,6 +238,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [ ] walidacja wymaganych pól
   - [ ] deduplikacja po normalizacji opisu
   - [ ] liczniki `rows_*` poprawne
+  - [ ] blokada ponownego commitu tego samego importu
+  - [ ] retry joba importu: 3 próby tylko dla błędów technicznych
+  - [ ] partial import: zapisane rekordy pozostają przy błędzie krytycznym
 
 #### 10.2 Manual QA (minimum)
 - [ ] “Happy path” rejestracja → konto → transakcja → filtr → import → transfer.

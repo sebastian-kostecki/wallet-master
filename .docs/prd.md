@@ -77,7 +77,7 @@ Użytkownik chce kontrolować domowy budżet i ograniczać zbędne wydatki, ale 
 2. Zarządzanie kontami (Must)
 3. Dodawanie i edycja transakcji (Must)
 4. Przegląd transakcji + filtry/sort/paginacja + podsumowanie (Must)
-5. Import CSV/XLSX z mapowaniem + podglądem + deduplikacją (Must)
+5. Import CSV/XLSX z mapowaniem + auto-commit + deduplikacją (Must)
 6. Transfer między kontami (Must)
 7. Reset hasła (Should)
 
@@ -95,7 +95,7 @@ Rejestracja → utworzenie konta → “Dodaj transakcję” → zapis → trans
 Widok transakcji → “Import” → wybór konta → upload CSV/XLSX → mapowanie kolumn (z podpowiedzią per bank konta) → automatyczny zapis importu → duplikaty pominięte → wynik (X nowych, Y duplikatów, Z błędnych) → lista transakcji uzupełniona → saldo zaktualizowane.
 
 **Alternatywy (krytyczne)**
-- Plik ma niepoprawne dane → błędy walidacji w preview → użytkownik poprawia mapowanie lub przerywa import.
+- Plik ma niepoprawne dane → import kończy się częściowo; użytkownik widzi liczniki i listę błędnych/skipowanych wierszy dla danego importu.
 - Wszystkie wiersze są duplikatami → import kończy się sukcesem z `rows_imported = 0` i jasnym komunikatem.
 
 ### Journey C — Transfer między kontami
@@ -251,9 +251,9 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
     Then saldo konta aktualizuje się o różnicę kwoty (delta).
   - Given użytkownik wprowadzi korektę salda  
     When zapisze korektę  
-    Then saldo zostaje ustawione na nową wartość i zdarzenie jest audytowane.
+    Then system zapisuje korektę jako osobną transakcję typu `adjustment`, aktualizuje saldo deltą i zdarzenie jest audytowane.
 - **Edge cases**
-  - Korekta salda vs historia transakcji: korekta działa jako “ustaw saldo na wartość”, bez modyfikowania transakcji. **[Assumption]**
+  - Korekta salda nie nadpisuje historii; jest nowym wpisem księgowym (adjustment) i pozostawia pełny ślad audytowy.
 - **Telemetry/Events**
   - `account_balance_adjusted` (stare→nowe, reason opcjonalny) **[Assumption]**
 
@@ -268,7 +268,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 ### 7.5 Import (CSV/XLSX)
 
 #### FR-I1 Import pliku z mapowaniem kolumn (auto-commit) + wynik
-- **Opis**: użytkownik uploaduje CSV/XLSX i mapuje kolumny do pól: data, kwota, opis, subject; system automatycznie tworzy transakcje bez etapu preview, pomija duplikaty i zwraca podsumowanie importu.
+- **Opis**: użytkownik uploaduje CSV/XLSX i mapuje kolumny do pól: data, kwota, opis oraz opcjonalnie `subject`; system automatycznie tworzy transakcje bez etapu preview, pomija duplikaty i zwraca podsumowanie importu.
 - **Priorytet**: Must
 - **Acceptance Criteria (Given/When/Then)**
   - Given użytkownik wybrał konto  
@@ -277,7 +277,9 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Edge cases**
   - Błędny format pliku: czytelny błąd.
   - Różne formaty dat/kwot: walidacja + komunikat.
-  - XLSX: importujemy pierwszy arkusz. **[Assumption]**
+  - XLSX: importujemy pierwszy arkusz.
+  - CSV: separator wykrywany automatycznie.
+  - Nagłówki kolumn są wymagane (mapping po nazwach nagłówków).
 - **Telemetry/Events**
   - `import_started`, `import_completed`, `import_failed`
 
@@ -286,10 +288,10 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Priorytet**: Must
 - **Acceptance Criteria (Given/When/Then)**
   - Given wiersz z kwotą ujemną  
-    When preview/import  
+    When import  
     Then transakcja ma typ=wydatek i kwota jest zapisana jako ujemna.
   - Given wiersz z kwotą dodatnią  
-    When preview/import  
+    When import  
     Then transakcja ma typ=przychód i kwota jest zapisana jako dodatnia.
 - **Edge cases**
   - Kwoty w nawiasach (format księgowy): traktować jako ujemne. **[Assumption]**
@@ -304,7 +306,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
     When import  
     Then wiersz jest pominięty, a w podsumowaniu importu rośnie licznik `rows_skipped_duplicate`.
 - **Edge cases**
-  - Normalizacja opisu: tylko `trim` + `case-fold` + standaryzacja whitespace (wielokrotne spacje → jedna). (Twoja decyzja)
+  - Normalizacja opisu (MVP): `trim` + `case-fold` + standaryzacja whitespace (wielokrotne spacje → jedna).
 - **Telemetry/Events**
   - `import_rows_skipped_duplicate` (agregat)
 
@@ -327,7 +329,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - Logika “per bank” obejmuje m.in.: parsowanie dat/kwot, normalizację opisu, ekstrakcję `subject`, dodatkowe reguły deduplikacji.
 
 #### FR-I5 “Pamięć” opisów z wyciągu: sugerowanie `subject` i `description` (Typesense)
-- **Opis**: system uczy się, jak użytkownik rozdziela surowy opis z wyciągu na `subject` i `description`. Podczas importu system może zasugerować (i automatycznie zastosować) `subject` i `description` na podstawie wcześniejszych korekt użytkownika zapisanych w wyszukiwarce (Typesense).
+- **Opis**: system uczy się, jak użytkownik rozdziela surowy opis z wyciągu na `subject` i `description`. Podczas importu system automatycznie stosuje `subject` i `description` na podstawie wcześniejszych korekt użytkownika zapisanych w Typesense (best-effort).
 - **Priorytet**: Should
 - **Acceptance Criteria (Given/When/Then)**
   - Given użytkownik edytował transakcję zaimportowaną z opisem z wyciągu `raw_statement_description`  
@@ -340,6 +342,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
   - Brak dopasowania: `subject` pozostaje puste, a `description` bazuje na surowym opisie (fallback).
   - Pamięć jest izolowana per użytkownik (brak wycieków między userami).
   - Dopasowanie może być specyficzne per bank (formaty opisów różnią się między bankami).
+  - Brak dostępności Typesense nie blokuje importu (degradacja do fallbacku).
 - **Telemetry/Events**
   - `import_enrichment_typesense_hit`, `import_enrichment_typesense_miss` **[Assumption]**
 
@@ -374,7 +377,6 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Format kwoty**: zgodny z PL (przecinek dziesiętny w prezentacji), z tolerancją wejścia `,` i `.` w polu formularza. **[Assumption]**
 - **Walidacja**: inline + jasne komunikaty; błędy importu wskazują, które pola są niepoprawne.
 - **Empty states**: brak kont → CTA “Dodaj konto”; brak transakcji → CTA “Dodaj transakcję” i “Zaimportuj plik”.
-- **Loading states**: import preview i zapis importu — loader/skeleton + licznik wierszy.
 - **Loading states**: import (po upload/mapowaniu) — loader/skeleton + licznik wierszy; na koniec podsumowanie importu.
 - **A11y baseline**: obsługa klawiaturą, widoczne focus states, kontrast WCAG AA, poprawne etykiety (label/aria).
 - **Copy tone**: krótko, rzeczowo; podsumowanie importu: “Zaimportowano X, pominięto duplikaty Y, błędne wiersze Z”.
@@ -408,6 +410,7 @@ Integracje zewnętrzne: brak (import plików tylko lokalny upload).
 
 Wymagania dot. kontraktów (na poziomie PRD):
 - Import jako proces 1-etapowy: `commit` (walidacja + dedupe + zapis) bez etapu preview; użytkownik widzi wyłącznie wynik. **[Assumption]**
+- Commit importu realizowany asynchronicznie (`queued` → `processing` → `committed|failed`) z aktualizacją statusu realtime (Reverb) i fallbackiem polling. **[Assumption]**
 
 ### Architektura importu “per bank” (adaptery)
 Cel: umożliwić dodawanie kolejnych banków bez zmian w core importu.
@@ -446,7 +449,7 @@ Kluczowe encje i relacje:
 - **Import**
   - należy do User i Account
   - ma status, liczniki wierszy (imported/skipped/failed), mapowanie.
-  - opcjonalnie: `bank` jako snapshot w momencie importu (żeby historia importu była stabilna nawet gdy user zmieni bank konta w przyszłości). **[Assumption]**
+  - ma `details` (JSON) na metadane techniczne importu (np. `mapping_used`, `source_file`, `parser`, `diagnostics`).
 - **Bank / ImportProfile**
   - per-user zapis mapowań “per bank” (bank + mapping + wersja). **[Assumption]**
 
@@ -481,8 +484,8 @@ Zasady autoryzacji (produktowe):
 - Konta: CRUD + saldo + korekta.
 - Transakcje: CRUD + lista + filtry/sort/paginacja + podsumowanie.
 - Transfer: jedna akcja → 2 transakcje powiązane.
-- Import CSV/XLSX: upload + mapowanie + preview + commit + dedupe + mapowania per bank + ekstrakcja `subject` per bank.
-- Import CSV/XLSX: entrypoint z widoku transakcji + upload + mapowanie + auto-commit + dedupe + mapowania per bank + ekstrakcja `subject` per bank + pamięć `subject/description` (Typesense).
+- Import CSV/XLSX: entrypoint z widoku transakcji + upload + mapowanie + auto-commit (bez preview) + dedupe + mapowania per bank + ekstrakcja `subject` per bank + pamięć `subject/description` (Typesense, best-effort).
+- Realtime status importu (Reverb) + fallback polling.
 - Telemetria podstawowa wg sekcji 2 i 7.
 
 ### Post-MVP (kierunek, bez zobowiązania)

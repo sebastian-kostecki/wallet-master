@@ -1,198 +1,269 @@
-# Backend plan — 7.5 Import (CSV/XLSX)
+## FR summary
+MVP import ma pozwalać użytkownikowi wczytać transakcje z CSV/XLSX do wybranego konta. Flow UX: **widok transakcji → Import → wybór konta → upload → mapowanie kolumn → auto-commit (bez preview) → wynik**.
+System:
+- parsuje i waliduje wiersze (data/kwota/opis; `subject` opcjonalny),
+- wylicza `type` ze znaku kwoty, zapisuje kwoty ujemne/dodatnie,
+- zawsze pomija duplikaty (po `date + amount + normalized_description` w obrębie konta),
+- tworzy tylko nowe transakcje i aktualizuje `current_balance` konta jedną deltą po przetworzeniu pliku,
+- zapisuje rekord `imports` z licznikami: `rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`.
 
-## 1) FR summary
-- Użytkownik wybiera konto, uploaduje plik CSV/XLSX, mapuje kolumny do pól `date`, `amount`, `description`, `subject`, widzi preview i dopiero potem uruchamia import (2-etapowo).
-- Typ transakcji wynika ze znaku kwoty (ujemna=wydatek, dodatnia=przychód) i **kwota jest zapisywana z tym znakiem**.
-- Deduplikacja jest **zawsze aktywna**: duplikaty na tym samym koncie po `date + amount + normalized_description` są pomijane, a licznik `rows_skipped_duplicate` rośnie.
-- Mapowanie można zapisać i ponownie użyć “per bank” (bank wynika z `Account.bank`), a kod ma mieć miejsce na logikę bankowo-specyficzną (adaptery).
-- Telemetry: `import_started`, `import_preview_generated`, `import_completed`, `import_failed`, `import_type_inferred`, `import_rows_skipped_duplicate` (agregat), `import_mapping_reused`, `import_mapping_saved`, `import_bank_resolved_from_account`.
+Dodatkowo (MVP+ / Should): “pamięć” rozbijania surowego opisu z wyciągu na `subject` + `description` z wykorzystaniem Typesense:
+- import próbuje wzbogacić `subject`/`description` na podstawie wcześniejszych edycji użytkownika,
+- przy edycji transakcji po imporcie zapisujemy/upsertujemy pamięć, dzięki czemu kolejne importy mają lepsze dopasowania.
 
-## 2) Assumptions
-- Import jest procesem **2-etapowym**: `preview` (walidacja + dedupe + podgląd) → `commit` (zapis w DB).
-- CSV parsujemy bez dodatkowych zależności (wbudowane funkcje PHP). XLSX wymaga biblioteki (patrz “Open questions”).
-- XLSX: importujemy **pierwszy arkusz**.
-- Kwoty w nawiasach (format księgowy), np. `(123,45)` traktujemy jako ujemne.
-- Normalizacja opisu dla dedupe: `trim` + `mb_strtolower` (case-fold) + standaryzacja whitespace (wielokrotne spacje/taby/newline → pojedyncza spacja).
-- Zanonimizowane sample wyciągów do budowy/regresji adapterów trzymamy w `tests/Fixtures/import/` (w podkatalogach per bank lub z prefiksami nazw plików).
+## Assumptions
+- W MVP wspieramy 2 banki (np. BNP Paribas, mBank). Każdy bank ma osobną klasę adaptera/parsera.
+- Bank importu wynika z `Account.bank` (użytkownik nie wybiera banku w imporcie).
+- Commit importu jest wykonywany **asynchronicznie** w tle (Job), a status i wynik są dostarczane realtime (Reverb) z fallbackiem polling.
+- Import jest procesem 2-etapowym technicznie (żeby obsłużyć mapowanie), ale UX nie ma “preview danych”:
+  - etap A: upload + ekstrakcja nagłówków/kolumn,
+  - etap B: commit z mapowaniem (auto-commit po zapisaniu mapowania w UI).
 
-## 3) Implementation plan
+## Current codebase facts (do wykorzystania)
+- Istnieje tabela i model `Import` (`database/migrations/2026_04_22_053133_create_imports_table.php`, `app/Models/Import.php`).
+- Istnieje mechanizm deduplikacji transakcji poprzez `transactions.account_id + dedupe_hash` (unikat) i helper `App\Support\Transactions\TransactionDedupe` używany przez:
+  - `app/Http/Requests/Transactions/StoreTransactionRequest.php`
+  - `app/Actions/Transactions/StoreTransaction.php`
+- Policy importu istnieje: `app/Policies/ImportPolicy.php` zawiera akcję `commit()` blokującą import do soft-deleted konta.
+- Sail ma Typesense (`compose.yaml`), ale w codebase nie ma jeszcze warstwy klienta/integracji.
 
-### Data model
-W repo istnieją już kluczowe elementy dla importu i dedupe:
-- `imports` ma status, liczniki wierszy, `mapping` (JSON) i `error_summary`.
-- `transactions` ma `normalized_description`, `dedupe_hash` oraz unikalność `unique(account_id, dedupe_hash)` (wymusza “always skip duplicates” nawet przy race condition).
+## Proposed backend architecture
 
-Do dodania (minimalnie dla FR-I4 “mapowanie per bank”):
-- **Nowa tabela** `import_mappings` (nazwa do dopasowania do konwencji repo):
-  - `id`
-  - `user_id` (FK, cascade)
-  - `bank` (string, np. `BnpParibas`, `MBank`, `Cash`)
-  - `mapping` (json) — snapshot mapowania (np. `{"date":"Data operacji","amount":"Kwota","description":"Opis","subject":"Nadawca/odbiorca"}`)
-  - `format_fingerprint` (nullable string, max 255) — opcjonalnie do rozpoznawania wersji formatu (np. hash nagłówków); ułatwia aktualizacje mapowania po zmianie formatu banku.
-  - timestamps
-  - indeks/unikalność: `unique(user_id, bank)` (lub `unique(user_id, bank, format_fingerprint)` jeśli chcemy wspierać wiele formatów na bank).
+### 1) Routes / endpoints (Inertia-friendly)
+Wzorzec: podobnie jak `transactions` i `transfers` – klasyczny web POST/redirect + walidacja FormRequest.
 
-Uwaga dot. “Cash”:
-- Jeśli `Account.bank = Cash`, można pozwolić na import (użytkownik może mieć CSV “gotówka”), ale adapter może być “generic” bez dodatkowych reguł.
+- **GET** `imports` → `ImportController@index` (opcjonalnie: historia importów / debug / przyszły ekran)
+- **POST** `imports/upload` → `ImportUploadController@store`
+  - tworzy rekord `imports` w statusie `draft`
+  - zapisuje plik tymczasowo (powiązany z `import_id`) i zwraca listę kolumn/nagłówków do mapowania
+- **POST** `imports/{import}/commit` → `ImportCommitController@store`
+  - przyjmuje mapowanie i uruchamia Job commitujący import w tle
+  - blokuje ponowny commit tego samego importu (gdy status != `draft`)
+  - zwraca “accepted” i redirect do listy transakcji; UI nasłuchuje statusu importu realtime
+- **GET** `imports/{import}` → `ImportController@show`
+  - zwraca status importu i (jeśli zakończony) podsumowanie `rows_*` oraz ewentualny `error_summary`
+  - opcjonalnie zwraca skróconą listę błędnych/skipowanych pozycji tylko informacyjnie dla bieżącego importu (bez retencji pełnych surowych wierszy)
 
-### Routes/API contracts
-Preferowane są endpointy “resource-like” powiązane z kontem/importem. Proponuję minimum:
+Nazewnictwo route (propozycja):
+- `imports.index`
+- `imports.upload`
+- `imports.commit`
+- `imports.show`
 
-1) **Preview**
-- `POST /accounts/{account}/imports/preview` (name: `accounts.imports.preview`)
-- **Request (multipart/form-data)**:
-  - `file` (required; csv/xlsx; max size np. 10–20MB)
-  - `mapping` (required; JSON object)
-    - `date`, `amount`, `description` (required)
-    - `subject` (optional)
-  - `save_mapping` (boolean, default false)
-- **Response 200**:
-  - `import` (draft): `{ id, status, rows_total, rows_failed_validation, rows_skipped_duplicate, mapping, bank }`
-  - `preview_rows` (array; np. pierwsze 50–200 wierszy): każdy element:
-    - `row_number`
-    - `parsed`: `{ date, amount, description, subject, type }`
-    - `issues`: lista błędów walidacji per wiersz (pusta jeśli OK)
-    - `is_duplicate` (bool)
-  - `summary`: `{ rows_total, rows_valid, rows_failed_validation, rows_skipped_duplicate }`
-- **Błędy**:
-  - `422` dla błędów walidacji requestu (brak mapowania, zły MIME/extension, zbyt duży plik).
-  - `415` lub `422` dla nieobsługiwanego formatu/parsowania pliku (“Invalid file format” / “Unable to parse file”).
+### 2) Import lifecycle / statuses
+Wykorzystać `imports.status` (string):
+- `draft`: po upload, przed commit
+- `queued`: Job przyjęty do realizacji
+- `processing`: Job w trakcie pracy **[Assumption]**
+- `committed`: po sukcesie commit (`committed_at` ustawione)
+- `failed`: błąd systemowy (np. nieudany odczyt pliku)
 
-2) **Commit**
-- `POST /imports/{import}/commit` (name: `imports.commit`)
-- **Request (JSON)**:
-  - brak dodatkowych pól (import jest przygotowany w `preview`) **albo** opcjonalne `confirm` boolean.
-- **Response 200/201**:
-  - `import`: `{ id, status="completed", rows_total, rows_imported, rows_failed_validation, rows_skipped_duplicate, committed_at }`
-- **Błędy**:
-  - `403` jeśli import nie należy do usera lub konto usunięte.
-  - `409` jeśli `imports.status` nie jest `draft` (idempotencja/ochrona przed wielokrotnym commit).
+W `imports.error_summary` trzymać krótkie info (nie logować surowych wierszy).
 
-3) **Get suggested mapping**
-- `GET /accounts/{account}/imports/mapping` (name: `accounts.imports.mapping`)
-- **Response 200**:
-  - `bank`
-  - `mapping` (nullable)
-  - `source`: `none | saved_mapping`
+### 3) Storage pliku (tymczasowy)
+Po upload:
+- zapisać plik w `storage/app/imports/{user_id}/{import_id}/source.{csv|xlsx}`
+- zapisać metadane techniczne w `imports.details` (JSON), m.in. `source_file`, `parser`, `mapping_used`, `diagnostics`
+Po commit:
+- usunąć plik (albo trzymać przez krótki TTL; MVP: usuwać po sukcesie, zostawić po fail dla debug w dev). **[Assumption]**
 
-Kontrakty “mapping”:
-- Mapowanie po nazwach nagłówków (string → field) jest prostsze dla użytkownika, ale w CSV/XLSX czasem brak nagłówków. MVP: zakładamy nagłówki w pierwszym wierszu; jeśli ich brak, zwracamy czytelny błąd i prosimy o poprawny plik. (Jeśli repo/UI już wspiera mapowanie po indeksach kolumn, dopasować plan.)
+### 4) Validation (FormRequests)
+#### Upload request (`StoreImportUploadRequest`)
+- `account_id`: `required|integer|exists:accounts,id` z warunkiem `user_id` i `deleted_at IS NULL`
+- `file`: `required|file|mimes:csv,txt,xlsx` + limit rozmiaru (np. 10MB) **[Assumption]**
 
-### Domain/service layer
-Proponowane komponenty (konkretne miejsca i nazwy do dopasowania do istniejących `app/Actions/*`):
+#### Commit request (`StoreImportCommitRequest`)
+- autoryzacja: `ImportPolicy::commit($user, $import)` (defense-in-depth)
+- `mapping`: required array / shape:
+  - wymagane: `date`, `amount`, `description`; opcjonalne: `subject`
+  - wartości mapowania wskazują nazwy nagłówków (headers są zawsze obecne)
+- opcjonalnie: `save_mapping` boolean (czy zapisać profil mapowania per bank)
 
-- `App\Actions\Imports\GenerateImportPreview`
-  - Input: `User $user`, `Account $account`, `UploadedFile $file`, `array $mapping`, `bool $saveMapping`
-  - Output: `ImportPreviewResult` (array/DTO) zawierający draft `Import` oraz `preview_rows` i `summary`.
-  - Odpowiedzialność:
-    - Autoryzacja: konto należy do usera i nie jest soft-deleted.
-    - Rozpoznanie banku: `bank = $account->bank` (emit telemetry `import_bank_resolved_from_account`).
-    - Parsowanie pliku (CSV/XLSX) do “raw rows”.
-    - Mapowanie raw row → canonical row: `{date, amount, description, subject}`.
-    - Parsowanie dat i kwot z tolerancją formatów (walidacja + czytelny komunikat per wiersz).
-    - Inferencja typu na podstawie znaku kwoty (emit `import_type_inferred` jako agregat lub per-row tylko wewnętrznie; telemetry preferowana agregacja).
-    - Normalizacja opisu oraz wyliczenie `dedupe_hash` z (`date`, `amount`, `normalized_description`).
-    - Dedupe:
-      - Sprawdzenie istniejących transakcji po `account_id` i `dedupe_hash` (batch query po hashach z pliku).
-      - Oznaczenie `is_duplicate` oraz policzenie `rows_skipped_duplicate` w preview.
-    - Utworzenie/aktualizacja `imports` w statusie `draft`:
-      - `mapping` snapshot
-      - `rows_total`, `rows_failed_validation`, `rows_skipped_duplicate`
-      - (opcjonalnie) `error_summary` w skróconej formie (bez surowych danych).
-    - Zapisywanie mapowania per bank, jeśli `saveMapping=true`.
+### 5) Parsing & bank adapters
+Folder i kontrakt (propozycja):
+- `app/Imports/BankAdapters/BankImportAdapter` (interface)
+  - `bank(): Bank`
+  - `readRows(UploadedFile|string $path): iterable<array<string,mixed>>` (CSV/XLSX → wiersze)
+  - `detectCsvDelimiter(string $path): string` (autodetekcja separatora dla CSV)
+  - `normalizeRow(array $row, array $mapping): ParsedImportRow`
+  - `normalizeRawStatementDescription(string $raw): NormalizedStatementKeys` (strict/relaxed)
+  - `extractSubjectAndDescription(string $raw, array $row): ExtractedFields` (opcjonalne reguły)
+- Implementacje:
+  - `BnpParibasImportAdapter`
+  - `MBankImportAdapter`
 
-- `App\Actions\Imports\CommitImport`
-  - Input: `User $user`, `Import $import`
-  - Output: `Import` (completed) + liczniki
-  - Odpowiedzialność:
-    - Autoryzacja: import należy do usera; konto importu nie jest soft-deleted.
-    - Wczytanie danych przygotowanych w preview.
-    - Zapis transakcji w transakcji DB:
-      - Dla każdego “valid non-duplicate row” wstawiamy `transactions`:
-        - `amount` z zachowanym znakiem
-        - `type`: determinujemy z `amount` (`expense` jeśli < 0, `income` jeśli > 0). (Dla `amount=0` → walidacja błędu.)
-        - `normalized_description`, `dedupe_hash`, `import_id`
-      - Dedupe enforce na poziomie DB: insert z obsługą konfliktu unikalności `unique(account_id, dedupe_hash)`:
-        - MySQL: `insert ignore` lub `upsert` z “do nothing” semantyką.
-        - Liczniki: jeśli konflikt → `rows_skipped_duplicate++`.
-    - Aktualizacja salda konta zgodnie z FR-S1 (delta sumy zaimportowanych kwot) w tej samej transakcji DB.
-    - Aktualizacja `imports`:
-      - `status=completed`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`, `committed_at`
-    - Zwrócenie rezultatu do kontrolera.
+Resolver:
+- `BankImportAdapterResolver` wybiera adapter po `Account.bank`.
 
-Gdzie trzymać dane pomiędzy preview i commit?
-- Opcja rekomendowana (bez trzymania całego pliku w DB): w preview zapisujemy plik do `storage/app/imports/{user_id}/{import_id}/source.*` i w `imports.mapping` snapshot mapowania; commit ponownie parsuje plik i stosuje mapowanie (deterministyczne).
-  - Plusy: brak dużych payloadów w DB, prostsze.
-  - Minusy: commit jest “parse again”, ale akceptowalne w MVP.
-- Alternatywa: zapis “canonical rows” w JSON (np. `imports.payload`) lub tabeli `import_rows` — odradzam w MVP bez potrzeby.
+DTO:
+- `ParsedImportRow`:
+  - `date` (Y-m-d)
+  - `amount` (numeric-string, z zachowaniem znaku)
+  - `raw_statement_description` (oryginalny opis z wyciągu; klucz do “pamięci”)
+  - `description` (wstępnie przetworzony lub raw; finalnie może zostać wzbogacony)
+  - `subject` (nullable; finalnie może zostać wzbogacony)
 
-#### Parsowanie dat i kwot
-Kwota:
-- Akceptujemy wejście z `,` lub `.` jako separator dziesiętny.
-- Usuwamy separatory tysięcy (spacje, `,`/`.` zależnie od heurystyki).
-- Obsługujemy format nawiasowy: `(123,45)` → `-123.45`.
-- Walidacja: `amount != 0`.
+### 6) Commit action (domain/service)
+Akcja domenowa (propozycja):
+- `app/Actions/Imports/CommitImport.php`
+  - `handle(User $user, Import $import, array $mapping): ImportResult`
 
-Data:
-- Akceptujemy kilka formatów (np. `Y-m-d`, `d-m-Y`, `d.m.Y`, `d/m/Y`) i ISO.
-- Jeśli nie da się sparsować: błąd per wiersz z informacją o wartości i oczekiwanych formatach.
+Algorytm:
+1. `DB::transaction()` i `Account::lockForUpdate()` (żeby saldo było poprawne).
+2. Odczyt pliku z path powiązanego z importem.
+3. Inicjalizacja liczników i akumulatora `imported_amount_sum = 0`.
+4. Dla każdego wiersza:
+   - `rows_total++`
+   - parse → `ParsedImportRow` (walidacja daty/kwoty i required fields)
+   - dedupe:
+     - `normalized_description = TransactionDedupe::normalizeDescription($finalDescription)`
+     - `dedupe_hash = TransactionDedupe::dedupeHash($date, $amount, $normalized_description)`
+     - jeśli istnieje w DB (unikat) → `rows_skipped_duplicate++`, continue
+   - create `Transaction` z `import_id`
+   - `imported_amount_sum += amount`
+5. Jednorazowa aktualizacja salda: `account.current_balance += imported_amount_sum`.
+6. `imports.status = committed`, `imports.mapping = mapping`, `imports.details` (JSON), liczniki, `committed_at`.
+7. Zwrócić wynik: `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`.
 
-#### Adaptery bankowe (“klasy banków”)
-Wprowadzamy kontrakt:
-- `BankImportAdapterInterface` z metodami:
-  - `normalizeDescription(string $description): string`
-  - `extractSubject(?string $subjectFromColumn, string $description): ?string`
-  - `parseAmount(mixed $raw): Decimal` (albo `string` → decimal)
-  - `parseDate(mixed $raw): CarbonImmutable`
-  - (opcjonalnie) `supports(Bank $bank): bool`
-- `BankImportAdapterResolver` wybiera adapter na podstawie `Account.bank` (telemetry `import_bank_resolved_from_account`).
-- Default adapter `GenericImportAdapter` działa dla wszystkich, a bankowe (np. `MBankImportAdapter`) mogą nadpisywać ekstrakcję `subject` z opisu lub niestandardowe formaty kwot/dat.
+Ważne:
+- Nie przerywać całego importu przez pojedynczy zły wiersz: błędne wiersze liczymy do `rows_failed_validation` i pomijamy.
+- Błędy systemowe (np. brak pliku) → `imports.status = failed`, `error_summary` ustawione.
 
-### Authorization
-Polityki/scoping:
-- Konto i import zawsze scope’ujemy do zalogowanego usera (`whereBelongsTo($request->user())`).
-- Blokady:
-  - Import do soft-deleted konta: **403** (zgodnie z FR-K2 edge case).
-  - Commit importu dla konta usuniętego pomiędzy preview a commit: **403**.
+### 6.5) Asynchroniczny commit (Job)
+- `app/Jobs/CommitImportJob.php`:
+  - bierze `import_id` i uruchamia `CommitImport`
+  - ustawia statusy: `queued` → `processing` → `committed|failed`
+  - retry: `tries = 3`, retry tylko dla błędów technicznych/infrastrukturalnych (nie dla błędów danych pliku)
+  - w razie exception: `failed` + bezpieczny `error_summary` (bez danych wrażliwych)
+  - import może być partial: jeśli wystąpi błąd krytyczny po zapisaniu części transakcji, zapisane rekordy pozostają w DB
+- Idempotencja:
+  - jeżeli `imports.committed_at` już ustawione → Job nic nie robi (guard)
+  - transakcje są chronione unikalnym indeksem `transactions(account_id, dedupe_hash)` (duplikaty pomijamy)
+  - jeżeli import nie jest w statusie `draft`, endpoint `commit` zwraca błąd (blokada ponownego commitu)
 
-## 4) Test plan (Pest)
-Testy feature (minimum, szybkie i krytyczne):
+### 7) “Pamięć” `subject/description` w Typesense (Should)
+Cel: dla `raw_statement_description` zapamiętać “jak user to poprawił” i użyć przy kolejnych importach.
 
-1) **Preview**
-- `it('generates preview for valid csv and required mapping')`
-  - Given user + active account
-  - When upload CSV + mapping
-  - Then 200, `import.status=draft`, `rows_total>0`, preview zawiera `type` i poprawnie sparsowane kwoty/daty
-- `it('returns readable error for invalid file format')`
-- `it('validates mapping requires date amount description')` (422)
-- `it('blocks preview for soft-deleted account')` (403)
+#### Data needed in DB (żeby działało deterministycznie)
+Transakcja musi pamiętać:
+- `raw_statement_description` (text) – surowy opis z wyciągu jako **źródło prawdy** (nigdy nie nadpisywane)
 
-2) **FR-I2 sign & accounting parentheses**
-- `it('infers expense for negative amount and persists negative amount on commit')`
-- `it('treats parenthesis amount as negative')`
+To wymaga migracji tabeli `transactions` o co najmniej jedno pole (np. `raw_statement_description`).
 
-3) **FR-I3 dedupe always skip**
-- Setup: istniejąca transakcja na koncie z tym samym `date + amount + normalized_description`
-- `it('marks duplicate rows in preview and increments rows_skipped_duplicate')`
-- `it('skips duplicates on commit and increments rows_skipped_duplicate')`
-- `it('is race-safe thanks to unique(account_id, dedupe_hash)')` (opcjonalnie: symulacja 2 insertów; oczekiwany brak duplikatu)
+Zasada zapisu:
+- `transactions.subject` i `transactions.description` są tym, co widzi UI (po wzbogaceniu z Typesense/adapterów),
+- `transactions.raw_statement_description` trzyma wersję oryginalną z wyciągu (do uczenia i debug).
 
-4) **FR-I4 mapping per bank**
-- `it('suggests saved mapping based on account bank')`
-- `it('saves mapping per bank when save_mapping is true')`
-- `it('emits mapping_reused telemetry when returning saved mapping')` (jeśli telemetria jest testowalna w repo przez `Event::fake()`).
+#### Source of truth
+W MVP “pamięć” jest przechowywana **wyłącznie w Typesense**. Źródłem danych do uczenia jest `transactions.raw_statement_description` (surowy opis z wyciągu) oraz finalne pola `transactions.subject` / `transactions.description` po edycji użytkownika.
+Enrichment jest **best-effort**: brak Typesense lub brak dopasowania nie blokuje importu.
 
-Komendy:
-- `./vendor/bin/sail artisan test --compact tests/Feature/Import*`
-  - albo filter, jeśli testy są w jednym pliku: `--filter=Import`
+#### Typesense collection (propozycja)
+Kolekcja: `import_description_memory`
+Dokument:
+- `id` (np. UUID albo hash)
+- `user_id` (facet/filter)
+- `bank` (facet/filter)
+- `raw_key_strict` (string, exact)
+- `raw_key_relaxed` (string, do fuzzy)
+- `raw_original` (string, do debug)
+- `learned_subject` (string)
+- `learned_description` (string)
+- `updated_at` (int)
 
-## 5) Open questions
-1) **XLSX parsing dependency**
-- Rekomendacja: dodać `phpoffice/phpspreadsheet` (najprościej dla 1. arkusza).
-- Alternatywa: `maatwebsite/excel` (większa “Laravel-owość”, ale cięższy wrapper).
-- Bez dodatkowej zależności XLSX będzie trudny do zrobienia poprawnie (a to jest Must).
+#### Enrichment flow
+Podczas importu (w adapterze lub osobnym serwisie):
+- obliczyć `raw_key_strict/relaxed` z `raw_statement_description`,
+- query Typesense filtrowane po `user_id` i `bank`,
+- jeżeli hit powyżej progu → nadpisać `subject/description` na transakcji.
 
-2) **Mapowanie po nagłówkach vs indeksach**
-- Rekomendacja domyślna: mapowanie po nazwach nagłówków w 1. wierszu.
-- Jeśli UI planuje mapowanie po indeksach (A/B/C), backend powinien przyjąć mapping w tej formie; logika adapterów się nie zmienia.
+#### Learning flow (update memory)
+Podczas update transakcji (w `UpdateTransaction` lub w `TransactionController@update`):
+- jeżeli transakcja ma `import_id` (pochodzi z importu) i posiada `raw_statement_description`:
+  - znormalizować klucze i wykonać upsert do Typesense (update/upsert) z `learned_subject/learned_description`
+
+## Security / privacy
+- Import i pamięć muszą być ściśle izolowane per user:
+  - `imports.user_id` scoping,
+  - Typesense query zawsze z filterem `user_id`.
+- Nie logować surowych wierszy importu w prod (tylko agregaty + error_summary).
+
+## Realtime status updates (MVP)
+Cel: UI ma dowiedzieć się natychmiast, że import zakończył się sukcesem/porażką, bez agresywnego polling.
+
+**Decision**: realtime (Reverb) jest częścią MVP. Polling zostaje jako fallback (rozłączenia, blokady sieci, itp.).
+
+### Proposed approach (hybrid)
+- `CommitImportJob` po zakończeniu:
+  - aktualizuje `imports.status` (`committed|failed`) i liczniki `rows_*`,
+  - emituje event domenowy:
+    - `ImportCommitted` lub `ImportFailed` (payload minimalny: `import_id`, `user_id`, `status`, `rows_*`, `error_summary?`).
+- Listener publikuje event realtime do kanału scoped per user, np. `imports.user.{userId}`.
+- UI:
+  - subskrybuje kanał po uruchomieniu importu,
+  - po otrzymaniu eventu od razu pokazuje wynik,
+  - jeśli event nie nadejdzie w czasie \(T\) lub połączenie padnie → kontynuuje polling do `imports.show`.
+
+### Transport (implementation options)
+- **Laravel Reverb** (wybrany transport): first-party WebSocket server dla Laravel (Pusher-protocol kompatybilny z Laravel Echo).
+- Autoryzacja kanałów wymagana (użytkownik ma dostać tylko eventy własnych importów).
+
+### Reverb installation & configuration (plan)
+- Zainstalować broadcasting + Reverb scaffolding:
+  - `php artisan install:broadcasting` (wybrać instalację Reverb w promptach) **lub** użyć wariantu z flagą, jeśli dostępny w danej wersji.
+- Upewnić się, że aplikacja ma ustawione:
+  - `BROADCAST_CONNECTION=reverb`
+  - Reverb credentials w `.env` (`REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`, `REVERB_HOST`, `REVERB_PORT`, `REVERB_SCHEME`)
+  - server bind vars (jeśli używane): `REVERB_SERVER_HOST`, `REVERB_SERVER_PORT`
+- Skonfigurować `config/reverb.php`:
+  - `allowed_origins` (dev: `*`, prod: konkretne domeny)
+- Uruchamianie serwera:
+  - dev: `php artisan reverb:start`
+  - prod: proces manager + `php artisan reverb:start` / `php artisan reverb:restart`
+- Frontend:
+  - installer zwykle konfiguruje Laravel Echo + `pusher-js` (Reverb używa Pusher protocol). Upewnić się, że klient subskrybuje kanał i odbiera event `import.updated`.
+
+### Channel design (authorization)
+- Preferowany kanał prywatny scoped per user:
+  - `private-imports.user.{userId}`
+- `routes/channels.php`:
+  - autoryzacja: `return $user->id === (int) $userId;`
+  - brak payloadów w autoryzacji poza `userId`
+
+### Minimal event contract (example)
+- Event name: `import.updated`
+- Payload:
+  - `import_id` (int)
+  - `status` (`committed|failed`)
+  - `rows_total` (int)
+  - `rows_imported` (int)
+  - `rows_skipped_duplicate` (int)
+  - `rows_failed_validation` (int)
+  - `error_summary` (string|null)
+
+### Broadcasting implementation detail (decision)
+- Eventy realtime implementujemy jako `ShouldBroadcast` (broadcasting przez kolejkę), a nie `ShouldBroadcastNow`.
+
+## Testing plan (Pest)
+- `tests/Feature/Imports/ImportUploadTest.php`
+  - upload dla własnego konta → tworzy `imports.draft`, zwraca kolumny
+  - upload dla cudzego konta / konta usuniętego → 422/403
+- `tests/Feature/Imports/ImportCommitQueuedTest.php`
+  - commit uruchamia Job i ustawia status `queued`
+- `tests/Feature/Imports/CommitImportJobTest.php`
+  - happy path: plik z kilkoma wierszami → tworzy transakcje, aktualizuje saldo, liczniki `rows_*`, status `committed`
+  - dedupe: ten sam plik 2x → 2. import ma `rows_imported=0`, `rows_skipped_duplicate>0`
+  - błędne wiersze: zła data/kwota → `rows_failed_validation` rośnie, reszta importuje się
+  - autoryzacja: commit importu innego usera → 403 (na endpointzie)
+- Typesense (jeśli włączone w testach):
+  - testy integracyjne jako opcjonalne (feature flag / fake client), żeby nie flakowały CI **[Assumption]**
+
+## Open questions (blokujące decyzje implementacyjne)
+Brak pytań blokujących (decyzje domknięte).
+
+## Defaults (MVP)
+- UI po uruchomieniu importu:
+  - nasłuchuje eventu `import.updated` (Reverb),
+  - robi fallback polling do `imports.show` **co 2s przez 60s**,
+  - po 60s pokazuje komunikat “Import nadal trwa” + przycisk “Odśwież”.
 
