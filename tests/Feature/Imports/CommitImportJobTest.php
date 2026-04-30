@@ -3,14 +3,20 @@
 use App\Actions\Imports\CommitImport;
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Events\Imports\ImportEnrichmentTypesenseHit;
+use App\Events\Imports\ImportEnrichmentTypesenseMiss;
 use App\Jobs\CommitImportJob;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\Import;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\DescriptionMemory\DescriptionMemoryRepository;
+use App\Support\DescriptionMemory\SuggestedFields;
 use Database\Seeders\CurrencySeeder;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Tests\Support\FakeDescriptionMemoryRepository;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
@@ -94,6 +100,66 @@ test('job commits valid rows and updates account balance', function () {
     expect($import->rows_failed_validation)->toBe(0);
     expect($account->current_balance)->toBe('187.66');
     expect(Transaction::query()->where('import_id', $import->id)->count())->toBe(2);
+});
+
+test('job enriches imported transactions via description memory (typesense best-effort)', function () {
+    Event::fake([ImportEnrichmentTypesenseHit::class, ImportEnrichmentTypesenseMiss::class]);
+
+    $fakeRepo = new FakeDescriptionMemoryRepository;
+    app()->instance(DescriptionMemoryRepository::class, $fakeRepo);
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = createImportWithFile(
+        $user,
+        $account,
+        "date;amount;description;subject\n24-04-2026;-12.34;Coffee;Cafe\n25-04-2026;100.00;Salary;Work"
+    );
+
+    $fakeRepo->setSuggestion(
+        userId: $user->id,
+        bank: Bank::BnpParibas,
+        rawStatementDescription: 'Coffee',
+        suggestedFields: new SuggestedFields(subject: 'Cafe override', description: 'Coffee (learned)', matchType: 'fuzzy', score: 42),
+    );
+
+    app(CommitImportJob::class, ['importId' => $import->id])->handle(app(CommitImport::class));
+
+    $import->refresh();
+    expect($import->status)->toBe('committed');
+
+    $coffee = Transaction::query()
+        ->where('import_id', $import->id)
+        ->where('raw_statement_description', 'Coffee')
+        ->firstOrFail();
+
+    expect($coffee->subject)->toBe('Cafe override');
+    expect($coffee->description)->toBe('Coffee (learned)');
+    expect($coffee->raw_statement_description)->toBe('Coffee');
+
+    Event::assertDispatched(ImportEnrichmentTypesenseHit::class, function (ImportEnrichmentTypesenseHit $event) use ($user, $import): bool {
+        return $event->userId === $user->id
+            && $event->importId === $import->id
+            && $event->bank === Bank::BnpParibas
+            && $event->matchType === 'fuzzy'
+            && $event->score === 42;
+    });
+
+    Event::assertDispatched(ImportEnrichmentTypesenseMiss::class, function (ImportEnrichmentTypesenseMiss $event) use ($user, $import): bool {
+        return $event->userId === $user->id
+            && $event->importId === $import->id
+            && $event->bank === Bank::BnpParibas;
+    });
 });
 
 test('job skips duplicates when importing same file twice', function () {

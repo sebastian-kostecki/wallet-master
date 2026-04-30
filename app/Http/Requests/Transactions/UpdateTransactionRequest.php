@@ -7,6 +7,7 @@ use App\Support\Transactions\TransactionDedupe;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 final class UpdateTransactionRequest extends FormRequest
@@ -68,7 +69,7 @@ final class UpdateTransactionRequest extends FormRequest
                     $normalizedDescription = TransactionDedupe::normalizeDescription($value);
                     $dedupeHash = TransactionDedupe::dedupeHash($date->toDateString(), $amount, $normalizedDescription);
 
-                    $exists = \DB::table('transactions')
+                    $exists = DB::table('transactions')
                         ->where('account_id', (int) $accountIdInput)
                         ->where('dedupe_hash', $dedupeHash)
                         ->where('id', '!=', $transaction->id)

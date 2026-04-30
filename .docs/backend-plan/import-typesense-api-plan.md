@@ -52,7 +52,7 @@ Dodać repo, które implementuje `DescriptionMemoryRepository` i opiera się o T
 Proponowane pliki/warstwy:
 - `app/Support/DescriptionMemory/TypesenseDescriptionMemoryRepository.php`
 - `app/Support/Typesense/TypesenseClient.php` (lekka otoczka na HTTP; jeden odpowiedzialny punkt dla auth/timeout/retry)
-- `config/typesense.php` + `.env`:
+- `config/services.php` (`services.typesense`) + `.env`:
   - `TYPESENSE_HOST`, `TYPESENSE_PORT`, `TYPESENSE_PROTOCOL`, `TYPESENSE_API_KEY`
   - `TYPESENSE_TIMEOUT_MS` (np. 800ms)
   - `TYPESENSE_ENABLED` (bool) — przełącznik feature/infra
