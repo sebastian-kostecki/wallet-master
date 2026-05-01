@@ -5,6 +5,7 @@ use App\Enums\AccountType;
 use App\Enums\Bank;
 use App\Events\Imports\ImportEnrichmentTypesenseHit;
 use App\Events\Imports\ImportEnrichmentTypesenseMiss;
+use App\Events\ImportStatusUpdated;
 use App\Jobs\CommitImportJob;
 use App\Models\Account;
 use App\Models\Currency;
@@ -70,6 +71,8 @@ function createImportWithFixture(User $user, Account $account, string $fixturePa
 }
 
 test('job commits valid rows and updates account balance', function () {
+    Event::fake([ImportStatusUpdated::class]);
+
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     $account = Account::query()->create([
@@ -100,6 +103,11 @@ test('job commits valid rows and updates account balance', function () {
     expect($import->rows_failed_validation)->toBe(0);
     expect($account->current_balance)->toBe('187.66');
     expect(Transaction::query()->where('import_id', $import->id)->count())->toBe(2);
+
+    Event::assertDispatched(ImportStatusUpdated::class, function (ImportStatusUpdated $event) use ($user, $import): bool {
+        return (int) $event->import->id === (int) $import->id
+            && (int) $event->import->user_id === (int) $user->id;
+    });
 });
 
 test('job enriches imported transactions via description memory (typesense best-effort)', function () {

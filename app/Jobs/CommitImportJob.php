@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Actions\Imports\CommitImport;
+use App\Events\ImportStatusUpdated;
 use App\Models\Import;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -32,11 +33,21 @@ final class CommitImportJob implements ShouldQueue
         try {
             $commitImport->handle($import);
         } catch (\Throwable $exception) {
-            $import->status = 'failed';
-            $import->error_summary = 'Import failed due to a system error.';
-            $import->save();
+            if ($this->attempts() >= $this->tries) {
+                $import->status = 'failed';
+                $import->error_summary = 'Import failed due to a system error.';
+                $import->save();
+
+                event(new ImportStatusUpdated($import));
+            } else {
+                $import->status = 'queued';
+                $import->save();
+            }
 
             throw $exception;
         }
+
+        $import->refresh();
+        event(new ImportStatusUpdated($import));
     }
 }

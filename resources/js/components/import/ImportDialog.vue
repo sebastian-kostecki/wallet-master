@@ -4,7 +4,8 @@ import DropdownSelect, { type DropdownOption } from '@/components/forms/Dropdown
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
+import { echo } from '@laravel/echo-vue';
 import { CheckCircle2, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -90,19 +91,26 @@ const canStart = computed(() => {
     );
 });
 
-const pollingSeconds = 60;
-const pollingEveryMs = 2000;
-const pollStartedAt = ref<number | null>(null);
-const pollTimer = ref<number | null>(null);
+const longRunningSeconds = 60;
+const showLongRunning = ref(false);
+const longRunningTimer = ref<number | null>(null);
 
-function clearPolling() {
-    if (pollTimer.value !== null) {
-        window.clearInterval(pollTimer.value);
-        pollTimer.value = null;
+function clearLongRunningTimer() {
+    if (longRunningTimer.value !== null) {
+        window.clearTimeout(longRunningTimer.value);
+        longRunningTimer.value = null;
     }
 }
 
-onBeforeUnmount(() => clearPolling());
+function startLongRunningTimer() {
+    showLongRunning.value = false;
+    clearLongRunningTimer();
+    longRunningTimer.value = window.setTimeout(() => {
+        showLongRunning.value = true;
+    }, longRunningSeconds * 1000);
+}
+
+onBeforeUnmount(() => clearLongRunningTimer());
 
 function resetState() {
     step.value = 'form';
@@ -114,8 +122,8 @@ function resetState() {
     importId.value = null;
     importState.value = null;
     isUploadingOrCommitting.value = false;
-    pollStartedAt.value = null;
-    clearPolling();
+    showLongRunning.value = false;
+    clearLongRunningTimer();
 }
 
 watch(
@@ -124,7 +132,7 @@ watch(
         if (isOpen) {
             resetState();
         } else {
-            clearPolling();
+            clearLongRunningTimer();
         }
     },
 );
@@ -218,7 +226,12 @@ function autoMapping(headers: string[], bank: string): { date: string; amount: s
         };
 
         if (mapped.date && mapped.amount && mapped.description) {
-            return mapped;
+            return {
+                date: mapped.date,
+                amount: mapped.amount,
+                description: mapped.description,
+                subject: mapped.subject ?? null,
+            };
         }
     }
 
@@ -226,7 +239,7 @@ function autoMapping(headers: string[], bank: string): { date: string; amount: s
 }
 
 async function commitImport(nextImportId: number, mapping: { date: string; amount: string; description: string; subject?: string | null }) {
-    const res = await fetch(route('imports.commit', nextImportId), {
+    const res = await fetch(route('imports.commit', nextImportId as any), {
         method: 'POST',
         headers: {
             Accept: 'application/json',
@@ -248,7 +261,7 @@ async function refreshImportState() {
         return;
     }
 
-    const res = await fetch(route('imports.show', importId.value), {
+    const res = await fetch(route('imports.show', importId.value as any), {
         headers: { Accept: 'application/json' },
     });
 
@@ -261,29 +274,67 @@ async function refreshImportState() {
 
     const status = json.status;
     if (status === 'committed' || status === 'failed') {
-        clearPolling();
+        clearLongRunningTimer();
         step.value = 'result';
     }
 }
 
-function startPolling() {
-    pollStartedAt.value = Date.now();
-    clearPolling();
-    pollTimer.value = window.setInterval(async () => {
-        const startedAt = pollStartedAt.value;
-        if (!startedAt) {
-            return;
-        }
+const page = usePage() as any;
+const currentUserId = computed<number | null>(() => (page.props.auth?.user?.id as number | undefined) ?? null);
 
-        const seconds = (Date.now() - startedAt) / 1000;
-        if (seconds > pollingSeconds) {
-            clearPolling();
-            return;
-        }
+const wsChannelName = ref<string | null>(null);
 
-        await refreshImportState();
-    }, pollingEveryMs);
+function handleImportStatusUpdated(payload: ImportState) {
+    if (!props.open) {
+        return;
+    }
+
+    if (importId.value === null || payload.id !== importId.value) {
+        return;
+    }
+
+    importState.value = payload;
+
+    if (payload.status === 'committed' || payload.status === 'failed') {
+        clearLongRunningTimer();
+        step.value = 'result';
+    }
 }
+
+function resubscribeToImportUpdates() {
+    const nextUserId = currentUserId.value;
+
+    if (wsChannelName.value !== null) {
+        echo().leaveChannel(`private-${wsChannelName.value}`);
+        wsChannelName.value = null;
+    }
+
+    if (!nextUserId) {
+        return;
+    }
+
+    const channelName = `App.Models.User.${nextUserId}`;
+    wsChannelName.value = channelName;
+
+    const channel = echo().private(channelName);
+
+    // Laravel Echo usually uses the event class basename. Keep a few variants to be resilient
+    // to differing broadcast naming (e.g. fully-qualified class name or custom broadcastAs).
+    channel.listen('ImportStatusUpdated', (payload: ImportState) => handleImportStatusUpdated(payload));
+    channel.listen('App\\Events\\ImportStatusUpdated', (payload: ImportState) => handleImportStatusUpdated(payload));
+    channel.listen('.import.updated', (payload: ImportState) => handleImportStatusUpdated(payload));
+}
+
+watch(currentUserId, () => resubscribeToImportUpdates(), { immediate: true });
+watch(
+    () => props.open,
+    (isOpen) => {
+        if (!isOpen && wsChannelName.value !== null) {
+            echo().leaveChannel(`private-${wsChannelName.value}`);
+            wsChannelName.value = null;
+        }
+    },
+);
 
 async function start() {
     accountError.value = '';
@@ -326,7 +377,7 @@ async function start() {
         await commitImport(upload.import_id, mapping);
 
         await refreshImportState();
-        startPolling();
+        startLongRunningTimer();
     } catch (e: any) {
         step.value = 'form';
         toast.dismiss();
@@ -509,7 +560,7 @@ function goToTransactions() {
                     </div>
                 </div>
 
-                <div v-if="pollTimer === null && importState?.status !== 'committed' && importState?.status !== 'failed'" class="rounded-lg bg-muted/30 p-4">
+                <div v-if="showLongRunning && importState?.status !== 'committed' && importState?.status !== 'failed'" class="rounded-lg bg-muted/30 p-4">
                     <p class="text-sm text-muted-foreground">{{ t('imports.dialog.processing.longRunning') }}</p>
                     <div class="mt-3">
                         <Button variant="secondary" type="button" @click="refreshImportState">{{ t('imports.dialog.processing.refresh') }}</Button>
