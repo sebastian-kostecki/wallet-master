@@ -112,6 +112,9 @@
                 },
                 "presets": {
                     "thisMonth": "Ten miesiąc",
+                    "previousMonth": "Poprzedni miesiąc",
+                    "thisYear": "Bieżący rok",
+                    "previousYear": "Poprzedni rok",
                     "last7Days": "Ostatnie 7 dni"
                 },
                 "a11y": {

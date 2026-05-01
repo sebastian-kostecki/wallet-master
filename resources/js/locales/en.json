@@ -112,6 +112,9 @@
                 },
                 "presets": {
                     "thisMonth": "This month",
+                    "previousMonth": "Previous month",
+                    "thisYear": "This year",
+                    "previousYear": "Previous year",
                     "last7Days": "Last 7 days"
                 },
                 "a11y": {
