@@ -1,10 +1,10 @@
 {
     "mcpServers": {
         "laravel-boost": {
-            "command": "php",
+            "command": "bash",
             "args": [
-                "/home/sebastian/my-projects/wallet-master/artisan",
-                "boost:mcp"
+                "-lc",
+                "./vendor/bin/sail artisan boost:mcp"
             ]
         }
     }
