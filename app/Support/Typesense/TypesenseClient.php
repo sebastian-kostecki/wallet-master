@@ -26,13 +26,47 @@ final readonly class TypesenseClient
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function getCollection(string $name): array
+    {
+        return $this->request()
+            ->get("/collections/{$name}")
+            ->throw()
+            ->json();
+    }
+
+    /**
+     * @param  array<string, mixed>  $schema
+     * @return array<string, mixed>
+     */
+    public function createCollection(array $schema): array
+    {
+        return $this->request()
+            ->post('/collections', $schema)
+            ->throw()
+            ->json();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function deleteCollection(string $name): array
+    {
+        return $this->request()
+            ->delete("/collections/{$name}")
+            ->throw()
+            ->json();
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     public function search(string $collection, array $payload): array
     {
         return $this->request()
-            ->post("/collections/{$collection}/documents/search", $payload)
+            ->get("/collections/{$collection}/documents/search", $payload)
             ->throw()
             ->json();
     }
