@@ -10,6 +10,11 @@ import { initializeTheme } from './composables/useAppearance';
 import { i18n } from './i18n';
 import type { SupportedLocale } from './i18n';
 import { supportedLocales } from './i18n';
+import { configureEcho } from '@laravel/echo-vue';
+
+configureEcho({
+    broadcaster: 'reverb',
+});
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

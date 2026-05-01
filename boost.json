@@ -13,6 +13,8 @@
         "mcp-development",
         "pest-testing",
         "inertia-vue-development",
-        "tailwindcss-development"
+        "tailwindcss-development",
+        "echo-vue-development",
+        "echo-development"
     ]
 }

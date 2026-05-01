@@ -14,6 +14,7 @@
         "laravel/framework": "^13.0",
         "laravel/horizon": "^5.46",
         "laravel/mcp": "^0.6.7",
+        "laravel/reverb": "^1.0",
         "laravel/tinker": "^3.0",
         "tightenco/ziggy": "^2.4"
     },
