@@ -82,4 +82,3 @@ test('cannot delete a transaction on a deleted account', function () {
         ->delete("/transactions/{$transaction->id}")
         ->assertForbidden();
 });
-

@@ -7,4 +7,3 @@ Route::middleware('auth')->group(function () {
     Route::resource('transactions', TransactionController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 });
-

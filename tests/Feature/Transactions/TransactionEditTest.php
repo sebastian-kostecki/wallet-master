@@ -53,4 +53,3 @@ test('edit page includes account bank_icon_url', function () {
         ->where('accounts.0.bank_icon_url', fn (mixed $value) => is_string($value) && str_contains($value, '/icons/banks/'))
     );
 });
-
