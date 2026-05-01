@@ -44,6 +44,11 @@ final class TransactionIndexRequest extends FormRequest
                 'integer',
                 $accountExistsRule,
             ],
+            'import_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('imports', 'id')->where(fn ($query) => $query->where('user_id', $this->user()->id)),
+            ],
             'from' => ['nullable', 'date_format:d-m-Y', 'before_or_equal:to'],
             'to' => ['nullable', 'date_format:d-m-Y', 'after_or_equal:from'],
             'sort' => ['nullable', 'string', 'in:date,amount'],

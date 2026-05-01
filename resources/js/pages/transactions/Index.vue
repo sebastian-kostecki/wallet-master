@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
+import ImportDialog from '@/components/import/ImportDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -18,6 +19,7 @@ type Account = {
     type: string;
     type_label_key: string;
     bank_icon_url: string | null;
+    bank?: string;
     currency?: {
         symbol: string | null;
     } | null;
@@ -73,6 +75,7 @@ type Paginator<T> = {
 type Filters = {
     all_time?: boolean;
     account_id: number | null;
+    import_id?: number | null;
     from: string | null; // DD-MM-YYYY
     to: string | null; // DD-MM-YYYY
     sort: 'date' | 'amount' | string;
@@ -267,6 +270,25 @@ const summaryCurrencySymbol = computed(() => {
 });
 
 const serverErrors = computed<Record<string, string>>(() => page.props.errors ?? {});
+
+const importDialogOpen = ref(false);
+
+function truncateText(input: string | null | undefined, maxLength: number): { text: string; isTruncated: boolean } {
+    const value = (input ?? '').trim();
+    if (value === '') {
+        return { text: '—', isTruncated: false };
+    }
+
+    if (value.length <= maxLength) {
+        return { text: value, isTruncated: false };
+    }
+
+    const slice = value.slice(0, Math.max(0, maxLength));
+    const lastSpace = slice.lastIndexOf(' ');
+    const trimmed = (lastSpace >= Math.floor(maxLength * 0.6) ? slice.slice(0, lastSpace) : slice).trimEnd();
+
+    return { text: `${trimmed}…`, isTruncated: true };
+}
 </script>
 
 <template>
@@ -277,6 +299,9 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
             <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <TransactionsIndexHeaderFilters :accounts="accounts" :filters="filters" :server-errors="serverErrors" :is-loading="isLoading" />
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+                    <Button variant="secondary" class="sm:shrink-0" type="button" @click="importDialogOpen = true">
+                        {{ t('imports.cta') }}
+                    </Button>
                     <Button variant="secondary" as-child class="sm:shrink-0">
                         <Link :href="route('transfers.create') + currentSearch">{{ t('transactions.index.addTransfer') }}</Link>
                     </Button>
@@ -345,10 +370,10 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
 
                 <div v-else>
                     <div class="hidden md:block">
-                        <table class="w-full text-sm">
+                        <table class="w-full table-fixed text-sm">
                             <thead class="border-b border-sidebar-border/70 text-left text-xs text-muted-foreground dark:border-sidebar-border">
                                 <tr>
-                                    <th class="px-6 py-3">
+                                    <th class="w-36 px-6 py-3">
                                         <button
                                             class="inline-flex items-center gap-2 hover:text-foreground"
                                             type="button"
@@ -364,8 +389,8 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                         </button>
                                     </th>
                                     <th class="px-6 py-3">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="px-6 py-3">{{ t('transactions.index.table.account') }}</th>
-                                    <th class="px-6 py-3">
+                                    <th class="w-72 px-6 py-3">{{ t('transactions.index.table.account') }}</th>
+                                    <th class="w-44 px-6 py-3">
                                         <button
                                             class="inline-flex items-center gap-2 hover:text-foreground"
                                             type="button"
@@ -380,7 +405,7 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                             />
                                         </button>
                                     </th>
-                                    <th class="px-6 py-3 text-right">{{ t('transactions.index.table.actions') }}</th>
+                                    <th class="w-20 px-6 py-3 text-right">{{ t('transactions.index.table.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -407,13 +432,45 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                                 <component :is="transactionIcon(tx).component" class="h-4 w-4" />
                                             </div>
 
-                                            <div class="min-w-0">
-                                                <p class="truncate text-sm font-medium text-foreground" style="max-width: 420px">
-                                                    {{ tx.subject ?? '—' }}
-                                                </p>
-                                                <p class="mt-0.5 truncate text-xs text-muted-foreground">
-                                                    {{ tx.description }}
-                                                </p>
+                                            <div class="min-w-0 w-full">
+                                                <TooltipProvider :delay-duration="0">
+                                                    <Tooltip v-if="truncateText(tx.subject, 80).isTruncated">
+                                                        <TooltipTrigger as-child>
+                                                            <p
+                                                                class="truncate text-sm font-medium text-foreground"
+                                                                :title="tx.subject ?? undefined"
+                                                            >
+                                                                {{ truncateText(tx.subject, 80).text }}
+                                                            </p>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p class="max-w-sm break-words">{{ tx.subject }}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                    <p
+                                                        v-else
+                                                        class="truncate text-sm font-medium text-foreground"
+                                                        :title="tx.subject ?? undefined"
+                                                    >
+                                                        {{ truncateText(tx.subject, 80).text }}
+                                                    </p>
+                                                </TooltipProvider>
+
+                                                <TooltipProvider :delay-duration="0">
+                                                    <Tooltip v-if="truncateText(tx.description, 120).isTruncated">
+                                                        <TooltipTrigger as-child>
+                                                            <p class="mt-0.5 truncate text-xs text-muted-foreground" :title="tx.description">
+                                                                {{ truncateText(tx.description, 120).text }}
+                                                            </p>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p class="max-w-sm break-words">{{ tx.description }}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                    <p v-else class="mt-0.5 truncate text-xs text-muted-foreground" :title="tx.description">
+                                                        {{ truncateText(tx.description, 120).text }}
+                                                    </p>
+                                                </TooltipProvider>
                                             </div>
                                         </div>
                                     </td>
@@ -499,7 +556,21 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                             <div v-for="tx in transactions.data" :key="tx.id" class="p-4">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
-                                        <p class="text-sm font-medium">{{ tx.description }}</p>
+                                        <TooltipProvider :delay-duration="0">
+                                            <Tooltip v-if="truncateText(tx.description, 90).isTruncated">
+                                                <TooltipTrigger as-child>
+                                                    <p class="text-sm font-medium" :title="tx.description">
+                                                        {{ truncateText(tx.description, 90).text }}
+                                                    </p>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p class="max-w-sm break-words">{{ tx.description }}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <p v-else class="text-sm font-medium" :title="tx.description">
+                                                {{ truncateText(tx.description, 90).text }}
+                                            </p>
+                                        </TooltipProvider>
                                         <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToDots(tx.date) }}</p>
                                         <p class="mt-0.5 text-xs text-muted-foreground">{{ tx.date_relative }}</p>
                                         <p class="mt-1 text-xs text-muted-foreground">
@@ -508,7 +579,21 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                                                 {{ t('transactions.index.readOnly.badge') }}
                                             </span>
                                         </p>
-                                        <p v-if="tx.subject" class="mt-1 text-xs text-muted-foreground">{{ tx.subject }}</p>
+                                        <TooltipProvider v-if="tx.subject" :delay-duration="0">
+                                            <Tooltip v-if="truncateText(tx.subject, 70).isTruncated">
+                                                <TooltipTrigger as-child>
+                                                    <p class="mt-1 text-xs text-muted-foreground" :title="tx.subject ?? undefined">
+                                                        {{ truncateText(tx.subject, 70).text }}
+                                                    </p>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p class="max-w-sm break-words">{{ tx.subject }}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <p v-else class="mt-1 text-xs text-muted-foreground" :title="tx.subject ?? undefined">
+                                                {{ truncateText(tx.subject, 70).text }}
+                                            </p>
+                                        </TooltipProvider>
                                     </div>
                                     <div class="shrink-0 text-right">
                                         <p
@@ -561,5 +646,13 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
                 </div>
             </div>
         </div>
+
+        <ImportDialog
+            v-model:open="importDialogOpen"
+            :accounts="accounts as any"
+            :preselected-account-id="filters.account_id ?? null"
+            :disabled="isLoading"
+            :current-search="currentSearch"
+        />
     </AppLayout>
 </template>

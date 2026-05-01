@@ -14,6 +14,7 @@ type Account = {
 type Filters = {
     all_time?: boolean;
     account_id: number | null;
+    import_id?: number | null;
     from: string | null; // DD-MM-YYYY
     to: string | null; // DD-MM-YYYY
     sort: 'date' | 'amount' | string;
@@ -87,6 +88,7 @@ function buildQuery() {
 
     return {
         account_id: localAccountId.value ?? undefined,
+        import_id: props.filters.import_id ?? undefined,
         all_time: isAllTime.value ? 1 : undefined,
         from: isAllTime.value ? undefined : trimmedFrom || undefined,
         to: isAllTime.value ? undefined : trimmedTo || undefined,
@@ -189,6 +191,36 @@ const hasError = computed(() => errorMessage.value.trim() !== '');
 
 <template>
     <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+        <div v-if="filters.import_id" class="flex flex-wrap items-center gap-2 sm:mr-auto">
+            <button
+                type="button"
+                class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-foreground hover:bg-muted/70"
+                :aria-label="t('transactions.index.importPreset.clearAria')"
+                @click="
+                    () => {
+                        router.get(
+                            route('transactions.index'),
+                            {
+                                account_id: localAccountId ?? undefined,
+                                all_time: isAllTime ? 1 : undefined,
+                                from: isAllTime ? undefined : localFrom.trim() || undefined,
+                                to: isAllTime ? undefined : localTo.trim() || undefined,
+                                sort: filters.sort ?? 'date',
+                                direction: filters.direction ?? 'desc',
+                                per_page: filters.per_page ?? undefined,
+                                import_id: undefined,
+                                page: undefined,
+                            },
+                            { preserveScroll: true, replace: true, preserveState: 'errors' },
+                        );
+                    }
+                "
+            >
+                <span class="font-medium">{{ t('transactions.index.importPreset.label') }}</span>
+                <span class="text-muted-foreground">×</span>
+            </button>
+        </div>
+
         <div class="grid gap-2 sm:flex sm:items-center">
             <div class="min-w-56 sm:min-w-64">
                 <DropdownSelect

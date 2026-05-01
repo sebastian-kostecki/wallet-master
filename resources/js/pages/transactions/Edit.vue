@@ -26,6 +26,8 @@ type Transaction = {
     amount: string;
     description: string;
     subject: string | null;
+    import_id: number | null;
+    raw_statement_description: string | null;
 };
 
 const props = defineProps<{
@@ -200,6 +202,19 @@ function submit() {
                         <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
                             {{ t('transactions.edit.hints.save') }}
                         </div>
+                    </div>
+                </div>
+
+                <div
+                    v-if="transaction.raw_statement_description && transaction.raw_statement_description.trim() !== ''"
+                    class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
+                >
+                    <h2 class="text-base font-semibold">{{ t('transactions.edit.statement.title') }}</h2>
+                    <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.statement.description') }}</p>
+                    <div class="mt-4 rounded-lg border border-sidebar-border/70 bg-muted/20 p-4 text-sm dark:border-sidebar-border">
+                        <p class="whitespace-pre-wrap break-words text-foreground">
+                            {{ transaction.raw_statement_description }}
+                        </p>
                     </div>
                 </div>
             </div>

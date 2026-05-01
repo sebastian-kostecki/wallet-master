@@ -54,6 +54,48 @@ test('commit queues import job and marks import as queued', function () {
     Bus::assertDispatched(CommitImportJob::class);
 });
 
+test('commit returns json when requested', function () {
+    Bus::fake();
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::MBank,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'draft',
+        'details' => ['headers' => ['date', 'amount', 'description']],
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->postJson(route('imports.commit', $import), [
+            'mapping' => [
+                'date' => 'date',
+                'amount' => 'amount',
+                'description' => 'description',
+            ],
+        ]);
+
+    $response->assertAccepted();
+    $response->assertJsonPath('import_id', $import->id);
+
+    $import->refresh();
+    expect($import->status)->toBe('queued');
+
+    Bus::assertDispatched(CommitImportJob::class);
+});
+
 test('cannot commit someone else import', function () {
     Bus::fake();
 

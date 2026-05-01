@@ -4,6 +4,7 @@ use App\Enums\AccountType;
 use App\Enums\Bank;
 use App\Models\Account;
 use App\Models\Currency;
+use App\Models\Import;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -108,6 +109,65 @@ test('users can filter by account and date range, sort, and see summary', functi
     );
 
     CarbonImmutable::setTestNow();
+});
+
+test('users can filter transactions by import id', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'A',
+        'bank' => Bank::MBank,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'committed',
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'import_id' => $import->id,
+        'date' => '2026-04-10',
+        'amount' => 10,
+        'type' => 'income',
+        'description' => 'Imported',
+        'subject' => null,
+        'raw_statement_description' => 'Imported',
+        'normalized_description' => 'imported',
+        'dedupe_hash' => md5('2026-04-10|10.00|imported', true),
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-04-10',
+        'amount' => 20,
+        'type' => 'income',
+        'description' => 'Not imported',
+        'subject' => null,
+        'normalized_description' => 'not imported',
+        'dedupe_hash' => md5('2026-04-10|20.00|not imported', true),
+    ]);
+
+    $response = $this->actingAs($user)->get('/transactions?import_id='.$import->id.'&all_time=1');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('transactions/Index', false)
+        ->where('filters.import_id', $import->id)
+        ->has('transactions.data', 1)
+        ->where('transactions.data.0.description', 'Imported')
+    );
 });
 
 test('date range is validated', function () {
