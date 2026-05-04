@@ -94,6 +94,93 @@ test('commit returns json when requested', function () {
     Bus::assertDispatched(CommitImportJob::class);
 });
 
+test('second commit attempt is rejected when import is no longer draft', function () {
+    Bus::fake();
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::MBank,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'draft',
+        'mapping' => [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+        ],
+        'details' => ['headers' => ['date', 'amount', 'description']],
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->post(route('imports.commit', $import))
+        ->assertRedirect(route('transactions.index'));
+
+    $this
+        ->actingAs($user)
+        ->post(route('imports.commit', $import))
+        ->assertRedirect(route('transactions.index'))
+        ->assertSessionHasErrors('import');
+
+    $import->refresh();
+    expect($import->status)->toBe('queued');
+
+    Bus::assertDispatchedTimes(CommitImportJob::class, 1);
+});
+
+test('second json commit attempt returns 422 when import is no longer draft', function () {
+    Bus::fake();
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::MBank,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'draft',
+        'mapping' => [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+        ],
+        'details' => ['headers' => ['date', 'amount', 'description']],
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('imports.commit', $import))
+        ->assertAccepted();
+
+    $this
+        ->actingAs($user)
+        ->postJson(route('imports.commit', $import))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Import can be committed only once.');
+
+    Bus::assertDispatchedTimes(CommitImportJob::class, 1);
+});
+
 test('cannot commit someone else import', function () {
     Bus::fake();
 

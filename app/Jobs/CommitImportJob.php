@@ -7,10 +7,13 @@ namespace App\Jobs;
 use App\Actions\Imports\CommitImport;
 use App\Events\ImportStatusUpdated;
 use App\Models\Import;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Attributes\UniqueFor;
 
-final class CommitImportJob implements ShouldQueue
+#[UniqueFor(3600)]
+final class CommitImportJob implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
 
@@ -19,6 +22,11 @@ final class CommitImportJob implements ShouldQueue
     public function __construct(
         public int $importId,
     ) {}
+
+    public function uniqueId(): string
+    {
+        return (string) $this->importId;
+    }
 
     public function handle(CommitImport $commitImport): void
     {
@@ -30,8 +38,10 @@ final class CommitImportJob implements ShouldQueue
         $import->status = 'processing';
         $import->save();
 
+        $processed = false;
+
         try {
-            $commitImport->handle($import);
+            $processed = $commitImport->handle($import);
         } catch (\Throwable $exception) {
             if ($this->attempts() >= $this->tries) {
                 $import->status = 'failed';
@@ -48,6 +58,9 @@ final class CommitImportJob implements ShouldQueue
         }
 
         $import->refresh();
-        event(new ImportStatusUpdated($import));
+
+        if ($processed) {
+            event(new ImportStatusUpdated($import));
+        }
     }
 }

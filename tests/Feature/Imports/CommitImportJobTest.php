@@ -16,6 +16,7 @@ use App\Support\DescriptionMemory\DescriptionMemoryRepository;
 use App\Support\DescriptionMemory\SuggestedFields;
 use Database\Seeders\CurrencySeeder;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\FakeDescriptionMemoryRepository;
 
@@ -286,4 +287,79 @@ test('job processes both import fixtures', function () {
     expect($mbankImport->rows_imported)->toBeGreaterThan(0);
     expect($bnpImport->status)->toBe('committed');
     expect($bnpImport->rows_imported)->toBe(2);
+});
+
+test('duplicate commit import job dispatch is deduped while unique lock is held', function () {
+    Queue::fake();
+
+    CommitImportJob::dispatch(123);
+    CommitImportJob::dispatch(123);
+
+    Queue::assertPushedTimes(CommitImportJob::class, 1);
+});
+
+test('commit import returns false when import is not queued or processing', function () {
+    Storage::fake('local');
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'draft',
+        'mapping' => [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+        ],
+        'details' => [
+            'source_file' => "imports/{$user->id}/draft.csv",
+            'headers' => ['date', 'amount', 'description'],
+        ],
+    ]);
+
+    Storage::disk('local')->put("imports/{$user->id}/draft.csv", "date;amount;description\n24-04-2026;-1.00;X");
+
+    expect(app(CommitImport::class)->handle($import))->toBeFalse();
+
+    $import->refresh();
+    expect($import->status)->toBe('draft');
+    expect(Transaction::query()->where('import_id', $import->id)->count())->toBe(0);
+});
+
+test('commit import returns false when import already committed', function () {
+    Storage::fake('local');
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = createImportWithFile(
+        $user,
+        $account,
+        "date;amount;description\n24-04-2026;-12.34;Coffee"
+    );
+
+    expect(app(CommitImport::class)->handle($import))->toBeTrue();
+    expect(app(CommitImport::class)->handle($import))->toBeFalse();
+
+    expect(Transaction::query()->where('import_id', $import->id)->count())->toBe(1);
 });

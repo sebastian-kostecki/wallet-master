@@ -14,23 +14,12 @@ final class ImportCommitController extends Controller
 {
     public function store(StoreImportCommitRequest $request, Import $import): RedirectResponse|JsonResponse
     {
-        if ($import->status !== 'draft') {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => 'Import can be committed only once.',
-                ], 422);
-            }
-
-            return to_route('transactions.index')->withErrors(['import' => 'Import can be committed only once.']);
-        }
-
         $validated = $request->validated();
 
-        if (isset($validated['mapping'])) {
-            $import->mapping = $validated['mapping'];
-        }
+        /** @var array<string, mixed>|null $mappingToPersist */
+        $mappingToPersist = $validated['mapping'] ?? $import->mapping;
 
-        if (empty($import->mapping)) {
+        if ($mappingToPersist === null || $mappingToPersist === []) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Import is missing a column mapping.',
@@ -41,8 +30,27 @@ final class ImportCommitController extends Controller
             return to_route('transactions.index')->withErrors(['import' => 'Import is missing a column mapping.']);
         }
 
-        $import->status = 'queued';
-        $import->save();
+        $affected = Import::query()
+            ->whereKey($import->id)
+            ->where('user_id', $request->user()->id)
+            ->where('status', 'draft')
+            ->update([
+                'status' => 'queued',
+                'mapping' => json_encode($mappingToPersist, JSON_THROW_ON_ERROR),
+                'updated_at' => now(),
+            ]);
+
+        if ($affected === 0) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Import can be committed only once.',
+                ], 422);
+            }
+
+            return to_route('transactions.index')->withErrors(['import' => 'Import can be committed only once.']);
+        }
+
+        $import->refresh();
 
         CommitImportJob::dispatch($import->id);
 

@@ -4,63 +4,70 @@ declare(strict_types=1);
 
 namespace App\Actions\Imports;
 
-use App\Events\Imports\ImportEnrichmentTypesenseHit;
-use App\Events\Imports\ImportEnrichmentTypesenseMiss;
 use App\Imports\BankImportAdapterResolver;
 use App\Models\Import;
 use App\Models\Transaction;
-use App\Support\DescriptionMemory\DescriptionMemoryRepository;
 use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 final class CommitImport
 {
     public function __construct(
         public BankImportAdapterResolver $resolver,
-        public DescriptionMemoryRepository $descriptionMemory,
+        public ResolveImportSourceFile $resolveImportSourceFile,
+        public EnrichImportRowDescription $enrichImportRowDescription,
     ) {}
 
-    public function handle(Import $import): void
+    /**
+     * Process the import when it is safe to do so. Returns false if the import
+     * was skipped (already committed or unexpected status).
+     */
+    public function handle(Import $import): bool
     {
         $import->loadMissing(['account', 'user']);
 
-        $sourceFile = (string) data_get($import->details, 'source_file', '');
-        if ($sourceFile === '' || ! Storage::disk('local')->exists($sourceFile)) {
-            throw new \RuntimeException('Import source file does not exist.');
-        }
+        $deleteRelativePath = DB::transaction(function () use ($import): ?string {
+            $lockedImport = Import::query()
+                ->whereKey($import->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        /** @var array{date:string, amount:string, description:string, subject?:?string} $mapping */
-        $mapping = $import->mapping ?? [];
-        $adapter = $this->resolver->resolve($import->account->bank);
-        $absolutePath = Storage::disk('local')->path($sourceFile);
+            if ($lockedImport->committed_at !== null) {
+                return null;
+            }
 
-        $rowsTotal = 0;
-        $rowsImported = 0;
-        $rowsSkippedDuplicate = 0;
-        $rowsFailedValidation = 0;
-        $importedAmountSum = '0.00';
+            if (! in_array($lockedImport->status, ['queued', 'processing'], true)) {
+                return null;
+            }
 
-        DB::transaction(function () use (
-            $import,
-            $adapter,
-            $absolutePath,
-            $mapping,
-            &$rowsTotal,
-            &$rowsImported,
-            &$rowsSkippedDuplicate,
-            &$rowsFailedValidation,
-            &$importedAmountSum,
-        ): void {
-            $account = $import->account()->lockForUpdate()->firstOrFail();
+            $paths = $this->resolveImportSourceFile->resolve($lockedImport);
+            $adapter = $this->resolver->resolve($lockedImport->account->bank);
 
-            foreach ($adapter->readRows($absolutePath) as $row) {
-                $rowsTotal++;
+            /** @var array{date: string, amount: string, description: string, subject?: ?string}|null $mapping */
+            $mapping = $lockedImport->mapping;
+
+            if ($mapping === null || $mapping === []) {
+                throw new \RuntimeException('Import is missing a column mapping.');
+            }
+
+            $account = $lockedImport->account()->lockForUpdate()->firstOrFail();
+
+            $counters = new ImportCommitCounters;
+
+            foreach ($adapter->readRows($paths['absolute']) as $row) {
+                $counters->rowIndex++;
+                $counters->rowsTotal++;
 
                 try {
                     $parsedRow = $adapter->normalizeRow($row, $mapping);
                 } catch (\Throwable) {
-                    $rowsFailedValidation++;
+                    $counters->rowsFailedValidation++;
+                    Log::debug('Import row validation failed.', [
+                        'import_id' => $lockedImport->id,
+                        'row_index' => $counters->rowIndex,
+                    ]);
 
                     continue;
                 }
@@ -74,54 +81,32 @@ final class CommitImport
                     ->exists();
 
                 if ($exists) {
-                    $rowsSkippedDuplicate++;
+                    $counters->rowsSkippedDuplicate++;
 
                     continue;
                 }
 
-                $description = $parsedRow->rawStatementDescription;
-                $subject = $parsedRow->subject;
+                $enriched = $this->enrichImportRowDescription->enrich(
+                    import: $lockedImport,
+                    bank: $account->bank,
+                    rawStatementDescription: $parsedRow->rawStatementDescription,
+                    description: $parsedRow->rawStatementDescription,
+                    subject: $parsedRow->subject,
+                );
 
-                if ($description !== '' && $account->bank->supportsImport()) {
-                    $suggested = $this->descriptionMemory->suggest(
-                        userId: (int) $import->user_id,
-                        bank: $account->bank,
-                        rawStatementDescription: $description,
-                    );
+                $description = $enriched['description'];
+                $subject = $enriched['subject'];
 
-                    if ($suggested !== null) {
-                        if ($suggested->subject !== null && trim($suggested->subject) !== '') {
-                            $subject = $suggested->subject;
-                        }
-
-                        if ($suggested->description !== null && trim($suggested->description) !== '') {
-                            $description = $suggested->description;
-                        }
-
-                        event(new ImportEnrichmentTypesenseHit(
-                            userId: (int) $import->user_id,
-                            importId: (int) $import->id,
-                            bank: $account->bank,
-                            matchType: $suggested->matchType,
-                            score: $suggested->score,
-                        ));
-                    } else {
-                        event(new ImportEnrichmentTypesenseMiss(
-                            userId: (int) $import->user_id,
-                            importId: (int) $import->id,
-                            bank: $account->bank,
-                        ));
-                    }
-                }
+                $transactionType = bccomp($parsedRow->amount, '0', 2) === -1 ? 'expense' : 'income';
 
                 Transaction::query()->create([
-                    'user_id' => $import->user_id,
+                    'user_id' => $lockedImport->user_id,
                     'account_id' => $account->id,
                     'currency_id' => $account->currency_id,
-                    'import_id' => $import->id,
+                    'import_id' => $lockedImport->id,
                     'date' => $parsedRow->date,
                     'amount' => $parsedRow->amount,
-                    'type' => ((float) $parsedRow->amount) < 0 ? 'expense' : 'income',
+                    'type' => $transactionType,
                     'description' => $description,
                     'subject' => $subject,
                     'raw_statement_description' => $parsedRow->rawStatementDescription,
@@ -129,22 +114,32 @@ final class CommitImport
                     'dedupe_hash' => $dedupeHash,
                 ]);
 
-                $rowsImported++;
-                $importedAmountSum = bcadd($importedAmountSum, $parsedRow->amount, 2);
+                $counters->rowsImported++;
+                $counters->importedAmountSum = bcadd($counters->importedAmountSum, $parsedRow->amount, 2);
             }
 
-            $account->current_balance = bcadd((string) $account->current_balance, $importedAmountSum, 2);
+            $account->current_balance = bcadd((string) $account->current_balance, $counters->importedAmountSum, 2);
             $account->save();
+
+            $lockedImport->rows_total = $counters->rowsTotal;
+            $lockedImport->rows_imported = $counters->rowsImported;
+            $lockedImport->rows_skipped_duplicate = $counters->rowsSkippedDuplicate;
+            $lockedImport->rows_failed_validation = $counters->rowsFailedValidation;
+            $lockedImport->status = 'committed';
+            $lockedImport->committed_at = now();
+            $lockedImport->save();
+
+            return $paths['relative'];
         });
 
-        $import->rows_total = $rowsTotal;
-        $import->rows_imported = $rowsImported;
-        $import->rows_skipped_duplicate = $rowsSkippedDuplicate;
-        $import->rows_failed_validation = $rowsFailedValidation;
-        $import->status = 'committed';
-        $import->committed_at = now();
-        $import->save();
+        if ($deleteRelativePath === null) {
+            return false;
+        }
 
-        Storage::disk('local')->delete($sourceFile);
+        $import->refresh();
+
+        Storage::disk('local')->delete($deleteRelativePath);
+
+        return true;
     }
 }
