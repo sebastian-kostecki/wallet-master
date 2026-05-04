@@ -161,7 +161,7 @@ function onFileSelected(next: File | null) {
     fileError.value = validateFile(next);
 }
 
-async function uploadImport(): Promise<{ import_id: number; headers: string[] }> {
+async function uploadImport(): Promise<{ import_id: number; headers?: string[] }> {
     if (selectedAccountId.value === null || file.value === null) {
         throw new Error('Missing required fields.');
     }
@@ -181,72 +181,31 @@ async function uploadImport(): Promise<{ import_id: number; headers: string[] }>
     if (!res.ok) {
         const data = await res.json().catch(() => null);
         const accountIdMessage = data?.errors?.account_id?.[0] ?? '';
-        const fileMessage = data?.errors?.file?.[0] ?? '';
+        const code = (data?.code as string | undefined) ?? '';
 
         accountError.value = accountIdMessage || '';
+
+        if (code === 'unrecognized_headers') {
+            fileError.value = t('imports.toast.unrecognizedHeaders');
+            throw new Error(t('imports.toast.unrecognizedHeaders'));
+        }
+
+        const fileMessage = data?.errors?.file?.[0] ?? '';
         fileError.value = fileMessage || (res.status === 422 ? t('imports.validation.generic') : t('imports.validation.generic'));
         throw new Error('Upload failed.');
     }
 
-    const json = (await res.json()) as { import_id: number; headers: string[] };
+    const json = (await res.json()) as { import_id: number; headers?: string[] };
     return json;
 }
 
-function normalizeHeader(input: string): string {
-    return input.trim().toLowerCase();
-}
-
-function autoMapping(headers: string[], bank: string): { date: string; amount: string; description: string; subject?: string | null } | null {
-    const byNormalized = new Map(headers.map((h) => [normalizeHeader(h), h] as const));
-
-    const has = (k: string) => byNormalized.get(normalizeHeader(k)) ?? null;
-
-    const direct = {
-        date: has('date'),
-        amount: has('amount'),
-        description: has('description'),
-        subject: has('subject'),
-    };
-
-    if (direct.date && direct.amount && direct.description) {
-        return {
-            date: direct.date,
-            amount: direct.amount,
-            description: direct.description,
-            subject: direct.subject ?? null,
-        };
-    }
-
-    if (bank === 'mbank') {
-        const mapped = {
-            date: has('Data operacji'),
-            amount: has('Kwota'),
-            description: has('Opis operacji'),
-            subject: has('Kategoria') ?? null,
-        };
-
-        if (mapped.date && mapped.amount && mapped.description) {
-            return {
-                date: mapped.date,
-                amount: mapped.amount,
-                description: mapped.description,
-                subject: mapped.subject ?? null,
-            };
-        }
-    }
-
-    return null;
-}
-
-async function commitImport(nextImportId: number, mapping: { date: string; amount: string; description: string; subject?: string | null }) {
+async function commitImport(nextImportId: number) {
     const res = await fetch(route('imports.commit', nextImportId as any), {
         method: 'POST',
         headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
         },
-        body: JSON.stringify({ mapping }),
     });
 
     if (!res.ok) {
@@ -369,12 +328,7 @@ async function start() {
         const upload = await uploadImport();
         importId.value = upload.import_id;
 
-        const mapping = autoMapping(upload.headers ?? [], account.bank);
-        if (!mapping) {
-            throw new Error(t('imports.toast.unrecognizedHeaders'));
-        }
-
-        await commitImport(upload.import_id, mapping);
+        await commitImport(upload.import_id);
 
         await refreshImportState();
         startLongRunningTimer();

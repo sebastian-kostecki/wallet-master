@@ -30,10 +30,10 @@ final class StoreImportCommitRequest extends FormRequest
         $headers = (array) data_get($import->details, 'headers', []);
 
         return [
-            'mapping' => ['required', 'array'],
-            'mapping.date' => ['required', 'string', Rule::in($headers)],
-            'mapping.amount' => ['required', 'string', Rule::in($headers)],
-            'mapping.description' => ['required', 'string', Rule::in($headers)],
+            'mapping' => ['sometimes', 'array'],
+            'mapping.date' => ['required_with:mapping', 'string', Rule::in($headers)],
+            'mapping.amount' => ['required_with:mapping', 'string', Rule::in($headers)],
+            'mapping.description' => ['required_with:mapping', 'string', Rule::in($headers)],
             'mapping.subject' => ['nullable', 'string', Rule::in($headers)],
         ];
     }

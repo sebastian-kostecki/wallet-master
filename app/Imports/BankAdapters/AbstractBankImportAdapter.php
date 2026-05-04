@@ -9,6 +9,7 @@ use App\Support\Transactions\TransactionDedupe;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use RuntimeException;
 
 abstract class AbstractBankImportAdapter implements BankImportAdapter
@@ -27,6 +28,46 @@ abstract class AbstractBankImportAdapter implements BankImportAdapter
         foreach ($rows['rows'] as $row) {
             yield $row;
         }
+    }
+
+    public function defaultMapping(array $headers): ?array
+    {
+        $date = $this->findHeader($headers, 'date');
+        $amount = $this->findHeader($headers, 'amount');
+        $description = $this->findHeader($headers, 'description');
+
+        if ($date === null || $amount === null || $description === null) {
+            return null;
+        }
+
+        $mapping = [
+            'date' => $date,
+            'amount' => $amount,
+            'description' => $description,
+        ];
+
+        $subject = $this->findHeader($headers, 'subject');
+        if ($subject !== null) {
+            $mapping['subject'] = $subject;
+        }
+
+        return $mapping;
+    }
+
+    /**
+     * @param  list<string>  $headers
+     */
+    protected function findHeader(array $headers, string $needle): ?string
+    {
+        $needleNormalized = mb_strtolower(trim($needle));
+
+        foreach ($headers as $header) {
+            if (mb_strtolower(trim($header)) === $needleNormalized) {
+                return $header;
+            }
+        }
+
+        return null;
     }
 
     public function normalizeRow(array $row, array $mapping): ParsedImportRow
@@ -108,69 +149,51 @@ abstract class AbstractBankImportAdapter implements BankImportAdapter
      */
     private function readXlsx(string $path): array
     {
-        $zip = new \ZipArchive;
-        if ($zip->open($path) !== true) {
-            throw new RuntimeException('Unable to open XLSX file.');
-        }
+        $spreadsheet = IOFactory::load($path);
 
-        $sharedStringsRaw = $zip->getFromName('xl/sharedStrings.xml');
-        $worksheetRaw = $zip->getFromName('xl/worksheets/sheet1.xml');
-        $zip->close();
+        try {
+            $sheet = $spreadsheet->getSheet(0);
+            $highestRow = $sheet->getHighestDataRow();
 
-        if (! is_string($worksheetRaw)) {
-            throw new RuntimeException('Unable to read first worksheet from XLSX.');
-        }
-
-        $sharedStrings = [];
-        if (is_string($sharedStringsRaw)) {
-            $sharedStringsXml = simplexml_load_string($sharedStringsRaw);
-            if ($sharedStringsXml !== false && isset($sharedStringsXml->si)) {
-                foreach ($sharedStringsXml->si as $item) {
-                    $sharedStrings[] = trim((string) ($item->t ?? ''));
-                }
+            if ($highestRow < 1) {
+                throw new RuntimeException('XLSX worksheet is empty.');
             }
-        }
 
-        $worksheetXml = simplexml_load_string($worksheetRaw);
-        if ($worksheetXml === false || ! isset($worksheetXml->sheetData->row)) {
-            throw new RuntimeException('XLSX worksheet is empty.');
-        }
+            $highestColumn = $sheet->getHighestDataColumn();
 
-        $headers = [];
-        $rows = [];
+            $headers = [];
+            $rows = [];
 
-        foreach ($worksheetXml->sheetData->row as $rowNode) {
-            $cells = [];
-            foreach ($rowNode->c as $cell) {
-                $type = (string) ($cell['t'] ?? '');
-                $value = trim((string) ($cell->v ?? ''));
+            foreach ($sheet->getRowIterator(1, $highestRow) as $row) {
+                $cells = [];
+                $cellIterator = $row->getCellIterator('A', $highestColumn, false);
 
-                if ($type === 's' && $value !== '') {
-                    $sharedIndex = (int) $value;
-                    $value = (string) ($sharedStrings[$sharedIndex] ?? '');
+                foreach ($cellIterator as $cell) {
+                    $cells[] = trim($cell->getFormattedValue());
                 }
 
-                $cells[] = $value;
+                if ($headers === []) {
+                    $headers = $this->normalizeHeaders($cells);
+
+                    continue;
+                }
+
+                if ($this->isEmptyRow($cells)) {
+                    continue;
+                }
+
+                $rows[] = $this->toAssociativeRow($headers, $cells);
             }
 
             if ($headers === []) {
-                $headers = $this->normalizeHeaders($cells);
-
-                continue;
+                throw new RuntimeException('Import file has no headers.');
             }
 
-            if ($this->isEmptyRow($cells)) {
-                continue;
-            }
-
-            $rows[] = $this->toAssociativeRow($headers, $cells);
+            return ['headers' => $headers, 'rows' => $rows];
+        } finally {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
         }
-
-        if ($headers === []) {
-            throw new RuntimeException('Import file has no headers.');
-        }
-
-        return ['headers' => $headers, 'rows' => $rows];
     }
 
     private function detectCsvDelimiter(string $path): string

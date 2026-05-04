@@ -26,6 +26,30 @@ final class MBankImportAdapter extends AbstractBankImportAdapter
         return $parsed['headers'];
     }
 
+    public function defaultMapping(array $headers): ?array
+    {
+        $date = $this->findHeader($headers, 'Data operacji');
+        $amount = $this->findHeader($headers, 'Kwota');
+        $description = $this->findHeader($headers, 'Opis operacji');
+
+        if ($date === null || $amount === null || $description === null) {
+            return null;
+        }
+
+        $mapping = [
+            'date' => $date,
+            'amount' => $amount,
+            'description' => $description,
+        ];
+
+        $subject = $this->findHeader($headers, 'Kategoria');
+        if ($subject !== null) {
+            $mapping['subject'] = $subject;
+        }
+
+        return $mapping;
+    }
+
     public function readRows(string $path): iterable
     {
         $parsed = $this->parseMbankCsv($path);

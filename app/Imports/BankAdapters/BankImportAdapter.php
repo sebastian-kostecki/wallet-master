@@ -26,4 +26,12 @@ interface BankImportAdapter
      * @param  array{date:string, amount:string, description:string, subject?:?string}  $mapping
      */
     public function normalizeRow(array $row, array $mapping): ParsedImportRow;
+
+    /**
+     * Resolve a default column mapping based on the file headers.
+     *
+     * @param  list<string>  $headers
+     * @return array{date:string, amount:string, description:string, subject?:?string}|null
+     */
+    public function defaultMapping(array $headers): ?array;
 }

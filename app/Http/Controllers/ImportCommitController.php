@@ -26,7 +26,21 @@ final class ImportCommitController extends Controller
 
         $validated = $request->validated();
 
-        $import->mapping = $validated['mapping'];
+        if (isset($validated['mapping'])) {
+            $import->mapping = $validated['mapping'];
+        }
+
+        if (empty($import->mapping)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Import is missing a column mapping.',
+                    'code' => 'missing_mapping',
+                ], 422);
+            }
+
+            return to_route('transactions.index')->withErrors(['import' => 'Import is missing a column mapping.']);
+        }
+
         $import->status = 'queued';
         $import->save();
 

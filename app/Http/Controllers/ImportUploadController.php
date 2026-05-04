@@ -25,23 +25,56 @@ final class ImportUploadController extends Controller
 
         $adapter = $resolver->resolve($account->bank);
 
+        $uploadedFile = $request->file('file');
+        $extension = strtolower($uploadedFile->getClientOriginalExtension()) ?: 'csv';
+
+        // Persist the file to a temp location first so we can inspect headers
+        // without creating an Import record that we may immediately delete.
+        $tempRelativePath = "imports/{$request->user()->id}/tmp/".Str::uuid()->toString().'.'.Str::lower($extension);
+        Storage::disk('local')->put($tempRelativePath, $uploadedFile->get());
+
+        $absoluteTempPath = Storage::disk('local')->path($tempRelativePath);
+
+        try {
+            $headers = $adapter->extractHeaders($absoluteTempPath);
+        } catch (\Throwable) {
+            Storage::disk('local')->delete($tempRelativePath);
+
+            return response()->json([
+                'message' => 'Unable to read import file headers.',
+                'code' => 'unreadable_file',
+                'errors' => [
+                    'file' => ['unreadable_file'],
+                ],
+            ], 422);
+        }
+
+        $mapping = $adapter->defaultMapping($headers);
+
+        if ($mapping === null) {
+            Storage::disk('local')->delete($tempRelativePath);
+
+            return response()->json([
+                'message' => 'Could not recognize import file columns.',
+                'code' => 'unrecognized_headers',
+                'errors' => [
+                    'file' => ['unrecognized_headers'],
+                ],
+            ], 422);
+        }
+
         $import = Import::query()->create([
             'user_id' => $request->user()->id,
             'account_id' => $account->id,
             'status' => 'draft',
         ]);
 
-        $uploadedFile = $request->file('file');
-        $extension = strtolower($uploadedFile->getClientOriginalExtension()) ?: 'csv';
-        $relativePath = "imports/{$request->user()->id}/{$import->id}/source.".Str::lower($extension);
+        $finalRelativePath = "imports/{$request->user()->id}/{$import->id}/source.".Str::lower($extension);
+        Storage::disk('local')->move($tempRelativePath, $finalRelativePath);
 
-        Storage::disk('local')->put($relativePath, $uploadedFile->get());
-
-        $absolutePath = Storage::disk('local')->path($relativePath);
-        $headers = $adapter->extractHeaders($absolutePath);
-
+        $import->mapping = $mapping;
         $import->details = [
-            'source_file' => $relativePath,
+            'source_file' => $finalRelativePath,
             'parser' => $adapter::class,
             'headers' => $headers,
         ];

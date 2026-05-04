@@ -34,18 +34,17 @@ test('commit queues import job and marks import as queued', function () {
         'user_id' => $user->id,
         'account_id' => $account->id,
         'status' => 'draft',
+        'mapping' => [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+        ],
         'details' => ['headers' => ['date', 'amount', 'description']],
     ]);
 
     $response = $this
         ->actingAs($user)
-        ->post(route('imports.commit', $import), [
-            'mapping' => [
-                'date' => 'date',
-                'amount' => 'amount',
-                'description' => 'description',
-            ],
-        ]);
+        ->post(route('imports.commit', $import));
 
     $response->assertRedirect(route('transactions.index'));
     $import->refresh();
@@ -74,18 +73,17 @@ test('commit returns json when requested', function () {
         'user_id' => $user->id,
         'account_id' => $account->id,
         'status' => 'draft',
+        'mapping' => [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+        ],
         'details' => ['headers' => ['date', 'amount', 'description']],
     ]);
 
     $response = $this
         ->actingAs($user)
-        ->postJson(route('imports.commit', $import), [
-            'mapping' => [
-                'date' => 'date',
-                'amount' => 'amount',
-                'description' => 'description',
-            ],
-        ]);
+        ->postJson(route('imports.commit', $import));
 
     $response->assertAccepted();
     $response->assertJsonPath('import_id', $import->id);
@@ -117,17 +115,16 @@ test('cannot commit someone else import', function () {
         'user_id' => $owner->id,
         'account_id' => $account->id,
         'status' => 'draft',
+        'mapping' => [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+        ],
         'details' => ['headers' => ['date', 'amount', 'description']],
     ]);
 
     $this
         ->actingAs($other)
-        ->post(route('imports.commit', $import), [
-            'mapping' => [
-                'date' => 'date',
-                'amount' => 'amount',
-                'description' => 'description',
-            ],
-        ])
+        ->post(route('imports.commit', $import))
         ->assertForbidden();
 });
