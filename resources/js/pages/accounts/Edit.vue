@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
+import Icon from '@/components/Icon.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { useI18n } from 'vue-i18n';
 type Option = {
     value: string;
     label_key: string;
+    icon_url?: string | null;
 };
 
 type Currency = {
@@ -46,6 +48,12 @@ const { t, locale } = useI18n();
 const bankOptions = computed<DropdownOption<string>[]>(() => {
     return props.banks.map((b) => ({ value: b.value, label: t(b.label_key) }));
 });
+
+const selectedBank = computed(() => props.banks.find((b) => b.value === form.bank) ?? null);
+
+function resolveBankIconUrl(bankValue: string): string | null {
+    return props.banks.find((b) => b.value === bankValue)?.icon_url ?? null;
+}
 
 const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
     return props.accountTypes.map((a) => ({ value: a.value, label: t(a.label_key) }));
@@ -119,7 +127,49 @@ const adjustProcessing = ref(false);
                                 :placeholder="t('accounts.create.fields.bank.placeholder')"
                                 :disabled="form.processing"
                                 @update:model-value="(value) => (form.bank = value)"
-                            />
+                            >
+                                <template #trigger-leading>
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="
+                                            selectedBank?.value === 'cash'
+                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                : 'bg-muted'
+                                        "
+                                        aria-hidden="true"
+                                    >
+                                        <img
+                                            v-if="selectedBank?.icon_url"
+                                            :src="selectedBank.icon_url"
+                                            :alt="t(selectedBank.label_key)"
+                                            class="h-5 w-5 object-cover"
+                                            loading="lazy"
+                                        />
+                                        <Icon v-else :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    </span>
+                                </template>
+
+                                <template #option-leading="{ option }">
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="
+                                            option.value === 'cash'
+                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                : 'bg-muted'
+                                        "
+                                        aria-hidden="true"
+                                    >
+                                        <img
+                                            v-if="resolveBankIconUrl(option.value)"
+                                            :src="resolveBankIconUrl(option.value) ?? undefined"
+                                            :alt="option.label"
+                                            class="h-5 w-5 object-cover"
+                                            loading="lazy"
+                                        />
+                                        <Icon v-else :name="option.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    </span>
+                                </template>
+                            </DropdownSelect>
                         </FormField>
 
                         <FormField for-id="type" :label="t('accounts.create.fields.type.label')" :error="form.errors.type">

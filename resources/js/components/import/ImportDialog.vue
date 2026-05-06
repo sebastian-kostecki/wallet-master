@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from '@/lib/utils';
 import { router, usePage } from '@inertiajs/vue3';
 import { echo } from '@laravel/echo-vue';
-import { CheckCircle2, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
+import { CheckCircle2, Coins, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
@@ -407,13 +407,23 @@ function goToTransactions() {
                         @update:model-value="(value: any) => (selectedAccountId = value)"
                     >
                         <template #trigger-leading>
-                            <span v-if="selectedAccount" class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
+                            <span
+                                v-if="selectedAccount"
+                                class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                :class="
+                                    selectedAccount.bank === 'cash'
+                                        ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                        : 'bg-muted'
+                                "
+                                aria-hidden="true"
+                            >
                                 <img
                                     v-if="selectedAccount.bank_icon_url"
                                     :src="selectedAccount.bank_icon_url"
                                     :alt="selectedAccount.name"
                                     class="h-5 w-5 object-cover"
                                 />
+                                <Coins v-else-if="selectedAccount.bank === 'cash'" class="h-3.5 w-3.5" />
                                 <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                     {{ selectedAccount.name.charAt(0).toUpperCase() }}
                                 </span>
@@ -421,13 +431,22 @@ function goToTransactions() {
                         </template>
 
                         <template #option-leading="{ option }">
-                            <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
+                            <span
+                                class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                :class="
+                                    accountsById.get(option.value)?.bank === 'cash'
+                                        ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                        : 'bg-muted'
+                                "
+                                aria-hidden="true"
+                            >
                                 <img
                                     v-if="accountsById.get(option.value)?.bank_icon_url"
                                     :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
                                     :alt="accountsById.get(option.value)?.name ?? ''"
                                     class="h-5 w-5 object-cover"
                                 />
+                                <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
                                 <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                     {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
                                 </span>

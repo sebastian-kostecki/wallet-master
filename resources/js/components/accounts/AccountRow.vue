@@ -47,7 +47,18 @@ const { t } = useI18n();
                     class="h-9 w-9 rounded-lg object-contain"
                     loading="lazy"
                 />
-                <component v-else :is="accountTypeIcon" class="h-9 w-9 text-muted-foreground" aria-hidden="true" />
+                <div
+                    v-else
+                    class="flex h-9 w-9 items-center justify-center rounded-lg"
+                    :class="
+                        account.bank === 'cash'
+                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                            : 'bg-muted text-muted-foreground'
+                    "
+                    aria-hidden="true"
+                >
+                    <component :is="account.bank === 'cash' ? Coins : accountTypeIcon" class="h-4 w-4" />
+                </div>
             </div>
 
             <div class="min-w-0 flex-1">

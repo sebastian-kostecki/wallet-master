@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Coins } from 'lucide-vue-next';
 import { Trash2 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
@@ -48,7 +49,18 @@ defineEmits<{
                         class="h-10 w-10 rounded-lg object-contain"
                         loading="lazy"
                     />
-                    <component v-else :is="accountTypeIcon" class="h-10 w-10 text-muted-foreground" aria-hidden="true" />
+                    <div
+                        v-else
+                        class="flex h-10 w-10 items-center justify-center rounded-lg"
+                        :class="
+                            account.bank === 'cash'
+                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                : 'bg-muted text-muted-foreground'
+                        "
+                        aria-hidden="true"
+                    >
+                        <component :is="account.bank === 'cash' ? Coins : accountTypeIcon" class="h-5 w-5" />
+                    </div>
                 </div>
 
                 <div class="min-w-0">

@@ -107,25 +107,45 @@ function submit() {
                             @update:model-value="(value) => (form.bank = value)"
                         >
                             <template #trigger-leading>
-                                <img
-                                    v-if="selectedBank?.icon_url"
-                                    :src="selectedBank.icon_url"
-                                    :alt="t(selectedBank.label_key)"
-                                    class="h-5 w-5 shrink-0 rounded object-contain"
-                                    loading="lazy"
-                                />
-                                <Icon v-else name="landmark" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                <span
+                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                    :class="
+                                        selectedBank?.value === 'cash'
+                                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                            : 'bg-muted'
+                                    "
+                                    aria-hidden="true"
+                                >
+                                    <img
+                                        v-if="selectedBank?.icon_url"
+                                        :src="selectedBank.icon_url"
+                                        :alt="t(selectedBank.label_key)"
+                                        class="h-5 w-5 object-cover"
+                                        loading="lazy"
+                                    />
+                                    <Icon v-else :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                </span>
                             </template>
 
                             <template #option-leading="{ option }">
-                                <img
-                                    v-if="resolveBankIconUrl(option.value)"
-                                    :src="resolveBankIconUrl(option.value) ?? undefined"
-                                    :alt="option.label"
-                                    class="h-5 w-5 shrink-0 rounded object-contain"
-                                    loading="lazy"
-                                />
-                                <Icon v-else name="wallet" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                <span
+                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                    :class="
+                                        option.value === 'cash'
+                                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                            : 'bg-muted'
+                                    "
+                                    aria-hidden="true"
+                                >
+                                    <img
+                                        v-if="resolveBankIconUrl(option.value)"
+                                        :src="resolveBankIconUrl(option.value) ?? undefined"
+                                        :alt="option.label"
+                                        class="h-5 w-5 object-cover"
+                                        loading="lazy"
+                                    />
+                                    <Icon v-else :name="option.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                </span>
                             </template>
                         </DropdownSelect>
                     </FormField>
@@ -193,10 +213,6 @@ function submit() {
 
                             <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
                         </div>
-
-                        <p class="text-sm text-muted-foreground">
-                            {{ t('accounts.create.openingBalanceHint') }}
-                        </p>
                     </div>
                 </form>
             </div>

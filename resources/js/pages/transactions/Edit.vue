@@ -8,6 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { displayAmount, normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Coins } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
@@ -16,6 +17,7 @@ type Account = {
     id: number;
     name: string;
     currency_id: number;
+    bank: string;
     bank_icon_url: string | null;
 };
 
@@ -128,13 +130,23 @@ function submit() {
                                 @update:model-value="(value) => (form.account_id = value)"
                             >
                                 <template #trigger-leading>
-                                    <span v-if="selectedAccount" class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
+                                    <span
+                                        v-if="selectedAccount"
+                                        class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                        :class="
+                                            selectedAccount.bank === 'cash'
+                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                : 'bg-muted'
+                                        "
+                                        aria-hidden="true"
+                                    >
                                         <img
                                             v-if="selectedAccount.bank_icon_url"
                                             :src="selectedAccount.bank_icon_url"
                                             :alt="selectedAccount.name"
                                             class="h-5 w-5 object-cover"
                                         />
+                                        <Coins v-else-if="selectedAccount.bank === 'cash'" class="h-3.5 w-3.5" />
                                         <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                             {{ selectedAccount.name.charAt(0).toUpperCase() }}
                                         </span>
@@ -142,13 +154,22 @@ function submit() {
                                 </template>
 
                                 <template #option-leading="{ option }">
-                                    <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted">
+                                    <span
+                                        class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                        :class="
+                                            accountsById.get(option.value)?.bank === 'cash'
+                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                : 'bg-muted'
+                                        "
+                                        aria-hidden="true"
+                                    >
                                         <img
                                             v-if="accountsById.get(option.value)?.bank_icon_url"
                                             :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
                                             :alt="accountsById.get(option.value)?.name ?? ''"
                                             class="h-5 w-5 object-cover"
                                         />
+                                        <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
                                         <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                             {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
                                         </span>
