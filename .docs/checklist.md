@@ -36,7 +36,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `import_id` (nullable; powiązanie z importem)
 - [x] Dodać encje importu + mapowania per bank:
   - [x] `imports`: `user_id`, `account_id`, status, liczniki (`rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`)
-  - [ ] `imports.details` (JSON): metadane techniczne (`mapping_used`, `source_file`, `parser`, `diagnostics`)
+  - [x] `imports.details` (JSON): metadane techniczne (`mapping_used`, `source_file`, `parser`, `diagnostics`)
   - [x] `import_profiles` (per user + bank): zapis mapowania kolumn + wersjonowanie (opcjonalnie) — na MVP mapowanie trzymamy w `imports.mapping` (JSON), bez osobnej tabeli
 - [x] Indeksy:
   - [x] `transactions(account_id, date)`
@@ -117,81 +117,81 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ### 6) Import — flow: z widoku transakcji → wybór konta → upload → mapowanie → auto-commit → wynik
 
 #### 6.1 Kontrakty i UI flow
-- [ ] Entry point: przycisk “Import” na widoku transakcji (modal/wizard).
-- [ ] Modal krok 1: wybór konta (bank wynika z konta i jest wyświetlany).
-- [ ] Modal krok 2: upload CSV/XLSX.
+- [x] Entry point: przycisk “Import” na widoku transakcji (modal/wizard).
+- [x] Modal krok 1: wybór konta (bank wynika z konta i jest wyświetlany).
+- [x] Modal krok 2: upload CSV/XLSX.
 - [ ] Modal krok 3: mapowanie kolumn:
   - [ ] Wymagane: data, kwota, opis
   - [ ] Opcjonalne: `subject`
   - [ ] Mapowanie po nazwach nagłówków (headers zawsze obecne)
   - [ ] Zapisywanie mapowania per user + bank konta (profil) i automatyczne podpowiadanie
 - [ ] Auto-commit importu (bez preview):
-  - [ ] Walidacja + dedupe + zapis w jednej akcji
-  - [ ] Blokada ponownego commitu tego samego importu (gdy status != `draft`)
-  - [ ] Podsumowanie końcowe: `rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`
+  - [x] Walidacja + dedupe + zapis w jednej akcji
+  - [x] Blokada ponownego commitu tego samego importu (gdy status != `draft`)
+  - [x] Podsumowanie końcowe: `rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`
 - [ ] Widok wyniku:
   - [ ] Po commit redirect do strony transakcji
   - [ ] Informacyjna lista błędnych/skipowanych pozycji dla bieżącego importu (bez retencji pełnych surowych wierszy)
 
 #### 6.2 Parsowanie i walidacja
-- [ ] CSV:
-  - [ ] Autodetekcja separatora
-  - [ ] Obsłużyć kwoty z `,` i `.` (wejście)
-- [ ] XLSX:
-  - [ ] Importować pierwszy arkusz
-- [ ] Data:
-  - [ ] Parsowanie do formatu daty (prezentacja DD-MM-YYYY; storage jako date)
-- [ ] Kwota:
-  - [ ] Ujemne kwoty → wydatek, dodatnie → przychód (ustawić `type`)
-  - [ ] Kwota 0 → błąd walidacji
-- [ ] `subject`:
-  - [ ] Ekstrakcja per bank (adaptery) z `description` lub innych pól, jeśli bank tego wymaga
-  - [ ] Fallback: pozostawić puste, jeśli nie da się wyciągnąć **[Assumption]**
+- [x] CSV:
+  - [x] Autodetekcja separatora
+  - [x] Obsłużyć kwoty z `,` i `.` (wejście)
+- [x] XLSX:
+  - [x] Importować pierwszy arkusz
+- [x] Data:
+  - [x] Parsowanie do formatu daty (prezentacja DD-MM-YYYY; storage jako date)
+- [x] Kwota:
+  - [x] Ujemne kwoty → wydatek, dodatnie → przychód (ustawić `type`)
+  - [~] Kwota 0 → błąd walidacji (obecnie traktowane jako poprawne, ale `type` wyjdzie jako `income`)
+- [x] `subject`:
+  - [~] Ekstrakcja per bank (adaptery) z `description` lub innych pól, jeśli bank tego wymaga (na MVP: `subject` z kolumny mapowania, jeśli istnieje)
+  - [x] Fallback: pozostawić puste, jeśli nie da się wyciągnąć **[Assumption]**
 
 #### 6.3 Deduplikacja (zawsze pomijamy)
-- [ ] Zaimplementować normalizację opisu:
-  - [ ] `trim`
-  - [ ] `case-fold` (np. lowercase)
-  - [ ] standaryzacja whitespace (wielokrotne spacje → jedna)
-- [ ] Duplikat = identyczne: `date + amount + normalized_description` na tym samym `account_id`
-- [ ] Import używa tej samej logiki dedupe niezależnie od banku (adapter może dostarczyć wstępnie oczyszczony opis).
+- [x] Zaimplementować normalizację opisu:
+  - [x] `trim`
+  - [x] `case-fold` (np. lowercase)
+  - [x] standaryzacja whitespace (wielokrotne spacje → jedna)
+- [x] Duplikat = identyczne: `date + amount + normalized_description` na tym samym `account_id`
+- [x] Import używa tej samej logiki dedupe niezależnie od banku (adapter może dostarczyć wstępnie oczyszczony opis).
 
 #### 6.4 Salda po imporcie
-- [ ] Agregować sumę kwot tylko dla faktycznie utworzonych transakcji (`imported_amount_sum`).
-- [ ] Wykonać jedną aktualizację `current_balance` po przetworzeniu importu.
-- [ ] Zabezpieczyć przed podwójnym zapisem (idempotencja importu przez `import_id` + dedupe).
+- [x] Agregować sumę kwot tylko dla faktycznie utworzonych transakcji (`imported_amount_sum`).
+- [x] Wykonać jedną aktualizację `current_balance` po przetworzeniu importu.
+- [x] Zabezpieczyć przed podwójnym zapisem (idempotencja importu przez `import_id` + dedupe).
 
 #### 6.5a Realtime status importu (MVP)
-- [ ] Włączyć aktualizację statusu importu przez Reverb (`queued` → `processing` → `committed|failed`).
-- [ ] Zostawić polling jako fallback na wypadek zerwania połączenia realtime.
-- [ ] Event `import.updated` z payloadem statusu i liczników `rows_*`.
+- [x] Włączyć aktualizację statusu importu przez Reverb (`queued` → `processing` → `committed|failed`).
+- [~] Zostawić polling jako fallback na wypadek zerwania połączenia realtime (obecnie: manualny refresh w UI).
+- [x] Event `import.updated` z payloadem statusu i liczników `rows_*`.
 
 #### 6.5 Enrichment `subject`/`description` z “pamięci” (Typesense)
-- [ ] Dodać “surowy opis z wyciągu” do transakcji/importu (np. `raw_statement_description`) i przechowywać go dla transakcji z importu.
-- [ ] Typesense collection “pamięci” (per user + bank):
-  - [ ] Klucze normalizacyjne (strict/relaxed) dla `raw_statement_description`
-  - [ ] Przechowywane wartości: `learned_subject`, `learned_description`, `updated_at`
-- [ ] Import: dla każdej transakcji spróbować dopasować pamięć po `raw_statement_description` i auto-uzupełnić `subject`/`description` (best-effort; brak trafienia lub brak Typesense → fallback).
-- [ ] Edycja transakcji: jeżeli transakcja pochodzi z importu i user zmieni `subject` i/lub `description`, wykonać upsert do pamięci w Typesense.
-- [ ] Izolacja danych: pamięć musi być ściśle per user (bez możliwości dopasowań między użytkownikami).
+- [x] Dodać “surowy opis z wyciągu” do transakcji/importu (np. `raw_statement_description`) i przechowywać go dla transakcji z importu.
+- [x] Typesense collection “pamięci” (per user + bank):
+  - [x] Klucze normalizacyjne (strict/relaxed) dla `raw_statement_description`
+  - [x] Przechowywane wartości: `learned_subject`, `learned_description`, `updated_at`
+- [x] Import: dla każdej transakcji spróbować dopasować pamięć po `raw_statement_description` i auto-uzupełnić `subject`/`description` (best-effort; brak trafienia lub brak Typesense → fallback).
+- [x] Edycja transakcji: jeżeli transakcja pochodzi z importu i user zmieni `subject` i/lub `description`, wykonać upsert do pamięci w Typesense.
+- [x] Izolacja danych: pamięć musi być ściśle per user (bez możliwości dopasowań między użytkownikami).
 
 ---
 
 ### 7) Adaptery banków + profile mapowań
-- [ ] Zdefiniować listę banków (enum/slug): `BnpParibas`, `MBank`, `Cash` (Gotówka).
+- [x] Zdefiniować listę banków (enum/slug): `BnpParibas`, `MBank`, `Cash` (Gotówka).
 - [ ] Ikony banków:
   - [ ] Dodać assets dla `BnpParibas`, `MBank`, `Cash`
   - [ ] Mapowanie ikon po slugu `bank` w UI
-- [ ] Zdefiniować interfejs “BankAdapter”:
+- [x] Zdefiniować interfejs “BankAdapter”:
   - [ ] identyfikator banku (`bank_key`)
-  - [ ] ekstrakcja `subject`
+  - [~] ekstrakcja `subject` (na MVP: kolumna `subject`, jeśli istnieje; bez reguł ekstrakcji z `description`)
   - [ ] ewentualne pre-processing `description` (tylko jeśli wymagane)
-- [ ] Mechanizm rejestracji adapterów + fallback “Generic”.
-- [ ] Resolver adaptera po `Account.bank` (bank nie wybierany osobno w imporcie).
-- [ ] Implementacje adapterów (MVP):
-  - [ ] `BnpParibas`
-  - [ ] `MBank`
-  - [ ] `Cash` (konto gotówkowe; import niewspierany lub ograniczony — decyzja produktowa/techniczna)
+- [~] Mechanizm rejestracji adapterów + fallback “Generic”. (jest resolver, fallback = wyjątek)
+- [x] Resolver adaptera po `Account.bank` (bank nie wybierany osobno w imporcie).
+- [x] Implementacje adapterów (MVP):
+  - [x] `BnpParibas`
+  - [x] `MBank`
+  - [x] `Cash` (konto gotówkowe; import niewspierany lub ograniczony — decyzja produktowa/techniczna)
 - [ ] Model “ImportProfile” per user + bank:
   - [ ] przechowywanie mapowania kolumn
   - [ ] możliwość nadpisania / aktualizacji
@@ -204,7 +204,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [ ] Transakcje: `transaction_create_opened`, `transaction_created`, `transaction_updated`, `transaction_deleted`
 - [ ] Lista: `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
 - [ ] Transfer: `transfer_created`, `transfer_failed_validation`
-- [ ] Import: `import_started`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account` (opcjonalnie), `import.updated` (realtime)
+- [~] Import: `import_started`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account` (opcjonalnie), `import.updated` (realtime)
 
 ---
 
