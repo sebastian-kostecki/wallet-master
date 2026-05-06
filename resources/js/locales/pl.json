@@ -112,6 +112,9 @@
                 },
                 "presets": {
                     "thisMonth": "Ten miesiąc",
+                    "previousMonth": "Poprzedni miesiąc",
+                    "thisYear": "Bieżący rok",
+                    "previousYear": "Poprzedni rok",
                     "last7Days": "Ostatnie 7 dni"
                 },
                 "a11y": {
@@ -157,6 +160,10 @@
                 "sortByDate": "Sortuj po dacie",
                 "sortByAmount": "Sortuj po kwocie",
                 "edit": "Edytuj transakcję: {description}"
+            },
+            "importPreset": {
+                "label": "Zaimportowane przed chwilą",
+                "clearAria": "Wyczyść filtr: Zaimportowane przed chwilą"
             }
         },
         "create": {
@@ -177,6 +184,10 @@
                 "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
                 "amount": "Sprawdź znak kwoty (plus/minus). To wpływa na saldo konta.",
                 "save": "Po zapisaniu wrócisz do listy transakcji."
+            },
+            "statement": {
+                "title": "Dane z wyciągu",
+                "description": "Surowy opis z wyciągu bankowego (nieedytowalny)."
             }
         },
         "form": {
@@ -221,6 +232,67 @@
         "toast": {
             "created": "Transfer zapisany.",
             "genericError": "Nie udało się wykonać transferu. Spróbuj ponownie."
+        }
+    },
+    "imports": {
+        "cta": "Importuj",
+        "dialog": {
+            "title": "Import transakcji",
+            "context": "Konto: {account} • Bank: {bank}",
+            "contextEmpty": "Wybierz konto, aby rozpocząć import.",
+            "account": {
+                "label": "Konto",
+                "hint": "Bank importu wynika z konta."
+            },
+            "file": {
+                "label": "Plik",
+                "title": "Wgraj plik",
+                "description": "Wgraj plik CSV lub XLSX z nagłówkami kolumn.",
+                "change": "Zmień plik"
+            },
+            "warning": {
+                "title": "Uwaga",
+                "undo": "Importu nie można cofnąć.",
+                "dedupe": "Duplikaty zostaną pominięte (duplikat = surowy opis + data + kwota + konto).",
+                "after": "Po imporcie pokażemy tylko nowo dodane transakcje."
+            },
+            "processing": {
+                "title": "Import w toku…",
+                "hint": "Może to potrwać do kilku minut. Możesz zamknąć to okno — import dokończy się w tle.",
+                "longRunning": "Import nadal trwa. Możesz odświeżyć status.",
+                "refresh": "Odśwież"
+            },
+            "actions": {
+                "start": "Rozpocznij import",
+                "startLoading": "Importuję…",
+                "cancel": "Anuluj",
+                "close": "Zamknij",
+                "goToTransactions": "Przejdź do transakcji"
+            }
+        },
+        "validation": {
+            "required": "To pole jest wymagane.",
+            "fileType": "Nieobsługiwany format pliku. Wgraj CSV lub XLSX.",
+            "fileSize": "Plik jest zbyt duży (max 10 MB).",
+            "cashBlocked": "Import z pliku nie jest dostępny dla kont gotówkowych.",
+            "generic": "Nie udało się wgrać pliku. Spróbuj ponownie."
+        },
+        "toast": {
+            "started": "Import uruchomiony.",
+            "startFailed": "Nie udało się uruchomić importu. Spróbuj ponownie.",
+            "unrecognizedHeaders": "Nie udało się rozpoznać nagłówków pliku dla wybranego banku."
+        },
+        "result": {
+            "successTitle": "Import zakończony",
+            "failedTitle": "Import nie powiódł się",
+            "summary": "Zaimportowano {rows_imported}, pominięto duplikaty {rows_skipped_duplicate}, błędne wiersze {rows_failed_validation}.",
+            "allDuplicates": "Nie znaleźliśmy nowych transakcji. Wszystkie wiersze były duplikatami.",
+            "validationHint": "Jeśli część wierszy była błędna, sprawdź format dat (DD-MM-YYYY lub ISO) i kwot (np. 123,45).",
+            "metrics": {
+                "imported": "Zaimportowano",
+                "duplicates": "Duplikaty",
+                "failed": "Błędne wiersze"
+            }
         }
     },
     "currency": {

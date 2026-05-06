@@ -24,6 +24,7 @@ final class Transaction extends Model
             'amount' => 'decimal:2',
             'transfer_id' => 'string',
             'import_id' => 'integer',
+            'raw_statement_description' => 'string',
             'account_id' => 'integer',
             'currency_id' => 'integer',
             'user_id' => 'integer',

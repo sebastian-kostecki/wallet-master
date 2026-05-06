@@ -2,14 +2,20 @@
 
 namespace App\Actions\Transactions;
 
+use App\Enums\Bank;
 use App\Models\Account;
 use App\Models\Transaction;
+use App\Support\DescriptionMemory\DescriptionMemoryRepository;
 use App\Support\Transactions\TransactionDedupe;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 final class UpdateTransaction
 {
+    public function __construct(
+        private DescriptionMemoryRepository $descriptionMemory,
+    ) {}
+
     /**
      * @param array{
      *   account_id: int,
@@ -53,6 +59,8 @@ final class UpdateTransaction
                 $account->current_balance = bcadd((string) $account->current_balance, $delta, 2);
                 $account->save();
 
+                $this->rememberDescriptionMemoryAfterCommit($transaction, $account->bank);
+
                 return;
             }
 
@@ -90,7 +98,39 @@ final class UpdateTransaction
 
             $newAccount->current_balance = bcadd((string) $newAccount->current_balance, $newAmount, 2);
             $newAccount->save();
+
+            $this->rememberDescriptionMemoryAfterCommit($transaction, $newAccount->bank);
+        });
+    }
+
+    private function rememberDescriptionMemoryAfterCommit(Transaction $transaction, Bank $bank): void
+    {
+        if ($bank === Bank::Cash) {
+            return;
+        }
+
+        if ($transaction->import_id === null) {
+            return;
+        }
+
+        $raw = (string) ($transaction->raw_statement_description ?? '');
+        if (trim($raw) === '') {
+            return;
+        }
+
+        $description = (string) ($transaction->description ?? '');
+        if (trim($description) === '') {
+            return;
+        }
+
+        DB::afterCommit(function () use ($transaction, $bank, $raw, $description): void {
+            $this->descriptionMemory->remember(
+                userId: (int) $transaction->user_id,
+                bank: $bank,
+                rawStatementDescription: $raw,
+                subject: $transaction->subject,
+                description: $description,
+            );
         });
     }
 }
-

@@ -154,6 +154,29 @@ function lastNDaysIso(n: number): { from: string; to: string } {
     return { from, to };
 }
 
+function previousMonthRangeIso(): { from: string; to: string } {
+    const t0 = todayUtc();
+    const from = isoFromUtcDate(new Date(Date.UTC(t0.getUTCFullYear(), t0.getUTCMonth() - 1, 1)));
+    const to = isoFromUtcDate(new Date(Date.UTC(t0.getUTCFullYear(), t0.getUTCMonth(), 0)));
+    return { from, to };
+}
+
+function thisYearRangeIso(): { from: string; to: string } {
+    const t0 = todayUtc();
+    const y = t0.getUTCFullYear();
+    const from = isoFromUtcDate(new Date(Date.UTC(y, 0, 1)));
+    const to = isoFromUtcDate(new Date(Date.UTC(y, 11, 31)));
+    return { from, to };
+}
+
+function previousYearRangeIso(): { from: string; to: string } {
+    const t0 = todayUtc();
+    const y = t0.getUTCFullYear() - 1;
+    const from = isoFromUtcDate(new Date(Date.UTC(y, 0, 1)));
+    const to = isoFromUtcDate(new Date(Date.UTC(y, 11, 31)));
+    return { from, to };
+}
+
 function applyPresetThisMonth() {
     setFromToIso(startOfThisMonthIso(), endOfThisMonthIso());
     emit('change');
@@ -162,6 +185,27 @@ function applyPresetThisMonth() {
 
 function applyPresetLast7Days() {
     const range = lastNDaysIso(7);
+    setFromToIso(range.from, range.to);
+    emit('change');
+    open.value = false;
+}
+
+function applyPresetPreviousMonth() {
+    const range = previousMonthRangeIso();
+    setFromToIso(range.from, range.to);
+    emit('change');
+    open.value = false;
+}
+
+function applyPresetThisYear() {
+    const range = thisYearRangeIso();
+    setFromToIso(range.from, range.to);
+    emit('change');
+    open.value = false;
+}
+
+function applyPresetPreviousYear() {
+    const range = previousYearRangeIso();
     setFromToIso(range.from, range.to);
     emit('change');
     open.value = false;
@@ -219,6 +263,27 @@ function applyPresetLast7Days() {
                         @click="applyPresetThisMonth"
                     >
                         {{ t('transactions.index.filters.presets.thisMonth') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
+                        @click="applyPresetPreviousMonth"
+                    >
+                        {{ t('transactions.index.filters.presets.previousMonth') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
+                        @click="applyPresetThisYear"
+                    >
+                        {{ t('transactions.index.filters.presets.thisYear') }}
+                    </button>
+                    <button
+                        type="button"
+                        class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
+                        @click="applyPresetPreviousYear"
+                    >
+                        {{ t('transactions.index.filters.presets.previousYear') }}
                     </button>
                     <button
                         type="button"

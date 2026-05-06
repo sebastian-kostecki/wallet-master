@@ -102,4 +102,3 @@ test('cannot create a transaction for a deleted account', function () {
         ])
         ->assertSessionHasErrors('account_id');
 });
-

@@ -31,6 +31,7 @@ final class TransactionController extends Controller
 
         $allTime = isset($validated['all_time']) ? (bool) $validated['all_time'] : false;
         $accountId = isset($validated['account_id']) ? (int) $validated['account_id'] : null;
+        $importId = isset($validated['import_id']) ? (int) $validated['import_id'] : null;
         $perPage = isset($validated['per_page']) ? (int) $validated['per_page'] : 15;
 
         $hasFrom = isset($validated['from']);
@@ -54,6 +55,7 @@ final class TransactionController extends Controller
         $baseQuery = Transaction::query()
             ->whereBelongsTo($request->user())
             ->when($accountId !== null, fn (Builder $q) => $q->where('account_id', $accountId))
+            ->when($importId !== null, fn (Builder $q) => $q->where('import_id', $importId))
             ->when(
                 $from !== null && $to !== null,
                 fn (Builder $q) => $q
@@ -139,13 +141,24 @@ final class TransactionController extends Controller
             ->whereBelongsTo($request->user())
             ->orderBy('name')
             ->with(['currency:id,symbol'])
-            ->get(['id', 'name', 'currency_id']);
+            ->get(['id', 'name', 'currency_id', 'bank'])
+            ->map(fn (Account $account) => [
+                'id' => $account->id,
+                'name' => $account->name,
+                'currency_id' => $account->currency_id,
+                'bank' => $account->bank?->value ?? (string) $account->bank,
+                'bank_icon_url' => $account->bank_icon_url,
+                'currency' => $account->currency !== null ? [
+                    'symbol' => $account->currency->symbol,
+                ] : null,
+            ]);
 
         return Inertia::render('transactions/Index', [
             'accounts' => $accounts,
             'filters' => [
                 'all_time' => $allTime,
                 'account_id' => $accountId,
+                'import_id' => $importId,
                 'from' => $fromInput,
                 'to' => $toInput,
                 'sort' => $sort,
@@ -204,7 +217,7 @@ final class TransactionController extends Controller
             ]);
 
         return Inertia::render('transactions/Edit', [
-            'transaction' => $transaction->only(['id', 'account_id', 'date', 'amount', 'description', 'subject'])
+            'transaction' => $transaction->only(['id', 'account_id', 'date', 'amount', 'description', 'subject', 'import_id', 'raw_statement_description'])
                 + [
                     'account' => $transaction->account?->only(['id', 'name']),
                     'currency' => $transaction->currency?->only(['id', 'code', 'symbol', 'precision']),

@@ -4,9 +4,12 @@ use App\Enums\AccountType;
 use App\Enums\Bank;
 use App\Models\Account;
 use App\Models\Currency;
+use App\Models\Import;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\DescriptionMemory\DescriptionMemoryRepository;
 use Database\Seeders\CurrencySeeder;
+use Tests\Support\FakeDescriptionMemoryRepository;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
@@ -94,3 +97,65 @@ test('cannot update a transaction on a deleted account', function () {
         ->assertForbidden();
 });
 
+test('updates an imported transaction and remembers user corrections (best-effort)', function () {
+    $fakeRepo = new FakeDescriptionMemoryRepository;
+    app()->instance(DescriptionMemoryRepository::class, $fakeRepo);
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Imported',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'committed',
+        'mapping' => [],
+        'details' => [],
+        'rows_total' => 0,
+        'rows_imported' => 0,
+        'rows_skipped_duplicate' => 0,
+        'rows_failed_validation' => 0,
+    ]);
+
+    $transaction = Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'import_id' => $import->id,
+        'raw_statement_description' => 'ATM CASH OUT',
+        'date' => '2026-04-20',
+        'amount' => -10,
+        'type' => 'expense',
+        'description' => 'ATM CASH OUT',
+        'subject' => null,
+        'normalized_description' => 'atm cash out',
+        'dedupe_hash' => md5('2026-04-20|-10.00|atm cash out', true),
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->put("/transactions/{$transaction->id}", [
+            'account_id' => $account->id,
+            'date' => '20-04-2026',
+            'amount' => -10,
+            'description' => 'Cash withdrawal',
+            'subject' => 'ATM',
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($fakeRepo->rememberCalls)->toHaveCount(1);
+    expect($fakeRepo->rememberCalls[0]['user_id'])->toBe($user->id);
+    expect($fakeRepo->rememberCalls[0]['bank'])->toBe(Bank::BnpParibas);
+    expect($fakeRepo->rememberCalls[0]['raw'])->toBe('ATM CASH OUT');
+    expect($fakeRepo->rememberCalls[0]['subject'])->toBe('ATM');
+    expect($fakeRepo->rememberCalls[0]['description'])->toBe('Cash withdrawal');
+});

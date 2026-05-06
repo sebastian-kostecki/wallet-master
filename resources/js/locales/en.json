@@ -112,6 +112,9 @@
                 },
                 "presets": {
                     "thisMonth": "This month",
+                    "previousMonth": "Previous month",
+                    "thisYear": "This year",
+                    "previousYear": "Previous year",
                     "last7Days": "Last 7 days"
                 },
                 "a11y": {
@@ -157,6 +160,10 @@
                 "sortByDate": "Sort by date",
                 "sortByAmount": "Sort by amount",
                 "edit": "Edit transaction: {description}"
+            },
+            "importPreset": {
+                "label": "Imported just now",
+                "clearAria": "Clear filter: Imported just now"
             }
         },
         "create": {
@@ -177,6 +184,10 @@
                 "scope": "You're editing an existing transaction — changes will be reflected in history.",
                 "amount": "Double-check the amount sign (+/−). It affects the account balance.",
                 "save": "After saving, you'll be taken back to the transactions list."
+            },
+            "statement": {
+                "title": "Statement data",
+                "description": "Raw statement description from the bank (read-only)."
             }
         },
         "form": {
@@ -220,6 +231,67 @@
         "toast": {
             "created": "Transfer saved.",
             "genericError": "We couldn't make the transfer. Please try again."
+        }
+    },
+    "imports": {
+        "cta": "Import",
+        "dialog": {
+            "title": "Import transactions",
+            "context": "Account: {account} • Bank: {bank}",
+            "contextEmpty": "Select an account to start the import.",
+            "account": {
+                "label": "Account",
+                "hint": "The import bank is derived from the account."
+            },
+            "file": {
+                "label": "File",
+                "title": "Upload a file",
+                "description": "Upload a CSV or XLSX file with column headers.",
+                "change": "Change file"
+            },
+            "warning": {
+                "title": "Warning",
+                "undo": "Imports cannot be undone.",
+                "dedupe": "Duplicates will be skipped (duplicate = raw description + date + amount + account).",
+                "after": "After importing, we'll show only the newly added transactions."
+            },
+            "processing": {
+                "title": "Import in progress…",
+                "hint": "This may take a few minutes. You can close this window — the import will continue in the background.",
+                "longRunning": "The import is still running. You can refresh the status.",
+                "refresh": "Refresh"
+            },
+            "actions": {
+                "start": "Start import",
+                "startLoading": "Importing…",
+                "cancel": "Cancel",
+                "close": "Close",
+                "goToTransactions": "Go to transactions"
+            }
+        },
+        "validation": {
+            "required": "This field is required.",
+            "fileType": "Unsupported file format. Upload a CSV or XLSX.",
+            "fileSize": "File is too large (max 10 MB).",
+            "cashBlocked": "File import is not available for cash accounts.",
+            "generic": "We couldn't upload the file. Please try again."
+        },
+        "toast": {
+            "started": "Import started.",
+            "startFailed": "We couldn't start the import. Please try again.",
+            "unrecognizedHeaders": "We couldn't recognize the file headers for the selected bank."
+        },
+        "result": {
+            "successTitle": "Import completed",
+            "failedTitle": "Import failed",
+            "summary": "Imported {rows_imported}, skipped duplicates {rows_skipped_duplicate}, failed rows {rows_failed_validation}.",
+            "allDuplicates": "We didn't find any new transactions. All rows were duplicates.",
+            "validationHint": "If some rows failed, check date formats (DD-MM-YYYY or ISO) and amounts (e.g. 123.45).",
+            "metrics": {
+                "imported": "Imported",
+                "duplicates": "Duplicates",
+                "failed": "Failed rows"
+            }
         }
     },
     "currency": {

@@ -26,6 +26,7 @@ final class Import extends Model
             'rows_skipped_duplicate' => 'integer',
             'rows_failed_validation' => 'integer',
             'mapping' => 'array',
+            'details' => 'array',
             'committed_at' => 'datetime',
         ];
     }
