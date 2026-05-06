@@ -109,6 +109,8 @@ const form = useForm({
     opening_balance: displayAmount(props.account.opening_balance),
 });
 
+const currencySymbol = computed(() => props.account.currency?.symbol ?? t('currency.defaultSymbol'));
+
 function submit() {
     form.opening_balance = normalizeAmount(form.opening_balance);
     form.patch(route('accounts.update', props.account.id));
@@ -226,7 +228,12 @@ const adjustProcessing = ref(false);
                             :label="t('accounts.create.fields.openingBalance.label')"
                             :error="form.errors.opening_balance"
                         >
-                            <Input id="opening_balance" inputmode="decimal" v-model="form.opening_balance" />
+                            <div class="relative">
+                                <Input id="opening_balance" inputmode="decimal" v-model="form.opening_balance" class="pr-10" />
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                                    {{ currencySymbol }}
+                                </span>
+                            </div>
                             <p class="text-xs text-muted-foreground">
                                 {{ t('accounts.edit.openingBalanceHint') }}
                             </p>
