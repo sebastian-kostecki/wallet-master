@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { displayAmount, normalizeAmount } from '@/lib/money';
@@ -103,16 +103,6 @@ const adjustProcessing = ref(false);
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('accounts.edit.title')" />
 
-        <template #headerActions>
-            <Button variant="secondary" as-child>
-                <Link :href="route('accounts.index')">{{ t('accounts.edit.back') }}</Link>
-            </Button>
-
-            <Button variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
-                {{ t('accounts.edit.deleteAction') }}
-            </Button>
-        </template>
-
         <div class="flex flex-col gap-6 p-4">
             <div class="grid gap-6 lg:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
@@ -154,19 +144,39 @@ const adjustProcessing = ref(false);
                             </p>
                         </FormField>
 
-                        <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="route('accounts.index')">{{ t('accounts.edit.back') }}</Link>
+                            </Button>
+
+                            <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        </div>
                     </form>
                 </div>
 
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <p class="text-xs text-muted-foreground">{{ t('accounts.card.currentBalance') }}</p>
-                    <p class="mt-2 text-2xl font-semibold tabular-nums">
-                        {{ formatMoney(account.current_balance) }} {{ account.currency?.symbol ?? t('currency.defaultSymbol') }}
-                    </p>
+                <div class="flex flex-col gap-6">
+                    <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                        <p class="text-xs text-muted-foreground">{{ t('accounts.card.currentBalance') }}</p>
+                        <p class="mt-2 text-2xl font-semibold tabular-nums">
+                            {{ formatMoney(account.current_balance) }}
+                            {{ account.currency?.symbol ?? t('currency.defaultSymbol') }}
+                        </p>
 
-                    <Button class="mt-4" variant="outline" :disabled="adjustProcessing" @click="adjustDialogOpen = true">
-                        {{ t('actions.setBalance') }}
-                    </Button>
+                        <Button class="mt-4" variant="outline" :disabled="adjustProcessing" @click="adjustDialogOpen = true">
+                            {{ t('actions.setBalance') }}
+                        </Button>
+                    </div>
+
+                    <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 dark:border-destructive/40 dark:bg-destructive/10">
+                        <p class="text-sm font-semibold text-destructive">{{ t('accounts.edit.dangerZone.title') }}</p>
+                        <p class="mt-2 text-sm text-muted-foreground">
+                            {{ t('accounts.edit.dangerZone.description') }}
+                        </p>
+
+                        <Button class="mt-4" variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
+                            {{ t('accounts.edit.deleteAction') }}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -189,4 +199,3 @@ const adjustProcessing = ref(false);
         />
     </AppLayout>
 </template>
-

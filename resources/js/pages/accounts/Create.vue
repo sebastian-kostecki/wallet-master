@@ -90,34 +90,14 @@ function submit() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('accounts.create.title')" />
 
-        <template #headerActions>
-            <Button variant="secondary" as-child>
-                <Link :href="route('accounts.index')">{{ t('accounts.create.back') }}</Link>
-            </Button>
-        </template>
-
         <div class="flex flex-col gap-6 p-4">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form @submit.prevent="submit" class="grid gap-6">
-                    <FormField
-                        for-id="name"
-                        :label="t('accounts.create.fields.name.label')"
-                        :error="form.errors.name"
-                    >
-                        <Input
-                            id="name"
-                            v-model="form.name"
-                            required
-                            autofocus
-                            :placeholder="t('accounts.create.fields.name.placeholder')"
-                        />
+                    <FormField for-id="name" :label="t('accounts.create.fields.name.label')" :error="form.errors.name">
+                        <Input id="name" v-model="form.name" required autofocus :placeholder="t('accounts.create.fields.name.placeholder')" />
                     </FormField>
 
-                    <FormField
-                        for-id="bank"
-                        :label="t('accounts.create.fields.bank.label')"
-                        :error="form.errors.bank"
-                    >
+                    <FormField for-id="bank" :label="t('accounts.create.fields.bank.label')" :error="form.errors.bank">
                         <DropdownSelect
                             id="bank"
                             :model-value="form.bank"
@@ -150,11 +130,7 @@ function submit() {
                         </DropdownSelect>
                     </FormField>
 
-                    <FormField
-                        for-id="type"
-                        :label="t('accounts.create.fields.type.label')"
-                        :error="form.errors.type"
-                    >
+                    <FormField for-id="type" :label="t('accounts.create.fields.type.label')" :error="form.errors.type">
                         <DropdownSelect
                             id="type"
                             :model-value="form.type"
@@ -181,11 +157,7 @@ function submit() {
                         </DropdownSelect>
                     </FormField>
 
-                    <FormField
-                        for-id="currency"
-                        :label="t('accounts.create.fields.currency.label')"
-                        :error="form.errors.currency_id"
-                    >
+                    <FormField for-id="currency" :label="t('accounts.create.fields.currency.label')" :error="form.errors.currency_id">
                         <DropdownSelect
                             id="currency"
                             :model-value="form.currency_id"
@@ -213,13 +185,21 @@ function submit() {
                         />
                     </FormField>
 
-                    <div class="flex items-center gap-3">
-                        <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
-                        <p class="text-sm text-muted-foreground">{{ t('accounts.create.openingBalanceHint') }}</p>
+                    <div class="grid gap-3">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="route('accounts.index')">{{ t('accounts.create.back') }}</Link>
+                            </Button>
+
+                            <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        </div>
+
+                        <p class="text-sm text-muted-foreground">
+                            {{ t('accounts.create.openingBalanceHint') }}
+                        </p>
                     </div>
                 </form>
             </div>
         </div>
     </AppLayout>
 </template>
-
