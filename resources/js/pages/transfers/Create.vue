@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { AlertTriangle } from 'lucide-vue-next';
+import { AlertTriangle, Coins } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
@@ -17,6 +17,7 @@ type Account = {
     id: number;
     name: string;
     currency_id: number;
+    bank: string;
     is_deleted: boolean;
     bank_icon_url: string | null;
 };
@@ -151,7 +152,12 @@ function submit() {
                                     <template #trigger-leading>
                                         <span
                                             v-if="fromAccount"
-                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted"
+                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                            :class="
+                                                fromAccount.bank === 'cash'
+                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                    : 'bg-muted'
+                                            "
                                             aria-hidden="true"
                                         >
                                             <img
@@ -160,6 +166,7 @@ function submit() {
                                                 :alt="fromAccount.name"
                                                 class="h-5 w-5 object-cover"
                                             />
+                                            <Coins v-else-if="fromAccount.bank === 'cash'" class="h-3.5 w-3.5" />
                                             <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                                 {{ fromAccount.name.charAt(0).toUpperCase() }}
                                             </span>
@@ -167,13 +174,22 @@ function submit() {
                                     </template>
 
                                     <template #option-leading="{ option }">
-                                        <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted" aria-hidden="true">
+                                        <span
+                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                            :class="
+                                                accountsById.get(option.value)?.bank === 'cash'
+                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                    : 'bg-muted'
+                                            "
+                                            aria-hidden="true"
+                                        >
                                             <img
                                                 v-if="accountsById.get(option.value)?.bank_icon_url"
                                                 :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
                                                 :alt="accountsById.get(option.value)?.name ?? ''"
                                                 class="h-5 w-5 object-cover"
                                             />
+                                            <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
                                             <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                                 {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
                                             </span>
@@ -198,8 +214,18 @@ function submit() {
                                     @update:model-value="(value) => (form.to_account_id = value)"
                                 >
                                     <template #trigger-leading>
-                                        <span v-if="toAccount" class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted" aria-hidden="true">
+                                        <span
+                                            v-if="toAccount"
+                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                            :class="
+                                                toAccount.bank === 'cash'
+                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                    : 'bg-muted'
+                                            "
+                                            aria-hidden="true"
+                                        >
                                             <img v-if="toAccount.bank_icon_url" :src="toAccount.bank_icon_url" :alt="toAccount.name" class="h-5 w-5 object-cover" />
+                                            <Coins v-else-if="toAccount.bank === 'cash'" class="h-3.5 w-3.5" />
                                             <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                                 {{ toAccount.name.charAt(0).toUpperCase() }}
                                             </span>
@@ -207,13 +233,22 @@ function submit() {
                                     </template>
 
                                     <template #option-leading="{ option }">
-                                        <span class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded bg-muted" aria-hidden="true">
+                                        <span
+                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                            :class="
+                                                accountsById.get(option.value)?.bank === 'cash'
+                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                    : 'bg-muted'
+                                            "
+                                            aria-hidden="true"
+                                        >
                                             <img
                                                 v-if="accountsById.get(option.value)?.bank_icon_url"
                                                 :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
                                                 :alt="accountsById.get(option.value)?.name ?? ''"
                                                 class="h-5 w-5 object-cover"
                                             />
+                                            <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
                                             <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                                 {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
                                             </span>

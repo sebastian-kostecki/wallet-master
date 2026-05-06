@@ -61,7 +61,10 @@ class AccountController extends Controller
             'current_balance' => $data['opening_balance'],
         ]);
 
-        return to_route('accounts.edit', $account);
+        return to_route('accounts.index')->with('toast', [
+            'type' => 'success',
+            'message_key' => 'accounts.toast.created',
+        ]);
     }
 
     public function edit(Account $account, AccountFormOptions $options): Response
@@ -81,7 +84,10 @@ class AccountController extends Controller
     {
         $updater->handle($account, $request->validated());
 
-        return to_route('accounts.edit', $account);
+        return to_route('accounts.index')->with('toast', [
+            'type' => 'success',
+            'message_key' => 'accounts.toast.updated',
+        ]);
     }
 
     public function destroy(Account $account): RedirectResponse

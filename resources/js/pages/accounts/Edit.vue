@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
+import Icon from '@/components/Icon.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { displayAmount, normalizeAmount } from '@/lib/money';
@@ -15,6 +16,8 @@ import { useI18n } from 'vue-i18n';
 type Option = {
     value: string;
     label_key: string;
+    icon_url?: string | null;
+    icon_name?: string | null;
 };
 
 type Currency = {
@@ -46,6 +49,25 @@ const { t, locale } = useI18n();
 const bankOptions = computed<DropdownOption<string>[]>(() => {
     return props.banks.map((b) => ({ value: b.value, label: t(b.label_key) }));
 });
+
+const selectedBank = computed(() => props.banks.find((b) => b.value === form.bank) ?? null);
+const selectedAccountType = computed(() => props.accountTypes.find((t) => t.value === form.type) ?? null);
+
+function accountTypeIconClasses(typeValue: string | undefined): string {
+    if (typeValue === 'checking') {
+        return 'bg-gradient-to-br from-sky-100 to-indigo-200 text-sky-900 dark:from-sky-950/40 dark:to-indigo-950/40 dark:text-sky-200';
+    }
+
+    if (typeValue === 'savings') {
+        return 'bg-gradient-to-br from-emerald-100 to-lime-200 text-emerald-900 dark:from-emerald-950/40 dark:to-lime-950/40 dark:text-emerald-200';
+    }
+
+    return 'bg-muted text-muted-foreground';
+}
+
+function resolveBankIconUrl(bankValue: string): string | null {
+    return props.banks.find((b) => b.value === bankValue)?.icon_url ?? null;
+}
 
 const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
     return props.accountTypes.map((a) => ({ value: a.value, label: t(a.label_key) }));
@@ -87,6 +109,8 @@ const form = useForm({
     opening_balance: displayAmount(props.account.opening_balance),
 });
 
+const currencySymbol = computed(() => props.account.currency?.symbol ?? t('currency.defaultSymbol'));
+
 function submit() {
     form.opening_balance = normalizeAmount(form.opening_balance);
     form.patch(route('accounts.update', props.account.id));
@@ -102,16 +126,6 @@ const adjustProcessing = ref(false);
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('accounts.edit.title')" />
-
-        <template #headerActions>
-            <Button variant="secondary" as-child>
-                <Link :href="route('accounts.index')">{{ t('accounts.edit.back') }}</Link>
-            </Button>
-
-            <Button variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
-                {{ t('accounts.edit.deleteAction') }}
-            </Button>
-        </template>
 
         <div class="flex flex-col gap-6 p-4">
             <div class="grid gap-6 lg:grid-cols-2">
@@ -129,7 +143,49 @@ const adjustProcessing = ref(false);
                                 :placeholder="t('accounts.create.fields.bank.placeholder')"
                                 :disabled="form.processing"
                                 @update:model-value="(value) => (form.bank = value)"
-                            />
+                            >
+                                <template #trigger-leading>
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="
+                                            selectedBank?.value === 'cash'
+                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                : 'bg-muted'
+                                        "
+                                        aria-hidden="true"
+                                    >
+                                        <img
+                                            v-if="selectedBank?.icon_url"
+                                            :src="selectedBank.icon_url"
+                                            :alt="t(selectedBank.label_key)"
+                                            class="h-5 w-5 object-cover"
+                                            loading="lazy"
+                                        />
+                                        <Icon v-else :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    </span>
+                                </template>
+
+                                <template #option-leading="{ option }">
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="
+                                            option.value === 'cash'
+                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                : 'bg-muted'
+                                        "
+                                        aria-hidden="true"
+                                    >
+                                        <img
+                                            v-if="resolveBankIconUrl(option.value)"
+                                            :src="resolveBankIconUrl(option.value) ?? undefined"
+                                            :alt="option.label"
+                                            class="h-5 w-5 object-cover"
+                                            loading="lazy"
+                                        />
+                                        <Icon v-else :name="option.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    </span>
+                                </template>
+                            </DropdownSelect>
                         </FormField>
 
                         <FormField for-id="type" :label="t('accounts.create.fields.type.label')" :error="form.errors.type">
@@ -140,7 +196,31 @@ const adjustProcessing = ref(false);
                                 :placeholder="t('accounts.create.fields.type.placeholder')"
                                 :disabled="form.processing"
                                 @update:model-value="(value) => (form.type = value)"
-                            />
+                            >
+                                <template #trigger-leading>
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="accountTypeIconClasses(selectedAccountType?.value)"
+                                        aria-hidden="true"
+                                    >
+                                        <Icon :name="selectedAccountType?.icon_name ?? 'wallet'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    </span>
+                                </template>
+
+                                <template #option-leading="{ option }">
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="accountTypeIconClasses(option.value)"
+                                        aria-hidden="true"
+                                    >
+                                        <Icon
+                                            :name="props.accountTypes.find((a) => a.value === option.value)?.icon_name ?? 'wallet'"
+                                            class="h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+                                </template>
+                            </DropdownSelect>
                         </FormField>
 
                         <FormField
@@ -148,25 +228,50 @@ const adjustProcessing = ref(false);
                             :label="t('accounts.create.fields.openingBalance.label')"
                             :error="form.errors.opening_balance"
                         >
-                            <Input id="opening_balance" inputmode="decimal" v-model="form.opening_balance" />
+                            <div class="relative">
+                                <Input id="opening_balance" inputmode="decimal" v-model="form.opening_balance" class="pr-10" />
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                                    {{ currencySymbol }}
+                                </span>
+                            </div>
                             <p class="text-xs text-muted-foreground">
                                 {{ t('accounts.edit.openingBalanceHint') }}
                             </p>
                         </FormField>
 
-                        <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="route('accounts.index')">{{ t('accounts.edit.back') }}</Link>
+                            </Button>
+
+                            <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        </div>
                     </form>
                 </div>
 
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <p class="text-xs text-muted-foreground">{{ t('accounts.card.currentBalance') }}</p>
-                    <p class="mt-2 text-2xl font-semibold tabular-nums">
-                        {{ formatMoney(account.current_balance) }} {{ account.currency?.symbol ?? t('currency.defaultSymbol') }}
-                    </p>
+                <div class="flex flex-col gap-6">
+                    <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                        <p class="text-xs text-muted-foreground">{{ t('accounts.card.currentBalance') }}</p>
+                        <p class="mt-2 text-2xl font-semibold tabular-nums">
+                            {{ formatMoney(account.current_balance) }}
+                            {{ account.currency?.symbol ?? t('currency.defaultSymbol') }}
+                        </p>
 
-                    <Button class="mt-4" variant="outline" :disabled="adjustProcessing" @click="adjustDialogOpen = true">
-                        {{ t('actions.setBalance') }}
-                    </Button>
+                        <Button class="mt-4" variant="outline" :disabled="adjustProcessing" @click="adjustDialogOpen = true">
+                            {{ t('actions.setBalance') }}
+                        </Button>
+                    </div>
+
+                    <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 dark:border-destructive/40 dark:bg-destructive/10">
+                        <p class="text-sm font-semibold text-destructive">{{ t('accounts.edit.dangerZone.title') }}</p>
+                        <p class="mt-2 text-sm text-muted-foreground">
+                            {{ t('accounts.edit.dangerZone.description') }}
+                        </p>
+
+                        <Button class="mt-4" variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
+                            {{ t('accounts.edit.deleteAction') }}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -189,4 +294,3 @@ const adjustProcessing = ref(false);
         />
     </AppLayout>
 </template>
-

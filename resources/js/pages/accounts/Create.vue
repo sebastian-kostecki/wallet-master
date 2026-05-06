@@ -64,6 +64,18 @@ const form = useForm<{
 const selectedBank = computed(() => props.banks.find((b) => b.value === form.bank) ?? null);
 const selectedAccountType = computed(() => props.accountTypes.find((t) => t.value === form.type) ?? null);
 
+function accountTypeIconClasses(typeValue: string | undefined): string {
+    if (typeValue === 'checking') {
+        return 'bg-gradient-to-br from-sky-100 to-indigo-200 text-sky-900 dark:from-sky-950/40 dark:to-indigo-950/40 dark:text-sky-200';
+    }
+
+    if (typeValue === 'savings') {
+        return 'bg-gradient-to-br from-emerald-100 to-lime-200 text-emerald-900 dark:from-emerald-950/40 dark:to-lime-950/40 dark:text-emerald-200';
+    }
+
+    return 'bg-muted text-muted-foreground';
+}
+
 function resolveBankIconUrl(bankValue: string): string | null {
     return props.banks.find((b) => b.value === bankValue)?.icon_url ?? null;
 }
@@ -90,34 +102,14 @@ function submit() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('accounts.create.title')" />
 
-        <template #headerActions>
-            <Button variant="secondary" as-child>
-                <Link :href="route('accounts.index')">{{ t('accounts.create.back') }}</Link>
-            </Button>
-        </template>
-
         <div class="flex flex-col gap-6 p-4">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form @submit.prevent="submit" class="grid gap-6">
-                    <FormField
-                        for-id="name"
-                        :label="t('accounts.create.fields.name.label')"
-                        :error="form.errors.name"
-                    >
-                        <Input
-                            id="name"
-                            v-model="form.name"
-                            required
-                            autofocus
-                            :placeholder="t('accounts.create.fields.name.placeholder')"
-                        />
+                    <FormField for-id="name" :label="t('accounts.create.fields.name.label')" :error="form.errors.name">
+                        <Input id="name" v-model="form.name" required autofocus :placeholder="t('accounts.create.fields.name.placeholder')" />
                     </FormField>
 
-                    <FormField
-                        for-id="bank"
-                        :label="t('accounts.create.fields.bank.label')"
-                        :error="form.errors.bank"
-                    >
+                    <FormField for-id="bank" :label="t('accounts.create.fields.bank.label')" :error="form.errors.bank">
                         <DropdownSelect
                             id="bank"
                             :model-value="form.bank"
@@ -127,34 +119,50 @@ function submit() {
                             @update:model-value="(value) => (form.bank = value)"
                         >
                             <template #trigger-leading>
-                                <img
-                                    v-if="selectedBank?.icon_url"
-                                    :src="selectedBank.icon_url"
-                                    :alt="t(selectedBank.label_key)"
-                                    class="h-5 w-5 shrink-0 rounded object-contain"
-                                    loading="lazy"
-                                />
-                                <Icon v-else name="landmark" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                <span
+                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                    :class="
+                                        selectedBank?.value === 'cash'
+                                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                            : 'bg-muted'
+                                    "
+                                    aria-hidden="true"
+                                >
+                                    <img
+                                        v-if="selectedBank?.icon_url"
+                                        :src="selectedBank.icon_url"
+                                        :alt="t(selectedBank.label_key)"
+                                        class="h-5 w-5 object-cover"
+                                        loading="lazy"
+                                    />
+                                    <Icon v-else :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                </span>
                             </template>
 
                             <template #option-leading="{ option }">
-                                <img
-                                    v-if="resolveBankIconUrl(option.value)"
-                                    :src="resolveBankIconUrl(option.value) ?? undefined"
-                                    :alt="option.label"
-                                    class="h-5 w-5 shrink-0 rounded object-contain"
-                                    loading="lazy"
-                                />
-                                <Icon v-else name="wallet" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                <span
+                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                    :class="
+                                        option.value === 'cash'
+                                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                            : 'bg-muted'
+                                    "
+                                    aria-hidden="true"
+                                >
+                                    <img
+                                        v-if="resolveBankIconUrl(option.value)"
+                                        :src="resolveBankIconUrl(option.value) ?? undefined"
+                                        :alt="option.label"
+                                        class="h-5 w-5 object-cover"
+                                        loading="lazy"
+                                    />
+                                    <Icon v-else :name="option.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                </span>
                             </template>
                         </DropdownSelect>
                     </FormField>
 
-                    <FormField
-                        for-id="type"
-                        :label="t('accounts.create.fields.type.label')"
-                        :error="form.errors.type"
-                    >
+                    <FormField for-id="type" :label="t('accounts.create.fields.type.label')" :error="form.errors.type">
                         <DropdownSelect
                             id="type"
                             :model-value="form.type"
@@ -164,28 +172,32 @@ function submit() {
                             @update:model-value="(value) => (form.type = value)"
                         >
                             <template #trigger-leading>
-                                <Icon
-                                    :name="selectedAccountType?.icon_name ?? 'wallet'"
-                                    class="h-5 w-5 shrink-0 text-muted-foreground"
+                                <span
+                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                    :class="accountTypeIconClasses(selectedAccountType?.value)"
                                     aria-hidden="true"
-                                />
+                                >
+                                    <Icon :name="selectedAccountType?.icon_name ?? 'wallet'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                </span>
                             </template>
 
                             <template #option-leading="{ option }">
-                                <Icon
-                                    :name="props.accountTypes.find((a) => a.value === option.value)?.icon_name ?? 'wallet'"
-                                    class="h-5 w-5 shrink-0 text-muted-foreground"
+                                <span
+                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                    :class="accountTypeIconClasses(option.value)"
                                     aria-hidden="true"
-                                />
+                                >
+                                    <Icon
+                                        :name="props.accountTypes.find((a) => a.value === option.value)?.icon_name ?? 'wallet'"
+                                        class="h-3.5 w-3.5"
+                                        aria-hidden="true"
+                                    />
+                                </span>
                             </template>
                         </DropdownSelect>
                     </FormField>
 
-                    <FormField
-                        for-id="currency"
-                        :label="t('accounts.create.fields.currency.label')"
-                        :error="form.errors.currency_id"
-                    >
+                    <FormField for-id="currency" :label="t('accounts.create.fields.currency.label')" :error="form.errors.currency_id">
                         <DropdownSelect
                             id="currency"
                             :model-value="form.currency_id"
@@ -213,13 +225,17 @@ function submit() {
                         />
                     </FormField>
 
-                    <div class="flex items-center gap-3">
-                        <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
-                        <p class="text-sm text-muted-foreground">{{ t('accounts.create.openingBalanceHint') }}</p>
+                    <div class="grid gap-3">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="route('accounts.index')">{{ t('accounts.create.back') }}</Link>
+                            </Button>
+
+                            <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
     </AppLayout>
 </template>
-

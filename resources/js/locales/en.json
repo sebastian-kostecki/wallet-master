@@ -1,5 +1,9 @@
 {
     "accounts": {
+        "toast": {
+            "created": "Account created.",
+            "updated": "Account updated."
+        },
         "index": {
             "title": "Accounts",
             "addAccount": "Add account",
@@ -17,7 +21,11 @@
             "title": "Edit account",
             "back": "Back",
             "deleteAction": "Delete account",
-            "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference."
+            "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference.",
+            "dangerZone": {
+                "title": "Danger zone",
+                "description": "This action is irreversible. Transactions will remain in history as read-only."
+            }
         },
         "create": {
             "title": "Add account",

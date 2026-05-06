@@ -16,9 +16,11 @@ const props = withDefaults(
         disabled?: boolean;
         accountId: number | null;
         initialNewBalance: string | null;
+        currencySymbol?: string | null;
     }>(),
     {
         disabled: false,
+        currencySymbol: null,
     },
 );
 
@@ -92,7 +94,21 @@ function submit() {
             <form @submit.prevent="submit" class="grid gap-4">
                 <div class="grid gap-2">
                     <Label for="new_balance">{{ t('accounts.adjust.newBalanceLabel') }}</Label>
-                    <Input id="new_balance" inputmode="decimal" v-model="form.new_balance" :placeholder="t('accounts.adjust.newBalancePlaceholder')" />
+                    <div class="relative">
+                        <Input
+                            id="new_balance"
+                            inputmode="decimal"
+                            v-model="form.new_balance"
+                            :placeholder="t('accounts.adjust.newBalancePlaceholder')"
+                            class="pr-10"
+                        />
+                        <span
+                            v-if="props.currencySymbol"
+                            class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+                        >
+                            {{ props.currencySymbol }}
+                        </span>
+                    </div>
                     <InputError :message="form.errors.new_balance" />
                 </div>
 

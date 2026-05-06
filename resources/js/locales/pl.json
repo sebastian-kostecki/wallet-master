@@ -1,5 +1,9 @@
 {
     "accounts": {
+        "toast": {
+            "created": "Konto zostało dodane.",
+            "updated": "Konto zostało zaktualizowane."
+        },
         "index": {
             "title": "Konta",
             "addAccount": "Dodaj konto",
@@ -17,7 +21,11 @@
             "title": "Edytuj konto",
             "back": "Wróć",
             "deleteAction": "Usuń konto",
-            "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę."
+            "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę.",
+            "dangerZone": {
+                "title": "Uwaga",
+                "description": "Ta operacja jest nieodwracalna. Transakcje pozostaną w historii jako tylko do odczytu."
+            }
         },
         "create": {
             "title": "Dodaj konto",
