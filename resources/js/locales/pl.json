@@ -1,5 +1,9 @@
 {
     "accounts": {
+        "toast": {
+            "created": "Konto zostało dodane.",
+            "updated": "Konto zostało zaktualizowane."
+        },
         "index": {
             "title": "Konta",
             "addAccount": "Dodaj konto",

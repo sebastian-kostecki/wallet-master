@@ -1,5 +1,9 @@
 {
     "accounts": {
+        "toast": {
+            "created": "Account created.",
+            "updated": "Account updated."
+        },
         "index": {
             "title": "Accounts",
             "addAccount": "Add account",
