@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\AccountBalanceAdjustmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property numeric-string $old_balance
+ * @property numeric-string $new_balance
+ */
 final class AccountBalanceAdjustment extends Model
 {
+    /** @use HasFactory<AccountBalanceAdjustmentFactory> */
     use HasFactory;
 
     protected $guarded = [];

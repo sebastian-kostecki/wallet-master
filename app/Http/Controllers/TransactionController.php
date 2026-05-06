@@ -11,10 +11,10 @@ use App\Http\Requests\Transactions\UpdateTransactionRequest;
 use App\Models\Account;
 use App\Models\Transaction;
 use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -71,7 +71,7 @@ final class TransactionController extends Controller
                 fn (Builder $q) => $q->whereDate('date', '<=', $to)
             );
 
-        $transactions = (clone $baseQuery)
+        $transactionsModels = (clone $baseQuery)
             ->with([
                 'account:id,name,bank,type,currency_id',
                 'account.currency:id,symbol',
@@ -90,47 +90,61 @@ final class TransactionController extends Controller
                 'subject',
                 'transfer_id',
             ])
-            ->through(function (Transaction $transaction): array {
-                $date = $transaction->date;
-                $dateIso = $date instanceof CarbonInterface ? $date->toDateString() : (string) $date;
-
-                $dateRelative = CarbonImmutable::parse($dateIso)
-                    ->locale(app()->getLocale())
-                    ->diffForHumans();
-
-                $account = $transaction->account;
-                $currency = $transaction->currency;
-
-                return [
-                    'id' => $transaction->id,
-                    'account_id' => $transaction->account_id,
-                    'currency_id' => $transaction->currency_id,
-                    'date' => $dateIso,
-                    'date_relative' => $dateRelative,
-                    'amount' => $transaction->amount,
-                    'type' => $transaction->type,
-                    'description' => $transaction->description,
-                    'subject' => $transaction->subject,
-                    'transfer_id' => $transaction->transfer_id,
-                    'account' => $account !== null ? [
-                        'id' => $account->id,
-                        'name' => $account->name,
-                        'type' => $account->type?->value ?? (string) $account->type,
-                        'type_label_key' => $account->type_label_key,
-                        'bank_icon_url' => $account->bank_icon_url,
-                        'currency' => $account->currency !== null ? [
-                            'symbol' => $account->currency->symbol,
-                        ] : null,
-                    ] : null,
-                    'currency' => $currency !== null ? [
-                        'id' => $currency->id,
-                        'code' => $currency->code,
-                        'symbol' => $currency->symbol,
-                        'precision' => $currency->precision,
-                    ] : null,
-                ];
-            })
             ->withQueryString();
+
+        $transactionItems = $transactionsModels->getCollection()->map(function (Transaction $transaction): array {
+            $dateIso = (string) $transaction->date;
+
+            $dateForHumans = CarbonImmutable::parse($dateIso)->locale(app()->getLocale());
+            $dateRelative = is_string($dateForHumans)
+                ? CarbonImmutable::parse($dateIso)->diffForHumans()
+                : $dateForHumans->diffForHumans();
+
+            $account = $transaction->account;
+            $currency = $transaction->currency;
+
+            return [
+                'id' => $transaction->id,
+                'account_id' => $transaction->account_id,
+                'currency_id' => $transaction->currency_id,
+                'date' => $dateIso,
+                'date_relative' => $dateRelative,
+                'amount' => $transaction->amount,
+                'type' => $transaction->type,
+                'description' => $transaction->description,
+                'subject' => $transaction->subject,
+                'transfer_id' => $transaction->transfer_id,
+                'account' => $account !== null ? [
+                    'id' => $account->id,
+                    'name' => $account->name,
+                    'type' => $account->type?->value,
+                    'type_label_key' => $account->type_label_key,
+                    'bank_icon_url' => $account->bank_icon_url,
+                    'currency' => $account->currency !== null ? [
+                        'symbol' => $account->currency->symbol,
+                    ] : null,
+                ] : null,
+                'currency' => $currency !== null ? [
+                    'id' => $currency->id,
+                    'code' => $currency->code,
+                    'symbol' => $currency->symbol,
+                    'precision' => $currency->precision,
+                ] : null,
+            ];
+        });
+
+        $transactions = new LengthAwarePaginator(
+            items: $transactionItems,
+            total: $transactionsModels->total(),
+            perPage: $transactionsModels->perPage(),
+            currentPage: $transactionsModels->currentPage(),
+            options: [
+                'path' => $transactionsModels->path(),
+                'pageName' => $transactionsModels->getPageName(),
+            ],
+        );
+
+        $transactions->appends($request->query());
 
         $summary = (clone $baseQuery)
             ->selectRaw('COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS total_income')
@@ -146,7 +160,7 @@ final class TransactionController extends Controller
                 'id' => $account->id,
                 'name' => $account->name,
                 'currency_id' => $account->currency_id,
-                'bank' => $account->bank?->value ?? (string) $account->bank,
+                'bank' => $account->bank?->value,
                 'bank_icon_url' => $account->bank_icon_url,
                 'currency' => $account->currency !== null ? [
                     'symbol' => $account->currency->symbol,
@@ -167,8 +181,8 @@ final class TransactionController extends Controller
             ],
             'transactions' => $transactions,
             'summary' => [
-                'total_income' => number_format((float) ($summary?->total_income ?? 0), 2, '.', ''),
-                'total_expense' => number_format((float) ($summary?->total_expense ?? 0), 2, '.', ''),
+                'total_income' => number_format((float) data_get($summary, 'total_income', 0), 2, '.', ''),
+                'total_expense' => number_format((float) data_get($summary, 'total_expense', 0), 2, '.', ''),
             ],
         ]);
     }

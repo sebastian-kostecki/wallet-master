@@ -108,14 +108,14 @@ final class MBankImportAdapter extends AbstractBankImportAdapter
         foreach ($lines as $lineRaw) {
             $line = str_getcsv((string) $lineRaw, ';');
             $line = array_map(fn ($value): string => trim((string) $value), $line);
-            $first = (string) ($line[0] ?? '');
+            $first = (string) $line[0];
 
             if ($headers === [] && str_contains($first, '#Data operacji')) {
-                $headers = collect($line)
+                $headers = array_values(collect($line)
                     ->map(fn (string $value): string => trim((string) Str::of($value)->ltrim('#')))
                     ->filter(fn (string $value): bool => $value !== '')
                     ->values()
-                    ->all();
+                    ->all());
 
                 continue;
             }
@@ -124,7 +124,7 @@ final class MBankImportAdapter extends AbstractBankImportAdapter
                 continue;
             }
 
-            if ($line === [] || ($line[0] ?? '') === '') {
+            if ($first === '') {
                 continue;
             }
 

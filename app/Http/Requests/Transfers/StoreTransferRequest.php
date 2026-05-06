@@ -71,6 +71,20 @@ final class StoreTransferRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array{
+     *   from_account_id: int,
+     *   to_account_id: int,
+     *   date: string,
+     *   amount: numeric-string|float|int,
+     *   description?: ?string,
+     * }
+     */
+    public function validated($key = null, $default = null): array
+    {
+        return parent::validated($key, $default);
+    }
+
     protected function failedValidation(Validator $validator): void
     {
         event(new TransferFailedValidation(

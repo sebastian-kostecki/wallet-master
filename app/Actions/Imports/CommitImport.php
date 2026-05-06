@@ -45,7 +45,7 @@ final class CommitImport
             $paths = $this->resolveImportSourceFile->resolve($lockedImport);
             $adapter = $this->resolver->resolve($lockedImport->account->bank);
 
-            /** @var array{date: string, amount: string, description: string, subject?: ?string}|null $mapping */
+            /** @var array{date: string, amount: string, description: string, subject?: ?string}|array{}|null $mapping */
             $mapping = $lockedImport->mapping;
 
             if ($mapping === null || $mapping === []) {
@@ -118,7 +118,7 @@ final class CommitImport
                 $counters->importedAmountSum = bcadd($counters->importedAmountSum, $parsedRow->amount, 2);
             }
 
-            $account->current_balance = bcadd((string) $account->current_balance, $counters->importedAmountSum, 2);
+            $account->current_balance = bcadd($account->current_balance, $counters->importedAmountSum, 2);
             $account->save();
 
             $lockedImport->rows_total = $counters->rowsTotal;

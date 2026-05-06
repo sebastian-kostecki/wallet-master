@@ -15,6 +15,11 @@ final class BnpParibasImportAdapter extends AbstractBankImportAdapter
 
     public function defaultMapping(array $headers): ?array
     {
+        $fallback = parent::defaultMapping($headers);
+        if ($fallback !== null) {
+            return $fallback;
+        }
+
         $date = $this->findHeader($headers, 'Data transakcji');
         $amount = $this->findHeader($headers, 'Kwota');
         $description = $this->findHeader($headers, 'Opis');

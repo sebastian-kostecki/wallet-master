@@ -6,15 +6,24 @@ namespace App\Models;
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use Database\Factories\AccountFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property Bank|null $bank
+ * @property AccountType|null $type
+ * @property numeric-string $opening_balance
+ * @property numeric-string $current_balance
+ */
 final class Account extends Model
 {
+    /** @use HasFactory<AccountFactory> */
     use HasFactory;
+
     use SoftDeletes;
 
     protected $guarded = [];
@@ -23,7 +32,7 @@ final class Account extends Model
     {
         $bank = $this->bank;
 
-        if (! $bank instanceof Bank) {
+        if ($bank === null) {
             return null;
         }
 
@@ -38,15 +47,11 @@ final class Account extends Model
     {
         $type = $this->type;
 
-        if ($type instanceof AccountType) {
-            return $type->labelKey();
+        if ($type === null) {
+            return '';
         }
 
-        if (is_string($type)) {
-            return AccountType::tryFrom($type)?->labelKey() ?? $type;
-        }
-
-        return (string) $type;
+        return $type->labelKey();
     }
 
     /**

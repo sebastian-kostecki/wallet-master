@@ -67,7 +67,7 @@ final class CreateTransfer
 
             $transferId = (string) Str::uuid();
 
-            $description = isset($validated['description']) && is_string($validated['description']) && $validated['description'] !== ''
+            $description = isset($validated['description']) && $validated['description'] !== ''
                 ? $validated['description']
                 : null;
 

@@ -32,4 +32,17 @@ class UpdateAccountRequest extends FormRequest
             'opening_balance' => ['required', 'numeric'],
         ];
     }
+
+    /**
+     * @return array{
+     *   name: string,
+     *   bank: Bank,
+     *   type: AccountType,
+     *   opening_balance: numeric-string|float|int,
+     * }
+     */
+    public function validated($key = null, $default = null): array
+    {
+        return parent::validated($key, $default);
+    }
 }

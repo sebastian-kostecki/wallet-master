@@ -33,7 +33,7 @@ final class UpdateAccountDetails
             $locked->name = $validated['name'];
             $locked->bank = $validated['bank'];
             $locked->type = $validated['type'];
-            $locked->opening_balance = $validated['opening_balance'];
+            $locked->opening_balance = $newOpening;
             $locked->current_balance = bcadd((string) $locked->current_balance, $delta, 2);
             $locked->save();
         });

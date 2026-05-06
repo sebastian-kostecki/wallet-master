@@ -238,11 +238,13 @@ abstract class AbstractBankImportAdapter implements BankImportAdapter
      */
     private function normalizeHeaders(array $headers): array
     {
-        return collect($headers)
+        $normalized = collect($headers)
             ->map(fn ($header): string => trim((string) $header))
             ->map(fn (string $header, int $index): string => $header !== '' ? $header : "column_{$index}")
             ->values()
             ->all();
+
+        return array_values($normalized);
     }
 
     /**
@@ -274,6 +276,9 @@ abstract class AbstractBankImportAdapter implements BankImportAdapter
         throw new RuntimeException('Invalid transaction date.');
     }
 
+    /**
+     * @return numeric-string
+     */
     private function parseAmount(string $rawAmount): string
     {
         $normalized = str_replace([' ', ','], ['', '.'], $rawAmount);

@@ -31,7 +31,18 @@ final class ImportUploadController extends Controller
         // Persist the file to a temp location first so we can inspect headers
         // without creating an Import record that we may immediately delete.
         $tempRelativePath = "imports/{$request->user()->id}/tmp/".Str::uuid()->toString().'.'.Str::lower($extension);
-        Storage::disk('local')->put($tempRelativePath, $uploadedFile->get());
+        $contents = $uploadedFile->get();
+        if ($contents === false) {
+            return response()->json([
+                'message' => 'Unable to read import file contents.',
+                'code' => 'unreadable_file',
+                'errors' => [
+                    'file' => ['unreadable_file'],
+                ],
+            ], 422);
+        }
+
+        Storage::disk('local')->put($tempRelativePath, $contents);
 
         $absoluteTempPath = Storage::disk('local')->path($tempRelativePath);
 

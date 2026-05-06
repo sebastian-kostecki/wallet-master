@@ -75,4 +75,18 @@ final class StoreTransactionRequest extends FormRequest
             'subject' => ['nullable', 'string', 'max:255'],
         ];
     }
+
+    /**
+     * @return array{
+     *   account_id: int,
+     *   date: string,
+     *   amount: numeric-string|float|int,
+     *   description: string,
+     *   subject?: ?string,
+     * }
+     */
+    public function validated($key = null, $default = null): array
+    {
+        return parent::validated($key, $default);
+    }
 }

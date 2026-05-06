@@ -61,7 +61,7 @@ final class Setup extends Command
 
             return self::SUCCESS;
         } catch (RequestException $e) {
-            if ($e->response?->status() !== 404) {
+            if ($e->response->status() !== 404) {
                 $this->error('Typesense request failed while checking collection.');
                 $this->line('Collection: '.$collection);
                 $this->line('Exception: '.$e::class);

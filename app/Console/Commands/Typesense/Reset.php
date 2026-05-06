@@ -68,7 +68,7 @@ final class Reset extends Command
             $client->deleteCollection($collection);
             $this->info('Typesense collection deleted: '.$collection);
         } catch (RequestException $e) {
-            if ($e->response?->status() === 404) {
+            if ($e->response->status() === 404) {
                 $this->info('Typesense collection not found (nothing to delete): '.$collection);
             } else {
                 $this->error('Typesense request failed while deleting collection.');

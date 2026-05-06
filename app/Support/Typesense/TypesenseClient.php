@@ -17,6 +17,9 @@ final readonly class TypesenseClient
         public int $timeoutMs,
     ) {}
 
+    /**
+     * @return array<string, mixed>
+     */
     public function health(): array
     {
         return $this->request()

@@ -4,12 +4,22 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property numeric-string $amount
+ * @property int $account_id
+ * @property int $currency_id
+ * @property int $user_id
+ * @property int|null $import_id
+ * @property string|null $transfer_id
+ */
 final class Transaction extends Model
 {
+    /** @use HasFactory<TransactionFactory> */
     use HasFactory;
 
     protected $guarded = [];

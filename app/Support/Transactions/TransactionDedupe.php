@@ -18,11 +18,17 @@ final class TransactionDedupe
         return Str::limit($normalized, 255, '');
     }
 
+    /**
+     * @return numeric-string
+     */
     public static function amountToDecimalString(float|int|string $amount): string
     {
         return number_format((float) $amount, 2, '.', '');
     }
 
+    /**
+     * @param  numeric-string  $amountDecimalString
+     */
     public static function dedupeHash(string $dateYmd, string $amountDecimalString, string $normalizedDescription): string
     {
         return md5($dateYmd.'|'.$amountDecimalString.'|'.$normalizedDescription, true);
