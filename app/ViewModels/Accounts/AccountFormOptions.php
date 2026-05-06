@@ -29,7 +29,7 @@ final class AccountFormOptions
                     'value' => $type->value,
                     'label_key' => $type->labelKey(),
                     'icon_name' => match ($type) {
-                        AccountType::Checking => 'wallet',
+                        AccountType::Checking => 'creditCard',
                         AccountType::Savings => 'piggyBank',
                     },
                 ],

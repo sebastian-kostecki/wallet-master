@@ -17,6 +17,7 @@ type Option = {
     value: string;
     label_key: string;
     icon_url?: string | null;
+    icon_name?: string | null;
 };
 
 type Currency = {
@@ -50,6 +51,19 @@ const bankOptions = computed<DropdownOption<string>[]>(() => {
 });
 
 const selectedBank = computed(() => props.banks.find((b) => b.value === form.bank) ?? null);
+const selectedAccountType = computed(() => props.accountTypes.find((t) => t.value === form.type) ?? null);
+
+function accountTypeIconClasses(typeValue: string | undefined): string {
+    if (typeValue === 'checking') {
+        return 'bg-gradient-to-br from-sky-100 to-indigo-200 text-sky-900 dark:from-sky-950/40 dark:to-indigo-950/40 dark:text-sky-200';
+    }
+
+    if (typeValue === 'savings') {
+        return 'bg-gradient-to-br from-emerald-100 to-lime-200 text-emerald-900 dark:from-emerald-950/40 dark:to-lime-950/40 dark:text-emerald-200';
+    }
+
+    return 'bg-muted text-muted-foreground';
+}
 
 function resolveBankIconUrl(bankValue: string): string | null {
     return props.banks.find((b) => b.value === bankValue)?.icon_url ?? null;
@@ -180,7 +194,31 @@ const adjustProcessing = ref(false);
                                 :placeholder="t('accounts.create.fields.type.placeholder')"
                                 :disabled="form.processing"
                                 @update:model-value="(value) => (form.type = value)"
-                            />
+                            >
+                                <template #trigger-leading>
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="accountTypeIconClasses(selectedAccountType?.value)"
+                                        aria-hidden="true"
+                                    >
+                                        <Icon :name="selectedAccountType?.icon_name ?? 'wallet'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    </span>
+                                </template>
+
+                                <template #option-leading="{ option }">
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="accountTypeIconClasses(option.value)"
+                                        aria-hidden="true"
+                                    >
+                                        <Icon
+                                            :name="props.accountTypes.find((a) => a.value === option.value)?.icon_name ?? 'wallet'"
+                                            class="h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+                                </template>
+                            </DropdownSelect>
                         </FormField>
 
                         <FormField
