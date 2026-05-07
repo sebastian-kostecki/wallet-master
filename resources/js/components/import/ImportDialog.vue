@@ -9,7 +9,6 @@ import { echo } from '@laravel/echo-vue';
 import { CheckCircle2, Coins, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { toast } from 'vue-sonner';
 
 type Account = {
     id: number;
@@ -322,9 +321,6 @@ async function start() {
     step.value = 'processing';
 
     try {
-        toast.dismiss();
-        toast.message(t('imports.toast.started'));
-
         const upload = await uploadImport();
         importId.value = upload.import_id;
 
@@ -334,8 +330,7 @@ async function start() {
         startLongRunningTimer();
     } catch (e: any) {
         step.value = 'form';
-        toast.dismiss();
-        toast.error(typeof e?.message === 'string' ? e.message : t('imports.toast.startFailed'));
+        fileError.value = typeof e?.message === 'string' ? e.message : t('imports.toast.startFailed');
     } finally {
         isUploadingOrCommitting.value = false;
     }

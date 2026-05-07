@@ -12,7 +12,6 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { toast } from 'vue-sonner';
 
 type Account = {
     id: number;
@@ -96,14 +95,7 @@ function submit() {
     form.amount = normalizeAmount(form.amount);
     form.put(route('transactions.update', props.transaction.id), {
         onSuccess: () => {},
-        onError: (errors) => {
-            if (Object.keys(errors).length > 0) {
-                return;
-            }
-
-            toast.dismiss();
-            toast.error(t('transactions.toast.genericError'));
-        },
+        onError: () => {},
     });
 }
 

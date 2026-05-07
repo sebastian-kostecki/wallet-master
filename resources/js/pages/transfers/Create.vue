@@ -11,7 +11,6 @@ import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { AlertTriangle, Coins } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { toast } from 'vue-sonner';
 
 type Account = {
     id: number;
@@ -102,14 +101,7 @@ function submit() {
     form.amount = normalizeAmount(form.amount);
     form.post(route('transfers.store'), {
         onSuccess: () => {},
-        onError: (errors) => {
-            if (Object.keys(errors).length > 0) {
-                return;
-            }
-
-            toast.dismiss();
-            toast.error(t('transfers.toast.genericError'));
-        },
+        onError: () => {},
     });
 }
 </script>
