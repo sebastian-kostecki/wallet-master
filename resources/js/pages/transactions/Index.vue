@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
 import ImportDialog from '@/components/import/ImportDialog.vue';
+import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,6 +22,7 @@ import {
     Pencil,
     PiggyBank,
     Plus,
+    Trash2,
     Upload,
     Wallet,
 } from 'lucide-vue-next';
@@ -303,6 +305,16 @@ function truncateText(input: string | null | undefined, maxLength: number): { te
 
     return { text: `${trimmed}…`, isTruncated: true };
 }
+
+const deletingTransactionId = ref<number | null>(null);
+const deleteDialogOpen = ref(false);
+const deleteProcessing = ref(false);
+const deletingTransaction = computed(() => props.transactions.data.find((t) => t.id === deletingTransactionId.value) ?? null);
+
+function openDeleteDialog(transactionId: number) {
+    deletingTransactionId.value = transactionId;
+    deleteDialogOpen.value = true;
+}
 </script>
 
 <template>
@@ -435,7 +447,7 @@ function truncateText(input: string | null | undefined, maxLength: number): { te
                                             />
                                         </button>
                                     </th>
-                                    <th class="w-20 px-6 py-3 text-right">{{ t('transactions.index.table.actions') }}</th>
+                                    <th class="w-28 px-6 py-3 text-right">{{ t('transactions.index.table.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -558,21 +570,41 @@ function truncateText(input: string | null | undefined, maxLength: number): { te
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <TooltipProvider v-if="tx.account" :delay-duration="0">
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <Button variant="ghost" size="icon" as-child>
-                                                        <Link
-                                                            :href="route('transactions.edit', tx.id) + currentSearch"
-                                                            :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
+                                            <div class="inline-flex w-full items-center justify-end gap-1">
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <Button variant="ghost" size="icon" as-child>
+                                                            <Link
+                                                                :href="route('transactions.edit', tx.id) + currentSearch"
+                                                                :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
+                                                            >
+                                                                <Pencil class="h-4 w-4" aria-hidden="true" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{{ t('actions.edit') }}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            type="button"
+                                                            :disabled="deleteProcessing"
+                                                            :aria-label="t('transactions.delete.iconLabel', { description: tx.description })"
+                                                            @click="openDeleteDialog(tx.id)"
                                                         >
-                                                            <Pencil class="h-4 w-4" aria-hidden="true" />
-                                                        </Link>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{{ t('actions.edit') }}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
+                                                            <Trash2 class="h-4 w-4" aria-hidden="true" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{{ t('transactions.delete.action') }}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
                                         </TooltipProvider>
                                         <span v-else class="text-xs text-muted-foreground">{{ t('transactions.index.readOnly.noActions') }}</span>
                                     </td>
@@ -639,18 +671,41 @@ function truncateText(input: string | null | undefined, maxLength: number): { te
                                         </p>
                                         <div class="mt-2">
                                             <TooltipProvider v-if="tx.account" :delay-duration="0">
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        <Button variant="ghost" size="icon" as-child>
-                                                            <Link :href="route('transactions.edit', tx.id) + currentSearch" :aria-label="t('actions.edit')">
-                                                                <Pencil class="h-4 w-4" aria-hidden="true" />
-                                                            </Link>
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{{ t('actions.edit') }}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
+                                                <div class="inline-flex items-center gap-1">
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
+                                                            <Button variant="ghost" size="icon" as-child>
+                                                                <Link
+                                                                    :href="route('transactions.edit', tx.id) + currentSearch"
+                                                                    :aria-label="t('actions.edit')"
+                                                                >
+                                                                    <Pencil class="h-4 w-4" aria-hidden="true" />
+                                                                </Link>
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>{{ t('actions.edit') }}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                type="button"
+                                                                :disabled="deleteProcessing"
+                                                                :aria-label="t('transactions.delete.iconLabel', { description: tx.description })"
+                                                                @click="openDeleteDialog(tx.id)"
+                                                            >
+                                                                <Trash2 class="h-4 w-4" aria-hidden="true" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>{{ t('transactions.delete.action') }}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </div>
                                             </TooltipProvider>
                                         </div>
                                     </div>
@@ -683,6 +738,16 @@ function truncateText(input: string | null | undefined, maxLength: number): { te
             :preselected-account-id="filters.account_id ?? null"
             :disabled="isLoading"
             :current-search="currentSearch"
+        />
+
+        <DeleteTransactionDialog
+            v-model:open="deleteDialogOpen"
+            :transaction-id="deletingTransactionId"
+            :description="deletingTransaction?.description ?? null"
+            :is-transfer="Boolean(deletingTransaction?.transfer_id)"
+            :disabled="deleteProcessing"
+            @processing="(value: any) => (deleteProcessing = value)"
+            @success="deletingTransactionId = null"
         />
     </AppLayout>
 </template>

@@ -231,7 +231,7 @@ final class TransactionController extends Controller
             ]);
 
         return Inertia::render('transactions/Edit', [
-            'transaction' => $transaction->only(['id', 'account_id', 'date', 'amount', 'description', 'subject', 'import_id', 'raw_statement_description'])
+            'transaction' => $transaction->only(['id', 'account_id', 'date', 'amount', 'description', 'subject', 'import_id', 'raw_statement_description', 'transfer_id'])
                 + [
                     'account' => $transaction->account?->only(['id', 'name']),
                     'currency' => $transaction->currency?->only(['id', 'code', 'symbol', 'precision']),
@@ -254,6 +254,9 @@ final class TransactionController extends Controller
     {
         $delete->handle($transaction);
 
-        return to_route('transactions.index');
+        return to_route('transactions.index')->with('toast', [
+            'type' => 'success',
+            'message_key' => 'transactions.toast.deleted',
+        ]);
     }
 }

@@ -190,6 +190,11 @@
         "edit": {
             "title": "Edytuj transakcję",
             "back": "Wróć",
+            "deleteAction": "Usuń transakcję",
+            "dangerZone": {
+                "title": "Uwaga",
+                "description": "Ta operacja jest nieodwracalna."
+            },
             "hints": {
                 "title": "Informacje",
                 "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
@@ -216,7 +221,16 @@
         "toast": {
             "created": "Transakcja dodana",
             "updated": "Transakcja zaktualizowana",
+            "deleted": "Transakcja usunięta",
             "genericError": "Nie udało się zapisać zmian. Spróbuj ponownie."
+        },
+        "delete": {
+            "action": "Usuń",
+            "iconLabel": "Usuń transakcję: {description}",
+            "title": "Usunąć transakcję?",
+            "description": "Transakcja zostanie trwale usunięta.",
+            "descriptionTransfer": "To jest transfer — usunięcie spowoduje usunięcie dwóch powiązanych transakcji.",
+            "confirm": "Usuń transakcję"
         }
     },
     "transfers": {

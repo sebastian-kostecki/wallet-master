@@ -2,14 +2,15 @@
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import FormField from '@/components/forms/FormField.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
+import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { displayAmount, normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 
@@ -30,6 +31,7 @@ type Transaction = {
     subject: string | null;
     import_id: number | null;
     raw_statement_description: string | null;
+    transfer_id: string | null;
 };
 
 const props = defineProps<{
@@ -103,6 +105,13 @@ function submit() {
             toast.error(t('transactions.toast.genericError'));
         },
     });
+}
+
+const deleteDialogOpen = ref(false);
+const deleteProcessing = ref(false);
+
+function onDeleted() {
+    router.visit(route('transactions.index') + currentSearch.value);
 }
 </script>
 
@@ -238,8 +247,27 @@ function submit() {
                         </p>
                     </div>
                 </div>
+
+                <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 dark:border-destructive/40 dark:bg-destructive/10">
+                    <p class="text-sm font-semibold text-destructive">{{ t('transactions.edit.dangerZone.title') }}</p>
+                    <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.dangerZone.description') }}</p>
+
+                    <Button class="mt-4" variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
+                        {{ t('transactions.edit.deleteAction') }}
+                    </Button>
+                </div>
             </div>
         </div>
+
+        <DeleteTransactionDialog
+            v-model:open="deleteDialogOpen"
+            :transaction-id="transaction.id"
+            :description="transaction.description"
+            :is-transfer="Boolean(transaction.transfer_id)"
+            :disabled="deleteProcessing"
+            @processing="(value: any) => (deleteProcessing = value)"
+            @success="onDeleted"
+        />
     </AppLayout>
 </template>
 
