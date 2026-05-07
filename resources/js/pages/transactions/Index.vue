@@ -2,6 +2,7 @@
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
 import ImportDialog from '@/components/import/ImportDialog.vue';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import PaginationBar from '@/components/pagination/PaginationBar.vue';
@@ -9,7 +10,20 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowDown, ArrowDownLeft, ArrowRightLeft, ArrowUp, ArrowUpDown, ArrowUpRight, Pencil, PiggyBank, Wallet } from 'lucide-vue-next';
+import {
+    ArrowDown,
+    ArrowDownLeft,
+    ArrowRightLeft,
+    ArrowUp,
+    ArrowUpDown,
+    ArrowUpRight,
+    ChevronDown,
+    Pencil,
+    PiggyBank,
+    Plus,
+    Upload,
+    Wallet,
+} from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -298,17 +312,33 @@ function truncateText(input: string | null | undefined, maxLength: number): { te
         <template #headerActions>
             <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <TransactionsIndexHeaderFilters :accounts="accounts" :filters="filters" :server-errors="serverErrors" :is-loading="isLoading" />
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-                    <Button variant="secondary" class="sm:shrink-0" type="button" @click="importDialogOpen = true">
-                        {{ t('imports.cta') }}
-                    </Button>
-                    <Button variant="secondary" as-child class="sm:shrink-0">
-                        <Link :href="route('transfers.create') + currentSearch">{{ t('transactions.index.addTransfer') }}</Link>
-                    </Button>
-                    <Button as-child class="sm:shrink-0">
-                        <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
-                    </Button>
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <Button class="sm:shrink-0">
+                            <Plus class="h-4 w-4" aria-hidden="true" />
+                            {{ t('transactions.index.actionsMenu.label') }}
+                            <ChevronDown class="ml-1 h-4 w-4" aria-hidden="true" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" class="w-56">
+                        <DropdownMenuItem as-child>
+                            <Link :href="route('transactions.create') + currentSearch">
+                                <Plus />
+                                {{ t('transactions.index.addTransaction') }}
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem as-child>
+                            <Link :href="route('transfers.create') + currentSearch">
+                                <ArrowRightLeft />
+                                {{ t('transactions.index.addTransfer') }}
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @select="importDialogOpen = true">
+                            <Upload />
+                            {{ t('imports.cta') }}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </template>
 

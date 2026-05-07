@@ -103,6 +103,9 @@
             "title": "Transakcje",
             "addTransaction": "Dodaj transakcję",
             "addTransfer": "Transfer",
+            "actionsMenu": {
+                "label": "Dodaj"
+            },
             "filters": {
                 "account": {
                     "label": "Konto",
