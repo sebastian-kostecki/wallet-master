@@ -197,6 +197,7 @@ final class TransactionController extends Controller
                 'id' => $account->id,
                 'name' => $account->name,
                 'currency_id' => $account->currency_id,
+                'bank' => $account->bank,
                 'bank_icon_url' => $account->bank_icon_url,
             ]);
 
@@ -227,6 +228,7 @@ final class TransactionController extends Controller
                 'id' => $account->id,
                 'name' => $account->name,
                 'currency_id' => $account->currency_id,
+                'bank' => $account->bank,
                 'bank_icon_url' => $account->bank_icon_url,
             ]);
 

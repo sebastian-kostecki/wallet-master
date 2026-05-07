@@ -3,12 +3,15 @@ import DateRangePickerInput from '@/components/forms/DateRangePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import InputError from '@/components/InputError.vue';
 import { router } from '@inertiajs/vue3';
+import { Coins } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type Account = {
     id: number;
     name: string;
+    bank_icon_url: string | null;
+    bank?: string;
 };
 
 type Filters = {
@@ -37,6 +40,15 @@ const accountOptions = computed<DropdownOption<number | null>[]>(() => [
 ]);
 
 const localAccountId = ref<number | null>(props.filters.account_id ?? null);
+const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
+
+const selectedAccount = computed(() => {
+    if (localAccountId.value === null) {
+        return null;
+    }
+
+    return accountsById.value.get(localAccountId.value) ?? null;
+});
 const localFrom = ref<string>(props.filters.from ?? '');
 const localTo = ref<string>(props.filters.to ?? '');
 const isAllTime = ref<boolean>(Boolean(props.filters.all_time));
@@ -233,7 +245,55 @@ const hasError = computed(() => errorMessage.value.trim() !== '');
                     :aria-invalid="hasError"
                     :aria-describedby="hasError ? errorId : undefined"
                     @update:model-value="(value: any) => (localAccountId = value)"
-                />
+                >
+                    <template #trigger-leading>
+                        <span
+                            v-if="selectedAccount"
+                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                            :class="
+                                selectedAccount.bank === 'cash'
+                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                    : 'bg-muted'
+                            "
+                            aria-hidden="true"
+                        >
+                            <img
+                                v-if="selectedAccount.bank_icon_url"
+                                :src="selectedAccount.bank_icon_url"
+                                :alt="selectedAccount.name"
+                                class="h-5 w-5 object-cover"
+                            />
+                            <Coins v-else-if="selectedAccount.bank === 'cash'" class="h-3.5 w-3.5" />
+                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                {{ selectedAccount.name.charAt(0).toUpperCase() }}
+                            </span>
+                        </span>
+                    </template>
+
+                    <template #option-leading="{ option }">
+                        <span
+                            v-if="option.value !== null"
+                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                            :class="
+                                accountsById.get(option.value)?.bank === 'cash'
+                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                    : 'bg-muted'
+                            "
+                            aria-hidden="true"
+                        >
+                            <img
+                                v-if="accountsById.get(option.value)?.bank_icon_url"
+                                :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
+                                :alt="accountsById.get(option.value)?.name ?? ''"
+                                class="h-5 w-5 object-cover"
+                            />
+                            <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
+                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                            </span>
+                        </span>
+                    </template>
+                </DropdownSelect>
             </div>
 
             <div class="min-w-56 sm:min-w-64">
