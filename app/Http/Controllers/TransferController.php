@@ -26,6 +26,7 @@ final class TransferController extends Controller
                 'currency_id' => $account->currency_id,
                 'is_deleted' => $account->trashed(),
                 'bank_icon_url' => $account->bank_icon_url,
+                'bank' => $account->bank?->value,
             ]);
 
         return Inertia::render('transfers/Create', [

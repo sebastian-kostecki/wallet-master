@@ -107,12 +107,6 @@ function submit() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('transactions.create.title')" />
 
-        <template #headerActions>
-            <Button variant="secondary" as-child>
-                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
-            </Button>
-        </template>
-
         <div class="flex flex-col gap-6 p-4">
             <div class="grid gap-6 lg:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
@@ -228,7 +222,11 @@ function submit() {
                             />
                         </FormField>
 
-                        <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
+                            </Button>
+
                             <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
                         </div>
                     </form>

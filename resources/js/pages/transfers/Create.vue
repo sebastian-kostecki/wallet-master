@@ -2,13 +2,13 @@
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
+import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { AlertTriangle, Coins } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -48,15 +48,12 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 const selectableAccounts = computed(() => props.accounts.filter((a) => !a.is_deleted));
 const canTransfer = computed(() => selectableAccounts.value.length >= 2);
 
-const accountOptions = computed<DropdownOption<number>[]>(() =>
-    props.accounts.map((a) => ({
-        value: a.id,
-        label: a.is_deleted ? `${a.name} (${t('transfers.form.deletedSuffix')})` : a.name,
-        disabled: a.is_deleted,
-    })),
-);
+const accountOptions = computed<DropdownOption<number>[]>(() => selectableAccounts.value.map((a) => ({ value: a.id, label: a.name })));
+const accountsById = computed(() => new Map(selectableAccounts.value.map((a) => [a.id, a])));
 
-const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
+function isCashBank(bank: string | null | undefined): boolean {
+    return (bank ?? '').toLowerCase() === 'cash';
+}
 
 function todayDdMmYyyy(): string {
     const now = new Date();
@@ -88,8 +85,8 @@ const form = useForm<{
 
 const formErrorId = 'transfer-form-error';
 
-const fromAccount = computed(() => props.accounts.find((a) => a.id === form.from_account_id) ?? null);
-const toAccount = computed(() => props.accounts.find((a) => a.id === form.to_account_id) ?? null);
+const fromAccount = computed(() => (form.from_account_id !== null ? accountsById.value.get(form.from_account_id) ?? null : null));
+const toAccount = computed(() => (form.to_account_id !== null ? accountsById.value.get(form.to_account_id) ?? null : null));
 
 const isSameAccount = computed(() => form.from_account_id !== null && form.to_account_id !== null && form.from_account_id === form.to_account_id);
 
@@ -109,12 +106,6 @@ function submit() {
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('transfers.create.title')" />
-
-        <template #headerActions>
-            <Button variant="secondary" as-child>
-                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
-            </Button>
-        </template>
 
         <div class="flex flex-col gap-6 p-4">
             <div class="grid gap-6 lg:grid-cols-2">
@@ -146,19 +137,19 @@ function submit() {
                                             v-if="fromAccount"
                                             class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
                                             :class="
-                                                fromAccount.bank === 'cash'
+                                                isCashBank(fromAccount.bank)
                                                     ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
                                                     : 'bg-muted'
                                             "
                                             aria-hidden="true"
                                         >
                                             <img
-                                                v-if="fromAccount.bank_icon_url"
+                                                v-if="fromAccount.bank_icon_url && !isCashBank(fromAccount.bank)"
                                                 :src="fromAccount.bank_icon_url"
                                                 :alt="fromAccount.name"
                                                 class="h-5 w-5 object-cover"
                                             />
-                                            <Coins v-else-if="fromAccount.bank === 'cash'" class="h-3.5 w-3.5" />
+                                            <Icon v-else-if="isCashBank(fromAccount.bank)" :name="'coins'" class="h-3.5 w-3.5" aria-hidden="true" />
                                             <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                                 {{ fromAccount.name.charAt(0).toUpperCase() }}
                                             </span>
@@ -169,29 +160,30 @@ function submit() {
                                         <span
                                             class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
                                             :class="
-                                                accountsById.get(option.value)?.bank === 'cash'
+                                                isCashBank(accountsById.get(option.value)?.bank)
                                                     ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
                                                     : 'bg-muted'
                                             "
                                             aria-hidden="true"
                                         >
                                             <img
-                                                v-if="accountsById.get(option.value)?.bank_icon_url"
+                                                v-if="accountsById.get(option.value)?.bank_icon_url && !isCashBank(accountsById.get(option.value)?.bank)"
                                                 :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
                                                 :alt="accountsById.get(option.value)?.name ?? ''"
                                                 class="h-5 w-5 object-cover"
                                             />
-                                            <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
+                                            <Icon
+                                                v-else-if="isCashBank(accountsById.get(option.value)?.bank)"
+                                                :name="'coins'"
+                                                class="h-3.5 w-3.5"
+                                                aria-hidden="true"
+                                            />
                                             <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                                 {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
                                             </span>
                                         </span>
                                     </template>
                                 </DropdownSelect>
-                                <div v-if="fromAccount?.is_deleted" class="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
-                                    <AlertTriangle class="mt-0.5 h-4 w-4" aria-hidden="true" />
-                                    <span>{{ t('transfers.form.deletedNotice') }}</span>
-                                </div>
                             </FormField>
 
                             <FormField for-id="to_account_id" :label="t('transfers.form.toAccount')" :error="form.errors.to_account_id">
@@ -210,14 +202,19 @@ function submit() {
                                             v-if="toAccount"
                                             class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
                                             :class="
-                                                toAccount.bank === 'cash'
+                                                isCashBank(toAccount.bank)
                                                     ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
                                                     : 'bg-muted'
                                             "
                                             aria-hidden="true"
                                         >
-                                            <img v-if="toAccount.bank_icon_url" :src="toAccount.bank_icon_url" :alt="toAccount.name" class="h-5 w-5 object-cover" />
-                                            <Coins v-else-if="toAccount.bank === 'cash'" class="h-3.5 w-3.5" />
+                                            <img
+                                                v-if="toAccount.bank_icon_url && !isCashBank(toAccount.bank)"
+                                                :src="toAccount.bank_icon_url"
+                                                :alt="toAccount.name"
+                                                class="h-5 w-5 object-cover"
+                                            />
+                                            <Icon v-else-if="isCashBank(toAccount.bank)" :name="'coins'" class="h-3.5 w-3.5" aria-hidden="true" />
                                             <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                                 {{ toAccount.name.charAt(0).toUpperCase() }}
                                             </span>
@@ -228,29 +225,30 @@ function submit() {
                                         <span
                                             class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
                                             :class="
-                                                accountsById.get(option.value)?.bank === 'cash'
+                                                isCashBank(accountsById.get(option.value)?.bank)
                                                     ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
                                                     : 'bg-muted'
                                             "
                                             aria-hidden="true"
                                         >
                                             <img
-                                                v-if="accountsById.get(option.value)?.bank_icon_url"
+                                                v-if="accountsById.get(option.value)?.bank_icon_url && !isCashBank(accountsById.get(option.value)?.bank)"
                                                 :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
                                                 :alt="accountsById.get(option.value)?.name ?? ''"
                                                 class="h-5 w-5 object-cover"
                                             />
-                                            <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
+                                            <Icon
+                                                v-else-if="isCashBank(accountsById.get(option.value)?.bank)"
+                                                :name="'coins'"
+                                                class="h-3.5 w-3.5"
+                                                aria-hidden="true"
+                                            />
                                             <span v-else class="text-[10px] font-semibold text-muted-foreground">
                                                 {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
                                             </span>
                                         </span>
                                     </template>
                                 </DropdownSelect>
-                                <div v-if="toAccount?.is_deleted" class="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
-                                    <AlertTriangle class="mt-0.5 h-4 w-4" aria-hidden="true" />
-                                    <span>{{ t('transfers.form.deletedNotice') }}</span>
-                                </div>
                             </FormField>
                         </div>
 
@@ -289,7 +287,11 @@ function submit() {
                             {{ t('transfers.form.sameAccountError') }}
                         </div>
 
-                        <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
+                            </Button>
+
                             <Button type="submit" :disabled="form.processing || isSameAccount">
                                 {{ form.processing ? t('transfers.form.saving') : t('transfers.form.submit') }}
                             </Button>
