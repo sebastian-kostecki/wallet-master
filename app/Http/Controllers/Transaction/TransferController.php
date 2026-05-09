@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Transaction;
 
 use App\Actions\Transfers\CreateTransfer;
 use App\Events\TransferCreated;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Transfers\StoreTransferRequest;
 use App\Models\Account;
 use Illuminate\Http\RedirectResponse;

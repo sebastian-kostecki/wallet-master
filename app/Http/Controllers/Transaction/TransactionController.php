@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Transaction;
 
 use App\Actions\Transactions\DeleteTransaction;
 use App\Actions\Transactions\StoreTransaction;
 use App\Actions\Transactions\UpdateTransaction;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Transactions\StoreTransactionRequest;
 use App\Http\Requests\Transactions\TransactionIndexRequest;
 use App\Http\Requests\Transactions\UpdateTransactionRequest;
