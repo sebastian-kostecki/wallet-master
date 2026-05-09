@@ -2,22 +2,25 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Imports;
+namespace App\Imports\Workflow;
 
-use App\Imports\BankImportAdapterResolver;
+use App\Enums\Bank;
+use App\Enums\ImportStatus;
+use App\Imports\BankAdapters\BankImportAdapter;
+use App\Models\Account;
 use App\Models\Import;
 use App\Models\Transaction;
 use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 final class CommitImport
 {
     public function __construct(
-        public BankImportAdapterResolver $resolver,
-        public ResolveImportSourceFile $resolveImportSourceFile,
-        public EnrichImportRowDescription $enrichImportRowDescription,
+        private ResolveImportSourceFile $resolveImportSourceFile,
+        private EnrichImportRowDescription $enrichImportRowDescription,
     ) {}
 
     /**
@@ -38,21 +41,20 @@ final class CommitImport
                 return null;
             }
 
-            if (! in_array($lockedImport->status, ['queued', 'processing'], true)) {
+            if (! in_array($lockedImport->status, [ImportStatus::Queued->value, ImportStatus::Processing->value], true)) {
                 return null;
             }
 
             $paths = $this->resolveImportSourceFile->resolve($lockedImport);
-            $adapter = $this->resolver->resolve($lockedImport->account->bank);
+            $account = $lockedImport->account()->lockForUpdate()->firstOrFail();
+            $adapter = $this->resolveAdapter($lockedImport, $account);
 
             /** @var array{date: string, amount: string, description: string, subject?: ?string}|array{}|null $mapping */
             $mapping = $lockedImport->mapping;
 
             if ($mapping === null || $mapping === []) {
-                throw new \RuntimeException('Import is missing a column mapping.');
+                throw new RuntimeException('Import is missing a column mapping.');
             }
-
-            $account = $lockedImport->account()->lockForUpdate()->firstOrFail();
 
             $counters = new ImportCommitCounters;
 
@@ -88,14 +90,11 @@ final class CommitImport
 
                 $enriched = $this->enrichImportRowDescription->enrich(
                     import: $lockedImport,
-                    bank: $account->bank,
+                    bank: $adapter->bank(),
                     rawStatementDescription: $parsedRow->rawStatementDescription,
                     description: $parsedRow->rawStatementDescription,
                     subject: $parsedRow->subject,
                 );
-
-                $description = $enriched['description'];
-                $subject = $enriched['subject'];
 
                 $transactionType = bccomp($parsedRow->amount, '0', 2) === -1 ? 'expense' : 'income';
 
@@ -107,8 +106,8 @@ final class CommitImport
                     'date' => $parsedRow->date,
                     'amount' => $parsedRow->amount,
                     'type' => $transactionType,
-                    'description' => $description,
-                    'subject' => $subject,
+                    'description' => $enriched['description'],
+                    'subject' => $enriched['subject'],
                     'raw_statement_description' => $parsedRow->rawStatementDescription,
                     'normalized_description' => $normalizedDescription,
                     'dedupe_hash' => $dedupeHash,
@@ -125,7 +124,7 @@ final class CommitImport
             $lockedImport->rows_imported = $counters->rowsImported;
             $lockedImport->rows_skipped_duplicate = $counters->rowsSkippedDuplicate;
             $lockedImport->rows_failed_validation = $counters->rowsFailedValidation;
-            $lockedImport->status = 'committed';
+            $lockedImport->status = ImportStatus::Committed->value;
             $lockedImport->committed_at = now();
             $lockedImport->save();
 
@@ -141,5 +140,32 @@ final class CommitImport
         Storage::disk('local')->delete($deleteRelativePath);
 
         return true;
+    }
+
+    private function resolveAdapter(Import $lockedImport, Account $account): BankImportAdapter
+    {
+        $bankValue = data_get($lockedImport->details, 'bank');
+
+        if (is_string($bankValue) && $bankValue !== '') {
+            $bank = Bank::tryFrom($bankValue);
+
+            if ($bank !== null && $bank->supportsImport()) {
+                return $bank->makeImportAdapter();
+            }
+        }
+
+        $parser = data_get($lockedImport->details, 'parser');
+
+        if (is_string($parser) && $parser !== '' && class_exists($parser) && is_subclass_of($parser, BankImportAdapter::class)) {
+            return new $parser;
+        }
+
+        $bank = $account->bank;
+
+        if ($bank === null || ! $bank->supportsImport()) {
+            throw new RuntimeException('This account bank does not support imports.');
+        }
+
+        return $bank->makeImportAdapter();
     }
 }

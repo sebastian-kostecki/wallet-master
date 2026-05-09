@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Imports;
+namespace App\Imports\Workflow;
 
 use App\Models\Import;
 use Illuminate\Support\Facades\Storage;

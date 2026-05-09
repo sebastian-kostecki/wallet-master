@@ -36,11 +36,7 @@ final class Account extends Model
             return null;
         }
 
-        if ($bank === Bank::Cash) {
-            return null;
-        }
-
-        return asset("icons/banks/{$bank->value}.jpeg");
+        return $bank->bankIconUrl();
     }
 
     public function getTypeLabelKeyAttribute(): string

@@ -38,7 +38,15 @@ final class ImportController extends Controller
     {
         $this->authorize('view', $import);
 
-        return response()->json([
+        return response()->json($this->importDetailPayload($import));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function importDetailPayload(Import $import): array
+    {
+        return [
             'id' => $import->id,
             'status' => $import->status,
             'rows_total' => $import->rows_total,
@@ -47,6 +55,6 @@ final class ImportController extends Controller
             'rows_failed_validation' => $import->rows_failed_validation,
             'error_summary' => $import->error_summary,
             'committed_at' => $import->committed_at,
-        ]);
+        ];
     }
 }

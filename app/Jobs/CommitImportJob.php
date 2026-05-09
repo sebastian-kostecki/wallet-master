@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Actions\Imports\CommitImport;
+use App\Enums\ImportStatus;
 use App\Events\ImportStatusUpdated;
+use App\Imports\Workflow\CommitImport;
 use App\Models\Import;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -35,7 +36,7 @@ final class CommitImportJob implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        $import->status = 'processing';
+        $import->status = ImportStatus::Processing->value;
         $import->save();
 
         $processed = false;
@@ -44,13 +45,13 @@ final class CommitImportJob implements ShouldBeUnique, ShouldQueue
             $processed = $commitImport->handle($import);
         } catch (\Throwable $exception) {
             if ($this->attempts() >= $this->tries) {
-                $import->status = 'failed';
+                $import->status = ImportStatus::Failed->value;
                 $import->error_summary = 'Import failed due to a system error.';
                 $import->save();
 
                 event(new ImportStatusUpdated($import));
             } else {
-                $import->status = 'queued';
+                $import->status = ImportStatus::Queued->value;
                 $import->save();
             }
 

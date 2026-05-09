@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Imports;
+namespace App\Imports\Workflow;
 
 use App\Enums\Bank;
 use App\Events\Imports\ImportEnrichmentTypesenseHit;

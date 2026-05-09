@@ -1,11 +1,12 @@
 <?php
 
-use App\Actions\Imports\CommitImport;
 use App\Enums\AccountType;
 use App\Enums\Bank;
 use App\Events\Imports\ImportEnrichmentTypesenseHit;
 use App\Events\Imports\ImportEnrichmentTypesenseMiss;
 use App\Events\ImportStatusUpdated;
+use App\Imports\BankAdapters\BnpParibasImportAdapter;
+use App\Imports\Workflow\CommitImport;
 use App\Jobs\CommitImportJob;
 use App\Models\Account;
 use App\Models\Currency;
@@ -287,6 +288,50 @@ test('job processes both import fixtures', function () {
     expect($mbankImport->rows_imported)->toBeGreaterThan(0);
     expect($bnpImport->status)->toBe('committed');
     expect($bnpImport->rows_imported)->toBe(2);
+});
+
+test('job uses bank captured at upload when account bank is changed before processing', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = createImportWithFixture(
+        $user,
+        $account,
+        'tests/Fixtures/import/bnp-basic.csv',
+        [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+            'subject' => 'subject',
+        ],
+        ['date', 'amount', 'description', 'subject']
+    );
+
+    $import->details = array_merge((array) $import->details, [
+        'bank' => Bank::BnpParibas->value,
+        'parser' => BnpParibasImportAdapter::class,
+    ]);
+    $import->save();
+
+    $account->bank = Bank::MBank;
+    $account->save();
+
+    app(CommitImportJob::class, ['importId' => $import->id])->handle(app(CommitImport::class));
+
+    $import->refresh();
+
+    expect($import->status)->toBe('committed');
+    expect($import->rows_imported)->toBe(2);
 });
 
 test('duplicate commit import job dispatch is deduped while unique lock is held', function () {
