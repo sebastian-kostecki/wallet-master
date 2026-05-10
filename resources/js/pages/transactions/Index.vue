@@ -22,6 +22,7 @@ import {
     Pencil,
     PiggyBank,
     Plus,
+    Scale,
     Trash2,
     Upload,
     Wallet,
@@ -185,9 +186,13 @@ function operationDateRelative(dateIso: string): string {
     return rtf.format(diffDays, 'day');
 }
 
-type TransactionIconVariant = 'internal' | 'expense' | 'income';
+type TransactionIconVariant = 'internal' | 'expense' | 'income' | 'adjustment';
 
 function transactionVariant(tx: Transaction): TransactionIconVariant {
+    if (tx.type === 'adjustment') {
+        return 'adjustment';
+    }
+
     if (tx.transfer_id) {
         return 'internal';
     }
@@ -202,6 +207,13 @@ function transactionIcon(tx: Transaction) {
         return {
             component: ArrowRightLeft,
             containerClass: 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400',
+        } as const;
+    }
+
+    if (variant === 'adjustment') {
+        return {
+            component: Scale,
+            containerClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400',
         } as const;
     }
 
@@ -502,6 +514,13 @@ function openDeleteDialog(transactionId: number) {
                                             </div>
 
                                             <div class="w-full min-w-0">
+                                                <div v-if="tx.type === 'adjustment'" class="mb-1">
+                                                    <span
+                                                        class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400"
+                                                    >
+                                                        {{ t('transactions.index.badges.adjustment') }}
+                                                    </span>
+                                                </div>
                                                 <TooltipProvider :delay-duration="0">
                                                     <Tooltip v-if="truncateText(tx.subject, 80).isTruncated">
                                                         <TooltipTrigger as-child>
@@ -635,6 +654,13 @@ function openDeleteDialog(transactionId: number) {
                             <div v-for="tx in transactions.data" :key="tx.id" class="p-4">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
+                                        <div v-if="tx.type === 'adjustment'" class="mb-1">
+                                            <span
+                                                class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400"
+                                            >
+                                                {{ t('transactions.index.badges.adjustment') }}
+                                            </span>
+                                        </div>
                                         <TooltipProvider :delay-duration="0">
                                             <Tooltip v-if="truncateText(tx.description, 90).isTruncated">
                                                 <TooltipTrigger as-child>

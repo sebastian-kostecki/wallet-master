@@ -68,10 +68,10 @@
         },
         "adjust": {
             "title": "Ustaw saldo",
-            "description": "Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.",
+            "description": "Zapisujemy transakcję korekty (deltę potrzebną do osiągnięcia nowego salda) i aktualizujemy saldo bieżące. Nie zmieniamy istniejących transakcji.",
             "newBalanceLabel": "Nowe saldo",
             "newBalancePlaceholder": "np. 1234,56",
-            "confirmLabel": "Rozumiem, że ta operacja nie zmienia historii transakcji.",
+            "confirmLabel": "Rozumiem, że zostanie utworzona transakcja korekty salda.",
             "confirmHint": "Używaj tylko do korekty salda bieżącego."
         },
         "delete": {
@@ -153,6 +153,9 @@
                 "subject": "Subject",
                 "amount": "Kwota",
                 "actions": "Akcje"
+            },
+            "badges": {
+                "adjustment": "Korekta"
             },
             "readOnly": {
                 "badge": "Tylko odczyt",

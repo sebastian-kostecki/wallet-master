@@ -28,6 +28,7 @@ type Transaction = {
     date: string; // YYYY-MM-DD from backend
     booked_at: string; // YYYY-MM-DD from backend
     amount: string;
+    type?: string;
     description: string;
     subject: string | null;
     import_id: number | null;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\TransactionType;
 use Carbon\CarbonImmutable;
 use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int|null $import_id
  * @property string|null $transfer_id
+ * @property TransactionType $type
  * @property Carbon|CarbonImmutable|string $date
  * @property Carbon|CarbonImmutable|string $booked_at
  */
@@ -37,6 +39,7 @@ final class Transaction extends Model
             'date' => 'date',
             'booked_at' => 'date',
             'amount' => 'decimal:2',
+            'type' => TransactionType::class,
             'transfer_id' => 'string',
             'import_id' => 'integer',
             'raw_statement_description' => 'string',

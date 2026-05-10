@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Transactions;
 
+use App\Enums\TransactionType;
+use App\Exceptions\DomainException;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Transactions\TransactionDedupe;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 final class StoreTransaction
 {
@@ -35,6 +40,13 @@ final class StoreTransaction
                 ? CarbonImmutable::createFromFormat('d-m-Y', $validated['booked_at'])->toDateString()
                 : $date;
             $amount = TransactionDedupe::amountToDecimalString($validated['amount']);
+
+            try {
+                $transactionType = TransactionType::fromAmount($amount);
+            } catch (DomainException $e) {
+                throw ValidationException::withMessages(['amount' => $e->getMessage()]);
+            }
+
             $normalizedDescription = TransactionDedupe::normalizeDescription($validated['description']);
             $dedupeHash = TransactionDedupe::dedupeHash($bookedAt, $amount, $normalizedDescription);
 
@@ -45,7 +57,7 @@ final class StoreTransaction
                 'date' => $date,
                 'booked_at' => $bookedAt,
                 'amount' => $amount,
-                'type' => ((float) $amount) < 0 ? 'expense' : 'income',
+                'type' => $transactionType,
                 'description' => $validated['description'],
                 'subject' => $validated['subject'] ?? null,
                 'normalized_description' => $normalizedDescription,

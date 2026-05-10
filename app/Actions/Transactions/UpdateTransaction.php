@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Transactions;
 
 use App\Enums\Bank;
+use App\Enums\TransactionType;
+use App\Exceptions\DomainException;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Support\DescriptionMemory\DescriptionMemoryRepository;
 use App\Support\Transactions\TransactionDedupe;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 final class UpdateTransaction
 {
@@ -34,6 +39,13 @@ final class UpdateTransaction
                 ? CarbonImmutable::createFromFormat('d-m-Y', $validated['booked_at'])->toDateString()
                 : $date;
             $newAmount = TransactionDedupe::amountToDecimalString($validated['amount']);
+
+            try {
+                $transactionType = $this->resolveTransactionType($transaction, $newAmount);
+            } catch (DomainException $e) {
+                throw ValidationException::withMessages(['amount' => $e->getMessage()]);
+            }
+
             $normalizedDescription = TransactionDedupe::normalizeDescription($validated['description']);
             $dedupeHash = TransactionDedupe::dedupeHash($bookedAt, $newAmount, $normalizedDescription);
 
@@ -54,7 +66,7 @@ final class UpdateTransaction
                 $transaction->date = $date;
                 $transaction->booked_at = $bookedAt;
                 $transaction->amount = $newAmount;
-                $transaction->type = ((float) $newAmount) < 0 ? 'expense' : 'income';
+                $transaction->type = $transactionType;
                 $transaction->description = $validated['description'];
                 $transaction->subject = $validated['subject'] ?? null;
                 $transaction->normalized_description = $normalizedDescription;
@@ -92,7 +104,7 @@ final class UpdateTransaction
             $transaction->date = $date;
             $transaction->booked_at = $bookedAt;
             $transaction->amount = $newAmount;
-            $transaction->type = ((float) $newAmount) < 0 ? 'expense' : 'income';
+            $transaction->type = $transactionType;
             $transaction->description = $validated['description'];
             $transaction->subject = $validated['subject'] ?? null;
             $transaction->normalized_description = $normalizedDescription;
@@ -107,6 +119,15 @@ final class UpdateTransaction
 
             $this->rememberDescriptionMemoryAfterCommit($transaction, $newAccount->bank);
         });
+    }
+
+    private function resolveTransactionType(Transaction $transaction, string $newAmount): TransactionType
+    {
+        if ($transaction->type === TransactionType::Adjustment || $transaction->type === TransactionType::Transfer) {
+            return $transaction->type;
+        }
+
+        return TransactionType::fromAmount($newAmount);
     }
 
     private function rememberDescriptionMemoryAfterCommit(Transaction $transaction, Bank $bank): void

@@ -68,7 +68,7 @@
         },
         "adjust": {
             "title": "Set balance",
-            "description": "This will set the current balance to the provided value. Transaction history will not be changed.",
+            "description": "This records a balance adjustment transaction (the delta needed to reach the new balance) and updates the current balance. Existing transactions are not modified.",
             "newBalanceLabel": "New balance",
             "newBalancePlaceholder": "e.g. 1234.56",
             "confirmLabel": "I understand this operation does not change transaction history.",
@@ -153,6 +153,9 @@
                 "subject": "Subject",
                 "amount": "Amount",
                 "actions": "Actions"
+            },
+            "badges": {
+                "adjustment": "Adjustment"
             },
             "readOnly": {
                 "badge": "Read-only",

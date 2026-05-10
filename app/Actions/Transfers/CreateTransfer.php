@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Transfers;
 
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
@@ -87,7 +90,7 @@ final class CreateTransfer
                 'date' => $dateYmd,
                 'booked_at' => $dateYmd,
                 'amount' => $withdrawAmount,
-                'type' => 'expense',
+                'type' => TransactionType::Expense,
                 'description' => $withdrawDescription,
                 'subject' => null,
                 'normalized_description' => $withdrawNormalized,
@@ -102,7 +105,7 @@ final class CreateTransfer
                 'date' => $dateYmd,
                 'booked_at' => $dateYmd,
                 'amount' => $depositAmount,
-                'type' => 'income',
+                'type' => TransactionType::Income,
                 'description' => $depositDescription,
                 'subject' => null,
                 'normalized_description' => $depositNormalized,

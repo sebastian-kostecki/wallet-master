@@ -120,7 +120,7 @@ final class TransactionController extends Controller
                 'booked_at' => $bookedAtIso,
                 'date_relative' => $dateRelative,
                 'amount' => $transaction->amount,
-                'type' => $transaction->type,
+                'type' => $transaction->type->value,
                 'description' => $transaction->description,
                 'subject' => $transaction->subject,
                 'transfer_id' => $transaction->transfer_id,
@@ -245,6 +245,7 @@ final class TransactionController extends Controller
         return Inertia::render('transactions/Edit', [
             'transaction' => $transaction->only(['id', 'account_id', 'date', 'booked_at', 'amount', 'description', 'subject', 'import_id', 'raw_statement_description', 'transfer_id'])
                 + [
+                    'type' => $transaction->type->value,
                     'account' => $transaction->account?->only(['id', 'name']),
                     'currency' => $transaction->currency?->only(['id', 'code', 'symbol', 'precision']),
                 ],

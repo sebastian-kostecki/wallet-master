@@ -6,6 +6,8 @@ namespace App\Imports\Workflow;
 
 use App\Enums\Bank;
 use App\Enums\ImportStatus;
+use App\Enums\TransactionType;
+use App\Exceptions\DomainException;
 use App\Imports\BankAdapters\BankImportAdapter;
 use App\Models\Account;
 use App\Models\Import;
@@ -96,7 +98,13 @@ final class CommitImport
                     subject: $parsedRow->subject,
                 );
 
-                $transactionType = bccomp($parsedRow->amount, '0', 2) === -1 ? 'expense' : 'income';
+                try {
+                    $transactionType = TransactionType::fromAmount($parsedRow->amount);
+                } catch (DomainException) {
+                    $counters->rowsFailedValidation++;
+
+                    continue;
+                }
 
                 Transaction::query()->create([
                     'user_id' => $lockedImport->user_id,

@@ -31,7 +31,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `date` (data operacji, bez czasu)
   - [ ] `booked_at` (data przypisania do okresu rozliczeniowego, default = `date`) **[plan §1]**
   - [x] `amount` jako **decimal** (ujemne dla wydatków, dodatnie dla przychodów)
-  - [~] `type` (`income` / `expense` / `transfer` / **`adjustment`**) — kolumna do rozszerzenia z `varchar(10)` na `varchar(20)` **[plan §3]**
+  - [x] `type` (`income` / `expense` / `transfer` / **`adjustment`**) — `varchar(20)` (MySQL); SQLite bez migracji długości **[plan §3]**
   - [x] `description`
   - [x] `subject` (nadawca/odbiorca)
   - [x] `currency_id` (na MVP zawsze PLN, ale pole istnieje)
@@ -84,8 +84,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [~] Korekta salda:
   - [x] Akcja „Ustaw saldo" (manual adjustment).
   - [x] Audit trail minimalny (kto/kiedy/stara→nowa wartość) w `account_balance_adjustments`.
-  - [ ] **Zmiana implementacji:** korekta tworzy transakcję typu `adjustment` z `amount = newBalance - currentBalance`; saldo aktualizowane przez normalną sumę transakcji **[plan §3]**.
-  - [ ] Komenda `php artisan accounts:recalculate-balance {account?} [--all] [--dry-run]` **[plan §3]**.
+  - [x] **Zmiana implementacji:** korekta tworzy transakcję typu `adjustment` z `amount = newBalance - currentBalance`; saldo aktualizowane tak samo jak dotychczas (zapis `current_balance` po delcie) **[plan §3]**.
+  - [x] Komenda `php artisan accounts:recalculate-balance {account?} [--all] [--dry-run]` **[plan §3]**.
 - [ ] Audyt usunięcia konta — tabela `account_deletions` (kto/kiedy/liczba transakcji w momencie usunięcia) **[plan §12.7]**.
 
 ---
@@ -101,12 +101,12 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [ ] **Wykluczenie wewnętrznych transferów** z `summary` (`transfer_id IS NULL`) **[plan §12.2]**
   - [x] Empty state + CTA
   - [ ] Kolumna „Okres rozliczeniowy" obok „Data operacji" **[plan §1]**
-  - [ ] Badge „Korekta" dla transakcji typu `adjustment` **[plan §3]**
+  - [x] Badge „Korekta" dla transakcji typu `adjustment` **[plan §3]**
 - [~] Dodanie transakcji:
   - [x] Pola: data (DD-MM-YYYY), kwota (decimal), opis, subject (opcjonalny)
   - [ ] Pole `booked_at` (DD-MM-YYYY) z domyślną wartością równą `date` **[plan §1]**
   - [x] Ustalenie typu na podstawie znaku kwoty (ujemna=wydatek, dodatnia=przychód)
-  - [ ] Egzekwowanie `amount != 0` w warstwie domeny przez enum `TransactionType::fromAmount` **[plan §6]**
+  - [~] Egzekwowanie `amount != 0` w warstwie domeny przez enum `TransactionType::fromAmount` (Store/Update manual + wiersze importu) **[plan §3, §6]**
   - [x] Walidacje: kwota != 0 (FormRequest); konto nieusunięte
   - [x] Aktualizacja `current_balance` konta deltą kwoty
   - [ ] **Usunięcie blokady „A similar transaction already exists"** w `StoreTransactionRequest` / `UpdateTransactionRequest` — manualne duplikaty są dozwolone **[plan §2]**

@@ -2,6 +2,7 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\Transaction;
@@ -46,7 +47,7 @@ test('user can create a transaction and it updates account balance', function ()
     expect($transaction)->not->toBeNull();
     expect((int) $transaction->account_id)->toBe($account->id);
     expect((string) $transaction->amount)->toBe('-12.34');
-    expect((string) $transaction->type)->toBe('expense');
+    expect($transaction->type)->toBe(TransactionType::Expense);
     expect($transaction->booked_at->toDateString())->toBe('2026-04-24');
 
     $account->refresh();
