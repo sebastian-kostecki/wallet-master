@@ -113,9 +113,7 @@ function changePerPage(next: number) {
                     :class="
                         cn(
                             'inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors',
-                            link.active
-                                ? 'bg-primary text-primary-foreground'
-                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                            link.active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             !link.url ? 'pointer-events-none opacity-50' : '',
                         )
                     "
@@ -132,4 +130,3 @@ function changePerPage(next: number) {
         </nav>
     </div>
 </template>
-

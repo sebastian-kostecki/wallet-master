@@ -20,6 +20,7 @@ final class UpdateTransaction
      * @param array{
      *   account_id: int,
      *   date: string,
+     *   booked_at?: ?string,
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,
@@ -29,9 +30,12 @@ final class UpdateTransaction
     {
         DB::transaction(function () use ($transaction, $validated): void {
             $date = CarbonImmutable::createFromFormat('d-m-Y', $validated['date'])->toDateString();
+            $bookedAt = isset($validated['booked_at']) && is_string($validated['booked_at']) && $validated['booked_at'] !== ''
+                ? CarbonImmutable::createFromFormat('d-m-Y', $validated['booked_at'])->toDateString()
+                : $date;
             $newAmount = TransactionDedupe::amountToDecimalString($validated['amount']);
             $normalizedDescription = TransactionDedupe::normalizeDescription($validated['description']);
-            $dedupeHash = TransactionDedupe::dedupeHash($date, $newAmount, $normalizedDescription);
+            $dedupeHash = TransactionDedupe::dedupeHash($bookedAt, $newAmount, $normalizedDescription);
 
             $oldAmount = TransactionDedupe::amountToDecimalString((string) $transaction->amount);
             $oldAccountId = (int) $transaction->account_id;
@@ -48,6 +52,7 @@ final class UpdateTransaction
                 $transaction->account_id = $newAccountId;
                 $transaction->currency_id = $account->currency_id;
                 $transaction->date = $date;
+                $transaction->booked_at = $bookedAt;
                 $transaction->amount = $newAmount;
                 $transaction->type = ((float) $newAmount) < 0 ? 'expense' : 'income';
                 $transaction->description = $validated['description'];
@@ -85,6 +90,7 @@ final class UpdateTransaction
             $transaction->account_id = $newAccountId;
             $transaction->currency_id = $newAccount->currency_id;
             $transaction->date = $date;
+            $transaction->booked_at = $bookedAt;
             $transaction->amount = $newAmount;
             $transaction->type = ((float) $newAmount) < 0 ? 'expense' : 'income';
             $transaction->description = $validated['description'];

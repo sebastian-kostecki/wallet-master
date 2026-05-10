@@ -65,7 +65,7 @@ const accountOptions = computed<DropdownOption<number>[]>(() =>
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
 
 const selectedAccountId = ref<number | null>(props.preselectedAccountId ?? null);
-const selectedAccount = computed(() => (selectedAccountId.value ? accountsById.value.get(selectedAccountId.value) ?? null : null));
+const selectedAccount = computed(() => (selectedAccountId.value ? (accountsById.value.get(selectedAccountId.value) ?? null) : null));
 const selectedBankLabel = computed(() => (selectedAccount.value ? t(`accounts.enums.bank.${selectedAccount.value.bank}`) : '—'));
 
 const file = ref<File | null>(null);
@@ -528,7 +528,10 @@ function goToTransactions() {
                     </div>
                 </div>
 
-                <div v-if="showLongRunning && importState?.status !== 'committed' && importState?.status !== 'failed'" class="rounded-lg bg-muted/30 p-4">
+                <div
+                    v-if="showLongRunning && importState?.status !== 'committed' && importState?.status !== 'failed'"
+                    class="rounded-lg bg-muted/30 p-4"
+                >
                     <p class="text-sm text-muted-foreground">{{ t('imports.dialog.processing.longRunning') }}</p>
                     <div class="mt-3">
                         <Button variant="secondary" type="button" @click="refreshImportState">{{ t('imports.dialog.processing.refresh') }}</Button>
@@ -603,4 +606,3 @@ function goToTransactions() {
         </DialogContent>
     </Dialog>
 </template>
-

@@ -104,6 +104,7 @@ final class CommitImport
                     'currency_id' => $account->currency_id,
                     'import_id' => $lockedImport->id,
                     'date' => $parsedRow->date,
+                    'booked_at' => $parsedRow->date,
                     'amount' => $parsedRow->amount,
                     'type' => $transactionType,
                     'description' => $enriched['description'],

@@ -60,16 +60,16 @@ final class TransactionController extends Controller
             ->when(
                 $from !== null && $to !== null,
                 fn (Builder $q) => $q
-                    ->whereDate('date', '>=', $from)
-                    ->whereDate('date', '<=', $to)
+                    ->whereDate('booked_at', '>=', $from)
+                    ->whereDate('booked_at', '<=', $to)
             )
             ->when(
                 $from !== null && $to === null,
-                fn (Builder $q) => $q->whereDate('date', '>=', $from)
+                fn (Builder $q) => $q->whereDate('booked_at', '>=', $from)
             )
             ->when(
                 $to !== null && $from === null,
-                fn (Builder $q) => $q->whereDate('date', '<=', $to)
+                fn (Builder $q) => $q->whereDate('booked_at', '<=', $to)
             );
 
         $transactionsModels = (clone $baseQuery)
@@ -78,13 +78,20 @@ final class TransactionController extends Controller
                 'account.currency:id,symbol',
                 'currency:id,code,symbol,precision',
             ])
-            ->when($sort === 'amount', fn (Builder $q) => $q->orderBy('amount', $direction)->orderBy('date', 'desc')->orderBy('id', 'desc'))
-            ->when($sort !== 'amount', fn (Builder $q) => $q->orderBy('date', $direction)->orderBy('id', 'desc'))
+            ->when(
+                $sort === 'amount',
+                fn (Builder $q) => $q->orderBy('amount', $direction)->orderBy('booked_at', 'desc')->orderBy('id', 'desc')
+            )
+            ->when(
+                $sort !== 'amount',
+                fn (Builder $q) => $q->orderBy('booked_at', $direction)->orderBy('date', 'desc')->orderBy('id', 'desc')
+            )
             ->paginate($perPage, [
                 'id',
                 'account_id',
                 'currency_id',
                 'date',
+                'booked_at',
                 'amount',
                 'type',
                 'description',
@@ -95,10 +102,11 @@ final class TransactionController extends Controller
 
         $transactionItems = $transactionsModels->getCollection()->map(function (Transaction $transaction): array {
             $dateIso = (string) $transaction->date;
+            $bookedAtIso = (string) $transaction->booked_at;
 
-            $dateForHumans = CarbonImmutable::parse($dateIso)->locale(app()->getLocale());
+            $dateForHumans = CarbonImmutable::parse($bookedAtIso)->locale(app()->getLocale());
             $dateRelative = is_string($dateForHumans)
-                ? CarbonImmutable::parse($dateIso)->diffForHumans()
+                ? CarbonImmutable::parse($bookedAtIso)->diffForHumans()
                 : $dateForHumans->diffForHumans();
 
             $account = $transaction->account;
@@ -109,6 +117,7 @@ final class TransactionController extends Controller
                 'account_id' => $transaction->account_id,
                 'currency_id' => $transaction->currency_id,
                 'date' => $dateIso,
+                'booked_at' => $bookedAtIso,
                 'date_relative' => $dateRelative,
                 'amount' => $transaction->amount,
                 'type' => $transaction->type,
@@ -234,7 +243,7 @@ final class TransactionController extends Controller
             ]);
 
         return Inertia::render('transactions/Edit', [
-            'transaction' => $transaction->only(['id', 'account_id', 'date', 'amount', 'description', 'subject', 'import_id', 'raw_statement_description', 'transfer_id'])
+            'transaction' => $transaction->only(['id', 'account_id', 'date', 'booked_at', 'amount', 'description', 'subject', 'import_id', 'raw_statement_description', 'transfer_id'])
                 + [
                     'account' => $transaction->account?->only(['id', 'name']),
                     'currency' => $transaction->currency?->only(['id', 'code', 'symbol', 'precision']),

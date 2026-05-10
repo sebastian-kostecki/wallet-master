@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property numeric-string $amount
@@ -16,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property int|null $import_id
  * @property string|null $transfer_id
+ * @property Carbon|CarbonImmutable|string $date
+ * @property Carbon|CarbonImmutable|string $booked_at
  */
 final class Transaction extends Model
 {
@@ -31,6 +35,7 @@ final class Transaction extends Model
     {
         return [
             'date' => 'date',
+            'booked_at' => 'date',
             'amount' => 'decimal:2',
             'transfer_id' => 'string',
             'import_id' => 'integer',

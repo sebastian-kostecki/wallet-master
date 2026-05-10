@@ -98,6 +98,10 @@
         "cancel": "Anuluj",
         "save": "Zapisz"
     },
+    "advancedSection": {
+        "toggle": "Opcje zaawansowane",
+        "hintDefault": "Dodatkowe ustawienia — zwykle nie są potrzebne."
+    },
     "transactions": {
         "index": {
             "title": "Transakcje",
@@ -209,6 +213,9 @@
         "form": {
             "account": "Konto",
             "date": "Data",
+            "booked_at": "Data przypisania do okresu",
+            "advancedDates": "Zaawansowane: okres rozliczeniowy",
+            "advancedDatesHint": "Opcjonalnie ustaw inną datę przypisania do okresu niż data operacji.",
             "amount": "Kwota",
             "description": "Opis",
             "subject": "Nadawca/Odbiorca",

@@ -1,16 +1,15 @@
-import '../css/app.css';
 import 'vue-sonner/style.css';
+import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
+import { configureEcho } from '@laravel/echo-vue';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { initializeTheme } from './composables/useAppearance';
-import { i18n } from './i18n';
 import type { SupportedLocale } from './i18n';
-import { supportedLocales } from './i18n';
-import { configureEcho } from '@laravel/echo-vue';
+import { i18n, supportedLocales } from './i18n';
 
 configureEcho({
     broadcaster: 'reverb',

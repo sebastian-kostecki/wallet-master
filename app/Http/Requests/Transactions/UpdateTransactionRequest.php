@@ -35,6 +35,7 @@ final class UpdateTransactionRequest extends FormRequest
                 $accountExistsRule,
             ],
             'date' => ['required', 'date_format:d-m-Y'],
+            'booked_at' => ['nullable', 'date_format:d-m-Y'],
             'amount' => ['required', 'numeric', 'decimal:0,2', Rule::notIn([0])],
             'description' => [
                 'required',
@@ -52,15 +53,16 @@ final class UpdateTransactionRequest extends FormRequest
                     }
 
                     $dateInput = $this->input('date');
+                    $bookedAtInput = $this->input('booked_at');
                     $amountInput = $this->input('amount');
                     $accountIdInput = $this->input('account_id');
 
-                    if (! is_string($dateInput) || $dateInput === '' || $amountInput === null || ! is_numeric($amountInput) || ! is_numeric($accountIdInput)) {
+                    if (! is_string($dateInput) || $dateInput === '' || ($bookedAtInput !== null && ! is_string($bookedAtInput)) || $amountInput === null || ! is_numeric($amountInput) || ! is_numeric($accountIdInput)) {
                         return;
                     }
 
                     try {
-                        $date = CarbonImmutable::createFromFormat('d-m-Y', $dateInput);
+                        $date = CarbonImmutable::createFromFormat('d-m-Y', $bookedAtInput !== null && $bookedAtInput !== '' ? $bookedAtInput : $dateInput);
                     } catch (\Throwable) {
                         return;
                     }
@@ -88,6 +90,7 @@ final class UpdateTransactionRequest extends FormRequest
      * @return array{
      *   account_id: int,
      *   date: string,
+     *   booked_at?: ?string,
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,

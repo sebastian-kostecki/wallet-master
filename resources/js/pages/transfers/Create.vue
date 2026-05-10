@@ -85,8 +85,8 @@ const form = useForm<{
 
 const formErrorId = 'transfer-form-error';
 
-const fromAccount = computed(() => (form.from_account_id !== null ? accountsById.value.get(form.from_account_id) ?? null : null));
-const toAccount = computed(() => (form.to_account_id !== null ? accountsById.value.get(form.to_account_id) ?? null : null));
+const fromAccount = computed(() => (form.from_account_id !== null ? (accountsById.value.get(form.from_account_id) ?? null) : null));
+const toAccount = computed(() => (form.to_account_id !== null ? (accountsById.value.get(form.to_account_id) ?? null) : null));
 
 const isSameAccount = computed(() => form.from_account_id !== null && form.to_account_id !== null && form.from_account_id === form.to_account_id);
 
@@ -167,7 +167,9 @@ function submit() {
                                             aria-hidden="true"
                                         >
                                             <img
-                                                v-if="accountsById.get(option.value)?.bank_icon_url && !isCashBank(accountsById.get(option.value)?.bank)"
+                                                v-if="
+                                                    accountsById.get(option.value)?.bank_icon_url && !isCashBank(accountsById.get(option.value)?.bank)
+                                                "
                                                 :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
                                                 :alt="accountsById.get(option.value)?.name ?? ''"
                                                 class="h-5 w-5 object-cover"
@@ -232,7 +234,9 @@ function submit() {
                                             aria-hidden="true"
                                         >
                                             <img
-                                                v-if="accountsById.get(option.value)?.bank_icon_url && !isCashBank(accountsById.get(option.value)?.bank)"
+                                                v-if="
+                                                    accountsById.get(option.value)?.bank_icon_url && !isCashBank(accountsById.get(option.value)?.bank)
+                                                "
                                                 :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
                                                 :alt="accountsById.get(option.value)?.name ?? ''"
                                                 class="h-5 w-5 object-cover"
@@ -320,4 +324,3 @@ function submit() {
         </div>
     </AppLayout>
 </template>
-

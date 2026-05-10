@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
-import FormField from '@/components/forms/FormField.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
+import AdvancedSectionCard from '@/components/forms/AdvancedSectionCard.vue';
+import FormField from '@/components/forms/FormField.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ type Transaction = {
     id: number;
     account_id: number;
     date: string; // YYYY-MM-DD from backend
+    booked_at: string; // YYYY-MM-DD from backend
     amount: string;
     description: string;
     subject: string | null;
@@ -76,12 +78,15 @@ const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])
 const form = useForm<{
     account_id: number;
     date: string;
+    booked_at: string;
     amount: string;
     description: string;
     subject: string;
 }>({
     account_id: props.transaction.account_id,
     date: isoToDdMmYyyy(props.transaction.date),
+    booked_at:
+        props.transaction.booked_at === props.transaction.date ? '' : isoToDdMmYyyy(props.transaction.booked_at),
     amount: displayAmount(props.transaction.amount),
     description: props.transaction.description,
     subject: props.transaction.subject ?? '',
@@ -93,6 +98,9 @@ const selectedAccount = computed(() => {
 
 function submit() {
     form.amount = normalizeAmount(form.amount);
+    if ((form.booked_at ?? '').trim() === '') {
+        form.booked_at = form.date;
+    }
     form.put(route('transactions.update', props.transaction.id), {
         onSuccess: () => {},
         onError: () => {},
@@ -112,9 +120,16 @@ function onDeleted() {
         <Head :title="t('transactions.edit.title')" />
 
         <div class="flex flex-col gap-6 p-4">
-            <div class="grid gap-6 lg:grid-cols-2">
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <form @submit.prevent="submit" class="grid gap-6" :aria-busy="form.processing ? 'true' : 'false'">
+            <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
+                <div class="flex flex-col gap-6">
+                    <form
+                        id="transaction-edit-form"
+                        class="flex flex-col gap-6"
+                        @submit.prevent="submit"
+                        :aria-busy="form.processing ? 'true' : 'false'"
+                    >
+                        <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                            <div class="grid gap-6">
                         <FormField for-id="account_id" :label="t('transactions.form.account')" :error="form.errors.account_id">
                             <DropdownSelect
                                 id="account_id"
@@ -207,6 +222,21 @@ function onDeleted() {
 
                             <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
                         </div>
+                            </div>
+                        </div>
+
+                        <AdvancedSectionCard :disabled="form.processing">
+                            <template #title>{{ t('advancedSection.toggle') }}</template>
+                            <template #hint>{{ t('transactions.form.advancedDatesHint') }}</template>
+                            <FormField for-id="booked_at" :label="t('transactions.form.booked_at')" :error="form.errors.booked_at">
+                                <DatePickerInput
+                                    id="booked_at"
+                                    :model-value="form.booked_at"
+                                    :disabled="form.processing"
+                                    @update:model-value="(value) => (form.booked_at = value)"
+                                />
+                            </FormField>
+                        </AdvancedSectionCard>
                     </form>
                 </div>
 
@@ -224,28 +254,28 @@ function onDeleted() {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div
-                    v-if="transaction.raw_statement_description && transaction.raw_statement_description.trim() !== ''"
-                    class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
-                >
-                    <h2 class="text-base font-semibold">{{ t('transactions.edit.statement.title') }}</h2>
-                    <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.statement.description') }}</p>
-                    <div class="mt-4 rounded-lg border border-sidebar-border/70 bg-muted/20 p-4 text-sm dark:border-sidebar-border">
-                        <p class="whitespace-pre-wrap break-words text-foreground">
-                            {{ transaction.raw_statement_description }}
-                        </p>
-                    </div>
+            <div
+                v-if="transaction.raw_statement_description && transaction.raw_statement_description.trim() !== ''"
+                class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
+            >
+                <h2 class="text-base font-semibold">{{ t('transactions.edit.statement.title') }}</h2>
+                <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.statement.description') }}</p>
+                <div class="mt-4 rounded-lg border border-sidebar-border/70 bg-muted/20 p-4 text-sm dark:border-sidebar-border">
+                    <p class="whitespace-pre-wrap break-words text-foreground">
+                        {{ transaction.raw_statement_description }}
+                    </p>
                 </div>
+            </div>
 
-                <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 dark:border-destructive/40 dark:bg-destructive/10">
-                    <p class="text-sm font-semibold text-destructive">{{ t('transactions.edit.dangerZone.title') }}</p>
-                    <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.dangerZone.description') }}</p>
+            <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 dark:border-destructive/40 dark:bg-destructive/10">
+                <p class="text-sm font-semibold text-destructive">{{ t('transactions.edit.dangerZone.title') }}</p>
+                <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.dangerZone.description') }}</p>
 
-                    <Button class="mt-4" variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
-                        {{ t('transactions.edit.deleteAction') }}
-                    </Button>
-                </div>
+                <Button class="mt-4" variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
+                    {{ t('transactions.edit.deleteAction') }}
+                </Button>
             </div>
         </div>
 
@@ -260,4 +290,3 @@ function onDeleted() {
         />
     </AppLayout>
 </template>
-

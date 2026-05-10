@@ -70,4 +70,3 @@ const formattedTotal = computed(() => `${money.format(totalBalance.value)} ${t('
         </CardContent>
     </Card>
 </template>
-

@@ -32,6 +32,7 @@ test('edit page includes account bank_icon_url', function () {
         'account_id' => $account->id,
         'currency_id' => $plnId,
         'date' => '2026-04-20',
+        'booked_at' => '2026-04-20',
         'amount' => -10,
         'type' => 'expense',
         'description' => 'Coffee',

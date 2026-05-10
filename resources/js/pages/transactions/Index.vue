@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
 import ImportDialog from '@/components/import/ImportDialog.vue';
+import PaginationBar from '@/components/pagination/PaginationBar.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
+import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import PaginationBar from '@/components/pagination/PaginationBar.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -51,6 +51,7 @@ type Currency = {
 type Transaction = {
     id: number;
     date: string; // YYYY-MM-DD
+    booked_at: string; // YYYY-MM-DD
     date_relative: string;
     amount: string | number;
     type: 'income' | 'expense' | string;
@@ -156,6 +157,32 @@ function formatDateIsoToDots(input: string): string {
     }
 
     return `${dd}.${mm}.${yyyy}`;
+}
+
+/** Relative label for the transaction operation date (`date`), aligned with UI locale */
+function operationDateRelative(dateIso: string): string {
+    const parts = dateIso.split('-');
+    if (parts.length !== 3) {
+        return '';
+    }
+
+    const y = Number(parts[0]);
+    const m = Number(parts[1]);
+    const d = Number(parts[2]);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+        return '';
+    }
+
+    const target = new Date(y, m - 1, d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+
+    const lng = locale.value === 'pl' ? 'pl' : 'en';
+    const rtf = new Intl.RelativeTimeFormat(lng, { numeric: 'auto' });
+
+    return rtf.format(diffDays, 'day');
 }
 
 type TransactionIconVariant = 'internal' | 'expense' | 'income';
@@ -461,7 +488,7 @@ function openDeleteDialog(transactionId: number) {
                                             {{ formatDateIsoToDots(tx.date) }}
                                         </div>
                                         <div class="mt-0.5 text-xs text-muted-foreground">
-                                            {{ tx.date_relative }}
+                                            {{ operationDateRelative(tx.date) }}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
@@ -474,14 +501,11 @@ function openDeleteDialog(transactionId: number) {
                                                 <component :is="transactionIcon(tx).component" class="h-4 w-4" />
                                             </div>
 
-                                            <div class="min-w-0 w-full">
+                                            <div class="w-full min-w-0">
                                                 <TooltipProvider :delay-duration="0">
                                                     <Tooltip v-if="truncateText(tx.subject, 80).isTruncated">
                                                         <TooltipTrigger as-child>
-                                                            <p
-                                                                class="truncate text-sm font-medium text-foreground"
-                                                                :title="tx.subject ?? undefined"
-                                                            >
+                                                            <p class="truncate text-sm font-medium text-foreground" :title="tx.subject ?? undefined">
                                                                 {{ truncateText(tx.subject, 80).text }}
                                                             </p>
                                                         </TooltipTrigger>
@@ -489,11 +513,7 @@ function openDeleteDialog(transactionId: number) {
                                                             <p class="max-w-sm break-words">{{ tx.subject }}</p>
                                                         </TooltipContent>
                                                     </Tooltip>
-                                                    <p
-                                                        v-else
-                                                        class="truncate text-sm font-medium text-foreground"
-                                                        :title="tx.subject ?? undefined"
-                                                    >
+                                                    <p v-else class="truncate text-sm font-medium text-foreground" :title="tx.subject ?? undefined">
                                                         {{ truncateText(tx.subject, 80).text }}
                                                     </p>
                                                 </TooltipProvider>
@@ -540,10 +560,7 @@ function openDeleteDialog(transactionId: number) {
                                                     <p class="truncate text-sm font-medium">
                                                         {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
                                                     </p>
-                                                    <span
-                                                        v-if="!tx.account"
-                                                        class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-                                                    >
+                                                    <span v-if="!tx.account" class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                                                         {{ t('transactions.index.readOnly.badge') }}
                                                     </span>
                                                 </div>
@@ -634,7 +651,7 @@ function openDeleteDialog(transactionId: number) {
                                             </p>
                                         </TooltipProvider>
                                         <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToDots(tx.date) }}</p>
-                                        <p class="mt-0.5 text-xs text-muted-foreground">{{ tx.date_relative }}</p>
+                                        <p class="mt-0.5 text-xs text-muted-foreground">{{ operationDateRelative(tx.date) }}</p>
                                         <p class="mt-1 text-xs text-muted-foreground">
                                             {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
                                             <span v-if="!tx.account" class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">

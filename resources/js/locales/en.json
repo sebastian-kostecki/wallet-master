@@ -98,6 +98,10 @@
         "cancel": "Cancel",
         "save": "Save"
     },
+    "advancedSection": {
+        "toggle": "Advanced options",
+        "hintDefault": "Extra settings — rarely needed."
+    },
     "transactions": {
         "index": {
             "title": "Transactions",
@@ -204,6 +208,9 @@
         "form": {
             "account": "Account",
             "date": "Date",
+            "booked_at": "Booked date",
+            "advancedDates": "Advanced: booking period",
+            "advancedDatesHint": "Optionally assign a booked date that differs from the operation date.",
             "amount": "Amount",
             "description": "Description",
             "subject": "Subject"

@@ -81,4 +81,3 @@ function destroy() {
         </DialogContent>
     </Dialog>
 </template>
-

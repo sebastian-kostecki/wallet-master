@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import RangeCalendar from '@/components/ui/calendar/RangeCalendar.vue';
 import { Button } from '@/components/ui/button';
+import RangeCalendar from '@/components/ui/calendar/RangeCalendar.vue';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon, X } from 'lucide-vue-next';
@@ -223,12 +223,7 @@ function applyPresetPreviousYear() {
                 :aria-invalid="ariaInvalid ? 'true' : undefined"
                 :aria-describedby="ariaDescribedby"
                 :aria-labelledby="ariaLabelledby"
-                :class="
-                    cn(
-                        'h-10 w-full justify-between px-3 text-left font-normal',
-                        !displayValue ? 'text-muted-foreground' : '',
-                    )
-                "
+                :class="cn('h-10 w-full justify-between px-3 text-left font-normal', !displayValue ? 'text-muted-foreground' : '')"
                 @blur="onBlur"
             >
                 <span class="truncate">
@@ -257,11 +252,7 @@ function applyPresetPreviousYear() {
         <PopoverContent class="p-3" align="start">
             <div class="flex w-full flex-col gap-3 sm:flex-row">
                 <div class="flex flex-wrap gap-2 sm:w-40 sm:flex-col">
-                    <button
-                        type="button"
-                        class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
-                        @click="applyPresetThisMonth"
-                    >
+                    <button type="button" class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted" @click="applyPresetThisMonth">
                         {{ t('transactions.index.filters.presets.thisMonth') }}
                     </button>
                     <button
@@ -271,11 +262,7 @@ function applyPresetPreviousYear() {
                     >
                         {{ t('transactions.index.filters.presets.previousMonth') }}
                     </button>
-                    <button
-                        type="button"
-                        class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
-                        @click="applyPresetThisYear"
-                    >
+                    <button type="button" class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted" @click="applyPresetThisYear">
                         {{ t('transactions.index.filters.presets.thisYear') }}
                     </button>
                     <button
@@ -285,11 +272,7 @@ function applyPresetPreviousYear() {
                     >
                         {{ t('transactions.index.filters.presets.previousYear') }}
                     </button>
-                    <button
-                        type="button"
-                        class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
-                        @click="applyPresetLast7Days"
-                    >
+                    <button type="button" class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted" @click="applyPresetLast7Days">
                         {{ t('transactions.index.filters.presets.last7Days') }}
                     </button>
                 </div>

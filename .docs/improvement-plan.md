@@ -10,6 +10,8 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 
 ## 1. Kolumna `booked_at` na transakcjach
 
+**Status.** Wykonane. Widok tabeli transakcji pozostaje przy obecnym UX: pokazuje datę operacji, a filtrowanie, sortowanie i podsumowanie działają po `booked_at`.
+
 **Cel.** Oddzielić *datę operacji* od *daty przypisania do okresu rozliczeniowego*. Domyślnie `booked_at = date`, ale użytkownik może przesunąć transakcję w czasie (np. zwrot z karty 3.05 ujęty w okresie kwietnia).
 
 **Wpływ.** Lista, filtry i podsumowanie domyślnie operują po `booked_at`. `date` zostaje datą faktyczną operacji.
@@ -36,7 +38,7 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
    - dodać do wystawianego payloadu `booked_at` i `date_relative` także po `booked_at`,
    - `summary` (income/expense) liczone w oknie `booked_at`.
 6. Vue:
-   - `resources/js/pages/transactions/Index.vue` — kolumna „Okres rozliczeniowy" (booked_at) obok „Data operacji" (date), domyślnie wyświetlany `booked_at`,
+   - `resources/js/pages/transactions/Index.vue` — bez zmiany układu tabeli; lista używa `booked_at` w filtrach, sortowaniu i `date_relative`, ale w tabeli nadal prezentuje datę operacji (`date`),
    - `resources/js/pages/transactions/Create.vue` + `Edit.vue` — pole „Data przypisania do okresu" z domyślną wartością równą `date`, walidacja inline.
 
 ### Akceptacja
@@ -46,7 +48,7 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 
 ### Testy (Pest, feature)
 - `tests/Feature/Transactions/StoreTransactionTest.php` — domyślny `booked_at`, jawny `booked_at`.
-- `tests/Feature/Transactions/TransactionListBookedAtTest.php` — transakcja z `date=01-04`, `booked_at=30-03` pojawia się w filtrze marzec, nie kwiecień.
+- `tests/Feature/TransactionListBookedAtTest.php` — transakcja z `date=01-04`, `booked_at=30-03` pojawia się w filtrze marzec, nie kwiecień.
 - `tests/Feature/Imports/CommitImportBookedAtTest.php` — import ustawia `booked_at = date`.
 
 ---

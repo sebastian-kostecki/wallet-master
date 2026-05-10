@@ -105,6 +105,7 @@ test('job commits valid rows and updates account balance', function () {
     expect($import->rows_failed_validation)->toBe(0);
     expect($account->current_balance)->toBe('187.66');
     expect(Transaction::query()->where('import_id', $import->id)->count())->toBe(2);
+    expect(Transaction::query()->where('import_id', $import->id)->whereColumn('booked_at', 'date')->count())->toBe(2);
 
     Event::assertDispatched(ImportStatusUpdated::class, function (ImportStatusUpdated $event) use ($user, $import): bool {
         return (int) $event->import->id === (int) $import->id

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
-import { buttonVariants } from '@/components/ui/button';
-import AccountsSummaryCard from '@/components/accounts/AccountsSummaryCard.vue';
 import AccountCard from '@/components/accounts/AccountCard.vue';
 import AccountRow from '@/components/accounts/AccountRow.vue';
+import AccountsSummaryCard from '@/components/accounts/AccountsSummaryCard.vue';
 import AccountsViewToggle from '@/components/accounts/AccountsViewToggle.vue';
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
+import { Button, buttonVariants } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';

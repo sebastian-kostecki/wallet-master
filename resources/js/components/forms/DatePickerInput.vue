@@ -81,12 +81,7 @@ function onSelect(nextIso: string) {
                 type="button"
                 variant="outline"
                 :disabled="disabled"
-                :class="
-                    cn(
-                        'h-10 w-full justify-between px-3 text-left font-normal',
-                        !displayValue ? 'text-muted-foreground' : '',
-                    )
-                "
+                :class="cn('h-10 w-full justify-between px-3 text-left font-normal', !displayValue ? 'text-muted-foreground' : '')"
                 @blur="emit('blur')"
             >
                 <span class="truncate">
