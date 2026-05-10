@@ -38,7 +38,6 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `transfer_id` (nullable; łączy 2 transakcje transferu)
   - [ ] `transfer_match_status` (`none` / `auto` / `manual` / `rejected`) **[plan §4]**
   - [ ] `transfer_candidate_for_id` (FK na `transactions.id`, nullable) **[plan §4]**
-  - [ ] `bank_reference_id` (nullable; główny klucz dedupe gdy bank go dostarcza) **[plan §2]**
   - [x] `import_id` (nullable; powiązanie z importem)
   - [x] `raw_statement_description` (surowy opis z wyciągu)
 - [x] Dodać encje importu + mapowania per bank:
@@ -50,9 +49,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [ ] `transactions(account_id, booked_at)` **[plan §1]**
   - [ ] `transactions(user_id, booked_at)` **[plan §1]**
   - [x] `transactions(transfer_id)`
-  - [ ] Drop dotychczasowego unique `transactions(account_id, dedupe_hash)` i zamiana na: **[plan §2]**
-    - [ ] unique `transactions(account_id, bank_reference_id)` (nullable)
-    - [ ] non-unique index `transactions(account_id, dedupe_hash)` (fallback)
+  - [ ] Zmiana unique `transactions(account_id, dedupe_hash)` → non-unique index (manualne duplikaty dozwolone) **[plan §2]**
 
 ---
 
@@ -86,7 +83,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Audit trail minimalny (kto/kiedy/stara→nowa wartość) w `account_balance_adjustments`.
   - [x] **Zmiana implementacji:** korekta tworzy transakcję typu `adjustment` z `amount = newBalance - currentBalance`; saldo aktualizowane tak samo jak dotychczas (zapis `current_balance` po delcie) **[plan §3]**.
   - [x] Komenda `php artisan accounts:recalculate-balance {account?} [--all] [--dry-run]` **[plan §3]**.
-- [ ] Audyt usunięcia konta — tabela `account_deletions` (kto/kiedy/liczba transakcji w momencie usunięcia) **[plan §12.7]**.
+- [ ] Audyt usunięcia konta — tabela `account_deletions` (kto/kiedy/liczba transakcji w momencie usunięcia) **[plan §12.6]**.
 
 ---
 
@@ -95,7 +92,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Filtry: konto, zakres dat
   - [ ] **Filtry dat działają po `booked_at`** (nie po `date`) **[plan §1]**
   - [x] Sort: data/kwota
-  - [ ] Sort `date` → wewnętrznie sortuje po `booked_at desc, date desc, id desc` **[plan §1, §12.6]**
+  - [ ] Sort `date` → wewnętrznie sortuje po `booked_at desc, date desc, id desc` **[plan §1, §12.5]**
   - [x] Paginacja (backend)
   - [x] Podsumowanie zakresu: suma wpływów i wydatków (oddzielnie)
   - [ ] **Wykluczenie wewnętrznych transferów** z `summary` (`transfer_id IS NULL`) **[plan §12.2]**
@@ -110,6 +107,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Walidacje: kwota != 0 (FormRequest); konto nieusunięte
   - [x] Aktualizacja `current_balance` konta deltą kwoty
   - [ ] **Usunięcie blokady „A similar transaction already exists"** w `StoreTransactionRequest` / `UpdateTransactionRequest` — manualne duplikaty są dozwolone **[plan §2]**
+  - [ ] Endpoint `GET /transactions/duplicate-check` (account_id, date, amount, description) → `{ exists, sample? }` **[plan §2]**
+  - [ ] UI w `Create.vue` / `Edit.vue`: debounced preflight + inline ostrzeżenie „Wykryto podobną transakcję — dodać mimo to?" + flaga `confirmed_duplicate` w payloadzie do telemetrii **[plan §2]**
 - [~] Edycja transakcji:
   - [x] Zmiana pól i przeliczenie delty salda (stara kwota → nowa kwota)
   - [x] Blokada edycji dla transakcji na usuniętym koncie
@@ -173,18 +172,15 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [~] Ekstrakcja per bank (adaptery) z `description` lub innych pól, jeśli bank tego wymaga (na MVP: `subject` z kolumny mapowania, jeśli istnieje)
   - [ ] **Usunąć mapowanie `Kategoria → subject` w `MBankImportAdapter`** (semantycznie niepoprawne) **[plan §12.1]**
   - [x] Fallback: pozostawić puste, jeśli nie da się wyciągnąć **[Assumption]**
-- [ ] **`bank_reference_id`** — dodać do `ParsedImportRow` i wyciągać w adapterach z odpowiedniej kolumny wyciągu (mBank: „Numer referencyjny" / „Identyfikator transakcji"; BNP: „Numer referencyjny" / „Numer transakcji") **[plan §2]**
 
-#### 6.3 Deduplikacja (zawsze pomijamy)
-- [~] Zaimplementować klucze dedupe v2 **[plan §2]**:
-  - [ ] **Główny**: `bank_reference_id` na tym samym `account_id` (gdy nie-null)
-  - [x] **Fallback** (`bank_reference_id` null): `date + amount + normalized_description` na tym samym `account_id`
-- [x] Zaimplementować normalizację opisu (fallback):
+#### 6.3 Deduplikacja (zawsze pomijamy w imporcie)
+- [x] Klucz dedupe importu: `date + amount + normalized_description` w obrębie `account_id`. **Bez `bank_reference_id`** — wspierane banki (BNP, mBank) nie eksportują takiego identyfikatora.
+- [x] Zaimplementować normalizację opisu:
   - [x] `trim`
   - [x] `case-fold` (np. lowercase)
   - [x] standaryzacja whitespace (wielokrotne spacje → jedna)
 - [x] Import używa tej samej logiki dedupe niezależnie od banku (adapter może dostarczyć wstępnie oczyszczony opis).
-- [ ] Bezpieczeństwo: dwa zakupy w tym samym sklepie tego samego dnia z różnymi `bank_reference_id` **muszą** być oba zaimportowane. Test pokrywający ten scenariusz **[plan §2]**.
+- [ ] Telemetria: `import_rows_skipped_duplicate`, `transaction_manual_duplicate_confirmed` **[plan §2]**.
 
 #### 6.4 Salda po imporcie + chunked processing
 - [x] Agregować sumę kwot tylko dla faktycznie utworzonych transakcji (`imported_amount_sum`).
@@ -257,7 +253,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ### 8) Telemetria / eventy (min.)
 - [ ] Auth: `user_registered`, `user_logged_in`, `user_login_failed`
 - [ ] Konta: `account_created`, `account_updated`, `account_deleted`, `account_deleted_with_transactions`, `account_balance_adjusted`
-- [ ] Transakcje: `transaction_create_opened`, `transaction_created`, `transaction_updated`, `transaction_deleted`
+- [ ] Transakcje: `transaction_create_opened`, `transaction_created`, `transaction_updated`, `transaction_deleted`, `transaction_manual_duplicate_confirmed`
 - [ ] Lista: `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
 - [ ] Transfer: `transfer_created`, `transfer_failed_validation`
 - [~] Import: `import_started`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account` (opcjonalnie), `import.updated` (realtime)
@@ -342,7 +338,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [ ] Wywołania w warstwie domeny / akcji:
   - [ ] Auth: `user_registered`, `user_logged_in`, `user_login_failed`
   - [ ] Konta: `account_created`, `account_updated`, `account_deleted`, `account_deleted_with_transactions`, `account_balance_adjusted`
-  - [ ] Transakcje: `transaction_created`, `transaction_updated`, `transaction_deleted`
+  - [ ] Transakcje: `transaction_created`, `transaction_updated`, `transaction_deleted`, `transaction_manual_duplicate_confirmed`
   - [ ] Lista (front-end POST `/telemetry/event`, throttle 60/min): `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`, `transaction_create_opened`
   - [ ] Transfer: `transfer_created`, `transfer_failed_validation`, `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`
   - [ ] Import: `import_started`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account`, `import_enrichment_typesense_hit`, `import_enrichment_typesense_miss`

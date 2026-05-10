@@ -22,8 +22,7 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
    - backfill: `UPDATE transactions SET booked_at = date`,
    - indeksy (zastąpić istniejące po `date`):
      - dropnąć: `transactions(account_id, date)`, `transactions(user_id, date)`,
-     - dodać: `transactions(account_id, booked_at)`, `transactions(user_id, booked_at)`,
-     - zachować osobny indeks `transactions(account_id, date)` jeśli używany przez dedupe (patrz pkt 2 — finalnie i tak zmienia się klucz dedupe).
+     - dodać: `transactions(account_id, booked_at)`, `transactions(user_id, booked_at)`.
 2. Model `Transaction`: dopisać `booked_at` do `$casts` (`date`), dodać akcesory PHPDoc.
 3. Akcje:
    - `StoreTransaction::handle` — `booked_at = $validated['booked_at'] ?? $date`.
@@ -53,39 +52,40 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 
 ---
 
-## 2. Deduplikacja v2 — `bank_reference_id` jako klucz główny
+## 2. Manualne duplikaty — zezwól z ostrzeżeniem UI
 
-**Cel.** Wyeliminować false-positive na duplikatach (dwa zakupy w tym samym sklepie tego samego dnia za tę samą kwotę). Tam, gdzie bank dostarcza unikalny identyfikator transakcji w wyciągu, używamy go.
+**Kontekst.** Pierwotny plan zakładał dedupe po `bank_reference_id`. Po analizie fixtures `tests/Fixtures/import/{mbank-basic.csv, bnp-paribas-basic.xlsx}` ustalono, że żaden z wspieranych banków nie eksportuje takiego identyfikatora. Pomysł porzucony.
+
+**Cel.** Synchronizacja kodu z PRD FR-I3: import nadal automatycznie pomija duplikaty po `dedupe_hash`, ale **ręczne dodanie identycznej transakcji jest dozwolone** (UI ostrzega i wymaga potwierdzenia).
+
+**Aktualna rozbieżność.** Kod blokuje ręczne duplikaty na dwóch poziomach: validator w `StoreTransactionRequest`/`UpdateTransactionRequest` oraz unique index `(account_id, dedupe_hash)` w DB.
 
 ### Kroki
-1. Migracja `add_bank_reference_id_to_transactions_table`:
-   - kolumna `bank_reference_id VARCHAR(120) NULL`,
-   - dropnąć dotychczasowy unique `(account_id, dedupe_hash)`,
-   - dodać:
-     - unique `(account_id, bank_reference_id)` z warunkiem `bank_reference_id IS NOT NULL` (MySQL: emulujemy przez generowaną kolumnę albo unikat partial przez aplikację — w MySQL bez partial używamy unique na `(account_id, bank_reference_id)` i akceptujemy NULL-y jako nie-kolizyjne z natury MySQL),
-     - non-unique index `(account_id, dedupe_hash)` jako fallback.
-2. `App\Imports\ParsedImportRow` — pole `?string $bankReferenceId`.
-3. `AbstractBankImportAdapter::normalizeRow` — pole `bankReferenceId` rozszerzone (domyślnie `null`).
-4. `MBankImportAdapter`:
-   - parser kolumny `#Numer referencyjny` lub `#Identyfikator transakcji` (zależnie od formatu eksportu) → `bankReferenceId`.
-5. `BnpParibasImportAdapter`:
-   - parser kolumny `Numer referencyjny` / `Numer transakcji` → `bankReferenceId`.
-6. `CommitImport::handle`:
-   - logika dedupe:
-     1. Jeżeli `bankReferenceId !== null` → `Transaction::where('account_id', $account->id)->where('bank_reference_id', $bankReferenceId)->exists()` → duplikat.
-     2. W przeciwnym razie fallback do `dedupe_hash` (obecna logika).
-7. `StoreTransactionRequest` i `UpdateTransactionRequest` — usunąć twardy walidator `dedupe_hash` na poziomie FormRequest. Dla ręcznych transakcji nie blokujemy, dopuszczamy duplikat na żądanie użytkownika.
-8. Migracja danych: nie wymagana (nowa kolumna nullable).
+1. Migracja `relax_transactions_dedupe_unique`:
+   - dropnąć unique `(account_id, dedupe_hash)`,
+   - dodać non-unique index o tych samych kolumnach (zachowuje wydajność lookupa w `CommitImport`).
+2. `StoreTransactionRequest` i `UpdateTransactionRequest`:
+   - usunąć custom rule sprawdzający `dedupe_hash` w polu `description`,
+   - zostają walidacje typów, `Rule::notIn([0])` na `amount`, `account_id` exists.
+3. `CommitImport::handle` — bez zmian (dalej pomija po `dedupe_hash`).
+4. Endpoint `GET /transactions/duplicate-check`:
+   - parametry: `account_id`, `date`, `amount`, `description`,
+   - response: `{ exists: bool, sample?: { id, date, amount, description } }`,
+   - autoryzacja: tylko własne konto.
+5. UI (`resources/js/pages/transactions/Create.vue`, `Edit.vue`):
+   - debounced preflight do `duplicate-check` po wypełnieniu wszystkich 4 pól,
+   - jeżeli `exists === true`: inline banner ostrzegawczy z linkiem do podobnej transakcji i przyciskami „Dodaj mimo to" / „Anuluj",
+   - przy submit z aktywnym ostrzeżeniem dorzucamy w payloadzie `confirmed_duplicate: true` (tylko do telemetrii; backend ignoruje w walidacji).
 
 ### Akceptacja
-- Import dwóch wierszy z tym samym `(date, amount, description)` ale różnymi `bankReferenceId` → obie transakcje w bazie.
-- Import dwóch wierszy z tym samym `bankReferenceId` → druga pominięta jako duplikat.
-- Ręczne dodanie transakcji o identycznych polach nie zwraca błędu walidacji.
+- Import dwóch wierszy z identycznymi `(date, amount, description)` → drugi pominięty (`rows_skipped_duplicate++`).
+- Manual POST identycznej drugiej transakcji → 201 Created.
+- W `Create.vue` po wpisaniu pól duplikatu pojawia się ostrzeżenie z opcją kontynuacji.
 
 ### Testy
-- `tests/Feature/Imports/CommitImportDedupeBankReferenceTest.php`:
-  - `dataset` z parami: same ref → duplikat; różne ref → dwie różne; brak ref + identyczne pola → duplikat (fallback).
-- `tests/Feature/Transactions/ManualDuplicateAllowedTest.php` — ręczne dodanie identycznej drugiej transakcji jest dozwolone.
+- `tests/Feature/Transactions/ManualDuplicateAllowedTest.php` — 2× POST identyczne → 201 + 2 wiersze w DB.
+- `tests/Feature/Transactions/DuplicateCheckEndpointTest.php` — endpoint zwraca `exists=true` przy kolizji i `exists=false` przy braku; weryfikacja izolacji per user.
+- `tests/Feature/Imports/CommitImportDedupeStillWorksTest.php` — import duplikatów nadal pomija (regression).
 
 ---
 
@@ -95,8 +95,7 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 
 ### Kroki
 1. Migracja `change_type_column_on_transactions_table`:
-   - rozszerzyć `type` do `VARCHAR(20)` (z 10),
-   - kolumna `transactions.bank_reference_id` już istnieje po pkt 2.
+   - rozszerzyć `type` do `VARCHAR(20)` (z 10).
 2. Wprowadzić enum PHP `App\Enums\TransactionType`:
    - cases: `Income`, `Expense`, `Transfer`, `Adjustment`,
    - metoda `fromAmount(string $amountDecimal): self` — z odrzuceniem `0`.
@@ -135,16 +134,15 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 **Założenia.**
 - Pracujemy tylko w obrębie kont jednego użytkownika.
 - Łączymy parę: jedna transakcja ujemna na koncie A + jedna dodatnia na koncie B.
-- Match heurystyczny w 3 poziomach pewności: `definite`, `probable`, `manual`.
+- Match heurystyczny w 2 poziomach pewności: `probable` (auto-link), `manual` (do potwierdzenia).
 
 ### Heurystyki dopasowania (sprawdzane w kolejności)
-1. **Definite** — w obu transakcjach istnieje `bank_reference_id` postaci „PRZELEW WŁASNY/WEWNĘTRZNY" + ten sam IBAN (jeżeli kiedyś sparsujemy IBAN). Na MVP: pomiń.
-2. **Probable** — wszystkie warunki:
+1. **Probable** — wszystkie warunki:
    - inne `account_id` (te same `user_id`),
    - przeciwne znaki kwot, identyczna wartość bezwzględna `|amount|`,
    - `|date_a − date_b| ≤ 3 dni`,
    - oba opisy zawierają któryś z tokenów: `przelew własny`, `przelew wewn`, `transfer`, `własny`, `between accounts` (tokeny jako konfig w `config/imports.php`).
-3. **Manual** — wszystko jak w 2 ale brak tokena „transfer" w opisie. Trafia do listy „Możliwe transfery" do potwierdzenia w UI.
+2. **Manual** — wszystko jak w 1 ale brak tokena „transfer" w opisie. Trafia do listy „Możliwe transfery" do potwierdzenia w UI.
 
 ### Kroki
 1. Nowa kolumna `transactions.transfer_match_status` (`VARCHAR(20)`, default `'none'`): `none|auto|manual|rejected`.
@@ -254,7 +252,7 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 1. Refaktor `CommitImport::handle`:
    - jedna krótka `DB::transaction` na: pobranie locked `Import`, ustawienie `Processing`, broadcast (patrz pkt 8),
    - pętla wierszy w `chunk` (np. 500 wierszy) — każda chunka osobna `DB::transaction`:
-     - dla wierszy chunka oblicz dedupe (z bank_reference_id i fallbackiem),
+     - dla wierszy chunka oblicz dedupe (po `dedupe_hash`),
      - bulk insert via `Transaction::query()->insert($rows)` (po przetłumaczeniu na tablice z polami DB),
      - zaktualizuj `Import` liczniki (`rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`) inkrementalnie,
      - po chunk → broadcast aktualizacji statusu (status pozostaje `Processing`, ale liczniki rosną).
@@ -391,13 +389,10 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 - `CommitImport::handle` — po `Failed` **nie** kasuj pliku źródłowego, zapisz go do `storage/app/imports/{user}/{import}/source-failed.{ext}`.
 - Dodać command `php artisan imports:purge-old-files {--days=30}` skasować pliki dla importów `Failed` starszych niż 30 dni; uruchamiać via scheduler.
 
-### 12.5 Dedupe — wymagane wykluczenie soft-deleted accounts ze scope
-- Indeks unique `(account_id, bank_reference_id)` nie wymaga zmian (account hard-delete = restrict; soft-delete nie usuwa wiersza).
-
-### 12.6 Sortowanie listy transakcji — tie-breaker
+### 12.5 Sortowanie listy transakcji — tie-breaker
 - `TransactionController::index` — sort `amount` powinien mieć tie-breaker `booked_at desc, id desc` (po zmianach z pkt 1).
 
-### 12.7 Audit trail usunięcia konta
+### 12.6 Audit trail usunięcia konta
 - Tabela `account_deletions` (`id`, `account_id`, `user_id`, `transactions_count_at_delete`, `created_at`),
 - Zapis przy `AccountController::destroy` przed `delete()`.
 
