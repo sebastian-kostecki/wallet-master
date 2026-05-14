@@ -241,32 +241,34 @@ function onDeleted() {
                     </form>
                 </div>
 
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <h2 class="text-base font-semibold">{{ t('transactions.edit.hints.title') }}</h2>
-                    <div class="mt-3 grid gap-3 text-sm text-muted-foreground">
-                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
-                            {{ t('transactions.edit.hints.scope') }}
-                        </div>
-                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
-                            {{ t('transactions.edit.hints.amount') }}
-                        </div>
-                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
-                            {{ t('transactions.edit.hints.save') }}
+                <div class="flex flex-col gap-6">
+                    <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                        <h2 class="text-base font-semibold">{{ t('transactions.edit.hints.title') }}</h2>
+                        <div class="mt-3 grid gap-3 text-sm text-muted-foreground">
+                            <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                                {{ t('transactions.edit.hints.scope') }}
+                            </div>
+                            <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                                {{ t('transactions.edit.hints.amount') }}
+                            </div>
+                            <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                                {{ t('transactions.edit.hints.save') }}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div
-                v-if="transaction.raw_statement_description && transaction.raw_statement_description.trim() !== ''"
-                class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
-            >
-                <h2 class="text-base font-semibold">{{ t('transactions.edit.statement.title') }}</h2>
-                <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.statement.description') }}</p>
-                <div class="mt-4 rounded-lg border border-sidebar-border/70 bg-muted/20 p-4 text-sm dark:border-sidebar-border">
-                    <p class="whitespace-pre-wrap break-words text-foreground">
-                        {{ transaction.raw_statement_description }}
-                    </p>
+                    <div
+                        v-if="transaction.raw_statement_description && transaction.raw_statement_description.trim() !== ''"
+                        class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
+                    >
+                        <h2 class="text-base font-semibold">{{ t('transactions.edit.statement.title') }}</h2>
+                        <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.statement.description') }}</p>
+                        <div class="mt-4 rounded-lg border border-sidebar-border/70 bg-muted/20 p-4 text-sm dark:border-sidebar-border">
+                            <p class="whitespace-pre-wrap break-words text-foreground">
+                                {{ transaction.raw_statement_description }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
