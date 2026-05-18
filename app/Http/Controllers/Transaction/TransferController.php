@@ -6,6 +6,7 @@ use App\Actions\Transfers\CreateTransfer;
 use App\Events\TransferCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transfers\StoreTransferRequest;
+use App\Http\Resources\AccountResource;
 use App\Models\Account;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,19 +17,13 @@ final class TransferController extends Controller
 {
     public function create(Request $request): Response
     {
-        $accounts = Account::query()
-            ->withTrashed()
-            ->whereBelongsTo($request->user())
-            ->orderBy('name')
-            ->get(['id', 'name', 'currency_id', 'bank', 'deleted_at'])
-            ->map(fn (Account $account) => [
-                'id' => $account->id,
-                'name' => $account->name,
-                'currency_id' => $account->currency_id,
-                'is_deleted' => $account->trashed(),
-                'bank_icon_url' => $account->bank_icon_url,
-                'bank' => $account->bank?->value,
-            ]);
+        $accounts = AccountResource::collection(
+            Account::query()
+                ->withTrashed()
+                ->whereBelongsTo($request->user())
+                ->orderBy('name')
+                ->get(['id', 'name', 'currency_id', 'bank', 'deleted_at'])
+        )->resolve();
 
         return Inertia::render('transfers/Create', [
             'accounts' => $accounts,

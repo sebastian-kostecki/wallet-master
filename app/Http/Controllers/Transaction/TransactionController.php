@@ -9,13 +9,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Transactions\StoreTransactionRequest;
 use App\Http\Requests\Transactions\TransactionIndexRequest;
 use App\Http\Requests\Transactions\UpdateTransactionRequest;
+use App\Http\Resources\AccountResource;
+use App\Http\Resources\Transaction\TransactionEditResource;
+use App\Http\Resources\Transaction\TransactionResource;
 use App\Models\Account;
 use App\Models\Transaction;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -72,7 +74,7 @@ final class TransactionController extends Controller
                 fn (Builder $q) => $q->whereDate('booked_at', '<=', $to)
             );
 
-        $transactionsModels = (clone $baseQuery)
+        $transactions = (clone $baseQuery)
             ->with([
                 'account:id,name,bank,type,currency_id',
                 'account.currency:id,symbol',
@@ -98,71 +100,8 @@ final class TransactionController extends Controller
                 'subject',
                 'transfer_id',
             ])
-            ->withQueryString();
-
-        $transactionItems = $transactionsModels->getCollection()->map(function (Transaction $transaction): array {
-            $dateIso = $transaction->date->toDateString();
-            $bookedAtIso = $transaction->booked_at?->toDateString() ?? $dateIso;
-
-            $displayDateIso = $transaction->booked_at !== null
-                ? $bookedAtIso
-                : $dateIso;
-
-            $displayDate = CarbonImmutable::parse($displayDateIso)->startOfDay();
-            $today = CarbonImmutable::today();
-
-            if ($displayDate->equalTo($today)) {
-                $dateRelative = app()->getLocale() === 'pl' ? 'dzisiaj' : 'today';
-            } else {
-                $dateRelative = $displayDate
-                    ->locale(app()->getLocale())
-                    ->diffForHumans();
-            }
-
-            $account = $transaction->account;
-            $currency = $transaction->currency;
-
-            return [
-                'id' => $transaction->id,
-                'account_id' => $transaction->account_id,
-                'currency_id' => $transaction->currency_id,
-                'date' => $dateIso,
-                'booked_at' => $bookedAtIso,
-                'date_relative' => $dateRelative,
-                'amount' => $transaction->amount,
-                'type' => $transaction->type->value,
-                'description' => $transaction->description,
-                'subject' => $transaction->subject,
-                'transfer_id' => $transaction->transfer_id,
-                'account' => $account !== null ? [
-                    'id' => $account->id,
-                    'name' => $account->name,
-                    'type' => $account->type?->value,
-                    'type_label_key' => $account->type_label_key,
-                    'bank_icon_url' => $account->bank_icon_url,
-                    'currency' => $account->currency !== null ? [
-                        'symbol' => $account->currency->symbol,
-                    ] : null,
-                ] : null,
-                'currency' => $currency !== null ? [
-                    'id' => $currency->id,
-                    'code' => $currency->code,
-                    'symbol' => $currency->symbol,
-                    'precision' => $currency->precision,
-                ] : null,
-            ];
-        });
-
-        $transactions = new LengthAwarePaginator(
-            items: $transactionItems,
-            total: $transactionsModels->total(),
-            perPage: $transactionsModels->perPage(),
-            currentPage: $transactionsModels->currentPage(),
-            options: [
-                'path' => $transactionsModels->path(),
-                'pageName' => $transactionsModels->getPageName(),
-            ],
-        );
+            ->withQueryString()
+            ->through(fn (Transaction $transaction) => (new TransactionResource($transaction))->resolve());
 
         $transactions->appends($request->query());
 
@@ -171,21 +110,13 @@ final class TransactionController extends Controller
             ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN -amount ELSE 0 END), 0) AS total_expense')
             ->first();
 
-        $accounts = Account::query()
-            ->whereBelongsTo($request->user())
-            ->orderBy('name')
-            ->with(['currency:id,symbol'])
-            ->get(['id', 'name', 'currency_id', 'bank'])
-            ->map(fn (Account $account) => [
-                'id' => $account->id,
-                'name' => $account->name,
-                'currency_id' => $account->currency_id,
-                'bank' => $account->bank?->value,
-                'bank_icon_url' => $account->bank_icon_url,
-                'currency' => $account->currency !== null ? [
-                    'symbol' => $account->currency->symbol,
-                ] : null,
-            ]);
+        $accounts = AccountResource::collection(
+            Account::query()
+                ->whereBelongsTo($request->user())
+                ->orderBy('name')
+                ->with(['currency:id,symbol'])
+                ->get(['id', 'name', 'currency_id', 'bank'])
+        )->resolve();
 
         return Inertia::render('transactions/Index', [
             'accounts' => $accounts,
@@ -209,17 +140,12 @@ final class TransactionController extends Controller
 
     public function create(Request $request): Response
     {
-        $accounts = Account::query()
-            ->whereBelongsTo($request->user())
-            ->orderBy('name')
-            ->get(['id', 'name', 'currency_id', 'bank'])
-            ->map(fn (Account $account) => [
-                'id' => $account->id,
-                'name' => $account->name,
-                'currency_id' => $account->currency_id,
-                'bank' => $account->bank?->value,
-                'bank_icon_url' => $account->bank_icon_url,
-            ]);
+        $accounts = AccountResource::collection(
+            Account::query()
+                ->whereBelongsTo($request->user())
+                ->orderBy('name')
+                ->get(['id', 'name', 'currency_id', 'bank'])
+        )->resolve();
 
         return Inertia::render('transactions/Create', [
             'accounts' => $accounts,
@@ -240,25 +166,15 @@ final class TransactionController extends Controller
     {
         $transaction->loadMissing(['account:id,name', 'currency:id,code,symbol,precision']);
 
-        $accounts = Account::query()
-            ->whereBelongsTo($request->user())
-            ->orderBy('name')
-            ->get(['id', 'name', 'currency_id', 'bank'])
-            ->map(fn (Account $account) => [
-                'id' => $account->id,
-                'name' => $account->name,
-                'currency_id' => $account->currency_id,
-                'bank' => $account->bank?->value,
-                'bank_icon_url' => $account->bank_icon_url,
-            ]);
+        $accounts = AccountResource::collection(
+            Account::query()
+                ->whereBelongsTo($request->user())
+                ->orderBy('name')
+                ->get(['id', 'name', 'currency_id', 'bank'])
+        )->resolve();
 
         return Inertia::render('transactions/Edit', [
-            'transaction' => $transaction->only(['id', 'account_id', 'date', 'booked_at', 'amount', 'description', 'subject', 'import_id', 'raw_statement_description', 'transfer_id'])
-                + [
-                    'type' => $transaction->type->value,
-                    'account' => $transaction->account?->only(['id', 'name']),
-                    'currency' => $transaction->currency?->only(['id', 'code', 'symbol', 'precision']),
-                ],
+            'transaction' => (new TransactionEditResource($transaction))->resolve(),
             'accounts' => $accounts,
         ]);
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Accounts\UpdateAccountDetails;
 use App\Http\Requests\StoreAccountRequest;
 use App\Http\Requests\UpdateAccountRequest;
+use App\Http\Resources\AccountResource;
 use App\Models\Account;
 use App\Models\Currency;
 use App\ViewModels\Accounts\AccountFormOptions;
@@ -21,13 +22,13 @@ class AccountController extends Controller
 
     public function index(): Response
     {
-        $accounts = Account::query()
-            ->whereBelongsTo(auth()->user())
-            ->with(['currency:id,code,symbol,precision'])
-            ->orderBy('name')
-            ->get(['id', 'currency_id', 'name', 'current_balance', 'bank', 'type']);
-
-        $accounts->each->append(['bank_icon_url', 'type_label_key']);
+        $accounts = AccountResource::collection(
+            Account::query()
+                ->whereBelongsTo(auth()->user())
+                ->with(['currency:id,code,symbol,precision'])
+                ->orderBy('name')
+                ->get(['id', 'currency_id', 'name', 'current_balance', 'bank', 'type'])
+        )->resolve();
 
         return Inertia::render('accounts/Index', [
             'accounts' => $accounts,
@@ -72,10 +73,7 @@ class AccountController extends Controller
         $account->loadMissing(['currency:id,code,symbol,precision']);
 
         return Inertia::render('accounts/Edit', [
-            'account' => $account->only(['id', 'name', 'opening_balance', 'current_balance', 'currency_id', 'bank', 'type'])
-                + [
-                    'currency' => $account->currency?->only(['id', 'code', 'symbol', 'precision']),
-                ],
+            'account' => (new AccountResource($account))->resolve(),
             ...$options->toArray(),
         ]);
     }
