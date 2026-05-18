@@ -146,8 +146,16 @@ function formatCurrencySymbol(account: Account | null): string {
     return account?.currency?.symbol ?? t('currency.defaultSymbol');
 }
 
+function normalizeDateIso(input: string): string {
+    const trimmed = input.trim();
+    const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+
+    return match?.[1] ?? trimmed;
+}
+
 function formatDateIsoToDots(input: string): string {
-    const parts = input.split('-');
+    const iso = normalizeDateIso(input);
+    const parts = iso.split('-');
     if (parts.length !== 3) {
         return input;
     }
@@ -160,9 +168,19 @@ function formatDateIsoToDots(input: string): string {
     return `${dd}.${mm}.${yyyy}`;
 }
 
-/** Relative label for the transaction operation date (`date`), aligned with UI locale */
+function transactionDisplayDateIso(tx: Transaction): string {
+    const booked = normalizeDateIso(tx.booked_at ?? '');
+    if (booked !== '') {
+        return booked;
+    }
+
+    return normalizeDateIso(tx.date);
+}
+
+/** Relative label for the displayed date (`booked_at ?? date`), aligned with UI locale */
 function operationDateRelative(dateIso: string): string {
-    const parts = dateIso.split('-');
+    const iso = normalizeDateIso(dateIso);
+    const parts = iso.split('-');
     if (parts.length !== 3) {
         return '';
     }
@@ -497,10 +515,10 @@ function openDeleteDialog(transactionId: number) {
                                 >
                                     <td class="whitespace-nowrap px-6 py-4 tabular-nums">
                                         <div class="text-sm font-medium text-foreground">
-                                            {{ formatDateIsoToDots(tx.date) }}
+                                            {{ formatDateIsoToDots(transactionDisplayDateIso(tx)) }}
                                         </div>
                                         <div class="mt-0.5 text-xs text-muted-foreground">
-                                            {{ operationDateRelative(tx.date) }}
+                                            {{ tx.date_relative || operationDateRelative(transactionDisplayDateIso(tx)) }}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
@@ -676,8 +694,10 @@ function openDeleteDialog(transactionId: number) {
                                                 {{ truncateText(tx.description, 90).text }}
                                             </p>
                                         </TooltipProvider>
-                                        <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToDots(tx.date) }}</p>
-                                        <p class="mt-0.5 text-xs text-muted-foreground">{{ operationDateRelative(tx.date) }}</p>
+                                        <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToDots(transactionDisplayDateIso(tx)) }}</p>
+                                        <p class="mt-0.5 text-xs text-muted-foreground">
+                                            {{ tx.date_relative || operationDateRelative(transactionDisplayDateIso(tx)) }}
+                                        </p>
                                         <p class="mt-1 text-xs text-muted-foreground">
                                             {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
                                             <span v-if="!tx.account" class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">

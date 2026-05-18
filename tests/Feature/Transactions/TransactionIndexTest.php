@@ -114,6 +114,50 @@ test('users can filter by account and date range, sort, and see summary', functi
     CarbonImmutable::setTestNow();
 });
 
+test('date_relative is dzisiaj when booked_at is today', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 4, 12, 12, 0, 0));
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'A',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-04-01',
+        'booked_at' => '2026-04-12',
+        'amount' => -10,
+        'type' => 'expense',
+        'description' => 'Today booking',
+        'subject' => null,
+        'normalized_description' => 'today booking',
+        'dedupe_hash' => md5('2026-04-12|-10.00|today booking', true),
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->get('/transactions?account_id='.$account->id.'&from=12-04-2026&to=12-04-2026');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('transactions/Index', false)
+        ->has('transactions.data', 1)
+        ->where('transactions.data.0.date_relative', 'dzisiaj')
+    );
+
+    CarbonImmutable::setTestNow();
+});
+
 test('users can filter transactions by import id', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();

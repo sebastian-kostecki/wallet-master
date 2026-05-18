@@ -101,13 +101,23 @@ final class TransactionController extends Controller
             ->withQueryString();
 
         $transactionItems = $transactionsModels->getCollection()->map(function (Transaction $transaction): array {
-            $dateIso = (string) $transaction->date;
-            $bookedAtIso = (string) $transaction->booked_at;
+            $dateIso = $transaction->date->toDateString();
+            $bookedAtIso = $transaction->booked_at?->toDateString() ?? $dateIso;
 
-            $dateForHumans = CarbonImmutable::parse($bookedAtIso)->locale(app()->getLocale());
-            $dateRelative = is_string($dateForHumans)
-                ? CarbonImmutable::parse($bookedAtIso)->diffForHumans()
-                : $dateForHumans->diffForHumans();
+            $displayDateIso = $transaction->booked_at !== null
+                ? $bookedAtIso
+                : $dateIso;
+
+            $displayDate = CarbonImmutable::parse($displayDateIso)->startOfDay();
+            $today = CarbonImmutable::today();
+
+            if ($displayDate->equalTo($today)) {
+                $dateRelative = app()->getLocale() === 'pl' ? 'dzisiaj' : 'today';
+            } else {
+                $dateRelative = $displayDate
+                    ->locale(app()->getLocale())
+                    ->diffForHumans();
+            }
 
             $account = $transaction->account;
             $currency = $transaction->currency;
