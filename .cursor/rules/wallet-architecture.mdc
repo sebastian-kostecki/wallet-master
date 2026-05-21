@@ -1,0 +1,37 @@
+---
+description: Wallet Master backend architecture (Variant A). Read before refactoring or adding app/ code.
+alwaysApply: true
+---
+
+# Wallet Master — architecture (Variant A)
+
+Full plan: `.docs/refactoring.md` (phases, file moves, acceptance criteria).
+
+## Approved `app/` roots
+
+- `Actions/{Domain}/` — use cases, `handle()`, no `Http/Resources`
+- `Data/{Domain}/` — DTO, filters, form options (not `ViewModels/`)
+- `Http/Controllers|Requests|Resources/{Domain}/` — web layer only
+- `Support/{Domain}/` — domain algorithms only (no SDK clients)
+- `Integrations/` — Typesense, external APIs (migrating from `Support/Typesense`, `Support/DescriptionMemory`)
+- `Imports/` — import workflow and bank adapters (unchanged root)
+- `Models/`, `Policies/`, `Jobs/`, `Events/`, `Listeners/`, `Enums/`
+
+Do **not** add `Services/`, `Modules/`, or `ViewModels/` for new code.
+
+## Domain names (always plural in folders)
+
+`Accounts`, `Transactions`, `Transfers`, `Imports`, `Auth`, `Settings`
+
+## Layer rules
+
+| Layer | Does | Does not |
+|-------|------|----------|
+| Controller | Action → Inertia/redirect, `message_key` toasts | SQL, Resources |
+| Action | DB, orchestration, return models/DTO | `*Resource`, `number_format` |
+| Resource | Array shape for Inertia | Business rules |
+| Data | Filters, form options, result DTOs | Eloquent queries |
+
+## Refactoring PRs
+
+One phase per PR (see `.docs/refactoring.md` §7). Update §10 status table when done. Run `vendor/bin/pint --dirty` and targeted `php artisan test --compact`.

@@ -1,0 +1,42 @@
+---
+description: PHP conventions when editing app/ — namespaces, moves, and presentation split
+globs: app/**/*.php
+alwaysApply: false
+---
+
+# PHP `app/` conventions
+
+## Namespace ↔ path
+
+`App\Actions\Transactions\Foo` → `app/Actions/Transactions/Foo.php`
+
+After moving controllers/requests, update: class namespace, `routes/*.php`, Pest tests, Pint.
+
+## HTTP symmetry
+
+Match sibling domains:
+
+- `Http/Controllers/Transactions/` (not `Transaction/`)
+- `Http/Requests/Accounts/StoreAccountRequest.php` (not loose files in `Requests/` root)
+
+Import HTTP: `Http/Controllers/Imports/`, not under `Transactions/`.
+
+## Actions
+
+```php
+// ✅ Action returns models or Data DTO
+public function handle(User $user, TransactionIndexFilters $filters): TransactionIndexResult
+
+// ❌ Action formats for Inertia
+return (new TransactionResource($transaction))->resolve();
+```
+
+Map collections in the controller with `Http/Resources/{Domain}/*`.
+
+## New integrations
+
+Typesense and similar → `app/Integrations/`, register bindings in `AppServiceProvider`.
+
+## Tests
+
+Move tests with code: `tests/Feature/{Domain}/`, `tests/Unit/Data/` or `tests/Unit/Support/{Domain}/`.
