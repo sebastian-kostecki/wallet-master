@@ -53,7 +53,7 @@ test('import sets booked_at equal to operation date for every row', function () 
         "date;amount;description;subject\n"
         ."01-04-2026;-12.34;Coffee;Cafe\n"
         ."15-04-2026;100.00;Salary;Work\n"
-        ."30-04-2026;-5.00;Snack;Shop"
+        .'30-04-2026;-5.00;Snack;Shop'
     );
 
     app(CommitImportJob::class, ['importId' => $import->id])->handle(app(CommitImport::class));
