@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin Account
+ * @property Account $resource
  */
 final class AccountResource extends JsonResource
 {
@@ -19,20 +19,20 @@ final class AccountResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'currency_id' => $this->currency_id,
-            'bank' => $this->bank?->value,
-            'bank_icon_url' => $this->bank_icon_url,
-            'type' => $this->type?->value,
-            'type_label_key' => $this->type_label_key,
-            'current_balance' => $this->when(isset($this->current_balance), $this->current_balance),
-            'opening_balance' => $this->when(isset($this->opening_balance), $this->opening_balance),
-            'is_deleted' => $this->trashed(),
+            'id' => $this->resource->id,
+            'name' => $this->resource->name,
+            'currency_id' => $this->resource->currency_id,
+            'bank' => $this->resource->bank?->value,
+            'bank_icon_url' => $this->resource->bank_icon_url,
+            'type' => $this->resource->type?->value,
+            'type_label_key' => $this->resource->type_label_key,
+            'current_balance' => $this->when(isset($this->resource->current_balance), $this->resource->current_balance),
+            'opening_balance' => $this->when(isset($this->resource->opening_balance), $this->resource->opening_balance),
+            'is_deleted' => $this->resource->trashed(),
             'currency' => $this->when(
-                $this->relationLoaded('currency'),
-                fn () => $this->currency !== null
-                    ? CurrencyResource::make($this->currency)->resolve($request)
+                $this->resource->relationLoaded('currency'),
+                fn () => $this->resource->currency !== null
+                    ? CurrencyResource::make($this->resource->currency)->resolve($request)
                     : null,
             ),
         ];

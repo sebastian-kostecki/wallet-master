@@ -110,16 +110,14 @@ final class TransactionController extends Controller
             ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN -amount ELSE 0 END), 0) AS total_expense')
             ->first();
 
-        $accounts = AccountResource::collection(
-            Account::query()
-                ->whereBelongsTo($request->user())
-                ->orderBy('name')
-                ->with(['currency:id,symbol'])
-                ->get(['id', 'name', 'currency_id', 'bank'])
-        )->resolve();
+        $accounts = Account::query()
+            ->whereBelongsTo($request->user())
+            ->orderBy('name')
+            ->with('currency')
+            ->get();
 
         return Inertia::render('transactions/Index', [
-            'accounts' => $accounts,
+            'accounts' => AccountResource::collection($accounts)->resolve(),
             'filters' => [
                 'all_time' => $allTime,
                 'account_id' => $accountId,

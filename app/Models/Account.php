@@ -14,10 +14,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
+ * @property int $id
+ * @property int $user_id
+ * @property int $currency_id
+ * @property string $name
  * @property Bank|null $bank
  * @property AccountType|null $type
  * @property numeric-string $opening_balance
  * @property numeric-string $current_balance
+ * @property string|null $bank_icon_url
+ * @property string $type_label_key
+ * @property Currency $currency
  */
 final class Account extends Model
 {
@@ -30,13 +37,7 @@ final class Account extends Model
 
     public function getBankIconUrlAttribute(): ?string
     {
-        $bank = $this->bank;
-
-        if ($bank === null) {
-            return null;
-        }
-
-        return $bank->bankIconUrl();
+        return $this->bank?->bankIconUrl();
     }
 
     public function getTypeLabelKeyAttribute(): string
