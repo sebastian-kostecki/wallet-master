@@ -2,12 +2,17 @@
 
 namespace App\Http\Requests\Transactions;
 
+use App\Http\Requests\Concerns\Indexable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 final class TransactionIndexRequest extends FormRequest
 {
+    use Indexable;
+
+    public array $filters = [];
+
     public function authorize(): bool
     {
         return $this->user() !== null;
@@ -38,23 +43,49 @@ final class TransactionIndexRequest extends FormRequest
             );
 
         return [
-            'all_time' => ['nullable', 'boolean'],
             'account_id' => [
                 'nullable',
                 'integer',
                 $accountExistsRule,
             ],
-            'import_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('imports', 'id')->where(fn ($query) => $query->where('user_id', $this->user()->id)),
-            ],
             'from' => ['nullable', 'date_format:d-m-Y', 'before_or_equal:to'],
             'to' => ['nullable', 'date_format:d-m-Y', 'after_or_equal:from'],
-            'sort' => ['nullable', 'string', 'in:date,amount'],
-            'direction' => ['nullable', 'string', 'in:asc,desc'],
-            'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', Rule::in([15, 25, 50, 100])],
         ];
+    }
+
+    public function getFilters(): array
+    {
+        if (! empty($this->filters)) {
+            return $this->filters;
+        }
+
+        $validated = $this->validated();
+
+        $accountId = isset($validated['account_id']) ? (int) $validated['account_id'] : null;
+        $fromInput = isset($validated['from']) ? (string) $validated['from'] : null;
+        $toInput = isset($validated['to']) ? (string) $validated['to'] : null;
+
+        $this->filters = [
+            'account_id' => $accountId,
+            'from' => $fromInput,
+            'to' => $toInput,
+        ];
+
+        return $this->filters;
+    }
+
+    public function getAccountId(): ?int
+    {
+        return $this->getFilters()['account_id'] ?? null;
+    }
+
+    public function getFrom(): ?string
+    {
+        return $this->getFilters()['from'] ?? null;
+    }
+
+    public function getTo(): ?string
+    {
+        return $this->getFilters()['to'] ?? null;
     }
 }

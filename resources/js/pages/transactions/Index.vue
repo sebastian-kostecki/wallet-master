@@ -107,9 +107,7 @@ type ResourcePaginator<T> = {
 type Paginator<T> = FlattenedPaginator<T> | ResourcePaginator<T>;
 
 type Filters = {
-    all_time?: boolean;
     account_id: number | null;
-    import_id?: number | null;
     from: string | null; // DD-MM-YYYY
     to: string | null; // DD-MM-YYYY
     sort: 'date' | 'amount' | string;
@@ -122,8 +120,8 @@ const props = defineProps<{
     filters: Filters;
     transactions: Paginator<Transaction>;
     summary: {
-        total_income: string;
-        total_expense: string;
+        total_income: string | number;
+        total_expense: string | number;
     };
 }>();
 
@@ -339,7 +337,7 @@ function directionIcon() {
 }
 
 const summaryIncome = computed(() => formatAmount(props.summary.total_income));
-const summaryExpense = computed(() => formatAmount(props.summary.total_expense));
+const summaryExpense = computed(() => formatAmount(Math.abs(toNumber(props.summary.total_expense))));
 
 const selectedAccount = computed(() => {
     const accountId = props.filters.account_id;
@@ -798,7 +796,6 @@ function openDeleteDialog(transactionId: number) {
                             :paginator="transactions"
                             :query="{
                                 account_id: filters.account_id ?? undefined,
-                                all_time: filters.all_time ? 1 : undefined,
                                 from: filters.from ?? undefined,
                                 to: filters.to ?? undefined,
                                 sort: filters.sort ?? 'date',

@@ -15,9 +15,7 @@ type Account = {
 };
 
 type Filters = {
-    all_time?: boolean;
     account_id: number | null;
-    import_id?: number | null;
     from: string | null; // DD-MM-YYYY
     to: string | null; // DD-MM-YYYY
     sort: 'date' | 'amount' | string;
@@ -51,7 +49,6 @@ const selectedAccount = computed(() => {
 });
 const localFrom = ref<string>(props.filters.from ?? '');
 const localTo = ref<string>(props.filters.to ?? '');
-const isAllTime = ref<boolean>(Boolean(props.filters.all_time));
 
 watch(
     () => props.filters,
@@ -59,7 +56,6 @@ watch(
         localAccountId.value = next.account_id ?? null;
         localFrom.value = next.from ?? '';
         localTo.value = next.to ?? '';
-        isAllTime.value = Boolean(next.all_time);
     },
     { deep: true },
 );
@@ -100,10 +96,8 @@ function buildQuery() {
 
     return {
         account_id: localAccountId.value ?? undefined,
-        import_id: props.filters.import_id ?? undefined,
-        all_time: isAllTime.value ? 1 : undefined,
-        from: isAllTime.value ? undefined : trimmedFrom || undefined,
-        to: isAllTime.value ? undefined : trimmedTo || undefined,
+        from: trimmedFrom || undefined,
+        to: trimmedTo || undefined,
         sort: props.filters.sort ?? 'date',
         direction: props.filters.direction ?? 'desc',
         per_page: props.filters.per_page ?? undefined,
@@ -115,15 +109,6 @@ function applyFiltersNow() {
     localErrors.value = {};
 
     if (props.isLoading) {
-        return;
-    }
-
-    if (isAllTime.value) {
-        router.get(route('transactions.index'), buildQuery(), {
-            preserveScroll: true,
-            replace: true,
-            preserveState: 'errors',
-        });
         return;
     }
 
@@ -180,19 +165,6 @@ watch([localAccountId, localFrom, localTo], () => {
     scheduleApply();
 });
 
-watch(
-    [localFrom, localTo],
-    ([from, to]) => {
-        const noRange = from.trim() === '' && to.trim() === '';
-        if (noRange) {
-            isAllTime.value = true;
-        } else if (isAllTime.value) {
-            isAllTime.value = false;
-        }
-    },
-    { flush: 'sync' },
-);
-
 const serverFromError = computed(() => props.serverErrors.from);
 const serverToError = computed(() => props.serverErrors.to);
 
@@ -203,36 +175,6 @@ const hasError = computed(() => errorMessage.value.trim() !== '');
 
 <template>
     <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-        <div v-if="filters.import_id" class="flex flex-wrap items-center gap-2 sm:mr-auto">
-            <button
-                type="button"
-                class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-foreground hover:bg-muted/70"
-                :aria-label="t('transactions.index.importPreset.clearAria')"
-                @click="
-                    () => {
-                        router.get(
-                            route('transactions.index'),
-                            {
-                                account_id: localAccountId ?? undefined,
-                                all_time: isAllTime ? 1 : undefined,
-                                from: isAllTime ? undefined : localFrom.trim() || undefined,
-                                to: isAllTime ? undefined : localTo.trim() || undefined,
-                                sort: filters.sort ?? 'date',
-                                direction: filters.direction ?? 'desc',
-                                per_page: filters.per_page ?? undefined,
-                                import_id: undefined,
-                                page: undefined,
-                            },
-                            { preserveScroll: true, replace: true, preserveState: 'errors' },
-                        );
-                    }
-                "
-            >
-                <span class="font-medium">{{ t('transactions.index.importPreset.label') }}</span>
-                <span class="text-muted-foreground">×</span>
-            </button>
-        </div>
-
         <div class="grid gap-2 sm:flex sm:items-center">
             <div class="min-w-56 sm:min-w-64">
                 <DropdownSelect

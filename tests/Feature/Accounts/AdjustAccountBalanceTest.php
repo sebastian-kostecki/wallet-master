@@ -107,9 +107,7 @@ test('balance adjustment appears on transactions index props', function () {
     $adjustmentId = Transaction::query()->where('type', TransactionType::Adjustment)->value('id');
     expect($adjustmentId)->not->toBeNull();
 
-    $this->actingAs($user)->get(route('transactions.index', [
-        'all_time' => 1,
-    ]))->assertInertia(fn (Assert $page) => $page
+    $this->actingAs($user)->get(route('transactions.index'))->assertInertia(fn (Assert $page) => $page
         ->component('transactions/Index', false)
         ->has('transactions.data', 1)
         ->where('transactions.data.0.id', $adjustmentId)

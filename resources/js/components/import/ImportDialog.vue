@@ -363,10 +363,17 @@ function goToTransactions() {
         return;
     }
 
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), 1);
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const pad2 = (n: number) => String(n).padStart(2, '0');
+    const formatDdMmYyyy = (d: Date) => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+
     router.get(
         route('transactions.index'),
         {
-            import_id: importId.value,
+            from: formatDdMmYyyy(from),
+            to: formatDdMmYyyy(to),
             sort: 'date',
             direction: 'desc',
         },

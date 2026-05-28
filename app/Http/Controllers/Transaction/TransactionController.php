@@ -14,7 +14,6 @@ use App\Http\Resources\Transaction\TransactionEditResource;
 use App\Http\Resources\Transaction\TransactionResource;
 use App\Models\Account;
 use App\Models\Transaction;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,53 +28,29 @@ final class TransactionController extends Controller
 
     public function index(TransactionIndexRequest $request): Response
     {
-        $validated = $request->validated();
+        $request->setSorts(['date', 'amount']);
 
-        $allTime = isset($validated['all_time']) ? (bool) $validated['all_time'] : false;
-        $accountId = isset($validated['account_id']) ? (int) $validated['account_id'] : null;
-        $importId = isset($validated['import_id']) ? (int) $validated['import_id'] : null;
-        $perPage = isset($validated['per_page']) ? (int) $validated['per_page'] : 15;
+        $accounts = Account::queryForUser($request->user())->get();
+        $transactionsQuery = Transaction::queryForUser(
+            $request->user(),
+            $request->getFilters(),
+            $request->getSorts(),
+        );
 
-        $hasFrom = isset($validated['from']);
-        $hasTo = isset($validated['to']);
-
-        $fromInput = $hasFrom ? (string) $validated['from'] : null; // d-m-Y
-        $toInput = $hasTo ? (string) $validated['to'] : null; // d-m-Y
-
-        if (! $hasFrom && ! $hasTo && ! $allTime) {
-            $today = CarbonImmutable::today();
-            $fromInput = $today->startOfMonth()->format('d-m-Y');
-            $toInput = $today->format('d-m-Y');
-        }
-
-        $from = $fromInput !== null ? CarbonImmutable::createFromFormat('d-m-Y', $fromInput)->toDateString() : null;
-        $to = $toInput !== null ? CarbonImmutable::createFromFormat('d-m-Y', $toInput)->toDateString() : null;
-
-        $sort = isset($validated['sort']) ? (string) $validated['sort'] : 'date';
-        $direction = isset($validated['direction']) ? (string) $validated['direction'] : 'desc';
-
-        $transactions = Transaction::query()
-            ->whereBelongsTo($request->user())
-            ->paginate($validated['per_page'] ?? 15);
-
-        $accounts = Account::getForUser($request->user());
+        $query = clone $transactionsQuery;
+        $totalIncome = $query->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as total_income')->value('total_income');
+        $totalExpense = $query->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END), 0) as total_expense')->value('total_expense');
 
         return Inertia::render('transactions/Index', [
-            'accounts' => AccountResource::collection($accounts)->resolve(),
             'filters' => [
-                'all_time' => $allTime,
-                'account_id' => $accountId,
-                'import_id' => $importId,
-                'from' => $fromInput,
-                'to' => $toInput,
-                'sort' => $sort,
-                'direction' => $direction,
-                'per_page' => $perPage,
+                ...$request->getFilters(),
+                ...$request->getData(),
             ],
-            'transactions' => TransactionResource::collection($transactions),
+            'accounts' => AccountResource::collection($accounts)->resolve(),
+            'transactions' => TransactionResource::collection($transactionsQuery->paginate($request->getPerPage())),
             'summary' => [
-                'total_income' => 0,
-                'total_expense' => 0,
+                'total_income' => $totalIncome,
+                'total_expense' => $totalExpense,
             ],
         ]);
     }

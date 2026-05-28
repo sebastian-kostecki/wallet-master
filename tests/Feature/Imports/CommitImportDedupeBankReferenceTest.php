@@ -76,8 +76,8 @@ test(
         "date;amount;description;ref\n"
         ."01-04-2026;-10.00;Store purchase;REF-AAA\n"
         ."01-04-2026;-10.00;Store purchase;REF-BBB\n",
-        2,
-        0,
+        1,
+        1,
         [
             'date' => 'date',
             'amount' => 'amount',

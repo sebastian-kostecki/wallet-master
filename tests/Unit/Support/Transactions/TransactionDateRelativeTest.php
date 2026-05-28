@@ -3,6 +3,9 @@
 use App\Models\Transaction;
 use App\Support\Transactions\TransactionDateRelative;
 use Carbon\CarbonImmutable;
+use Tests\TestCase;
+
+uses(TestCase::class);
 
 test('displayDateIso prefers booked_at when set', function () {
     $transaction = new Transaction([

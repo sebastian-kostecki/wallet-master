@@ -8,6 +8,21 @@ import { Link } from '@inertiajs/vue3';
 import { ArrowLeftRight, BookOpen, Folder, LayoutGrid, Wallet } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
+function pad2(n: number): string {
+    return String(n).padStart(2, '0');
+}
+
+function formatDdMmYyyy(d: Date): string {
+    return `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+}
+
+function currentMonthRangeQuery(): string {
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), 1);
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return `from=${encodeURIComponent(formatDdMmYyyy(from))}&to=${encodeURIComponent(formatDdMmYyyy(to))}`;
+}
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -21,7 +36,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Transakcje',
-        href: '/transactions',
+        href: `/transactions?${currentMonthRangeQuery()}`,
         icon: ArrowLeftRight,
     },
 ];
