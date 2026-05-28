@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\AccountType;
 use App\Enums\Bank;
 use Database\Factories\AccountFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,6 +33,15 @@ final class Account extends Model
     use HasFactory;
 
     use SoftDeletes;
+
+    public static function getForUser(User $user): Collection
+    {
+        return self::query()
+            ->whereBelongsTo($user)
+            ->orderBy('name')
+            ->with('currency')
+            ->get();
+    }
 
     protected $guarded = [];
 
