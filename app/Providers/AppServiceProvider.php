@@ -6,14 +6,14 @@ use App\Events\Imports\ImportEnrichmentTypesenseHit;
 use App\Events\Imports\ImportEnrichmentTypesenseMiss;
 use App\Events\TransferCreated;
 use App\Events\TransferFailedValidation;
+use App\Integrations\DescriptionMemory\DescriptionMemoryRepository;
+use App\Integrations\DescriptionMemory\NullDescriptionMemoryRepository;
+use App\Integrations\DescriptionMemory\TypesenseDescriptionMemoryRepository;
+use App\Integrations\Typesense\TypesenseClient;
 use App\Listeners\LogImportEnrichmentTypesenseHit;
 use App\Listeners\LogImportEnrichmentTypesenseMiss;
 use App\Listeners\LogTransferCreated;
 use App\Listeners\LogTransferFailedValidation;
-use App\Support\DescriptionMemory\DescriptionMemoryRepository;
-use App\Support\DescriptionMemory\NullDescriptionMemoryRepository;
-use App\Support\DescriptionMemory\TypesenseDescriptionMemoryRepository;
-use App\Support\Typesense\TypesenseClient;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 

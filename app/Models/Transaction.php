@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\TransactionType;
-use Carbon\CarbonImmutable;
 use Database\Factories\TransactionFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,17 +27,22 @@ final class Transaction extends Model
     /** @use HasFactory<TransactionFactory> */
     use HasFactory;
 
-    /**
-     * @return Builder<self>
-     */
-    public static function queryForUser(User $user, array $filters = [], array $sorts = []): Builder
-    {
-        return self::query()
-            ->with('account.currency')
-            ->whereBelongsTo($user)
-            ->indexFilters($filters)
-            ->indexSort($sorts);
-    }
+    protected $fillable = [
+        'user_id',
+        'account_id',
+        'currency_id',
+        'import_id',
+        'date',
+        'booked_at',
+        'amount',
+        'type',
+        'description',
+        'subject',
+        'normalized_description',
+        'raw_statement_description',
+        'dedupe_hash',
+        'transfer_id',
+    ];
 
     protected $guarded = [];
 
@@ -92,50 +95,5 @@ final class Transaction extends Model
     public function import(): BelongsTo
     {
         return $this->belongsTo(Import::class);
-    }
-
-    /**
-     * @param  Builder<self>  $query
-     */
-    public function scopeIndexFilters(Builder $query, array $filters): void
-    {
-        if (isset($filters['account_id'])) {
-            $query->where('account_id', $filters['account_id']);
-        }
-
-        if (! empty($filters['from'])) {
-            $query->whereDate(
-                'date',
-                '>=',
-                CarbonImmutable::createFromFormat('d-m-Y', (string) $filters['from'])->toDateString(),
-            );
-        }
-
-        if (! empty($filters['to'])) {
-            $query->whereDate(
-                'date',
-                '<=',
-                CarbonImmutable::createFromFormat('d-m-Y', (string) $filters['to'])->toDateString(),
-            );
-        }
-    }
-
-    /**
-     * @param  Builder<self>  $query
-     */
-    public function scopeIndexSort(Builder $query, array $sorts): void
-    {
-        $sortBy = $sorts['sort_by'] ?? null;
-        $sortDirection = $sorts['sort_direction'] ?? 'desc';
-
-        if ($sortBy === null) {
-            return;
-        }
-
-        if (! in_array($sortDirection, ['asc', 'desc'], true)) {
-            $sortDirection = 'desc';
-        }
-
-        $query->orderBy($sortBy, $sortDirection);
     }
 }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Enums\Bank;
-use App\Support\DescriptionMemory\DescriptionMemoryRepository;
-use App\Support\DescriptionMemory\SuggestedFields;
+use App\Integrations\DescriptionMemory\DescriptionMemoryRepository;
+use App\Integrations\DescriptionMemory\SuggestedFields;
 
 final class FakeDescriptionMemoryRepository implements DescriptionMemoryRepository
 {

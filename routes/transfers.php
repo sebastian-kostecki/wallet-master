@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Transaction\TransferController;
+use App\Http\Controllers\Transfers\TransferController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {

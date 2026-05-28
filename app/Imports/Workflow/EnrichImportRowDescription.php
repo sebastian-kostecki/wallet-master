@@ -7,8 +7,8 @@ namespace App\Imports\Workflow;
 use App\Enums\Bank;
 use App\Events\Imports\ImportEnrichmentTypesenseHit;
 use App\Events\Imports\ImportEnrichmentTypesenseMiss;
+use App\Integrations\DescriptionMemory\DescriptionMemoryRepository;
 use App\Models\Import;
-use App\Support\DescriptionMemory\DescriptionMemoryRepository;
 
 final readonly class EnrichImportRowDescription
 {

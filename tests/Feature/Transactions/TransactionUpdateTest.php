@@ -2,12 +2,12 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Integrations\DescriptionMemory\DescriptionMemoryRepository;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\Import;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Support\DescriptionMemory\DescriptionMemoryRepository;
 use Database\Seeders\CurrencySeeder;
 use Tests\Support\FakeDescriptionMemoryRepository;
 

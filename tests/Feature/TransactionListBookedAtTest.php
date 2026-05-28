@@ -13,7 +13,7 @@ beforeEach(function () {
     $this->seed(CurrencySeeder::class);
 });
 
-test('transactions are filtered by booked_at (not operation date)', function () {
+test('transactions are filtered by operation date', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -27,11 +27,11 @@ test('transactions are filtered by booked_at (not operation date)', function () 
         'current_balance' => 0,
     ]);
 
-    $marchBooked = Transaction::query()->create([
+    $marchTransaction = Transaction::query()->create([
         'user_id' => $user->id,
         'account_id' => $account->id,
         'currency_id' => $plnId,
-        'date' => '2026-04-01',
+        'date' => '2026-03-30',
         'booked_at' => '2026-03-30',
         'amount' => -10,
         'type' => 'expense',
@@ -63,7 +63,7 @@ test('transactions are filtered by booked_at (not operation date)', function () 
     $responseMarch->assertInertia(fn (Assert $page) => $page
         ->component('transactions/Index', false)
         ->has('transactions.data', 1)
-        ->where('transactions.data.0.id', $marchBooked->id)
+        ->where('transactions.data.0.id', $marchTransaction->id)
     );
 
     $responseApril = $this

@@ -23,8 +23,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property AccountType|null $type
  * @property numeric-string $opening_balance
  * @property numeric-string $current_balance
- * @property string|null $bank_icon_url
- * @property string $type_label_key
  * @property Currency $currency
  */
 final class Account extends Model
@@ -43,22 +41,6 @@ final class Account extends Model
     }
 
     protected $guarded = [];
-
-    public function getBankIconUrlAttribute(): ?string
-    {
-        return $this->bank?->bankIconUrl();
-    }
-
-    public function getTypeLabelKeyAttribute(): string
-    {
-        $type = $this->type;
-
-        if ($type === null) {
-            return '';
-        }
-
-        return $type->labelKey();
-    }
 
     /**
      * @return array<string, string>

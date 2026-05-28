@@ -5,17 +5,19 @@ alwaysApply: true
 
 # Wallet Master — architecture (Variant A)
 
-Full plan: `.docs/refactoring.md` (phases, file moves, acceptance criteria).
+Full migration plan: `.docs/refactoring.md` (phases, file moves, acceptance criteria, §10 status).
+
+One domain = the same namespace segment across all layers (e.g. `Transactions` everywhere, never `Transaction` in one folder and `Transactions` in another).
 
 ## Approved `app/` roots
 
-- `Actions/{Domain}/` — use cases, `handle()`, no `Http/Resources`
-- `Data/{Domain}/` — DTO, filters, form options (not `ViewModels/`)
+- `Actions/{Domain}/` — use cases (write + read orchestration), `handle()`, no `Http/Resources`
+- `Data/{Domain}/` — DTO, filters, form options, read results (not `ViewModels/`)
 - `Http/Controllers|Requests|Resources/{Domain}/` — web layer only
-- `Support/{Domain}/` — domain algorithms only (no SDK clients)
-- `Integrations/` — Typesense, external APIs (migrating from `Support/Typesense`, `Support/DescriptionMemory`)
+- `Support/{Domain}/` — stateless domain algorithms (no HTTP, no SDK clients)
+- `Integrations/{Name}/` — external clients and infrastructure repositories (e.g. Typesense, DescriptionMemory)
 - `Imports/` — import workflow and bank adapters (unchanged root)
-- `Models/`, `Policies/`, `Jobs/`, `Events/`, `Listeners/`, `Enums/`
+- `Models/`, `Policies/`, `Jobs/`, `Events/`, `Listeners/`, `Enums/`, `Console/`
 
 Do **not** add `Services/`, `Modules/`, or `ViewModels/` for new code.
 
@@ -23,15 +25,49 @@ Do **not** add `Services/`, `Modules/`, or `ViewModels/` for new code.
 
 `Accounts`, `Transactions`, `Transfers`, `Imports`, `Auth`, `Settings`
 
-## Layer rules
+## Layer responsibilities
 
 | Layer | Does | Does not |
 |-------|------|----------|
-| Controller | Action → Inertia/redirect, `message_key` toasts | SQL, Resources |
-| Action | DB, orchestration, return models/DTO | `*Resource`, `number_format` |
-| Resource | Array shape for Inertia | Business rules |
-| Data | Filters, form options, result DTOs | Eloquent queries |
+| **Controller** | `authorize*`, call Action, `Inertia::render` / redirect, toast `message_key`, map via `Resource::collection()->resolve()` | `DB::transaction`, dedupe rules, `selectRaw` aggregations, business date parsing |
+| **Form Request** | `rules()`, `authorize()`, build filters (e.g. `getFilters()`) | DB writes |
+| **Action** | transactions, `lockForUpdate`, orchestration; returns `Model` / `Collection` / `Data\*Result` | import `Http\Resources\*`, `number_format`, `asset()` |
+| **Data** | immutable DTO: `*Filters`, `*Result`, `*FormOptions::toArray()` | `Inertia::render`, Eloquent in DTO classes |
+| **Resource** | array shape for Vue/Inertia | authorization, business rules |
+| **Support/{Domain}** | pure algorithms (dedupe, relative dates) | HTTP/SDK clients |
+| **Integrations** | API clients, infra repositories | wallet business rules |
+| **Model** | relations, `casts()`, general scopes (`whereBelongsTo`) | full index workflow (date filters + sort + aggregates) |
+
+## Data flow
+
+- **Write:** `Request` → `Action` → `Model` (+ `Support` / `Integrations`) → redirect + toast.
+- **Read (index):** `Request` → `Action` → `Data\*Result` → `Controller` → `Resource` → Inertia.
+
+## Code conventions
+
+- Action: one public `handle()`, prefer `final`.
+- Action **never** imports `App\Http\Resources\*`.
+- UI presentation (`asset()`, `label_key`, front-facing date format) only in Resource or Enum metadata.
+- Integrations: register bindings in `AppServiceProvider`.
+- Tests mirror domains: `tests/Feature/{Domain}/`, `tests/Unit/Data/` or `tests/Unit/Support/{Domain}/`.
 
 ## Refactoring PRs
 
-One phase per PR (see `.docs/refactoring.md` §7). Update §10 status table when done. Run `vendor/bin/pint --dirty` and targeted `php artisan test --compact`.
+One phase per PR (see `.docs/refactoring.md` §7). Update §10 status when done. Run `vendor/bin/pint --dirty` and `php artisan test --compact` (domain filter).
+
+## Where to put a new file
+
+| Need… | Location |
+|-------|----------|
+| Inertia endpoint | `Http/Controllers/{Domain}/` |
+| Request validation | `Http/Requests/{Domain}/` |
+| JSON props shape | `Http/Resources/{Domain}/` |
+| Business operation | `Actions/{Domain}/` |
+| Filters / DTO / form options | `Data/{Domain}/` |
+| Domain algorithm | `Support/{Domain}/` |
+| External API | `Integrations/{Name}/` |
+| DB entity | `Models/` |
+| CSV import workflow | `Imports/` |
+| Queue job | `Jobs/` + dispatch from Action/Workflow |
+| HTTP test | `tests/Feature/{Domain}/` |
+| Pure logic test | `tests/Unit/...` |

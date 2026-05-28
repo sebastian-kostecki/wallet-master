@@ -57,10 +57,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 ## Application Structure & Architecture
 
-- Follow the **Variant A** layout in `.docs/refactoring.md` and Cursor rules `.cursor/rules/wallet-*.mdc` when adding or moving PHP code.
-- Approved top-level `app/` folders include `Actions/`, `Data/`, `Http/`, `Imports/`, `Integrations/`, `Support/`, `Models/` — see the refactoring doc for responsibilities.
-- Do not introduce parallel layers (`Services/`, `Modules/`, `ViewModels/`) unless the refactoring plan is explicitly updated.
-- Refactor in small PRs per phase in `.docs/refactoring.md` §7; do not rename the entire `app/` tree in one change.
+- Stick to existing directory structure; don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
 
 ## Frontend Bundling

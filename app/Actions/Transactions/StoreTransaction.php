@@ -25,6 +25,8 @@ final class StoreTransaction
      *   description: string,
      *   subject?: ?string,
      * } $validated
+     *
+     * @throws \Throwable
      */
     public function handle(User $user, array $validated): Transaction
     {
@@ -48,7 +50,7 @@ final class StoreTransaction
             }
 
             $normalizedDescription = TransactionDedupe::normalizeDescription($validated['description']);
-            $dedupeHash = TransactionDedupe::dedupeHash($bookedAt, $amount, $normalizedDescription);
+            $dedupeHash = TransactionDedupe::manualDedupeHash($bookedAt, $amount, $normalizedDescription);
 
             $transaction = Transaction::query()->create([
                 'user_id' => $user->id,

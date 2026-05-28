@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\AccountBalanceController;
-use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Accounts\AccountBalanceController;
+use App\Http\Controllers\Accounts\AccountController;
 use App\Models\Account;
 use Illuminate\Support\Facades\Route;
 

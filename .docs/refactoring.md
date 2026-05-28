@@ -253,12 +253,12 @@ Struktura `resources/js/` zostaje. Przy refaktorze backendu:
 
 | Faza | Status | Data | Uwagi |
 |------|--------|------|-------|
-| 0 | Zakończona | 2026-05-21 | HTTP: `Accounts/`, `Transactions/`, `Transfers/`, `Imports/` |
-| 1 | Zakończona | 2026-05-21 | `Data/Accounts/AccountFormOptions`; usunięto `ViewModels/` |
-| 2 | Zakończona | 2026-05-21 | `TransactionIndexResult`; Actions bez Resource; prezentacja w kontrolerze |
-| 3 | Zakończona | 2026-05-21 | `Integrations/Typesense`, `Integrations/DescriptionMemory` |
-| 4 | Zakończona | 2026-05-21 | `ImportController`; `routes/imports.php` |
-| 5 | Zakończona | 2026-05-21 | Auth/Settings bez zmian; pint + testy |
+| 0 | Zakończona | 2026-05-28 | HTTP: `Accounts/`, `Transactions/`, `Transfers/` |
+| 1 | Zakończona | 2026-05-28 | `Data/Accounts/AccountFormOptions`; usunięto `ViewModels/` |
+| 2 | Zakończona | 2026-05-28 | `TransactionIndexResult`; `ListTransactions`; Actions bez Resource |
+| 3 | Zakończona | 2026-05-28 | `Integrations/Typesense`, `Integrations/DescriptionMemory` |
+| 4 | Zakończona | 2026-05-28 | `ImportController`; `routes/imports.php` |
+| 5 | Zakończona | 2026-05-28 | `StoreAccount`, prezentacja w `AccountResource` |
 
 *Aktualizuj tabelę po zakończeniu każdego PR.*
 
