@@ -74,9 +74,17 @@ type PaginatorMeta = {
     last_page: number;
     per_page: number;
     total: number;
+    links?: PaginatorLink[];
 };
 
-type Paginator<T> = {
+type ResourceLinksObject = {
+    first?: string | null;
+    last?: string | null;
+    prev?: string | null;
+    next?: string | null;
+};
+
+type FlattenedPaginator<T> = {
     data: T[];
     links: PaginatorLink[];
     /**
@@ -89,6 +97,14 @@ type Paginator<T> = {
     total: number;
     meta?: PaginatorMeta;
 };
+
+type ResourcePaginator<T> = {
+    data: T[];
+    links: ResourceLinksObject;
+    meta: PaginatorMeta & { links: PaginatorLink[] };
+};
+
+type Paginator<T> = FlattenedPaginator<T> | ResourcePaginator<T>;
 
 type Filters = {
     all_time?: boolean;

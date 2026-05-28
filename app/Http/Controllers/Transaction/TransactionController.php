@@ -15,7 +15,6 @@ use App\Http\Resources\Transaction\TransactionResource;
 use App\Models\Account;
 use App\Models\Transaction;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -55,66 +54,11 @@ final class TransactionController extends Controller
         $sort = isset($validated['sort']) ? (string) $validated['sort'] : 'date';
         $direction = isset($validated['direction']) ? (string) $validated['direction'] : 'desc';
 
-        $baseQuery = Transaction::query()
+        $transactions = Transaction::query()
             ->whereBelongsTo($request->user())
-            ->when($accountId !== null, fn (Builder $q) => $q->where('account_id', $accountId))
-            ->when($importId !== null, fn (Builder $q) => $q->where('import_id', $importId))
-            ->when(
-                $from !== null && $to !== null,
-                fn (Builder $q) => $q
-                    ->whereDate('booked_at', '>=', $from)
-                    ->whereDate('booked_at', '<=', $to)
-            )
-            ->when(
-                $from !== null && $to === null,
-                fn (Builder $q) => $q->whereDate('booked_at', '>=', $from)
-            )
-            ->when(
-                $to !== null && $from === null,
-                fn (Builder $q) => $q->whereDate('booked_at', '<=', $to)
-            );
+            ->paginate($validated['per_page'] ?? 15);
 
-        $transactions = (clone $baseQuery)
-            ->with([
-                'account:id,name,bank,type,currency_id',
-                'account.currency:id,symbol',
-                'currency:id,code,symbol,precision',
-            ])
-            ->when(
-                $sort === 'amount',
-                fn (Builder $q) => $q->orderBy('amount', $direction)->orderBy('booked_at', 'desc')->orderBy('id', 'desc')
-            )
-            ->when(
-                $sort !== 'amount',
-                fn (Builder $q) => $q->orderBy('booked_at', $direction)->orderBy('date', 'desc')->orderBy('id', 'desc')
-            )
-            ->paginate($perPage, [
-                'id',
-                'account_id',
-                'currency_id',
-                'date',
-                'booked_at',
-                'amount',
-                'type',
-                'description',
-                'subject',
-                'transfer_id',
-            ])
-            ->withQueryString()
-            ->through(fn (Transaction $transaction) => (new TransactionResource($transaction))->resolve());
-
-        $transactions->appends($request->query());
-
-        $summary = (clone $baseQuery)
-            ->selectRaw('COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS total_income')
-            ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN -amount ELSE 0 END), 0) AS total_expense')
-            ->first();
-
-        $accounts = Account::query()
-            ->whereBelongsTo($request->user())
-            ->orderBy('name')
-            ->with('currency')
-            ->get();
+        $accounts = Account::getForUser($request->user());
 
         return Inertia::render('transactions/Index', [
             'accounts' => AccountResource::collection($accounts)->resolve(),
@@ -128,10 +72,10 @@ final class TransactionController extends Controller
                 'direction' => $direction,
                 'per_page' => $perPage,
             ],
-            'transactions' => $transactions,
+            'transactions' => TransactionResource::collection($transactions),
             'summary' => [
-                'total_income' => number_format((float) data_get($summary, 'total_income', 0), 2, '.', ''),
-                'total_expense' => number_format((float) data_get($summary, 'total_expense', 0), 2, '.', ''),
+                'total_income' => 0,
+                'total_expense' => 0,
             ],
         ]);
     }

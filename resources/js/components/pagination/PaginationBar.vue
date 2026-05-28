@@ -12,12 +12,31 @@ type PaginatorLink = {
     active: boolean;
 };
 
-type Paginator = {
+type ResourceLinksObject = {
+    first?: string | null;
+    last?: string | null;
+    prev?: string | null;
+    next?: string | null;
+};
+
+type SimplePaginator = {
     links: PaginatorLink[];
     current_page: number;
     last_page: number;
     per_page: number;
 };
+
+type ResourcePaginator = {
+    links?: ResourceLinksObject;
+    meta: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        links: PaginatorLink[];
+    };
+};
+
+type Paginator = SimplePaginator | ResourcePaginator;
 
 const props = withDefaults(
     defineProps<{
@@ -46,15 +65,88 @@ function normalizeLabel(label: string): string {
         .trim();
 }
 
-const prevUrl = computed(() => props.paginator.links[0]?.url ?? null);
-const nextUrl = computed(() => props.paginator.links[props.paginator.links.length - 1]?.url ?? null);
+const paginatorLinks = computed<PaginatorLink[]>(() => {
+    const paginator = props.paginator as any;
+
+    if (Array.isArray(paginator?.links)) {
+        return paginator.links;
+    }
+
+    if (Array.isArray(paginator?.meta?.links)) {
+        return paginator.meta.links;
+    }
+
+    return [];
+});
+
+const currentPage = computed(() => {
+    const paginator = props.paginator as any;
+
+    if (typeof paginator?.current_page === 'number') {
+        return paginator.current_page;
+    }
+
+    if (typeof paginator?.meta?.current_page === 'number') {
+        return paginator.meta.current_page;
+    }
+
+    return 1;
+});
+
+const lastPage = computed(() => {
+    const paginator = props.paginator as any;
+
+    if (typeof paginator?.last_page === 'number') {
+        return paginator.last_page;
+    }
+
+    if (typeof paginator?.meta?.last_page === 'number') {
+        return paginator.meta.last_page;
+    }
+
+    return 1;
+});
+
+const perPage = computed(() => {
+    const paginator = props.paginator as any;
+
+    if (typeof paginator?.per_page === 'number') {
+        return paginator.per_page;
+    }
+
+    if (typeof paginator?.meta?.per_page === 'number') {
+        return paginator.meta.per_page;
+    }
+
+    return props.perPageOptions[0] ?? 10;
+});
+
+const prevUrl = computed(() => {
+    const paginator = props.paginator as any;
+    const resourcePrev = paginator?.links?.prev ?? null;
+    if (typeof resourcePrev === 'string' || resourcePrev === null) {
+        return resourcePrev;
+    }
+
+    return paginatorLinks.value[0]?.url ?? null;
+});
+
+const nextUrl = computed(() => {
+    const paginator = props.paginator as any;
+    const resourceNext = paginator?.links?.next ?? null;
+    if (typeof resourceNext === 'string' || resourceNext === null) {
+        return resourceNext;
+    }
+
+    return paginatorLinks.value[paginatorLinks.value.length - 1]?.url ?? null;
+});
 
 const middleLinks = computed(() => {
-    if (props.paginator.links.length <= 2) {
+    if (paginatorLinks.value.length <= 2) {
         return [];
     }
 
-    return props.paginator.links.slice(1, -1).map((l) => ({
+    return paginatorLinks.value.slice(1, -1).map((l) => ({
         ...l,
         label: normalizeLabel(l.label),
     }));
@@ -84,9 +176,9 @@ function changePerPage(next: number) {
             <div class="w-24">
                 <DropdownSelect
                     id="per_page"
-                    :model-value="paginator.per_page"
+                    :model-value="perPage"
                     :options="perPageDropdownOptions"
-                    :placeholder="String(paginator.per_page)"
+                    :placeholder="String(perPage)"
                     size="sm"
                     @update:model-value="(value: any) => changePerPage(Number(value))"
                 />
@@ -94,7 +186,7 @@ function changePerPage(next: number) {
         </div>
 
         <div class="text-xs text-muted-foreground">
-            {{ t('transactions.index.pagination.pageOf', { page: paginator.current_page, pages: paginator.last_page }) }}
+            {{ t('transactions.index.pagination.pageOf', { page: currentPage, pages: lastPage }) }}
         </div>
 
         <nav class="flex items-center gap-1" :aria-label="t('transactions.index.pagination.aria')">
