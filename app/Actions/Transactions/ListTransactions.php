@@ -4,42 +4,67 @@ declare(strict_types=1);
 
 namespace App\Actions\Transactions;
 
-use App\Data\Transactions\TransactionIndexFilters;
-use App\Data\Transactions\TransactionIndexResult;
+use App\Http\Requests\Transactions\TransactionIndexRequest;
+use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 final class ListTransactions
 {
-    /**
-     * @param  array{sort_by: string|null, sort_direction: string}  $sorts
-     */
-    public function handle(
-        User $user,
-        TransactionIndexFilters $filters,
-        array $sorts,
-        int $perPage,
-        int $page = 1,
-    ): TransactionIndexResult {
-        $query = $this->baseQuery($user);
-        $this->applyFilters($query, $filters);
-        $this->applySort($query, $sorts);
+    private LengthAwarePaginator $transactions;
+
+    private Collection $accounts;
+
+    private string|int|float $totalIncome;
+
+    private string|int|float $totalExpense;
+
+    private array $filters;
+
+    public function handle(TransactionIndexRequest $request): void
+    {
+        $this->handleFilters($request);
+        $this->handleAccounts($request);
+        $this->handleTransactions($request);
+    }
+
+    private function handleFilters(TransactionIndexRequest $request): void
+    {
+        $request->setSorts(['date', 'amount']);
+        $this->filters = [
+            ...$request->getFilters(),
+            ...$request->getData(),
+        ];
+    }
+
+    private function handleTransactions(TransactionIndexRequest $request): void
+    {
+        $query = $this->baseQuery($request->user());
+        $this->applyFilters($query, $request->getFilters());
+        $this->applySort($query, $request->getSorts());
 
         /** @var object{total_income: string|int|float, total_expense: string|int|float}|null $summary */
         $summary = (clone $query)
             ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as total_income')
             ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END), 0) as total_expense')
             ->first();
-        $totalIncome = $summary?->total_income ?? 0;
-        $totalExpense = $summary?->total_expense ?? 0;
+        $this->totalIncome = $summary?->total_income ?? 0;
+        $this->totalExpense = $summary?->total_expense ?? 0;
 
-        return new TransactionIndexResult(
-            paginator: $query->paginate(perPage: $perPage, page: $page),
-            totalIncome: $totalIncome ?? 0,
-            totalExpense: $totalExpense ?? 0,
-        );
+        $this->transactions = $query->paginate(perPage: $request->getPerPage(), page: $request->getPage());
+    }
+
+    private function handleAccounts(TransactionIndexRequest $request): void
+    {
+        $this->accounts = Account::query()
+            ->whereBelongsTo($request->user())
+            ->with('currency')
+            ->orderBy('name')
+            ->get();
     }
 
     /**
@@ -55,25 +80,25 @@ final class ListTransactions
     /**
      * @param  Builder<Transaction>  $query
      */
-    private function applyFilters(Builder $query, TransactionIndexFilters $filters): void
+    private function applyFilters(Builder $query, array $filters): void
     {
-        if ($filters->accountId !== null) {
-            $query->where('account_id', $filters->accountId);
+        if ($filters['account_id'] !== null) {
+            $query->where('account_id', $filters['account_id']);
         }
 
-        if ($filters->from !== null) {
+        if ($filters['from'] !== null) {
             $query->whereDate(
                 'date',
                 '>=',
-                CarbonImmutable::createFromFormat('d-m-Y', $filters->from)->toDateString(),
+                CarbonImmutable::createFromFormat('d-m-Y', $filters['from'])->toDateString(),
             );
         }
 
-        if ($filters->to !== null) {
+        if ($filters['to'] !== null) {
             $query->whereDate(
                 'date',
                 '<=',
-                CarbonImmutable::createFromFormat('d-m-Y', $filters->to)->toDateString(),
+                CarbonImmutable::createFromFormat('d-m-Y', $filters['to'])->toDateString(),
             );
         }
     }
@@ -96,5 +121,28 @@ final class ListTransactions
         }
 
         $query->orderBy($sortBy, $sortDirection);
+    }
+
+    public function getFilters(): array
+    {
+        return $this->filters;
+    }
+
+    public function getTransactionPaginator(): LengthAwarePaginator
+    {
+        return $this->transactions;
+    }
+
+    public function getAccounts(): Collection
+    {
+        return $this->accounts;
+    }
+
+    public function getSummary(): array
+    {
+        return [
+            'total_income' => $this->totalIncome,
+            'total_expense' => $this->totalExpense,
+        ];
     }
 }

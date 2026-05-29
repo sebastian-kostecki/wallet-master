@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Accounts;
 
 use App\Actions\Accounts\StoreAccount;
 use App\Actions\Accounts\UpdateAccountDetails;
+use App\Data\Accounts\AccountFormOptions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Resources\Accounts\AccountResource;
 use App\Models\Account;
 use App\Models\Currency;
-use App\Data\Accounts\AccountFormOptions;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;

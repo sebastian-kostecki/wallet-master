@@ -6,7 +6,6 @@ use App\Actions\Transactions\DeleteTransaction;
 use App\Actions\Transactions\ListTransactions;
 use App\Actions\Transactions\StoreTransaction;
 use App\Actions\Transactions\UpdateTransaction;
-use App\Data\Transactions\TransactionIndexFilters;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transactions\StoreTransactionRequest;
 use App\Http\Requests\Transactions\TransactionIndexRequest;
@@ -16,7 +15,6 @@ use App\Http\Resources\Transactions\TransactionEditResource;
 use App\Http\Resources\Transactions\TransactionResource;
 use App\Models\Account;
 use App\Models\Transaction;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,46 +31,20 @@ final class TransactionController extends Controller
         TransactionIndexRequest $request,
         ListTransactions $listTransactions,
     ): Response {
-        $request->setSorts(['date', 'amount']);
-
-        $accounts = Account::queryForUser($request->user())->get();
-        $result = $listTransactions->handle(
-            $request->user(),
-            TransactionIndexFilters::fromArray($request->getFilters()),
-            $request->getSorts(),
-            $request->getPerPage(),
-            $request->getPage(),
-        );
+        $listTransactions->handle($request);
 
         return Inertia::render('transactions/Index', [
-            'filters' => [
-                ...$request->getFilters(),
-                ...$request->getData(),
-            ],
-            'accounts' => AccountResource::collection($accounts)->resolve(),
-            'transactions' => $this->transactionsPaginatorPayload($result->paginator),
-            'summary' => [
-                'total_income' => $result->totalIncome,
-                'total_expense' => $result->totalExpense,
-            ],
+            'filters' => $listTransactions->getFilters(),
+            'accounts' => AccountResource::collection($listTransactions->getAccounts())->resolve(),
+            'transactions' => TransactionResource::collection($listTransactions->getTransactionPaginator()),
+            'summary' => $listTransactions->getSummary(),
         ]);
-    }
-
-    /**
-     * @param  LengthAwarePaginator<int, Transaction>  $paginator
-     * @return array<string, mixed>
-     */
-    private function transactionsPaginatorPayload(LengthAwarePaginator $paginator): array
-    {
-        $payload = $paginator->toArray();
-        $payload['data'] = TransactionResource::collection($paginator->items())->resolve();
-
-        return $payload;
     }
 
     public function create(Request $request): Response
     {
         $accounts = Account::queryForUser($request->user())->get();
+
         return Inertia::render('transactions/Create', [
             'accounts' => AccountResource::collection($accounts)->resolve(),
         ]);
