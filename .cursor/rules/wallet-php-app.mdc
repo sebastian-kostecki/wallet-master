@@ -23,15 +23,32 @@ Import HTTP: `Http/Controllers/Imports/`, not under `Transactions/`.
 
 ## Actions
 
+**Write** — pass primitives/models, not Form Requests:
+
 ```php
-// ✅ Action returns models or Data DTO
-public function handle(User $user, TransactionIndexFilters $filters): TransactionIndexResult
+public function handle(User $user, array $validated): Transaction
+```
+
+**Read index** — Action orchestrates; controller maps Resources (reference: `ListTransactions`):
+
+```php
+// ✅ Action
+public function handle(TransactionIndexRequest $request): void { /* queries + getters */ }
+
+// ✅ Controller
+$listTransactions->handle($request);
+return Inertia::render('transactions/Index', [
+    'filters' => $listTransactions->getFilters(),
+    'accounts' => AccountResource::collection($listTransactions->getAccounts())->resolve(),
+    'transactions' => $this->transactionsPaginatorPayload($listTransactions->getTransactionPaginator()),
+    'summary' => $listTransactions->getSummary(),
+]);
 
 // ❌ Action formats for Inertia
 return (new TransactionResource($transaction))->resolve();
 ```
 
-Map collections in the controller with `Http/Resources/{Domain}/*`.
+Never import `App\Http\Resources\*` in Actions.
 
 ## New integrations
 
