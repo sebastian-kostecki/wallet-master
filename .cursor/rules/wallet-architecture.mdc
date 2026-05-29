@@ -12,7 +12,7 @@ One domain = the same namespace segment across all layers (e.g. `Transactions` e
 ## Approved `app/` roots
 
 - `Actions/{Domain}/` — use cases (write + read orchestration), `handle()`, no `Http/Resources`
-- `Data/{Domain}/` — optional DTOs (`*Filters`, `*Result`, `*FormOptions`) when a use case benefits
+- `Data/{Domain}/` — static form options (`*FormOptions`) and shared DTOs reused across layers; **not** for index read results (use Action getters)
 - `Http/Controllers|Requests|Resources/{Domain}/` — web layer only
 - `Support/{Domain}/` — stateless domain algorithms (no HTTP, no SDK clients)
 - `Integrations/{Name}/` — external clients and infrastructure repositories (e.g. Typesense, DescriptionMemory)
@@ -29,10 +29,10 @@ Do **not** add `Services/`, `Modules/`, or `ViewModels/` for new code.
 
 | Layer | Does | Does not |
 |-------|------|----------|
-| **Controller** | `authorize*`, call Action, `Inertia::render` / redirect, toast `message_key`, map Action output via `Http\Resources\*` (`->resolve()`, paginator payload helpers) | `DB::transaction`, dedupe rules, `selectRaw` aggregations, business date parsing, full index query workflow |
+| **Controller** | `authorize*`, call Action, `Inertia::render` / redirect, toast `message_key`, map Action getters via `Http\Resources\*` (`->resolve()`) | `DB::transaction`, dedupe rules, `selectRaw` aggregations, business date parsing, full index query workflow |
 | **Form Request** | `rules()`, `authorize()`, filter/sort/page helpers (`getFilters()`, `getData()`, `getSorts()`, `Indexable`) | DB writes |
 | **Action** | use-case orchestration: queries, filters, sort, aggregates, pagination; write: `handle(User, array)` → `Model`; read index: `handle(*IndexRequest)` + typed getters | `Http\Resources\*`, `Inertia::render`, `number_format`, `asset()` |
-| **Data** | immutable DTOs when useful — not required for every index | `Inertia::render`, Eloquent in DTO classes |
+| **Data** | form options (`*FormOptions`), shared immutable DTOs | index read results, `Inertia::render`, Eloquent in DTO classes |
 | **Resource** | array shape for Vue/Inertia | authorization, business rules |
 | **Support/{Domain}** | pure algorithms (dedupe, relative dates) | HTTP/SDK clients |
 | **Integrations** | API clients, infra repositories | wallet business rules |
@@ -49,17 +49,19 @@ Reference implementation: `App\Actions\Transactions\ListTransactions` + `Transac
 
 1. **Request** — validation; `getFilters()` for query constraints; `getData()` for UI state (`sort`, `direction`, `per_page`, `page`); `getSorts()` for Eloquent (`sort_by`, `sort_direction`).
 2. **Action** — `handle(*IndexRequest $request): void`; call `setSorts()` on the request when needed; store merged UI filters (`getFilters()` + `getData()`); run queries; expose **getters** (e.g. `getFilters()`, `getTransactionPaginator()`, `getAccounts()`, `getSummary()`).
-3. **Controller** — single `handle()` call; build Inertia props with Resources only. For paginated lists where Vue expects `total` / `current_page` on the prop root, use a private helper that merges `LengthAwarePaginator::toArray()` with `Resource::collection($paginator->items())->resolve()` for `data` (see `TransactionController::transactionsPaginatorPayload()`).
+3. **Controller** — single `handle()` call; assemble Inertia props explicitly from getters + Resources (see `TransactionController::index()`).
 
-Action uses `$request->getFilters()` / `getSorts()` for queries; the getter for `filters` returns the merged array for the frontend.
+Action uses `$request->getFilters()` / `getSorts()` for queries; `getFilters()` returns the merged array (`getFilters()` + `getData()`) for the frontend.
+
+**Rules:** one `handle()` per Action instance (fresh DI per request); getter names describe what they return (`getTransactionPaginator`, not `getData()`).
 
 ## Code conventions
 
 - Action: one public `handle()`, prefer `final`.
 - Write Actions: `handle(User $user, array $validated)` (or model + validated) → return `Model` / `void`.
-- Read-index Actions: `handle(*IndexRequest $request): void` + getters; **may** import `App\Http\Requests\{Domain}\*`.
+- Read-index Actions: `handle(*IndexRequest $request): void` + typed getters; **may** import `App\Http\Requests\{Domain}\*`. Do **not** return `Data\*Result` — getters are the canonical pattern.
 - Action **never** imports `App\Http\Resources\*`.
-- `Data\*Result` is allowed but **not required** when getters + controller mapping are enough.
+- Index filters/sort/page live in `*IndexRequest` (`getFilters()`, `getData()`, `getSorts()`, `Indexable`) — not in `Data/`.
 - UI presentation (`asset()`, `label_key`, front-facing date format) only in Resource or Enum metadata.
 - Integrations: register bindings in `AppServiceProvider`.
 - Tests mirror domains: `tests/Feature/{Domain}/`, `tests/Unit/Data/` or `tests/Unit/Support/{Domain}/`.
@@ -75,10 +77,11 @@ One phase per PR (see `.docs/refactoring.md` §7). Update §10 status when done.
 | Inertia endpoint | `Http/Controllers/{Domain}/` |
 | Request validation | `Http/Requests/{Domain}/` |
 | JSON props shape | `Http/Resources/{Domain}/` |
-| Inertia index props (Resource mapping, paginator helpers) | `Http/Controllers/{Domain}/` |
+| Inertia index props (getters → Resource mapping) | `Http/Controllers/{Domain}/` |
 | Business operation | `Actions/{Domain}/` |
 | Read list orchestration (`*IndexRequest`, getters) | `Actions/{Domain}/` |
-| Optional DTO / form options | `Data/{Domain}/` |
+| Form options / shared DTO | `Data/{Domain}/` |
+| Index filters, sort, pagination | `Http/Requests/{Domain}/` (*IndexRequest) |
 | Domain algorithm | `Support/{Domain}/` |
 | External API | `Integrations/{Name}/` |
 | DB entity | `Models/` |

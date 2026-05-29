@@ -39,7 +39,7 @@ Dokument operacyjny dla agentów AI i deweloperów. Opisuje **docelową struktur
 ```
 app/
 ├── Actions/{Domain}/              # Use case — logika biznesowa, bez formatowania pod Vue
-├── Data/{Domain}/                 # DTO, filtry, FormOptions (zastępuje ViewModels + rozproszone DTO)
+├── Data/{Domain}/                 # FormOptions, shared DTOs (not index read results — use Action getters)
 ├── Enums/
 ├── Events/ / Listeners/ / Jobs/
 ├── Exceptions/
@@ -76,10 +76,10 @@ Zasada: **liczba mnoga** w folderach (`Transactions`, `Accounts`), zgodnie z `Ac
 
 | Warstwa | Odpowiedzialność | Nie robi |
 |---------|------------------|----------|
-| **Controller** | Autoryzacja zasobu, wywołanie Action, `Inertia::render`, redirect, toast (`message_key`) | SQL, reguły deduplikacji, mapowanie Resource |
-| **Form Request** | `rules()`, `authorize()`, budowa filtrów (`*Filters::fromRequest`) | Zapis do DB |
-| **Action** | Orchestracja: zapytania, transakcje DB, wywołanie innych Actions/Support | `TransactionResource`, `number_format`, `asset()` |
-| **Data** | Immutable DTO: filtry, opcje formularza, wyniki pośrednie | Zapytań Eloquent |
+| **Controller** | Autoryzacja zasobu, wywołanie Action, mapowanie `Http\Resources\*`, `Inertia::render`, redirect, toast (`message_key`) | SQL, reguły deduplikacji, pełny index workflow |
+| **Form Request** | `rules()`, `authorize()`, filtry/sort/stronicowanie (`getFilters()`, `getData()`, `getSorts()`, `Indexable`) | Zapis do DB |
+| **Action** | Orchestracja: zapytania, transakcje DB, wywołanie innych Actions/Support; read index: `handle(): void` + gettery | `TransactionResource`, `number_format`, `asset()` |
+| **Data** | Opcje formularza (`*FormOptions`), współdzielone immutable DTO | Wyników index (gettery w Action), zapytań Eloquent |
 | **Support/{Domain}** | Algorytmy czystej logiki (dedupe, daty względne) | Integracji HTTP/SDK |
 | **Integrations/** | Klienty API, repozytoria infrastruktury | Reguł biznesowych portfela |
 | **Resource** | Kształt tablicy pod Inertia/API | Autoryzacji |
@@ -114,9 +114,8 @@ Zasada: **liczba mnoga** w folderach (`Transactions`, `Accounts`), zgodnie z `Ac
 |---------|----------|
 | `ViewModels/` (usunąć po migracji) | `Data/{Domain}/` |
 | `ListUserAccounts::forTransactionForm()` | `Data/Accounts/AccountListForForm` lub Action `ListAccountsForForm` + Resource w kontrolerze |
-| `Support/Transactions/TransactionIndexFilters` | `Data/Transactions/TransactionIndexFilters` (opcjonalnie; Support OK jeśli tylko logika parsowania) |
 
-**Decyzja projektowa:** dane statyczne pod formularz (enumy, ikony) → `Data/`. Listy z DB → Action zwraca modele/collection, kontroler mapuje przez Resource.
+**Decyzja projektowa:** dane statyczne pod formularz (enumy, ikony) → `Data/`. Listy z DB → Action z getterami lub `Collection`, kontroler mapuje przez Resource. Filtry index → `*IndexRequest` (`getFilters()`, `Indexable`), nie `Data/`.
 
 **Kroki:**
 1. Przenieś `AccountFormOptions` → `Data/Accounts/`.
@@ -125,17 +124,17 @@ Zasada: **liczba mnoga** w folderach (`Transactions`, `Accounts`), zgodnie z `Ac
 
 ### Faza 2 — Rozdzielenie query i prezentacji (Transactions)
 
-**Problem:** `ListTransactions` używa `TransactionResource` i formatuje summary w Action.
+**Problem:** `ListTransactions` używał `TransactionResource` i formatował summary w Action.
 
-**Docelowo:**
-- `ListTransactions::handle()` → zwraca np. `TransactionIndexResult` (Data) z: `LengthAwarePaginator` modeli, `summary` jako int/decimal, `filters` array.
-- Kontroler lub `Http/Presenters/Transactions/TransactionIndexPresenter` (opcjonalnie) → mapuje na props Inertia.
+**Docelowo (wzorzec getterów):**
+- `ListTransactions::handle(*IndexRequest $request): void` — orkiestracja w prywatnych metodach (`handleFilters`, `handleAccounts`, `handleTransactions`).
+- Publiczne gettery eksponują wyniki: `getFilters()`, `getTransactionPaginator()`, `getAccounts()`, `getSummary()`.
+- Kontroler: jedno `handle()`, potem jawne składanie props z getterów przez Resources.
 
 | Plik | Zmiana |
 |------|--------|
-| `Actions/Transactions/ListTransactions.php` | Usuń Resource i `number_format` z Action |
-| `Actions/Accounts/ListUserAccounts.php` | Usuń `AccountResource::collection` z Action; zwróć `Collection` lub DTO |
-| Nowy (opcjonalnie) | `Data/Transactions/TransactionIndexResult.php` |
+| `Actions/Transactions/ListTransactions.php` | Usuń Resource i `number_format` z Action; gettery zamiast DTO |
+| `Actions/Accounts/ListUserAccounts.php` | Usuń `AccountResource::collection` z Action; gettery lub `Collection` |
 
 **Testy:** zaktualizuj `TransactionIndexTest` — asserty na props bez zmiany zachowania UI.
 
@@ -243,6 +242,7 @@ Struktura `resources/js/` zostaje. Przy refaktorze backendu:
 |-------------|----------------|
 | `Services/` obok `Actions/` | Duplikacja warstwy aplikacji |
 | Resource w Action | Trudne testy, zależność Application → Http |
+| `Data/*Result` dla index read | Gettery w Action są kanoniczne; kontroler składa props explicite |
 | `Support/` na wszystko | Rozmyta granica; użyj `Integrations/` lub `Data/` |
 | Big-bang rename całego `app/` | Konflikty git, trudny review |
 | Zmiana URL-i przy przenosinach kontrolerów | Łamie zakładki i testy E2E |
@@ -255,7 +255,7 @@ Struktura `resources/js/` zostaje. Przy refaktorze backendu:
 |------|--------|------|-------|
 | 0 | Zakończona | 2026-05-28 | HTTP: `Accounts/`, `Transactions/`, `Transfers/` |
 | 1 | Zakończona | 2026-05-28 | `Data/Accounts/AccountFormOptions`; usunięto `ViewModels/` |
-| 2 | Zakończona | 2026-05-28 | `TransactionIndexResult`; `ListTransactions`; Actions bez Resource |
+| 2 | Zakończona | 2026-05-28 | `ListTransactions` (getters); Actions bez Resource |
 | 3 | Zakończona | 2026-05-28 | `Integrations/Typesense`, `Integrations/DescriptionMemory` |
 | 4 | Zakończona | 2026-05-28 | `ImportController`; `routes/imports.php` |
 | 5 | Zakończona | 2026-05-28 | `StoreAccount`, prezentacja w `AccountResource` |
@@ -272,7 +272,8 @@ Struktura `resources/js/` zostaje. Przy refaktorze backendu:
 | Walidacja requestu | `Http/Requests/{Domain}/` |
 | Kształt props JSON | `Http/Resources/{Domain}/` |
 | Operacja biznesowa | `Actions/{Domain}/` |
-| Filtry / DTO / opcje formularza | `Data/{Domain}/` |
+| Read index (gettery) | `Actions/{Domain}/` + `Http/Requests/{Domain}/` (*IndexRequest) |
+| Opcje formularza / współdzielone DTO | `Data/{Domain}/` |
 | Algorytm domenowy (dedupe, daty) | `Support/{Domain}/` |
 | API zewnętrzne (Typesense) | `Integrations/{Name}/` |
 | Encja DB | `Models/` |
