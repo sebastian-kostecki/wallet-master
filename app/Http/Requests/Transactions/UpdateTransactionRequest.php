@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Transactions;
 
+use App\Models\Transaction;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -10,7 +11,10 @@ final class UpdateTransactionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        /** @var Transaction $transaction */
+        $transaction = $this->route('transaction');
+
+        return $this->user()?->can('update', $transaction) ?? false;
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Transactions;
 
+use App\Models\Transaction;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -10,7 +11,7 @@ final class StoreTransactionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user()?->can('create', Transaction::class) ?? false;
     }
 
     /**
