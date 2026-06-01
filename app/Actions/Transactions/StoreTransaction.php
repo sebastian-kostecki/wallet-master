@@ -13,20 +13,21 @@ use App\Support\Transactions\TransactionDedupe;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 final class StoreTransaction
 {
     /**
-     * @param array{
+     * @param  array{
      *   account_id: int,
      *   date: string,
      *   booked_at?: ?string,
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,
-     * } $validated
+     * }  $validated
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function handle(User $user, array $validated): Transaction
     {
@@ -38,7 +39,7 @@ final class StoreTransaction
                 ->firstOrFail();
 
             $date = CarbonImmutable::createFromFormat('d-m-Y', $validated['date'])->toDateString();
-            $bookedAt = isset($validated['booked_at']) && is_string($validated['booked_at']) && $validated['booked_at'] !== ''
+            $bookedAt = ! empty($validated['booked_at'])
                 ? CarbonImmutable::createFromFormat('d-m-Y', $validated['booked_at'])->toDateString()
                 : $date;
             $amount = TransactionDedupe::amountToDecimalString($validated['amount']);

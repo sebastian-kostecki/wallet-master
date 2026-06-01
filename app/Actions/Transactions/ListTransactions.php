@@ -15,14 +15,27 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 final class ListTransactions
 {
+    /** @var LengthAwarePaginator<int, Transaction> */
     private LengthAwarePaginator $transactions;
 
+    /** @var Collection<int, Account> */
     private Collection $accounts;
 
     private string|int|float $totalIncome;
 
     private string|int|float $totalExpense;
 
+    /**
+     * @var array{
+     *   account_id: ?int,
+     *   from: ?string,
+     *   to: ?string,
+     *   sort: ?string,
+     *   direction: string,
+     *   per_page: int,
+     *   page?: int,
+     * }
+     */
     private array $filters;
 
     public function handle(TransactionIndexRequest $request): void
@@ -52,8 +65,8 @@ final class ListTransactions
             ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as total_income')
             ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END), 0) as total_expense')
             ->first();
-        $this->totalIncome = $summary?->total_income ?? 0;
-        $this->totalExpense = $summary?->total_expense ?? 0;
+        $this->totalIncome = $summary !== null ? $summary->total_income : 0;
+        $this->totalExpense = $summary !== null ? $summary->total_expense : 0;
 
         $this->transactions = $query->paginate(perPage: $request->getPerPage(), page: $request->getPage());
     }
@@ -79,6 +92,7 @@ final class ListTransactions
 
     /**
      * @param  Builder<Transaction>  $query
+     * @param  array{account_id: ?int, from: ?string, to: ?string}  $filters
      */
     private function applyFilters(Builder $query, array $filters): void
     {
@@ -109,8 +123,8 @@ final class ListTransactions
      */
     private function applySort(Builder $query, array $sorts): void
     {
-        $sortBy = $sorts['sort_by'] ?? null;
-        $sortDirection = $sorts['sort_direction'] ?? 'desc';
+        $sortBy = $sorts['sort_by'];
+        $sortDirection = $sorts['sort_direction'];
 
         if ($sortBy === null) {
             return;
@@ -123,21 +137,41 @@ final class ListTransactions
         $query->orderBy($sortBy, $sortDirection);
     }
 
+    /**
+     * @return array{
+     *   account_id: ?int,
+     *   from: ?string,
+     *   to: ?string,
+     *   sort: ?string,
+     *   direction: string,
+     *   per_page: int,
+     *   page?: int,
+     * }
+     */
     public function getFilters(): array
     {
         return $this->filters;
     }
 
+    /**
+     * @return LengthAwarePaginator<int, Transaction>
+     */
     public function getTransactionPaginator(): LengthAwarePaginator
     {
         return $this->transactions;
     }
 
+    /**
+     * @return Collection<int, Account>
+     */
     public function getAccounts(): Collection
     {
         return $this->accounts;
     }
 
+    /**
+     * @return array{total_income: string|int|float, total_expense: string|int|float}
+     */
     public function getSummary(): array
     {
         return [

@@ -19,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 final class TransactionController extends Controller
 {
@@ -50,6 +51,9 @@ final class TransactionController extends Controller
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function store(StoreTransactionRequest $request, StoreTransaction $store): RedirectResponse
     {
         $store->handle($request->user(), $request->validated());
@@ -63,18 +67,17 @@ final class TransactionController extends Controller
     public function edit(Transaction $transaction, Request $request): Response
     {
         $transaction->loadMissing(['account:id,name', 'currency:id,code,symbol,precision']);
-
-        $accounts = AccountResource::collection(
-            Account::queryForUser($request->user())
-                ->get(['id', 'name', 'currency_id', 'bank', 'type', 'current_balance', 'opening_balance'])
-        )->resolve();
+        $accounts = Account::queryForUser($request->user())->get();
 
         return Inertia::render('transactions/Edit', [
             'transaction' => new TransactionEditResource($transaction)->resolve(),
-            'accounts' => $accounts,
+            'accounts' => AccountResource::collection($accounts)->resolve(),
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function update(UpdateTransactionRequest $request, Transaction $transaction, UpdateTransaction $update): RedirectResponse
     {
         $update->handle($transaction, $request->validated());

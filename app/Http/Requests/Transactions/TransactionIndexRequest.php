@@ -11,7 +11,8 @@ final class TransactionIndexRequest extends FormRequest
 {
     use Indexable;
 
-    public array $filters = [];
+    /** @var array{account_id: ?int, from: ?string, to: ?string}|null */
+    private ?array $filters = null;
 
     public function authorize(): bool
     {
@@ -53,9 +54,12 @@ final class TransactionIndexRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array{account_id: ?int, from: ?string, to: ?string}
+     */
     public function getFilters(): array
     {
-        if (! empty($this->filters)) {
+        if ($this->filters !== null) {
             return $this->filters;
         }
 
@@ -65,13 +69,11 @@ final class TransactionIndexRequest extends FormRequest
         $fromInput = isset($validated['from']) ? (string) $validated['from'] : null;
         $toInput = isset($validated['to']) ? (string) $validated['to'] : null;
 
-        $this->filters = [
+        return $this->filters = [
             'account_id' => $accountId,
             'from' => $fromInput,
             'to' => $toInput,
         ];
-
-        return $this->filters;
     }
 
     public function getAccountId(): ?int

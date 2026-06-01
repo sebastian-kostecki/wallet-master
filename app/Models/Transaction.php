@@ -19,8 +19,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $import_id
  * @property string|null $transfer_id
  * @property TransactionType $type
- * @property Carbon|CarbonImmutable|string $date
- * @property Carbon|CarbonImmutable|string $booked_at
+ * @property Carbon $date
+ * @property Carbon|null $booked_at
  */
 final class Transaction extends Model
 {

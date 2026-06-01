@@ -15,6 +15,14 @@ trait Indexable
         $this->sorts = $sorts;
     }
 
+    /**
+     * @return array{
+     *   sort: ?string,
+     *   direction: string,
+     *   per_page: int,
+     *   page?: int,
+     * }
+     */
     public function getData(): array
     {
         if (! empty($this->data)) {
@@ -61,6 +69,9 @@ trait Indexable
         return $this->getData()['direction'] ?? 'desc';
     }
 
+    /**
+     * @return array{sort_by: string|null, sort_direction: string}
+     */
     public function getSorts(): array
     {
         return [

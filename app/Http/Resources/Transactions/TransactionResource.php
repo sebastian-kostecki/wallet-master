@@ -22,7 +22,9 @@ final class TransactionResource extends JsonResource
     public function toArray(Request $request): array
     {
         $dateIso = $this->date->toDateString();
-        $bookedAtIso = $this->booked_at?->toDateString() ?? $dateIso;
+        $bookedAtIso = $this->booked_at !== null
+            ? $this->booked_at->toDateString()
+            : $dateIso;
 
         return [
             'id' => $this->id,
