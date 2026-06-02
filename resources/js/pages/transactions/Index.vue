@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -275,10 +276,7 @@ function resolveAccountTypeIcon(type: string) {
     return accountTypeIcons.value[type as keyof typeof accountTypeIcons.value] ?? Wallet;
 }
 
-const currentSearch = computed(() => {
-    const idx = page.url.indexOf('?');
-    return idx >= 0 ? page.url.slice(idx) : '';
-});
+const { currentSearch, transactionsIndexSearch } = useTransactionsIndexSearch();
 
 const hasImportRoute = computed(() => {
     const r = route as any;
@@ -831,6 +829,7 @@ function openDeleteDialog(transactionId: number) {
             :description="deletingTransaction?.description ?? null"
             :is-transfer="Boolean(deletingTransaction?.transfer_id)"
             :disabled="deleteProcessing"
+            :return-search="transactionsIndexSearch"
             @processing="(value: any) => (deleteProcessing = value)"
             @success="deletingTransactionId = null"
         />

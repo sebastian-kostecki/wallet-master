@@ -12,11 +12,13 @@ const props = withDefaults(
         transactionId: number | null;
         description?: string | null;
         isTransfer?: boolean;
+        returnSearch?: string;
     }>(),
     {
         disabled: false,
         description: null,
         isTransfer: false,
+        returnSearch: '',
     },
 );
 
@@ -43,7 +45,7 @@ function destroy() {
         return;
     }
 
-    form.delete(route('transactions.destroy', props.transactionId), {
+    form.delete(route('transactions.destroy', props.transactionId) + (props.returnSearch ?? ''), {
         preserveScroll: true,
         onSuccess: () => {
             emit('update:open', false);

@@ -3,27 +3,16 @@ import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { ArrowLeftRight, BookOpen, Folder, LayoutGrid, Wallet } from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
-function pad2(n: number): string {
-    return String(n).padStart(2, '0');
-}
+const { transactionsIndexHref } = useTransactionsIndexSearch();
 
-function formatDdMmYyyy(d: Date): string {
-    return `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
-}
-
-function currentMonthRangeQuery(): string {
-    const now = new Date();
-    const from = new Date(now.getFullYear(), now.getMonth(), 1);
-    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return `from=${encodeURIComponent(formatDdMmYyyy(from))}&to=${encodeURIComponent(formatDdMmYyyy(to))}`;
-}
-
-const mainNavItems: NavItem[] = [
+const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
         href: '/dashboard',
@@ -36,10 +25,10 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Transakcje',
-        href: `/transactions?${currentMonthRangeQuery()}`,
+        href: transactionsIndexHref.value,
         icon: ArrowLeftRight,
     },
-];
+]);
 
 const footerNavItems: NavItem[] = [
     {

@@ -6,9 +6,10 @@ import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -26,18 +27,12 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const page = usePage() as any;
-
-const currentSearch = computed(() => {
-    const url = page.url as string;
-    const idx = url.indexOf('?');
-    return idx >= 0 ? url.slice(idx) : '';
-});
+const { transactionsIndexHref } = useTransactionsIndexSearch();
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('transactions.index.title'),
-        href: '/transactions',
+        href: transactionsIndexHref.value,
     },
     {
         title: t('transfers.create.title'),
@@ -293,7 +288,7 @@ function submit() {
 
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <Button variant="secondary" as-child>
-                                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
+                                <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
                             </Button>
 
                             <Button type="submit" :disabled="form.processing || isSameAccount">

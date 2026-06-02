@@ -7,9 +7,10 @@ import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTran
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { displayAmount, normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -42,12 +43,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const page = usePage() as any;
-const currentSearch = computed(() => {
-    const url = page.url as string;
-    const idx = url.indexOf('?');
-    return idx >= 0 ? url.slice(idx) : '';
-});
+const { transactionsIndexSearch, transactionsIndexHref } = useTransactionsIndexSearch();
 
 function isoToDdMmYyyy(input: string): string {
     const trimmed = input.trim();
@@ -65,7 +61,7 @@ function isoToDdMmYyyy(input: string): string {
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('transactions.index.title'),
-        href: '/transactions',
+        href: transactionsIndexHref.value,
     },
     {
         title: t('transactions.edit.title'),
@@ -102,7 +98,7 @@ function submit() {
     if ((form.booked_at ?? '').trim() === '') {
         form.booked_at = form.date;
     }
-    form.put(route('transactions.update', props.transaction.id), {
+    form.put(route('transactions.update', props.transaction.id) + transactionsIndexSearch.value, {
         onSuccess: () => {},
         onError: () => {},
     });
@@ -112,7 +108,7 @@ const deleteDialogOpen = ref(false);
 const deleteProcessing = ref(false);
 
 function onDeleted() {
-    router.visit(route('transactions.index') + currentSearch.value);
+    router.visit(transactionsIndexHref.value);
 }
 </script>
 
@@ -218,7 +214,7 @@ function onDeleted() {
 
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <Button variant="secondary" as-child>
-                                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
+                                <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
                             </Button>
 
                             <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
@@ -288,6 +284,7 @@ function onDeleted() {
             :description="transaction.description"
             :is-transfer="Boolean(transaction.transfer_id)"
             :disabled="deleteProcessing"
+            :return-search="transactionsIndexSearch"
             @processing="(value: any) => (deleteProcessing = value)"
             @success="onDeleted"
         />
