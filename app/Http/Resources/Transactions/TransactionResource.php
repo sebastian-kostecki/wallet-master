@@ -37,6 +37,7 @@ final class TransactionResource extends JsonResource
             'type' => $this->type->value,
             'description' => $this->description,
             'subject' => $this->subject,
+            'raw_statement_description' => $this->raw_statement_description,
             'transfer_id' => $this->transfer_id,
             'account' => $this->account !== null
                 ? AccountResource::make($this->account)->resolve($request)

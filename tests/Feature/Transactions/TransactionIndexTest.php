@@ -423,3 +423,57 @@ test('transactions index includes unresolved import failed rows and respects acc
             ->has('unresolved_import_failed_rows', 0)
         );
 });
+
+test('transactions index includes raw_statement_description when present', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'A',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-04-10',
+        'booked_at' => '2026-04-10',
+        'amount' => -50,
+        'type' => 'expense',
+        'description' => 'Coffee shop',
+        'subject' => 'Cafe',
+        'raw_statement_description' => 'PAYMENT CAFE XYZ 01.04',
+        'normalized_description' => 'coffee shop',
+        'dedupe_hash' => md5('2026-04-10|-50.00|coffee shop', true),
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-04-11',
+        'booked_at' => '2026-04-11',
+        'amount' => -10,
+        'type' => 'expense',
+        'description' => 'Manual only',
+        'subject' => null,
+        'normalized_description' => 'manual only',
+        'dedupe_hash' => md5('2026-04-11|-10.00|manual only', true),
+    ]);
+
+    $this->actingAs($user)
+        ->get('/transactions')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('transactions/Index', false)
+            ->has('transactions.data', 2)
+            ->where('transactions.data.0.raw_statement_description', null)
+            ->where('transactions.data.1.raw_statement_description', 'PAYMENT CAFE XYZ 01.04')
+        );
+});

@@ -60,6 +60,7 @@ type Transaction = {
     type: 'income' | 'expense' | string;
     description: string;
     subject: string | null;
+    raw_statement_description: string | null;
     transfer_id: string | null;
     account: Account | null;
     currency: Currency | null;
@@ -370,6 +371,10 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
 
 const importDialogOpen = ref(false);
 
+function hasRawStatementDescription(tx: Transaction): boolean {
+    return (tx.raw_statement_description ?? '').trim() !== '';
+}
+
 function truncateText(input: string | null | undefined, maxLength: number): { text: string; isTruncated: boolean } {
     const value = (input ?? '').trim();
     if (value === '') {
@@ -553,7 +558,71 @@ function openDeleteDialog(transactionId: number) {
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="flex min-w-0 items-center gap-3">
+                                        <TooltipProvider v-if="hasRawStatementDescription(tx)" :delay-duration="0">
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <div
+                                                        class="flex min-w-0 cursor-pointer items-center gap-3"
+                                                        :aria-label="t('transactions.index.a11y.showStatementDescription')"
+                                                    >
+                                                        <div
+                                                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                                                            :class="transactionIcon(tx).containerClass"
+                                                            aria-hidden="true"
+                                                        >
+                                                            <component :is="transactionIcon(tx).component" class="h-4 w-4" />
+                                                        </div>
+
+                                                        <div class="w-full min-w-0">
+                                                            <div v-if="tx.type === 'adjustment'" class="mb-1">
+                                                                <span
+                                                                    class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400"
+                                                                >
+                                                                    {{ t('transactions.index.badges.adjustment') }}
+                                                                </span>
+                                                            </div>
+                                                            <p class="truncate text-sm font-medium text-foreground">
+                                                                {{ truncateText(tx.subject, 80).text }}
+                                                            </p>
+                                                            <p class="mt-0.5 truncate text-xs text-muted-foreground">
+                                                                {{ truncateText(tx.description, 120).text }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <div class="space-y-3">
+                                                        <div>
+                                                            <p class="text-xs font-medium text-muted-foreground">
+                                                                {{ t('transactions.edit.statement.title') }}
+                                                            </p>
+                                                            <p class="mt-1 max-w-md whitespace-pre-wrap break-words">
+                                                                {{ tx.raw_statement_description }}
+                                                            </p>
+                                                        </div>
+                                                        <div
+                                                            v-if="
+                                                                truncateText(tx.subject, 80).isTruncated &&
+                                                                (tx.subject ?? '').trim() !== ''
+                                                            "
+                                                        >
+                                                            <p class="text-xs font-medium text-muted-foreground">
+                                                                {{ t('transactions.index.table.subject') }}
+                                                            </p>
+                                                            <p class="mt-1 max-w-md break-words">{{ tx.subject }}</p>
+                                                        </div>
+                                                        <div v-if="truncateText(tx.description, 120).isTruncated">
+                                                            <p class="text-xs font-medium text-muted-foreground">
+                                                                {{ t('transactions.index.table.description') }}
+                                                            </p>
+                                                            <p class="mt-1 max-w-md break-words">{{ tx.description }}</p>
+                                                        </div>
+                                                    </div>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+
+                                        <div v-else class="flex min-w-0 items-center gap-3">
                                             <div
                                                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                                                 :class="transactionIcon(tx).containerClass"
@@ -710,21 +779,75 @@ function openDeleteDialog(transactionId: number) {
                                                 {{ t('transactions.index.badges.adjustment') }}
                                             </span>
                                         </div>
-                                        <TooltipProvider :delay-duration="0">
-                                            <Tooltip v-if="truncateText(tx.description, 90).isTruncated">
+
+                                        <TooltipProvider v-if="hasRawStatementDescription(tx)" :delay-duration="0">
+                                            <Tooltip>
                                                 <TooltipTrigger as-child>
-                                                    <p class="text-sm font-medium" :title="tx.description">
-                                                        {{ truncateText(tx.description, 90).text }}
-                                                    </p>
+                                                    <div
+                                                        class="cursor-pointer"
+                                                        :aria-label="t('transactions.index.a11y.showStatementDescription')"
+                                                    >
+                                                        <p class="text-sm font-medium">
+                                                            {{ truncateText(tx.description, 90).text }}
+                                                        </p>
+                                                        <p
+                                                            v-if="(tx.subject ?? '').trim() !== ''"
+                                                            class="mt-1 text-xs text-muted-foreground"
+                                                        >
+                                                            {{ truncateText(tx.subject, 70).text }}
+                                                        </p>
+                                                    </div>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
-                                                    <p class="max-w-sm break-words">{{ tx.description }}</p>
+                                                    <div class="space-y-3">
+                                                        <div>
+                                                            <p class="text-xs font-medium text-muted-foreground">
+                                                                {{ t('transactions.edit.statement.title') }}
+                                                            </p>
+                                                            <p class="mt-1 max-w-md whitespace-pre-wrap break-words">
+                                                                {{ tx.raw_statement_description }}
+                                                            </p>
+                                                        </div>
+                                                        <div
+                                                            v-if="
+                                                                truncateText(tx.subject, 70).isTruncated &&
+                                                                (tx.subject ?? '').trim() !== ''
+                                                            "
+                                                        >
+                                                            <p class="text-xs font-medium text-muted-foreground">
+                                                                {{ t('transactions.index.table.subject') }}
+                                                            </p>
+                                                            <p class="mt-1 max-w-md break-words">{{ tx.subject }}</p>
+                                                        </div>
+                                                        <div v-if="truncateText(tx.description, 90).isTruncated">
+                                                            <p class="text-xs font-medium text-muted-foreground">
+                                                                {{ t('transactions.index.table.description') }}
+                                                            </p>
+                                                            <p class="mt-1 max-w-md break-words">{{ tx.description }}</p>
+                                                        </div>
+                                                    </div>
                                                 </TooltipContent>
                                             </Tooltip>
-                                            <p v-else class="text-sm font-medium" :title="tx.description">
-                                                {{ truncateText(tx.description, 90).text }}
-                                            </p>
                                         </TooltipProvider>
+
+                                        <template v-else>
+                                            <TooltipProvider :delay-duration="0">
+                                                <Tooltip v-if="truncateText(tx.description, 90).isTruncated">
+                                                    <TooltipTrigger as-child>
+                                                        <p class="text-sm font-medium" :title="tx.description">
+                                                            {{ truncateText(tx.description, 90).text }}
+                                                        </p>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p class="max-w-sm break-words">{{ tx.description }}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                                <p v-else class="text-sm font-medium" :title="tx.description">
+                                                    {{ truncateText(tx.description, 90).text }}
+                                                </p>
+                                            </TooltipProvider>
+                                        </template>
+
                                         <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToDots(transactionDisplayDateIso(tx)) }}</p>
                                         <p class="mt-0.5 text-xs text-muted-foreground">
                                             {{ tx.date_relative || operationDateRelative(transactionDisplayDateIso(tx)) }}
@@ -735,7 +858,8 @@ function openDeleteDialog(transactionId: number) {
                                                 {{ t('transactions.index.readOnly.badge') }}
                                             </span>
                                         </p>
-                                        <TooltipProvider v-if="tx.subject" :delay-duration="0">
+
+                                        <TooltipProvider v-if="!hasRawStatementDescription(tx) && tx.subject" :delay-duration="0">
                                             <Tooltip v-if="truncateText(tx.subject, 70).isTruncated">
                                                 <TooltipTrigger as-child>
                                                     <p class="mt-1 text-xs text-muted-foreground" :title="tx.subject ?? undefined">

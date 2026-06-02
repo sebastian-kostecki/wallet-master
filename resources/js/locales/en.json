@@ -177,7 +177,8 @@
             "a11y": {
                 "sortByDate": "Sort by date",
                 "sortByAmount": "Sort by amount",
-                "edit": "Edit transaction: {description}"
+                "edit": "Edit transaction: {description}",
+                "showStatementDescription": "Show statement data and full description"
             },
             "importPreset": {
                 "label": "Imported just now",

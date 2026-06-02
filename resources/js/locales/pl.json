@@ -177,7 +177,8 @@
             "a11y": {
                 "sortByDate": "Sortuj po dacie",
                 "sortByAmount": "Sortuj po kwocie",
-                "edit": "Edytuj transakcję: {description}"
+                "edit": "Edytuj transakcję: {description}",
+                "showStatementDescription": "Pokaż dane z wyciągu i pełny opis"
             },
             "importPreset": {
                 "label": "Zaimportowane przed chwilą",
