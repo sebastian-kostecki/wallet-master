@@ -68,7 +68,7 @@ Action uses `$request->getFilters()` / `getSorts()` for queries; `getFilters()` 
 
 ## Refactoring PRs
 
-One phase per PR (see `.docs/refactoring.md` §7). Update §10 status when done. Run `vendor/bin/pint --dirty` and `php artisan test --compact` (domain filter).
+One phase per PR (see `.docs/refactoring.md` §7). Update §10 status when done. Run verification per `wallet-dev-workflow.mdc` (Pint + Sail tests, domain filter).
 
 ## Where to put a new file
 

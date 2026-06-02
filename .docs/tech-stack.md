@@ -31,7 +31,9 @@ Volumes: `sail-mysql`, `sail-redis`, `sail-typesense`. `laravel.test` depends on
 
 ## Commands
 
-- **Sail:** `./vendor/bin/sail up -d` · `sail artisan migrate` · `sail npm run dev`
+Agent workflow: `.cursor/rules/wallet-dev-workflow.mdc`.
+
+- **Sail:** `./vendor/bin/sail up -d` · `./vendor/bin/sail artisan migrate` · `./vendor/bin/sail npm run dev` · `./vendor/bin/sail artisan test --compact`
 - **Host (without the full Docker stack):** `composer run dev` — `serve` + `queue:listen` + `pail` + `vite` (via `concurrently`)
-- **Tests / style:** Pest 4 + PHPUnit 12 · `vendor/bin/pint` · `npm run lint` / `npm run format` · ESLint 9 + Prettier 3 + vue-tsc
+- **Tests / style:** Pest 4 + PHPUnit 12 · `./vendor/bin/sail artisan test --compact` · `vendor/bin/pint --dirty --format agent` · `npm run lint` / `npm run format` · ESLint 9 + Prettier 3 + vue-tsc
 - **Static analysis:** `./vendor/bin/phpstan analyse` (Larastan)

@@ -1,0 +1,38 @@
+---
+description: Dev workflow — Superpowers paths, Sail, tests, Pint, static analysis
+alwaysApply: true
+---
+
+# Dev workflow
+
+Details: `.docs/tech-stack.md` (Commands section).
+
+## Superpowers
+
+Override default `docs/superpowers/` paths — project docs live under `.docs/`:
+
+- Specs: `.docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- Plans: `.docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+
+When reading or writing Superpowers specs/plans, use these paths (including cross-references inside plan headers).
+
+## Laravel Sail (default for app commands)
+
+Stack requires MySQL, Redis, Typesense — run through Sail:
+
+- Tests: `./vendor/bin/sail artisan test --compact [--filter=...] [path]`
+- Artisan: `./vendor/bin/sail artisan ...`
+- Migrations: `./vendor/bin/sail artisan migrate`
+- Frontend in container: `./vendor/bin/sail npm run dev`
+- Make test: `./vendor/bin/sail artisan make:test --pest {name}`
+
+## Host (without Sail)
+
+- Pint: `vendor/bin/pint --dirty --format agent`
+- Static analysis: `./vendor/bin/phpstan analyse`
+- Quick dev without Docker: `composer run dev`
+
+## After PHP changes
+
+1. `vendor/bin/pint --dirty --format agent`
+2. `./vendor/bin/sail artisan test --compact --filter=<Domain>` (or scoped test file)
