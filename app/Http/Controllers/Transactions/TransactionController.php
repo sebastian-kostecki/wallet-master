@@ -16,6 +16,7 @@ use App\Http\Resources\Transactions\TransactionEditResource;
 use App\Http\Resources\Transactions\TransactionResource;
 use App\Models\Account;
 use App\Models\Transaction;
+use App\Support\Transactions\TransactionsIndexQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,6 +35,8 @@ final class TransactionController extends Controller
         ListTransactions $listTransactions,
     ): Response {
         $listTransactions->handle($request);
+
+        TransactionsIndexQuery::remember($request);
 
         return Inertia::render('transactions/Index', [
             'filters' => $listTransactions->getFilters(),
@@ -62,7 +65,7 @@ final class TransactionController extends Controller
     {
         $store->handle($request->user(), $request->validated());
 
-        return to_route('transactions.index')->with('toast', [
+        return TransactionsIndexQuery::redirect($request)->with('toast', [
             'type' => 'success',
             'message_key' => 'transactions.toast.created',
         ]);
@@ -92,11 +95,11 @@ final class TransactionController extends Controller
         ]);
     }
 
-    public function destroy(Transaction $transaction, DeleteTransaction $delete): RedirectResponse
+    public function destroy(Request $request, Transaction $transaction, DeleteTransaction $delete): RedirectResponse
     {
         $delete->handle($transaction);
 
-        return to_route('transactions.index')->with('toast', [
+        return TransactionsIndexQuery::redirect($request)->with('toast', [
             'type' => 'success',
             'message_key' => 'transactions.toast.deleted',
         ]);

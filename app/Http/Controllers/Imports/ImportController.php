@@ -14,6 +14,7 @@ use App\Imports\Workflow\QueueImportCommitStatus;
 use App\Models\Account;
 use App\Models\Import;
 use App\Models\ImportFailedRow;
+use App\Support\Transactions\TransactionsIndexQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -128,7 +129,7 @@ final class ImportController extends Controller
                 ], 422);
             }
 
-            return to_route('transactions.index')->withErrors(['import' => 'Import is missing a column mapping.']);
+            return TransactionsIndexQuery::redirect($request)->withErrors(['import' => 'Import is missing a column mapping.']);
         }
 
         if ($result->status === QueueImportCommitStatus::NotDraft) {
@@ -138,7 +139,7 @@ final class ImportController extends Controller
                 ], 422);
             }
 
-            return to_route('transactions.index')->withErrors(['import' => 'Import can be committed only once.']);
+            return TransactionsIndexQuery::redirect($request)->withErrors(['import' => 'Import can be committed only once.']);
         }
 
         if ($request->expectsJson()) {
@@ -148,7 +149,7 @@ final class ImportController extends Controller
             ], 202);
         }
 
-        return to_route('transactions.index')->with('toast', [
+        return TransactionsIndexQuery::redirect($request)->with('toast', [
             'type' => 'info',
             'message' => 'Import queued.',
         ]);

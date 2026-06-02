@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Transfers\StoreTransferRequest;
 use App\Http\Resources\Accounts\AccountResource;
 use App\Models\Account;
+use App\Support\Transactions\TransactionsIndexQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,7 +44,7 @@ final class TransferController extends Controller
             date: $result['date'],
         ));
 
-        return to_route('transactions.index')->with('toast', [
+        return TransactionsIndexQuery::redirect($request)->with('toast', [
             'type' => 'success',
             'message_key' => 'transfers.toast.created',
         ]);
