@@ -38,8 +38,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `subject` (nadawca/odbiorca)
   - [x] `currency_id` (na MVP zawsze PLN, ale pole istnieje)
   - [x] `transfer_id` (nullable; łączy 2 transakcje transferu)
-  - [ ] `transfer_match_status` (`none` / `auto` / `manual` / `rejected`) **[plan §4]**
-  - [ ] `transfer_candidate_for_id` (FK na `transactions.id`, nullable) **[plan §4]**
+  - [x] `transfer_match_status` (`none` / `auto` / `manual` / `rejected`) **[plan §4]**
+  - [x] `transfer_candidate_for_id` (FK na `transactions.id`, nullable) **[plan §4]**
   - [x] `import_id` (nullable; powiązanie z importem)
   - [x] `raw_statement_description` (surowy opis z wyciągu)
 - [x] Dodać encje importu + mapowania per bank:
@@ -210,22 +210,22 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Izolacja danych: pamięć musi być ściśle per user (bez możliwości dopasowań między użytkownikami).
 
 #### 6.6 Identyfikacja transferów podczas importu (matcher) [plan §4]
-- [ ] Klasa `App\Imports\TransferMatcher` z metodą `matchAfterImport(Import $import): void`.
-- [ ] Heurystyki dopasowania (kolejność):
-  - [ ] **probable** (auto-link): inne `account_id`, te same `user_id` i waluta, przeciwne znaki kwot, identyczne `|amount|`, `|date_a − date_b| ≤ 3 dni`, opisy zawierają któryś z tokenów konfiguracyjnych (`przelew własny`, `przelew wewn`, `transfer`, `własny`, `between accounts`).
-  - [ ] **manual** (do potwierdzenia): jak wyżej, ale bez tokena „transfer" w opisie.
-  - [ ] **ambiguous → manual**: gdy >1 kandydatka — żaden z wpisów nie jest auto-linkowany.
-- [ ] Lista tokenów w `config/imports.php` (`transfer_tokens`).
-- [ ] Auto-link: ustawia wspólny `transfer_id = (string) Str::uuid()`, oba `transfer_match_status = 'auto'`, oba `type = 'transfer'`. **Bez ponownej aktualizacji salda** (kwoty już zaksięgowane).
-- [ ] Manual link: ustawia obu transakcjom wzajemny `transfer_candidate_for_id` + `transfer_match_status = 'manual'`.
-- [ ] Wywołanie `TransferMatcher::matchAfterImport` w `CommitImport::handle` po pętli wierszy, przed broadcastem `Committed`.
-- [ ] Endpoint `GET /transfers/candidates` + Vue strona „Możliwe transfery" (sekcja menu z badge'em).
-- [ ] Akcje:
-  - [ ] „Potwierdź transfer" (`POST /transfers/candidates/{id}/confirm`) — ustawia wspólny `transfer_id`, `type=transfer`, `transfer_match_status='manual'`.
-  - [ ] „To nie transfer" (`POST /transfers/candidates/{id}/reject`) — `transfer_match_status='rejected'` na obu, czyści `transfer_candidate_for_id`.
-- [ ] Akcja „Rozłącz transfer" (`POST /transfers/{transferId}/unlink`) — czyści `transfer_id` na obu nogach, przywraca `type` na podstawie znaku `amount`, status `rejected`.
-- [ ] Telemetria: `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`.
-- [ ] Walidacja waluty: różne waluty → brak dopasowania (na MVP).
+- [x] Klasa `App\Imports\TransferMatcher` z metodą `matchAfterImport(Import $import): TransferMatcherResult`.
+- [x] Heurystyki dopasowania (kolejność):
+  - [x] **probable** (auto-link): inne `account_id`, te same `user_id` i waluta, przeciwne znaki kwot, identyczne `|amount|`, `|date_a − date_b| ≤ 3 dni`, opisy zawierają któryś z tokenów konfiguracyjnych (`przelew własny`, `przelew wewn`, `transfer`, `własny`, `between accounts`).
+  - [x] **manual** (do potwierdzenia): jak wyżej, ale bez tokena „transfer" w opisie.
+  - [x] **ambiguous → manual**: gdy >1 kandydatka — brak auto-link; manual do najlepszej pary + telemetria `transfer_match_skipped_ambiguous`.
+- [x] Lista tokenów w `config/imports.php` (`transfer_tokens`).
+- [x] Auto-link: ustawia wspólny `transfer_id = (string) Str::uuid()`, oba `transfer_match_status = 'auto'`, oba `type = 'transfer'`. **Bez ponownej aktualizacji salda** (kwoty już zaksięgowane).
+- [x] Manual link: ustawia obu transakcjom wzajemny `transfer_candidate_for_id` + `transfer_match_status = 'manual'`.
+- [x] Wywołanie `TransferMatcher::matchAfterImport` w `CommitImport::handle` po pętli wierszy, przed broadcastem `Committed`.
+- [x] UI: baner `TransferCandidatesBanner` na `transactions/Index` (prop `pending_transfer_candidates`) — bez osobnej strony / menu.
+- [x] Akcje:
+  - [x] „Potwierdź transfer" (`POST /transfers/candidates/{id}/confirm`) — ustawia wspólny `transfer_id`, `type=transfer`, `transfer_match_status='manual'`.
+  - [x] „To nie transfer" (`POST /transfers/candidates/{id}/reject`) — `transfer_match_status='rejected'` na obu, czyści `transfer_candidate_for_id`.
+- [x] Akcja „Rozłącz transfer" (`POST /transfers/{transferId}/unlink`) — czyści `transfer_id` na obu nogach, przywraca `type` na podstawie znaku `amount`, status `rejected` (backend; przycisk w Edit — poza tym PR).
+- [x] Telemetria: `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`.
+- [x] Walidacja waluty: różne waluty → brak dopasowania (na MVP).
 
 ---
 
@@ -336,7 +336,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [ ] Konta: `account_created`, `account_updated`, `account_deleted`, `account_deleted_with_transactions`, `account_balance_adjusted`
   - [ ] Transakcje: `transaction_created`, `transaction_updated`, `transaction_deleted`, `transaction_manual_duplicate_confirmed`
   - [ ] Lista (front-end POST `/telemetry/event`, throttle 60/min): `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`, `transaction_create_opened`
-  - [ ] Transfer: `transfer_created`, `transfer_failed_validation`, `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`
+  - [~] Transfer: `transfer_created`, `transfer_failed_validation`, `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous` (logi `telemetry`; eventy listenerów częściowo), `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`
   - [ ] Import: `import_started`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account`, `import_enrichment_typesense_hit`, `import_enrichment_typesense_miss`
 - [ ] Helper front-end `resources/js/lib/telemetry.ts` z `track(name, payload)`.
 

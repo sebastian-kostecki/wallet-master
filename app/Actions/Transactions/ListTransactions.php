@@ -25,6 +25,9 @@ final class ListTransactions
     /** @var Collection<int, ImportFailedRow> */
     private Collection $unresolvedImportFailedRows;
 
+    /** @var Collection<int, Transaction> */
+    private Collection $pendingTransferCandidates;
+
     private string|int|float $totalIncome;
 
     private string|int|float $totalExpense;
@@ -47,6 +50,7 @@ final class ListTransactions
         $this->handleFilters($request);
         $this->handleAccounts($request);
         $this->handleUnresolvedImportFailedRows($request);
+        $this->handlePendingTransferCandidates($request);
         $this->handleTransactions($request);
     }
 
@@ -95,6 +99,30 @@ final class ListTransactions
             ->when($accountId !== null, fn ($query) => $query->where('account_id', $accountId))
             ->orderByDesc('created_at')
             ->orderBy('row_number')
+            ->get();
+    }
+
+    private function handlePendingTransferCandidates(TransactionIndexRequest $request): void
+    {
+        $accountId = $request->getFilters()['account_id'] ?? null;
+
+        $this->pendingTransferCandidates = Transaction::query()
+            ->with([
+                'account.currency',
+                'transferCandidate.account.currency',
+                'currency',
+            ])
+            ->whereBelongsTo($request->user())
+            ->pendingTransferCandidate()
+            ->when($accountId !== null, function (Builder $query) use ($accountId): void {
+                $query->where(function (Builder $scoped) use ($accountId): void {
+                    $scoped
+                        ->where('account_id', $accountId)
+                        ->orWhereHas('transferCandidate', fn (Builder $candidate) => $candidate->where('account_id', $accountId));
+                });
+            })
+            ->orderByDesc('date')
+            ->orderBy('id')
             ->get();
     }
 
@@ -213,6 +241,14 @@ final class ListTransactions
     public function getUnresolvedImportFailedRows(): Collection
     {
         return $this->unresolvedImportFailedRows;
+    }
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function getPendingTransferCandidates(): Collection
+    {
+        return $this->pendingTransferCandidates;
     }
 
     /**

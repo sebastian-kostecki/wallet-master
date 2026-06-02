@@ -265,8 +265,29 @@
             "submit": "Wykonaj transfer",
             "saving": "Zapisywanie…"
         },
+        "candidates": {
+            "banner": {
+                "title": "{count} możliwych transferów do potwierdzenia",
+                "subtitle": "System dopasował pary transakcji z różnych kont. Potwierdź transfer lub oznacz, że to nie jest przelew wewnętrzny."
+            },
+            "table": {
+                "from": "Z konta",
+                "to": "Na konto",
+                "amount": "Kwota",
+                "dates": "Różnica dat",
+                "dateDelta": "±{days} dni",
+                "actions": "Akcje"
+            },
+            "actions": {
+                "confirm": "Potwierdź transfer",
+                "reject": "To nie transfer"
+            }
+        },
         "toast": {
             "created": "Transfer zapisany.",
+            "candidate_confirmed": "Transfer potwierdzony.",
+            "candidate_rejected": "Para oznaczona jako niebędąca transferem.",
+            "unlinked": "Transfer rozłączony.",
             "genericError": "Nie udało się wykonać transferu. Spróbuj ponownie."
         }
     },

@@ -14,6 +14,7 @@ use App\Http\Resources\Accounts\AccountResource;
 use App\Http\Resources\Imports\ImportFailedRowResource;
 use App\Http\Resources\Transactions\TransactionEditResource;
 use App\Http\Resources\Transactions\TransactionResource;
+use App\Http\Resources\Transfers\TransferCandidatePairResource;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Support\Transactions\TransactionsIndexQuery;
@@ -45,6 +46,9 @@ final class TransactionController extends Controller
             'summary' => $listTransactions->getSummary(),
             'unresolved_import_failed_rows' => ImportFailedRowResource::collection(
                 $listTransactions->getUnresolvedImportFailedRows(),
+            )->resolve(),
+            'pending_transfer_candidates' => TransferCandidatePairResource::collection(
+                $listTransactions->getPendingTransferCandidates(),
             )->resolve(),
         ]);
     }

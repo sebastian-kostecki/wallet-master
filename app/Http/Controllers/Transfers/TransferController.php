@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Transfers;
 
 use App\Actions\Transfers\CreateTransfer;
+use App\Actions\Transfers\UnlinkTransfer;
 use App\Events\TransferCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transfers\StoreTransferRequest;
@@ -47,6 +48,16 @@ final class TransferController extends Controller
         return TransactionsIndexQuery::redirect($request)->with('toast', [
             'type' => 'success',
             'message_key' => 'transfers.toast.created',
+        ]);
+    }
+
+    public function unlink(Request $request, string $transferId, UnlinkTransfer $unlinkTransfer): RedirectResponse
+    {
+        $unlinkTransfer->handle($request->user(), $transferId);
+
+        return back()->with('toast', [
+            'type' => 'success',
+            'message_key' => 'transfers.toast.unlinked',
         ]);
     }
 }

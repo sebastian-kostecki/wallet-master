@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ImportDialog from '@/components/import/ImportDialog.vue';
 import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
+import TransferCandidatesBanner, { type TransferCandidatePair } from '@/components/transfers/TransferCandidatesBanner.vue';
 import PaginationBar from '@/components/pagination/PaginationBar.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
@@ -127,6 +128,7 @@ const props = defineProps<{
         total_expense: string | number;
     };
     unresolved_import_failed_rows?: ImportFailedRow[];
+    pending_transfer_candidates?: TransferCandidatePair[];
 }>();
 
 const page = usePage<{ errors?: Record<string, string> }>();
@@ -444,6 +446,13 @@ function openDeleteDialog(transactionId: number) {
             <ImportFailedRowsBanner
                 v-if="(unresolved_import_failed_rows ?? []).length > 0"
                 :rows="unresolved_import_failed_rows ?? []"
+                :accounts="accounts"
+                :account-filter-id="filters.account_id"
+            />
+
+            <TransferCandidatesBanner
+                v-if="(pending_transfer_candidates ?? []).length > 0"
+                :pairs="pending_transfer_candidates ?? []"
                 :accounts="accounts"
                 :account-filter-id="filters.account_id"
             />

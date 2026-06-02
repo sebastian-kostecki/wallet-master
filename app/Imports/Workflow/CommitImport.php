@@ -11,6 +11,7 @@ use App\Enums\TransactionType;
 use App\Events\ImportStatusUpdated;
 use App\Exceptions\DomainException;
 use App\Imports\BankAdapters\BankImportAdapter;
+use App\Imports\TransferMatcher;
 use App\Models\Account;
 use App\Models\Import;
 use App\Models\ImportFailedRow;
@@ -30,6 +31,7 @@ final class CommitImport
     public function __construct(
         private ResolveImportSourceFile $resolveImportSourceFile,
         private EnrichImportRowDescription $enrichImportRowDescription,
+        private TransferMatcher $transferMatcher,
     ) {}
 
     /**
@@ -140,6 +142,15 @@ final class CommitImport
                 ->whereKey($lockedImport->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            try {
+                $this->transferMatcher->matchAfterImport($lockedImportFresh);
+            } catch (\Throwable $exception) {
+                Log::warning('Transfer matcher failed during import commit.', [
+                    'import_id' => $lockedImportFresh->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
 
             $lockedAccount->current_balance = bcadd($lockedAccount->current_balance, $counters->importedAmountSum, 2);
             $lockedAccount->save();
