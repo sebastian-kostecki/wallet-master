@@ -328,6 +328,36 @@
                 "duplicates": "Duplikaty",
                 "failed": "Błędne wiersze"
             }
+        },
+        "failed_rows": {
+            "banner": {
+                "title": "{count} wierszy z importu nie zostało dodanych",
+                "subtitle": "Saldo może być niezgodne z wyciągiem bankowym. Dodaj brakujące transakcje ręcznie lub oznacz jako rozwiązane."
+            },
+            "modal": {
+                "title": "Błędne wiersze z pliku",
+                "hint": "Te wiersze nie wpłynęły na saldo. Dodaj je ręcznie lub sprawdź dane w pliku źródłowym.",
+                "more_on_transactions": "i jeszcze {count} — pełna lista na stronie transakcji."
+            },
+            "table": {
+                "row": "Wiersz",
+                "date": "Data",
+                "amount": "Kwota",
+                "description": "Opis",
+                "reason": "Powód",
+                "actions": "Akcje"
+            },
+            "actions": {
+                "dismiss": "Oznacz jako rozwiązane",
+                "dismiss_all": "Oznacz wszystkie jako rozwiązane"
+            },
+            "reasons": {
+                "missing_fields": "Brak wymaganych pól (data, kwota lub opis)",
+                "invalid_date": "Niepoprawna data",
+                "invalid_amount": "Niepoprawna kwota",
+                "zero_amount": "Kwota równa zero",
+                "invalid_row": "Niepoprawny wiersz"
+            }
         }
     },
     "currency": {

@@ -7,8 +7,9 @@ import { apiFetch } from '@/lib/apiFetch';
 import { cn } from '@/lib/utils';
 import { router, usePage } from '@inertiajs/vue3';
 import { echo } from '@laravel/echo-vue';
-import { CheckCircle2, Coins, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
+import { CheckCircle2, ChevronDown, Coins, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import type { ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
 import { useI18n } from 'vue-i18n';
 
 type Account = {
@@ -29,6 +30,8 @@ type ImportState = {
     rows_failed_validation: number | null;
     error_summary: string | null;
     committed_at: string | null;
+    failed_rows?: ImportFailedRow[];
+    failed_rows_total?: number;
 };
 
 const props = withDefaults(
@@ -371,6 +374,20 @@ async function start() {
     }
 }
 
+const failedRowsExpanded = ref(false);
+
+const failedRows = computed(() => importState.value?.failed_rows ?? []);
+
+const failedRowsOverflow = computed(() => {
+    const total = importState.value?.failed_rows_total ?? failedRows.value.length;
+
+    return total > failedRows.value.length ? total - failedRows.value.length : 0;
+});
+
+function displayRawValue(value: string | null | undefined): string {
+    return value && value.trim() !== '' ? value : '—';
+}
+
 const resultSummary = computed(() => {
     const s = importState.value;
     if (!s) {
@@ -601,7 +618,54 @@ function goToTransactions() {
                             {{ importState.error_summary }}
                         </p>
                         <p v-if="(importState?.rows_failed_validation ?? 0) > 0" class="text-xs text-muted-foreground">
-                            {{ t('imports.result.validationHint') }}
+                            {{ t('imports.failed_rows.modal.hint') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    v-if="(importState?.rows_failed_validation ?? 0) > 0 && failedRows.length > 0"
+                    class="rounded-lg border border-amber-500/40 bg-amber-50/30 dark:border-amber-500/30 dark:bg-amber-950/10"
+                >
+                    <button
+                        type="button"
+                        class="flex w-full items-center justify-between gap-3 p-4 text-left"
+                        :aria-expanded="failedRowsExpanded"
+                        @click="failedRowsExpanded = !failedRowsExpanded"
+                    >
+                        <p class="text-sm font-medium text-foreground">{{ t('imports.failed_rows.modal.title') }}</p>
+                        <ChevronDown
+                            class="h-5 w-5 shrink-0 text-muted-foreground transition-transform"
+                            :class="failedRowsExpanded ? 'rotate-180' : ''"
+                            aria-hidden="true"
+                        />
+                    </button>
+
+                    <div v-if="failedRowsExpanded" class="border-t border-amber-500/20 px-4 pb-4 pt-2">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead class="text-xs text-muted-foreground">
+                                    <tr>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.row') }}</th>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.date') }}</th>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.amount') }}</th>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.description') }}</th>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.reason') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="row in failedRows" :key="row.id" class="border-t border-sidebar-border/50">
+                                        <td class="px-2 py-2 tabular-nums">{{ row.row_number }}</td>
+                                        <td class="px-2 py-2 whitespace-nowrap">{{ displayRawValue(row.date_raw) }}</td>
+                                        <td class="px-2 py-2 whitespace-nowrap tabular-nums">{{ displayRawValue(row.amount_raw) }}</td>
+                                        <td class="max-w-xs truncate px-2 py-2">{{ displayRawValue(row.description_raw) }}</td>
+                                        <td class="px-2 py-2 text-xs text-muted-foreground">{{ t(row.reason_label_key) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p v-if="failedRowsOverflow > 0" class="mt-2 text-xs text-muted-foreground">
+                            {{ t('imports.failed_rows.modal.more_on_transactions', { count: failedRowsOverflow }) }}
                         </p>
                     </div>
                 </div>

@@ -7,11 +7,13 @@ namespace App\Http\Controllers\Imports;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Imports\StoreImportCommitRequest;
 use App\Http\Requests\Imports\StoreImportUploadRequest;
+use App\Http\Resources\Imports\ImportFailedRowResource;
 use App\Imports\Workflow\PrepareImportUpload;
 use App\Imports\Workflow\QueueImportCommit;
 use App\Imports\Workflow\QueueImportCommitStatus;
 use App\Models\Account;
 use App\Models\Import;
+use App\Models\ImportFailedRow;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -54,7 +56,7 @@ final class ImportController extends Controller
      */
     private function importDetailPayload(Import $import): array
     {
-        return [
+        $payload = [
             'id' => $import->id,
             'status' => $import->status,
             'rows_total' => $import->rows_total,
@@ -64,6 +66,21 @@ final class ImportController extends Controller
             'error_summary' => $import->error_summary,
             'committed_at' => $import->committed_at,
         ];
+
+        if ($import->status === 'committed') {
+            $failedRows = ImportFailedRow::query()
+                ->where('import_id', $import->id)
+                ->orderBy('row_number')
+                ->limit(50)
+                ->get();
+
+            $payload['failed_rows'] = ImportFailedRowResource::collection($failedRows)->resolve();
+            $payload['failed_rows_total'] = ImportFailedRow::query()
+                ->where('import_id', $import->id)
+                ->count();
+        }
+
+        return $payload;
     }
 
     public function upload(StoreImportUploadRequest $request, PrepareImportUpload $prepareImportUpload): JsonResponse

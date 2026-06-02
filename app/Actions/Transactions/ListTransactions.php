@@ -6,6 +6,7 @@ namespace App\Actions\Transactions;
 
 use App\Http\Requests\Transactions\TransactionIndexRequest;
 use App\Models\Account;
+use App\Models\ImportFailedRow;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -20,6 +21,9 @@ final class ListTransactions
 
     /** @var Collection<int, Account> */
     private Collection $accounts;
+
+    /** @var Collection<int, ImportFailedRow> */
+    private Collection $unresolvedImportFailedRows;
 
     private string|int|float $totalIncome;
 
@@ -42,6 +46,7 @@ final class ListTransactions
     {
         $this->handleFilters($request);
         $this->handleAccounts($request);
+        $this->handleUnresolvedImportFailedRows($request);
         $this->handleTransactions($request);
     }
 
@@ -77,6 +82,19 @@ final class ListTransactions
             ->whereBelongsTo($request->user())
             ->with('currency')
             ->orderBy('name')
+            ->get();
+    }
+
+    private function handleUnresolvedImportFailedRows(TransactionIndexRequest $request): void
+    {
+        $accountId = $request->getFilters()['account_id'] ?? null;
+
+        $this->unresolvedImportFailedRows = ImportFailedRow::query()
+            ->where('user_id', $request->user()->id)
+            ->unresolved()
+            ->when($accountId !== null, fn ($query) => $query->where('account_id', $accountId))
+            ->orderByDesc('created_at')
+            ->orderBy('row_number')
             ->get();
     }
 
@@ -167,6 +185,14 @@ final class ListTransactions
     public function getAccounts(): Collection
     {
         return $this->accounts;
+    }
+
+    /**
+     * @return Collection<int, ImportFailedRow>
+     */
+    public function getUnresolvedImportFailedRows(): Collection
+    {
+        return $this->unresolvedImportFailedRows;
     }
 
     /**

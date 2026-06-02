@@ -313,6 +313,36 @@
                 "duplicates": "Duplicates",
                 "failed": "Failed rows"
             }
+        },
+        "failed_rows": {
+            "banner": {
+                "title": "{count} import rows were not added",
+                "subtitle": "Your balance may not match the bank statement. Add missing transactions manually or mark as resolved."
+            },
+            "modal": {
+                "title": "Failed rows from file",
+                "hint": "These rows did not affect your balance. Add them manually or check the source file.",
+                "more_on_transactions": "and {count} more — see the full list on the transactions page."
+            },
+            "table": {
+                "row": "Row",
+                "date": "Date",
+                "amount": "Amount",
+                "description": "Description",
+                "reason": "Reason",
+                "actions": "Actions"
+            },
+            "actions": {
+                "dismiss": "Mark as resolved",
+                "dismiss_all": "Mark all as resolved"
+            },
+            "reasons": {
+                "missing_fields": "Missing required fields (date, amount, or description)",
+                "invalid_date": "Invalid date",
+                "invalid_amount": "Invalid amount",
+                "zero_amount": "Amount is zero",
+                "invalid_row": "Invalid row"
+            }
         }
     },
     "currency": {

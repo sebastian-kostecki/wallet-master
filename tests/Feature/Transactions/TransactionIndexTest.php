@@ -2,8 +2,11 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\ImportFailedRowReason;
 use App\Models\Account;
 use App\Models\Currency;
+use App\Models\Import;
+use App\Models\ImportFailedRow;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -341,4 +344,82 @@ test('index renders when filters match no transactions', function () {
     );
 
     CarbonImmutable::setTestNow();
+});
+
+test('transactions index includes unresolved import failed rows and respects account filter', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $accountA = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'A',
+        'bank' => Bank::MBank,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $accountB = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'B',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $accountA->id,
+        'status' => 'committed',
+    ]);
+
+    $rowA = ImportFailedRow::query()->create([
+        'import_id' => $import->id,
+        'user_id' => $user->id,
+        'account_id' => $accountA->id,
+        'row_number' => 1,
+        'reason_code' => ImportFailedRowReason::InvalidDate,
+        'date_raw' => 'bad',
+        'amount_raw' => '-10.00',
+        'description_raw' => 'Coffee',
+    ]);
+
+    ImportFailedRow::query()->create([
+        'import_id' => $import->id,
+        'user_id' => $user->id,
+        'account_id' => $accountB->id,
+        'row_number' => 2,
+        'reason_code' => ImportFailedRowReason::InvalidAmount,
+        'date_raw' => '24-04-2026',
+        'amount_raw' => 'x',
+        'description_raw' => 'Shop',
+        'dismissed_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->get('/transactions')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('transactions/Index', false)
+            ->has('unresolved_import_failed_rows', 1)
+            ->where('unresolved_import_failed_rows.0.id', $rowA->id)
+        );
+
+    $this->actingAs($user)
+        ->get('/transactions?account_id='.$accountA->id)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('unresolved_import_failed_rows', 1)
+            ->where('unresolved_import_failed_rows.0.account_id', $accountA->id)
+        );
+
+    $this->actingAs($user)
+        ->get('/transactions?account_id='.$accountB->id)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('unresolved_import_failed_rows', 0)
+        );
 });

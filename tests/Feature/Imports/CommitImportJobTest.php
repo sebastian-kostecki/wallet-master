@@ -113,6 +113,54 @@ test('job commits valid rows and updates account balance', function () {
     });
 });
 
+test('job uses typ transakcji for BNP rows when opis is empty', function () {
+    Event::fake([ImportStatusUpdated::class]);
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'BNP',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'queued',
+        'mapping' => [
+            'date' => 'Data transakcji',
+            'amount' => 'Kwota',
+            'description' => 'Opis',
+        ],
+        'details' => [
+            'source_file' => "imports/{$user->id}/bnp-opis-fallback.csv",
+            'headers' => ['Data transakcji', 'Kwota', 'Opis', 'Typ transakcji'],
+            'bank' => Bank::BnpParibas->value,
+            'parser' => BnpParibasImportAdapter::class,
+        ],
+    ]);
+
+    Storage::disk('local')->put(
+        data_get($import->details, 'source_file'),
+        "Data transakcji;Kwota;Opis;Typ transakcji\n24-04-2026;-12.34;Coffee shop;\n25-04-2026;100.00;;Przelew przychodzący"
+    );
+
+    app(CommitImportJob::class, ['importId' => $import->id])->handle(app(CommitImport::class));
+
+    $import->refresh();
+
+    expect($import->status)->toBe('committed');
+    expect($import->rows_imported)->toBe(2);
+    expect($import->rows_failed_validation)->toBe(0);
+    expect(Transaction::query()->where('import_id', $import->id)->where('description', 'Coffee shop')->exists())->toBeTrue();
+    expect(Transaction::query()->where('import_id', $import->id)->where('description', 'Przelew przychodzący')->exists())->toBeTrue();
+});
+
 test('job enriches imported transactions via description memory (typesense best-effort)', function () {
     Event::fake([ImportEnrichmentTypesenseHit::class, ImportEnrichmentTypesenseMiss::class]);
 

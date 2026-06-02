@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Imports\Workflow;
 
 use App\Enums\Bank;
+use App\Enums\ImportFailedRowReason;
 use App\Enums\ImportStatus;
 use App\Enums\TransactionType;
 use App\Events\ImportStatusUpdated;
@@ -12,11 +13,14 @@ use App\Exceptions\DomainException;
 use App\Imports\BankAdapters\BankImportAdapter;
 use App\Models\Account;
 use App\Models\Import;
+use App\Models\ImportFailedRow;
 use App\Models\Transaction;
+use App\Support\Imports\ImportRowRawSnapshot;
 use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 final class CommitImport
@@ -90,6 +94,8 @@ final class CommitImport
         $seenDedupeHashes = [];
         /** @var list<array<string, mixed>> $pendingInserts */
         $pendingInserts = [];
+        /** @var list<array<string, mixed>> $pendingFailedRows */
+        $pendingFailedRows = [];
         $chunkSize = max(1, (int) config('imports.chunk_size', 500));
         $timestamp = now()->toDateTimeString();
 
@@ -105,23 +111,23 @@ final class CommitImport
                 row: $row,
                 counters: $counters,
                 seenDedupeHashes: $seenDedupeHashes,
+                pendingFailedRows: $pendingFailedRows,
                 timestamp: $timestamp,
             );
 
-            if ($insertRow === null) {
-                continue;
+            if ($insertRow !== null) {
+                $pendingInserts[] = $insertRow;
             }
 
-            $pendingInserts[] = $insertRow;
-
-            if (count($pendingInserts) >= $chunkSize) {
-                $this->flushChunk($lockedImport, $pendingInserts, $counters);
+            if (count($pendingInserts) >= $chunkSize || count($pendingFailedRows) >= $chunkSize) {
+                $this->flushChunk($lockedImport, $pendingInserts, $pendingFailedRows, $counters);
                 $pendingInserts = [];
+                $pendingFailedRows = [];
             }
         }
 
-        if ($pendingInserts !== []) {
-            $this->flushChunk($lockedImport, $pendingInserts, $counters);
+        if ($pendingInserts !== [] || $pendingFailedRows !== []) {
+            $this->flushChunk($lockedImport, $pendingInserts, $pendingFailedRows, $counters);
         }
 
         $deleteRelativePath = DB::transaction(function () use ($lockedImport, $account, $counters, $paths): string {
@@ -162,6 +168,7 @@ final class CommitImport
      * @param  array<string, string>  $row
      * @param  array{date: string, amount: string, description: string, subject?: ?string}  $mapping
      * @param  array<string, true>  $seenDedupeHashes
+     * @param  list<array<string, mixed>>  $pendingFailedRows
      * @return array<string, mixed>|null
      */
     private function buildInsertRow(
@@ -172,16 +179,23 @@ final class CommitImport
         array $row,
         ImportCommitCounters $counters,
         array &$seenDedupeHashes,
+        array &$pendingFailedRows,
         string $timestamp,
     ): ?array {
+        $rawFields = ImportRowRawSnapshot::fromMappedRow($row, $mapping);
+
         try {
             $parsedRow = $adapter->normalizeRow($row, $mapping);
-        } catch (\Throwable) {
-            $counters->rowsFailedValidation++;
-            Log::debug('Import row validation failed.', [
-                'import_id' => $lockedImport->id,
-                'row_index' => $counters->rowIndex,
-            ]);
+        } catch (\Throwable $exception) {
+            $this->recordFailedRow(
+                lockedImport: $lockedImport,
+                account: $account,
+                counters: $counters,
+                rawFields: $rawFields,
+                reasonCode: ImportFailedRowReason::fromException($exception),
+                pendingFailedRows: $pendingFailedRows,
+                timestamp: $timestamp,
+            );
 
             return null;
         }
@@ -219,8 +233,16 @@ final class CommitImport
 
         try {
             $transactionType = TransactionType::fromAmount($parsedRow->amount);
-        } catch (DomainException) {
-            $counters->rowsFailedValidation++;
+        } catch (DomainException $exception) {
+            $this->recordFailedRow(
+                lockedImport: $lockedImport,
+                account: $account,
+                counters: $counters,
+                rawFields: $rawFields,
+                reasonCode: ImportFailedRowReason::fromException($exception),
+                pendingFailedRows: $pendingFailedRows,
+                timestamp: $timestamp,
+            );
 
             return null;
         }
@@ -248,13 +270,64 @@ final class CommitImport
     }
 
     /**
-     * @param  list<array<string, mixed>>  $rows
+     * @param  array{date_raw: string, amount_raw: string, description_raw: string, subject_raw: ?string}  $rawFields
+     * @param  list<array<string, mixed>>  $pendingFailedRows
      */
-    private function flushChunk(Import $import, array $rows, ImportCommitCounters $counters): void
+    private function recordFailedRow(
+        Import $lockedImport,
+        Account $account,
+        ImportCommitCounters $counters,
+        array $rawFields,
+        ImportFailedRowReason $reasonCode,
+        array &$pendingFailedRows,
+        string $timestamp,
+    ): void {
+        $counters->rowsFailedValidation++;
+
+        $pendingFailedRows[] = [
+            'import_id' => $lockedImport->id,
+            'user_id' => $lockedImport->user_id,
+            'account_id' => $account->id,
+            'row_number' => $counters->rowIndex,
+            'reason_code' => $reasonCode->value,
+            'date_raw' => $rawFields['date_raw'] !== '' ? $rawFields['date_raw'] : null,
+            'amount_raw' => $rawFields['amount_raw'] !== '' ? $rawFields['amount_raw'] : null,
+            'description_raw' => $rawFields['description_raw'] !== '' ? $rawFields['description_raw'] : null,
+            'subject_raw' => $rawFields['subject_raw'],
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ];
+
+        Log::channel('telemetry')->info('import_row_validation_failed', [
+            'event' => 'import_row_validation_failed',
+            'import_id' => $lockedImport->id,
+            'account_id' => $account->id,
+            'user_id' => $lockedImport->user_id,
+            'row_number' => $counters->rowIndex,
+            'reason_code' => $reasonCode->value,
+        ]);
+
+        Log::debug('Import row validation failed.', [
+            'import_id' => $lockedImport->id,
+            'row_number' => $counters->rowIndex,
+            'reason_code' => $reasonCode->value,
+            'description_raw' => Str::limit($rawFields['description_raw'], 80, ''),
+        ]);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @param  list<array<string, mixed>>  $failedRows
+     */
+    private function flushChunk(Import $import, array $rows, array $failedRows, ImportCommitCounters $counters): void
     {
-        DB::transaction(function () use ($import, $rows, $counters): void {
+        DB::transaction(function () use ($import, $rows, $failedRows, $counters): void {
             if ($rows !== []) {
                 Transaction::query()->insert($rows);
+            }
+
+            if ($failedRows !== []) {
+                ImportFailedRow::query()->insert($failedRows);
             }
 
             Import::query()

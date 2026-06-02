@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ImportDialog from '@/components/import/ImportDialog.vue';
+import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
 import PaginationBar from '@/components/pagination/PaginationBar.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
@@ -123,6 +124,7 @@ const props = defineProps<{
         total_income: string | number;
         total_expense: string | number;
     };
+    unresolved_import_failed_rows?: ImportFailedRow[];
 }>();
 
 const page = usePage<{ errors?: Record<string, string> }>();
@@ -426,6 +428,13 @@ function openDeleteDialog(transactionId: number) {
         </template>
 
         <div class="flex flex-col gap-6 p-4">
+            <ImportFailedRowsBanner
+                v-if="(unresolved_import_failed_rows ?? []).length > 0"
+                :rows="unresolved_import_failed_rows ?? []"
+                :accounts="accounts"
+                :account-filter-id="filters.account_id"
+            />
+
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                     <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.income') }}</p>

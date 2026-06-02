@@ -11,6 +11,7 @@ use App\Http\Requests\Transactions\StoreTransactionRequest;
 use App\Http\Requests\Transactions\TransactionIndexRequest;
 use App\Http\Requests\Transactions\UpdateTransactionRequest;
 use App\Http\Resources\Accounts\AccountResource;
+use App\Http\Resources\Imports\ImportFailedRowResource;
 use App\Http\Resources\Transactions\TransactionEditResource;
 use App\Http\Resources\Transactions\TransactionResource;
 use App\Models\Account;
@@ -39,6 +40,9 @@ final class TransactionController extends Controller
             'accounts' => AccountResource::collection($listTransactions->getAccounts())->resolve(),
             'transactions' => TransactionResource::collection($listTransactions->getTransactionPaginator()),
             'summary' => $listTransactions->getSummary(),
+            'unresolved_import_failed_rows' => ImportFailedRowResource::collection(
+                $listTransactions->getUnresolvedImportFailedRows(),
+            )->resolve(),
         ]);
     }
 

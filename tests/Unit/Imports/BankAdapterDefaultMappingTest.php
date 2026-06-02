@@ -30,10 +30,35 @@ it('resolves BNP Paribas default mapping case-insensitively without subject', fu
     ]);
 });
 
-it('returns null for BNP Paribas adapter when description column is missing', function () {
+it('uses Typ transakcji for BNP Paribas when Opis column is missing', function () {
+    $adapter = new BnpParibasImportAdapter;
+
+    $mapping = $adapter->defaultMapping(['Data transakcji', 'Kwota', 'Typ transakcji']);
+
+    expect($mapping)->toBe([
+        'date' => 'Data transakcji',
+        'amount' => 'Kwota',
+        'description' => 'Typ transakcji',
+    ]);
+});
+
+it('prefers Opis over Typ transakcji for BNP Paribas default mapping when both exist', function () {
+    $adapter = new BnpParibasImportAdapter;
+
+    $mapping = $adapter->defaultMapping(['Data transakcji', 'Kwota', 'Opis', 'Typ transakcji']);
+
+    expect($mapping)->toBe([
+        'date' => 'Data transakcji',
+        'amount' => 'Kwota',
+        'description' => 'Opis',
+    ]);
+});
+
+it('returns null for BNP Paribas adapter when no description column is available', function () {
     $adapter = new BnpParibasImportAdapter;
 
     expect($adapter->defaultMapping(['date', 'amount']))->toBeNull();
+    expect($adapter->defaultMapping(['Data transakcji', 'Kwota']))->toBeNull();
 });
 
 it('resolves mBank default mapping with category as subject', function () {
