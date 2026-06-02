@@ -119,20 +119,32 @@ final class ListTransactions
         }
 
         if ($filters['from'] !== null) {
-            $query->whereDate(
-                'date',
-                '>=',
-                CarbonImmutable::createFromFormat('d-m-Y', $filters['from'])->toDateString(),
+            $fromDate = CarbonImmutable::createFromFormat('d-m-Y', $filters['from'])->toDateString();
+            $query->whereRaw(
+                $this->displayDateSqlExpression($query).' >= ?',
+                [$fromDate],
             );
         }
 
         if ($filters['to'] !== null) {
-            $query->whereDate(
-                'date',
-                '<=',
-                CarbonImmutable::createFromFormat('d-m-Y', $filters['to'])->toDateString(),
+            $toDate = CarbonImmutable::createFromFormat('d-m-Y', $filters['to'])->toDateString();
+            $query->whereRaw(
+                $this->displayDateSqlExpression($query).' <= ?',
+                [$toDate],
             );
         }
+    }
+
+    /**
+     * @param  Builder<Transaction>  $query
+     */
+    private function displayDateSqlExpression(Builder $query): string
+    {
+        $grammar = $query->getGrammar();
+        $bookedAt = $grammar->wrap($query->qualifyColumn('booked_at'));
+        $date = $grammar->wrap($query->qualifyColumn('date'));
+
+        return "COALESCE({$bookedAt}, {$date})";
     }
 
     /**
