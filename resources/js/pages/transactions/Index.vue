@@ -327,8 +327,18 @@ const hasActiveFilters = computed(() => {
     return Boolean(props.filters.account_id !== null || (props.filters.from ?? '').trim() !== '' || (props.filters.to ?? '').trim() !== '');
 });
 
-const isFirstUseEmpty = computed(() => props.transactions.total === 0 && !hasActiveFilters.value);
-const isFilteredEmpty = computed(() => props.transactions.total === 0 && hasActiveFilters.value);
+const transactionTotal = computed(() => {
+    const paginator = props.transactions as FlattenedPaginator<Transaction> | ResourcePaginator<Transaction>;
+
+    if ('total' in paginator && typeof paginator.total === 'number') {
+        return paginator.total;
+    }
+
+    return paginator.meta?.total ?? 0;
+});
+
+const isFirstUseEmpty = computed(() => transactionTotal.value === 0 && !hasActiveFilters.value);
+const isFilteredEmpty = computed(() => transactionTotal.value === 0 && hasActiveFilters.value);
 
 function directionIcon() {
     const currentSort = props.filters.sort ?? 'date';

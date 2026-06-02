@@ -293,7 +293,7 @@ test('index renders when user has no transactions', function () {
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
         ->component('transactions/Index', false)
-        ->where('transactions.total', 0)
+        ->where('transactions.meta.total', 0)
         ->has('transactions.data', 0)
         ->where('summary.total_income', 0)
         ->where('summary.total_expense', 0)
@@ -337,7 +337,7 @@ test('index renders when filters match no transactions', function () {
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
         ->component('transactions/Index', false)
-        ->where('transactions.total', 0)
+        ->where('transactions.meta.total', 0)
         ->has('transactions.data', 0)
         ->where('summary.total_income', 0)
         ->where('summary.total_expense', 0)

@@ -121,7 +121,7 @@ final class ListTransactions
         if ($filters['from'] !== null) {
             $fromDate = CarbonImmutable::createFromFormat('d-m-Y', $filters['from'])->toDateString();
             $query->whereRaw(
-                $this->displayDateSqlExpression($query).' >= ?',
+                'DATE('.$this->displayDateSqlExpression($query).') >= ?',
                 [$fromDate],
             );
         }
@@ -129,7 +129,7 @@ final class ListTransactions
         if ($filters['to'] !== null) {
             $toDate = CarbonImmutable::createFromFormat('d-m-Y', $filters['to'])->toDateString();
             $query->whereRaw(
-                $this->displayDateSqlExpression($query).' <= ?',
+                'DATE('.$this->displayDateSqlExpression($query).') <= ?',
                 [$toDate],
             );
         }
@@ -164,7 +164,15 @@ final class ListTransactions
             $sortDirection = 'desc';
         }
 
+        if ($sortBy === 'date') {
+            $query->orderByRaw($this->displayDateSqlExpression($query).' '.$sortDirection);
+            $query->orderByDesc('date')->orderByDesc('id');
+
+            return;
+        }
+
         $query->orderBy($sortBy, $sortDirection);
+        $query->orderByRaw($this->displayDateSqlExpression($query).' desc')->orderByDesc('id');
     }
 
     /**
