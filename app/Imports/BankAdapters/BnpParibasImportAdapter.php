@@ -8,7 +8,10 @@ use App\Enums\Bank;
 use App\Imports\ParsedImportRow;
 use App\Support\Imports\AmountParser;
 use App\Support\Imports\DateParser;
+use App\Support\Imports\SignBasedSubjectColumnResolver;
+use App\Support\Imports\SubjectSanitizer;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -37,11 +40,23 @@ final class BnpParibasImportAdapter extends AbstractBankImportAdapter
             return null;
         }
 
-        return [
+        $data = [
             'date' => $date,
             'amount' => $amount,
             'description' => $description,
         ];
+
+        $sender = $this->findHeader($headers, 'Nadawca');
+        if ($sender !== null) {
+            $data['subject_positive'] = $sender;
+        }
+
+        $recipient = $this->findHeader($headers, 'Odbiorca');
+        if ($recipient !== null) {
+            $data['subject_negative'] = $recipient;
+        }
+
+        return $data;
     }
 
     public function normalizeRow(array $row, array $mapping): ParsedImportRow
@@ -49,7 +64,6 @@ final class BnpParibasImportAdapter extends AbstractBankImportAdapter
         $dateRaw = trim((string) Arr::get($row, $mapping['date'], ''));
         $amountRaw = trim((string) Arr::get($row, $mapping['amount'], ''));
         $descriptionRaw = $this->resolveDescription($row, $mapping);
-        $subjectRaw = isset($mapping['subject']) ? trim((string) Arr::get($row, $mapping['subject'], '')) : '';
 
         if ($dateRaw === '' || $amountRaw === '' || $descriptionRaw === '') {
             throw new RuntimeException('Required import columns are empty.');
@@ -57,14 +71,55 @@ final class BnpParibasImportAdapter extends AbstractBankImportAdapter
 
         $date = DateParser::parse($dateRaw);
         $amount = AmountParser::parse($amountRaw);
+        $subject = $this->resolveSubject($row, $mapping, $amount);
 
         return new ParsedImportRow(
             date: $date,
             amount: $amount,
             description: Str::limit($descriptionRaw, 2000, ''),
-            subject: $subjectRaw !== '' ? Str::limit($subjectRaw, 255, '') : null,
+            subject: $subject,
             rawStatementDescription: Str::limit($descriptionRaw, 2000, ''),
         );
+    }
+
+    /**
+     * @param  array<string, string>  $row
+     * @param  array{date: string, amount: string, description: string, subject?: string, subject_positive?: string, subject_negative?: string}  $mapping
+     */
+    private function resolveSubject(array $row, array $mapping, string $parsedAmount): ?string
+    {
+        $raw = $this->resolveSubjectRaw($row, $mapping, $parsedAmount);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $sanitized = SubjectSanitizer::sanitize($raw);
+
+        if ($sanitized === '') {
+            return null;
+        }
+
+        return Str::limit($sanitized, 255, '');
+    }
+
+    /**
+     * @param  array<string, string>  $row
+     * @param  array{date: string, amount: string, description: string, subject?: string, subject_positive?: string, subject_negative?: string}  $mapping
+     */
+    private function resolveSubjectRaw(array $row, array $mapping, string $parsedAmount): string
+    {
+        if (isset($mapping['subject'])) {
+            return trim((string) Arr::get($row, $mapping['subject'], ''));
+        }
+
+        $columnKey = SignBasedSubjectColumnResolver::resolveColumnKey($mapping, $parsedAmount);
+
+        if ($columnKey === null) {
+            return '';
+        }
+
+        return trim((string) Arr::get($row, $columnKey, ''));
     }
 
     /**

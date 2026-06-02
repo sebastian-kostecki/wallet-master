@@ -42,6 +42,20 @@ it('uses Typ transakcji for BNP Paribas when Opis column is missing', function (
     ]);
 });
 
+it('maps BNP Paribas Nadawca and Odbiorca as sign-based subject columns', function () {
+    $mapping = (new BnpParibasImportAdapter)->defaultMapping([
+        'Data transakcji', 'Kwota', 'Opis', 'Nadawca', 'Odbiorca',
+    ]);
+
+    expect($mapping)->toBe([
+        'date' => 'Data transakcji',
+        'amount' => 'Kwota',
+        'description' => 'Opis',
+        'subject_positive' => 'Nadawca',
+        'subject_negative' => 'Odbiorca',
+    ]);
+});
+
 it('prefers Opis over Typ transakcji for BNP Paribas default mapping when both exist', function () {
     $adapter = new BnpParibasImportAdapter;
 
