@@ -14,7 +14,10 @@ use App\Listeners\LogImportEnrichmentTypesenseHit;
 use App\Listeners\LogImportEnrichmentTypesenseMiss;
 use App\Listeners\LogTransferCreated;
 use App\Listeners\LogTransferFailedValidation;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -57,6 +60,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('imports', function (Request $request): Limit {
+            return Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip()));
+        });
+
         Event::listen(TransferCreated::class, LogTransferCreated::class);
         Event::listen(TransferFailedValidation::class, LogTransferFailedValidation::class);
         Event::listen(ImportEnrichmentTypesenseHit::class, LogImportEnrichmentTypesenseHit::class);

@@ -36,6 +36,13 @@ final readonly class ImportStatusUpdated implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
+        $progress = [
+            'rows_total' => $this->import->rows_total,
+            'rows_imported' => $this->import->rows_imported,
+            'rows_skipped_duplicate' => $this->import->rows_skipped_duplicate,
+            'rows_failed_validation' => $this->import->rows_failed_validation,
+        ];
+
         return [
             'id' => (int) $this->import->id,
             'status' => (string) $this->import->status,
@@ -45,6 +52,7 @@ final readonly class ImportStatusUpdated implements ShouldBroadcast
             'rows_failed_validation' => $this->import->rows_failed_validation,
             'error_summary' => $this->import->error_summary,
             'committed_at' => $this->import->committed_at?->toISOString(),
+            'progress' => $progress,
         ];
     }
 }

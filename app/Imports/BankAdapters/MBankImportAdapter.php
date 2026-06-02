@@ -6,8 +6,9 @@ namespace App\Imports\BankAdapters;
 
 use App\Enums\Bank;
 use App\Imports\ParsedImportRow;
-use App\Support\Transactions\TransactionDedupe;
-use Carbon\CarbonImmutable;
+use App\Support\Imports\AmountParser;
+use App\Support\Imports\DateParser;
+use App\Support\Imports\FileEncodingNormalizer;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -70,18 +71,8 @@ final class MBankImportAdapter extends AbstractBankImportAdapter
             throw new RuntimeException('Required import columns are empty.');
         }
 
-        try {
-            $date = CarbonImmutable::createFromFormat('Y-m-d', $dateRaw)->toDateString();
-        } catch (\Throwable) {
-            throw new RuntimeException('Invalid transaction date.');
-        }
-
-        $amountNormalized = str_replace(['PLN', ' ', ','], ['', '', '.'], strtoupper($amountRaw));
-        if (! is_numeric($amountNormalized)) {
-            throw new RuntimeException('Invalid transaction amount.');
-        }
-
-        $amount = TransactionDedupe::amountToDecimalString($amountNormalized);
+        $date = DateParser::parse($dateRaw);
+        $amount = AmountParser::parse($amountRaw);
 
         return new ParsedImportRow(
             date: $date,
@@ -96,6 +87,21 @@ final class MBankImportAdapter extends AbstractBankImportAdapter
      * @return array{headers:list<string>, rows:list<array<string, string>>}
      */
     private function parseMbankCsv(string $path): array
+    {
+        $normalizer = app(FileEncodingNormalizer::class);
+        $readablePath = $normalizer->resolveReadablePath($path);
+
+        try {
+            return $this->parseMbankCsvFromPath($readablePath);
+        } finally {
+            $normalizer->cleanup($readablePath, $path);
+        }
+    }
+
+    /**
+     * @return array{headers:list<string>, rows:list<array<string, string>>}
+     */
+    private function parseMbankCsvFromPath(string $path): array
     {
         $lines = file($path, FILE_IGNORE_NEW_LINES);
         if ($lines === false) {

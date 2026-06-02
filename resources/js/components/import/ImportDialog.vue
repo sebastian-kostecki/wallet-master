@@ -3,6 +3,7 @@ import InputError from '@/components/InputError.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { apiFetch } from '@/lib/apiFetch';
 import { cn } from '@/lib/utils';
 import { router, usePage } from '@inertiajs/vue3';
 import { echo } from '@laravel/echo-vue';
@@ -94,6 +95,25 @@ const longRunningSeconds = 60;
 const showLongRunning = ref(false);
 const longRunningTimer = ref<number | null>(null);
 
+const pollIntervalMs = 5000;
+const pollTimer = ref<number | null>(null);
+
+function clearPollTimer() {
+    if (pollTimer.value !== null) {
+        window.clearInterval(pollTimer.value);
+        pollTimer.value = null;
+    }
+}
+
+function startPollTimer() {
+    clearPollTimer();
+    pollTimer.value = window.setInterval(() => {
+        if (step.value === 'processing') {
+            void refreshImportState();
+        }
+    }, pollIntervalMs);
+}
+
 function clearLongRunningTimer() {
     if (longRunningTimer.value !== null) {
         window.clearTimeout(longRunningTimer.value);
@@ -109,7 +129,10 @@ function startLongRunningTimer() {
     }, longRunningSeconds * 1000);
 }
 
-onBeforeUnmount(() => clearLongRunningTimer());
+onBeforeUnmount(() => {
+    clearLongRunningTimer();
+    clearPollTimer();
+});
 
 function resetState() {
     step.value = 'form';
@@ -123,6 +146,7 @@ function resetState() {
     isUploadingOrCommitting.value = false;
     showLongRunning.value = false;
     clearLongRunningTimer();
+    clearPollTimer();
 }
 
 watch(
@@ -132,6 +156,7 @@ watch(
             resetState();
         } else {
             clearLongRunningTimer();
+            clearPollTimer();
         }
     },
 );
@@ -169,18 +194,20 @@ async function uploadImport(): Promise<{ import_id: number; headers?: string[] }
     form.append('account_id', String(selectedAccountId.value));
     form.append('file', file.value);
 
-    const res = await fetch(route('imports.upload'), {
+    const res = await apiFetch(route('imports.upload'), {
         method: 'POST',
         body: form,
-        headers: {
-            Accept: 'application/json',
-        },
     });
 
     if (!res.ok) {
         const data = await res.json().catch(() => null);
         const accountIdMessage = data?.errors?.account_id?.[0] ?? '';
         const code = (data?.code as string | undefined) ?? '';
+
+        if (code === 'bank_unsupported') {
+            accountError.value = t('imports.validation.cashBlocked');
+            throw new Error(t('imports.validation.cashBlocked'));
+        }
 
         accountError.value = accountIdMessage || '';
 
@@ -199,12 +226,8 @@ async function uploadImport(): Promise<{ import_id: number; headers?: string[] }
 }
 
 async function commitImport(nextImportId: number) {
-    const res = await fetch(route('imports.commit', nextImportId as any), {
+    const res = await apiFetch(route('imports.commit', nextImportId as any), {
         method: 'POST',
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
     });
 
     if (!res.ok) {
@@ -219,9 +242,7 @@ async function refreshImportState() {
         return;
     }
 
-    const res = await fetch(route('imports.show', importId.value as any), {
-        headers: { Accept: 'application/json' },
-    });
+    const res = await apiFetch(route('imports.show', importId.value as any));
 
     if (!res.ok) {
         return;
@@ -233,9 +254,18 @@ async function refreshImportState() {
     const status = json.status;
     if (status === 'committed' || status === 'failed') {
         clearLongRunningTimer();
+        clearPollTimer();
         step.value = 'result';
     }
 }
+
+watch(step, (nextStep) => {
+    if (nextStep === 'processing') {
+        startPollTimer();
+    } else {
+        clearPollTimer();
+    }
+});
 
 const page = usePage() as any;
 const currentUserId = computed<number | null>(() => (page.props.auth?.user?.id as number | undefined) ?? null);
@@ -255,6 +285,7 @@ function handleImportStatusUpdated(payload: ImportState) {
 
     if (payload.status === 'committed' || payload.status === 'failed') {
         clearLongRunningTimer();
+        clearPollTimer();
         step.value = 'result';
     }
 }
@@ -330,7 +361,11 @@ async function start() {
         startLongRunningTimer();
     } catch (e: any) {
         step.value = 'form';
-        fileError.value = typeof e?.message === 'string' ? e.message : t('imports.toast.startFailed');
+        clearPollTimer();
+        const message = typeof e?.message === 'string' ? e.message : t('imports.toast.startFailed');
+        if (!accountError.value) {
+            fileError.value = message;
+        }
     } finally {
         isUploadingOrCommitting.value = false;
     }

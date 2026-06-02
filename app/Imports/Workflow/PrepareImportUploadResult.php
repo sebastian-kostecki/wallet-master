@@ -41,4 +41,9 @@ final readonly class PrepareImportUploadResult
     {
         return new self(false, null, null, 'unrecognized_headers', 'Could not recognize import file columns.');
     }
+
+    public static function bankDoesNotSupportImport(): self
+    {
+        return new self(false, null, null, 'bank_unsupported', 'This account bank does not support file imports.');
+    }
 }

@@ -11,7 +11,6 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 final class PrepareImportUpload
 {
@@ -20,7 +19,7 @@ final class PrepareImportUpload
         $bank = $account->bank;
 
         if ($bank === null || ! $bank->supportsImport()) {
-            throw new RuntimeException('This account bank does not support imports.');
+            return PrepareImportUploadResult::bankDoesNotSupportImport();
         }
 
         $adapter = $bank->makeImportAdapter();

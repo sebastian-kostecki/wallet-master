@@ -78,11 +78,16 @@ final class ImportController extends Controller
         $result = $prepareImportUpload->execute($account, $request->user(), $request->file('file'));
 
         if (! $result->success) {
+            $errorField = $result->code === 'bank_unsupported' ? 'account_id' : 'file';
+
             return response()->json([
                 'message' => $result->message,
                 'code' => $result->code,
+                'message_key' => $result->code === 'bank_unsupported'
+                    ? 'imports.errors.bank_unsupported'
+                    : null,
                 'errors' => [
-                    'file' => [$result->code],
+                    $errorField => [$result->code],
                 ],
             ], 422);
         }
