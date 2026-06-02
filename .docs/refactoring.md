@@ -212,27 +212,27 @@ Struktura `resources/js/` zostaje. Przy refaktorze backendu:
 ## 8. Akceptacja per faza
 
 ### Faza 0
-- [ ] Wszystkie kontrolery kont w `Http/Controllers/Accounts/`
-- [ ] `Transactions` i `Imports` — spójne nazwy folderów HTTP
-- [ ] `php artisan test --compact` — zielone
-- [ ] `php artisan route:list` — te same URI i nazwy route
+- [x] Wszystkie kontrolery kont w `Http/Controllers/Accounts/`
+- [x] `Transactions` i `Imports` — spójne nazwy folderów HTTP
+- [x] `php artisan test --compact` — zielone
+- [x] `php artisan route:list` — te same URI i nazwy route
 
 ### Faza 1
-- [ ] Brak katalogu `app/ViewModels/`
-- [ ] `AccountFormOptions` w `app/Data/Accounts/`
-- [ ] Test `AccountFormOptionsTest` zaktualizowany
+- [x] Brak katalogu `app/ViewModels/`
+- [x] `AccountFormOptions` w `app/Data/Accounts/`
+- [x] Test `AccountFormOptionsTest` zaktualizowany
 
 ### Faza 2
-- [ ] Żaden Action nie importuje `Http/Resources/*`
-- [ ] Lista transakcji — identyczne props w Inertia (snapshot lub feature test)
+- [x] Żaden Action nie importuje `Http/Resources/*`
+- [x] Lista transakcji — identyczne props w Inertia (feature test)
 
 ### Faza 3
-- [ ] Brak `Support/Typesense` i `Support/DescriptionMemory`
-- [ ] Import enrichment działa (testy `tests/Feature/Imports/`)
+- [x] Brak `Support/Typesense` i `Support/DescriptionMemory`
+- [x] Import enrichment działa (testy `tests/Feature/Imports/`)
 
 ### Faza 4
-- [ ] `ImportController` w `Http/Controllers/Imports/`
-- [ ] Testy import upload/commit — zielone
+- [x] `ImportController` w `Http/Controllers/Imports/`
+- [x] Testy import upload/commit — zielone
 
 ---
 

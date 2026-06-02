@@ -4,6 +4,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 > **Uwaga.** Nowe zadania wynikające z `.docs/improvement-plan.md` są oznaczone tagiem `[plan]` przy nazwie sekcji lub punktu. Sekcje 12–17 zostały dopisane na podstawie planu poprawek.
 
+> **Ostatnia synchronizacja:** 2026-06-02 (branch `improvement/transactions`). Refaktoryzacja architektury (fazy 0–5): `.docs/refactoring.md` §10 — **zakończona**. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
+
 ---
 
 ### 0) Uruchomienie projektu / baseline
@@ -29,7 +31,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Dodać encję transakcji:
   - [x] `account_id`, `user_id` (lub inny jednoznaczny mechanizm izolacji)
   - [x] `date` (data operacji, bez czasu)
-  - [ ] `booked_at` (data przypisania do okresu rozliczeniowego, default = `date`) **[plan §1]**
+  - [x] `booked_at` (data przypisania do okresu rozliczeniowego, default = `date`) **[plan §1]**
   - [x] `amount` jako **decimal** (ujemne dla wydatków, dodatnie dla przychodów)
   - [x] `type` (`income` / `expense` / `transfer` / **`adjustment`**) — `varchar(20)` (MySQL); SQLite bez migracji długości **[plan §3]**
   - [x] `description`
@@ -44,18 +46,19 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `imports`: `user_id`, `account_id`, status, liczniki (`rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`)
   - [x] `imports.details` (JSON): metadane techniczne (`mapping_used`, `source_file`, `parser`, `diagnostics`)
   - [x] `import_profiles` (per user + bank): zapis mapowania kolumn + wersjonowanie (opcjonalnie) — na MVP mapowanie trzymamy w `imports.mapping` (JSON), bez osobnej tabeli
-- [~] Indeksy:
-  - [x] `transactions(account_id, date)` (zachowany dla zapytań po dacie operacji)
-  - [ ] `transactions(account_id, booked_at)` **[plan §1]**
-  - [ ] `transactions(user_id, booked_at)` **[plan §1]**
+- [x] Indeksy:
+  - [x] `transactions(account_id, booked_at)` **[plan §1]** (indeksy po `date` usunięte na MySQL po migracji)
+  - [x] `transactions(user_id, booked_at)` **[plan §1]**
   - [x] `transactions(transfer_id)`
   - [ ] Zmiana unique `transactions(account_id, dedupe_hash)` → non-unique index (manualne duplikaty dozwolone) **[plan §2]**
 
 ---
 
 ### 2) Autoryzacja i izolacja danych
-- [ ] Zaimplementować autoryzację per zasób (konto/transakcja/import) tak, aby użytkownik widział wyłącznie swoje dane.
-- [ ] Dodać testy izolacji danych (min. 2 użytkowników, próby odczytu/edycji cudzych zasobów).
+- [x] Zaimplementować autoryzację per zasób (konto/transakcja/import) — Policies (`Account`, `Transaction`, `Import`, `ImportFailedRow`).
+- [~] Dodać testy izolacji danych (min. 2 użytkowników, próby odczytu/edycji cudzych zasobów):
+  - [x] `tests/Feature/Transactions/TransactionAuthorizationTest.php` (create/edit/store/update/destroy między userami)
+  - [ ] pełny pakiet `tests/Feature/Authorization/*IsolationTest.php` — sekcja 16
 - [ ] Upewnić się, że reset hasła nie ujawnia czy email istnieje.
 
 ---
@@ -74,10 +77,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [~] Zablokować edycję/usuwanie transakcji na usuniętym koncie:
     - [x] backend (policy)
     - [x] UI (blokady/ukrycie akcji)
-  - [~] Zablokować import i transfer dla usuniętego konta:
-    - [x] backend: częściowo (Import policy dla commit)
-    - [ ] backend: brak tras/flow importu i transferu → do wdrożenia wraz z modułami
-    - [ ] UI (blokady/CTA/disabled)
+  - [x] Zablokować import i transfer dla usuniętego konta:
+    - [x] backend (policies + middleware konta aktywnego)
+    - [x] UI (blokady/CTA/disabled na liście transakcji i formularzach)
 - [~] Korekta salda:
   - [x] Akcja „Ustaw saldo" (manual adjustment).
   - [x] Audit trail minimalny (kto/kiedy/stara→nowa wartość) w `account_balance_adjustments`.
@@ -90,18 +92,19 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ### 4) Transakcje — API/CRUD + UI
 - [~] Lista transakcji:
   - [x] Filtry: konto, zakres dat
-  - [ ] **Filtry dat działają po `booked_at`** (nie po `date`) **[plan §1]**
+  - [x] **Filtry dat po `COALESCE(booked_at, date)`** (wyświetlana data okresu) **[plan §1]**
+  - [x] **Persistencja filtrów/sortu/strony** w sesji + redirect (`TransactionsIndexQuery`) **[branch 2026-06]**
   - [x] Sort: data/kwota
-  - [ ] Sort `date` → wewnętrznie sortuje po `booked_at desc, date desc, id desc` **[plan §1, §12.5]**
+  - [x] Sort `date` → `COALESCE(booked_at, date)` + tie-breaker `date desc, id desc` **[plan §1, §12.5]**
   - [x] Paginacja (backend)
   - [x] Podsumowanie zakresu: suma wpływów i wydatków (oddzielnie)
   - [ ] **Wykluczenie wewnętrznych transferów** z `summary` (`transfer_id IS NULL`) **[plan §12.2]**
   - [x] Empty state + CTA
-  - [ ] Kolumna „Okres rozliczeniowy" obok „Data operacji" **[plan §1]**
+  - [~] Kolumna „Okres rozliczeniowy" obok „Data operacji" — jedna kolumna z datą `booked_at ?? date` + tooltip surowego opisu wyciągu **[plan §1, branch 2026-06]**
   - [x] Badge „Korekta" dla transakcji typu `adjustment` **[plan §3]**
 - [~] Dodanie transakcji:
   - [x] Pola: data (DD-MM-YYYY), kwota (decimal), opis, subject (opcjonalny)
-  - [ ] Pole `booked_at` (DD-MM-YYYY) z domyślną wartością równą `date` **[plan §1]**
+  - [x] Pole `booked_at` (DD-MM-YYYY) z domyślną wartością równą `date` (Create/Edit) **[plan §1]**
   - [x] Ustalenie typu na podstawie znaku kwoty (ujemna=wydatek, dodatnia=przychód)
   - [~] Egzekwowanie `amount != 0` w warstwie domeny przez enum `TransactionType::fromAmount` (Store/Update manual + wiersze importu) **[plan §3, §6]**
   - [x] Walidacje: kwota != 0 (FormRequest); konto nieusunięte
@@ -112,12 +115,12 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [~] Edycja transakcji:
   - [x] Zmiana pól i przeliczenie delty salda (stara kwota → nowa kwota)
   - [x] Blokada edycji dla transakcji na usuniętym koncie
-  - [ ] Edycja `booked_at` niezależnie od `date` (nie wpływa na saldo, tylko na okres) **[plan §1]**
+  - [x] Edycja `booked_at` niezależnie od `date` (nie wpływa na saldo, tylko na okres) **[plan §1]**
   - [ ] Edycja transakcji typu `transfer` (z ustawionym `transfer_id`) — kwota tylko po „Rozłącz transfer" **[plan §4]**
 - [~] Usuwanie transakcji:
   - [x] Aktualizacja salda deltą (odwrócenie wpływu)
   - [x] Blokada usuwania dla transakcji na usuniętym koncie
-  - [ ] UI: akcja usuwania (np. na ekranie edycji lub w tabeli)
+  - [x] UI: akcja usuwania (Index + Edit, dialog potwierdzenia)
 
 ---
 
@@ -142,35 +145,36 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Entry point: przycisk “Import” na widoku transakcji (modal/wizard).
 - [x] Modal krok 1: wybór konta (bank wynika z konta i jest wyświetlany).
 - [x] Modal krok 2: upload CSV/XLSX.
-- [ ] Modal krok 3: mapowanie kolumn:
-  - [ ] Wymagane: data, kwota, opis
-  - [ ] Opcjonalne: `subject`
-  - [ ] Mapowanie po nazwach nagłówków (headers zawsze obecne)
-  - [ ] Zapisywanie mapowania per user + bank konta (profil) i automatyczne podpowiadanie
+- [~] Modal krok 3: mapowanie kolumn (zgodnie z PRD — **bez edycji w UI**; mapowanie z adaptera):
+  - [x] Wymagane: data, kwota, opis — `BankImportAdapter::defaultMapping()` + auto-mapowanie nagłówków
+  - [x] Opcjonalne: `subject` (per bank, np. BNP: `subject_positive` / `subject_negative`)
+  - [x] Mapowanie po nazwach nagłówków (headers zawsze obecne)
+  - [ ] Zapisywanie mapowania per user + bank (`ImportMapping` + fingerprint) — sekcja 7
 - [ ] Auto-commit importu (bez preview):
   - [x] Walidacja + dedupe + zapis w jednej akcji
   - [x] Blokada ponownego commitu tego samego importu (gdy status != `draft`)
   - [x] Podsumowanie końcowe: `rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`
-- [ ] Widok wyniku:
-  - [ ] Po commit redirect do strony transakcji
-  - [ ] Informacyjna lista błędnych/skipowanych pozycji dla bieżącego importu (bez retencji pełnych surowych wierszy)
+- [~] Widok wyniku:
+  - [x] Po commit redirect do strony transakcji (`TransactionsIndexQuery`)
+  - [x] Lista błędnych wierszy w modalu importu + banner na index (`import_failed_rows`, dismiss ręczny) **[branch 2026-06]**
 
 #### 6.2 Parsowanie i walidacja
-- [~] CSV:
+- [x] CSV:
   - [x] Autodetekcja separatora
-  - [~] Obsłużyć kwoty z `,` i `.` (wejście) — **wymagana wymiana parsera na `App\Support\Imports\AmountParser`** (separator tysięcy `.`/spacja/NBSP, nawiasy księgowe, przyrostki walut) **[plan §5.2]**
-- [ ] **Detekcja kodowania pliku** (UTF-8 / Windows-1250 / ISO-8859-2) z konwersją do UTF-8 + usunięcie BOM (`App\Support\Imports\FileEncodingNormalizer`) **[plan §5.1]**
+  - [x] Kwoty — `App\Support\Imports\AmountParser` (separator tysięcy, nawiasy, waluty) **[plan §5.2]**
+  - [x] Kodowanie — `App\Support\Imports\FileEncodingNormalizer` (UTF-8 / Windows-1250 / ISO-8859-2, BOM) **[plan §5.1]**
 - [x] XLSX:
   - [x] Importować pierwszy arkusz
-- [~] Data:
+- [x] Data:
   - [x] Parsowanie do formatu daty (prezentacja DD-MM-YYYY; storage jako date)
-  - [ ] Wymiana parsera na `App\Support\Imports\DateParser` z obsługą `d-m-Y`, `Y-m-d`, `d/m/Y`, `d.m.Y`, `Y.m.d`, `Y/m/d` + odcinanie suffixu czasu **[plan §5.3]**
-- [~] Kwota:
+  - [x] `App\Support\Imports\DateParser` — wiele formatów + odcinanie suffixu czasu **[plan §5.3]**
+- [x] Kwota:
   - [x] Ujemne kwoty → wydatek, dodatnie → przychód (ustawić `type`)
-  - [ ] **Kwota 0 → błąd walidacji**: egzekwowane przez `TransactionType::fromAmount` (rzucanie `DomainException`) → `rows_failed_validation++` **[plan §6]**
+  - [x] **Kwota 0 → błąd** — `AmountParser` / `TransactionType::fromAmount` → `ImportFailedRow` lub `rows_failed_validation++` **[plan §6]**
 - [~] `subject`:
   - [~] Ekstrakcja per bank (adaptery) z `description` lub innych pól, jeśli bank tego wymaga (na MVP: `subject` z kolumny mapowania, jeśli istnieje)
-  - [ ] **Usunąć mapowanie `Kategoria → subject` w `MBankImportAdapter`** (semantycznie niepoprawne) **[plan §12.1]**
+  - [ ] **Usunąć mapowanie `Kategoria → subject` w `MBankImportAdapter`** (nadal w `defaultMapping`) **[plan §12.1]**
+  - [x] BNP Paribas: `subject_positive` / `subject_negative` + `SubjectSanitizer` **[branch 2026-06]**
   - [x] Fallback: pozostawić puste, jeśli nie da się wyciągnąć **[Assumption]**
 
 #### 6.3 Deduplikacja (zawsze pomijamy w imporcie)
@@ -186,16 +190,15 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Agregować sumę kwot tylko dla faktycznie utworzonych transakcji (`imported_amount_sum`).
 - [x] Wykonać jedną aktualizację `current_balance` po przetworzeniu importu.
 - [x] Zabezpieczyć przed podwójnym zapisem (idempotencja importu przez `import_id` + dedupe).
-- [ ] **Chunked processing**: pętla wierszy w batchach po 500, każdy chunk w osobnej krótkiej `DB::transaction`; bulk insert; lock konta tylko w finalnej transakcji aktualizującej saldo **[plan §7]**.
-- [ ] Importer odporny na `Lock wait timeout` przy pliku 5000+ wierszy (testowane).
+- [x] **Chunked processing**: batch po `config('imports.chunk_size', 500)`, `flushChunk()` w `DB::transaction`, bulk insert; `lockForUpdate` konta tylko przy finalnym zapisie salda **[plan §7]**.
+- [ ] Importer odporny na `Lock wait timeout` przy pliku 5000+ wierszy (test obciążeniowy).
 
 #### 6.5a Realtime status importu (MVP)
-- [x] Włączyć aktualizację statusu importu przez Reverb (`queued` → `committed|failed`).
-- [ ] **Broadcast po przejściu na `processing`** (obecnie pomijane) **[plan §8]**.
-- [ ] **Broadcast progresu po każdym chunk** (`rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`) **[plan §8]**.
+- [x] Włączyć aktualizację statusu importu przez Reverb (`queued` → `processing` → `committed|failed`).
+- [~] **Broadcast progresu** — `ImportStatusUpdated` po chunk (throttle `imports.progress_broadcast_interval_seconds`) **[plan §8]**.
 - [ ] **Polling jako fallback w UI** (co 5s, gdy WebSocket rozłączony) — `useImportStatus` composable **[plan §8]**.
-- [x] Event `import.updated` z payloadem statusu i liczników `rows_*`.
-- [ ] Payload eventu rozszerzony o `progress` (struktura jak liczniki) **[plan §8]**.
+- [x] Event `import.updated` z payloadem statusu, liczników `rows_*` i opcjonalnie `failed_rows` po commit.
+- [~] Payload `progress` — liczniki w evencie; brak osobnego klucza `progress` **[plan §8]**.
 
 #### 6.5 Enrichment `subject`/`description` z „pamięci" (Typesense)
 - [x] Dodać „surowy opis z wyciągu" do transakcji/importu (np. `raw_statement_description`) i przechowywać go dla transakcji z importu.
@@ -277,22 +280,15 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ### 10) Testy (Pest) + QA checklist
 
 #### 10.1 Testy automatyczne (minimum)
-- [ ] Autoryzacja i izolacja danych (konto/transakcja/import).
-- [ ] CRUD kont:
-  - [ ] tworzenie/edycja/usunięcie (soft delete)
-  - [ ] transakcje na usuniętym koncie są read-only
-- [ ] CRUD transakcji:
-  - [ ] saldo aktualizuje się o deltę kwoty przy create/update/delete
-- [ ] Transfer:
-  - [ ] tworzy 2 transakcje z `transfer_id`
-  - [ ] aktualizuje saldo obu kont
-- [ ] Import:
-  - [ ] walidacja wymaganych pól
-  - [ ] deduplikacja po normalizacji opisu
-  - [ ] liczniki `rows_*` poprawne
-  - [ ] blokada ponownego commitu tego samego importu
-  - [ ] retry joba importu: 3 próby tylko dla błędów technicznych
-  - [ ] partial import: zapisane rekordy pozostają przy błędzie krytycznym
+- [~] Autoryzacja i izolacja danych — częściowo (`TransactionAuthorizationTest`; pełny pakiet: sekcja 16).
+- [x] CRUD kont (`tests/Feature/Accounts/*`).
+- [x] CRUD transakcji — saldo deltą (`TransactionStoreTest`, `TransactionUpdateTest`, `TransactionDeleteTest`).
+- [x] Transfer (`tests/Feature/Transfers/*`).
+- [~] Import:
+  - [x] walidacja, dedupe, liczniki, blokada ponownego commitu (`tests/Feature/Imports/*`)
+  - [x] `ImportFailedRow` + dismiss (`CommitImportFailedRowsTest`, `ImportFailedRowDismissTest`)
+  - [ ] retry joba: 3 próby tylko dla błędów technicznych
+  - [ ] partial import przy błędzie krytycznym w jobie
 
 #### 10.2 Manual QA (minimum)
 - [ ] “Happy path” rejestracja → konto → transakcja → filtr → import → transfer.
@@ -316,17 +312,17 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ### 12) Bezpieczeństwo i UX poprawki **[plan §9]**
 
 #### 12.1 Rate limiting
-- [ ] `RateLimiter::for('imports', ...)` w `AppServiceProvider::boot` — 10/min per `user_id` (fallback per IP).
+- [x] `RateLimiter::for('imports', ...)` w `AppServiceProvider::boot` — 10/min per `user_id` (fallback per IP).
 - [ ] `RateLimiter::for('api', ...)` — 60/min per zalogowanego użytkownika.
-- [ ] Middleware `throttle:imports` na trasach `imports/upload` i `imports/{import}/commit` w `routes/web.php`.
+- [x] Middleware `throttle:imports` na trasach upload/commit w `routes/imports.php`.
 
 #### 12.2 Konto Cash bez 500
-- [ ] `PrepareImportUpload::execute` — zamiast `RuntimeException` zwraca `PrepareImportUploadResult::importsNotSupported(...)`.
-- [ ] `TransactionImportController::upload` — mapowanie na 422 z `message_key = imports.errors.bank_unsupported`.
-- [ ] UI: czytelny toast „Konta gotówkowe nie obsługują importu z pliku".
+- [x] `PrepareImportUpload` → `PrepareImportUploadResult` z kodem `bank_unsupported`.
+- [x] `ImportController::upload` — 422 z `message_key = imports.errors.bank_unsupported`.
+- [x] UI: toast w `ImportDialog.vue` dla `bank_unsupported`.
 
 #### 12.3 Mass assignment
-- [ ] Modele `Account`, `Transaction`, `Import`, `AccountBalanceAdjustment` — `$fillable` zamiast `$guarded = []`.
+- [~] Modele — `Transaction` ma `$fillable`; pozostałe (`Account`, `Import`, `AccountBalanceAdjustment`) nadal `$guarded = []`.
 - [ ] `Model::shouldBeStrict()` w `AppServiceProvider::boot()` (poza prod).
 
 ---
@@ -348,7 +344,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 14) Komendy artisan i scheduler **[plan §3, §12.4]**
 
-- [ ] `php artisan accounts:recalculate-balance {account?} [--all] [--dry-run]`
+- [x] `php artisan accounts:recalculate-balance {account?} [--all] [--dry-run]`
 - [ ] `php artisan imports:purge-old-files {--days=30}` — czyści pliki importów `Failed` starszych niż N dni.
 - [ ] Wpis w `bootstrap/app.php` lub `routes/console.php` — uruchamianie `imports:purge-old-files` codziennie.
 
@@ -373,7 +369,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 17) Drobne, ale ważne **[plan §12]**
 
-- [ ] `TransactionImportController::index` — `paginate(20)` zamiast `latest()->limit(30)`.
+- [ ] `ImportController::index` — `paginate(20)` zamiast `latest()->limit(30)` (jeśli endpoint listy importów jest w scope).
 - [ ] Sortowanie listy transakcji po `amount` z tie-breakerem `booked_at desc, id desc` (po wdrożeniu `booked_at`).
 - [ ] Usunięcie `Kategoria → subject` z `MBankImportAdapter::defaultMapping`.
 - [ ] Wymagany wpis audytowy w `account_deletions` przy `AccountController::destroy`.
