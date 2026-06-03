@@ -2,9 +2,9 @@
 
 Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcja** / **Import** / **Transfer**).
 
-> **Uwaga.** Nowe zadania wynikające z `.docs/improvement-plan.md` są oznaczone tagiem `[plan]` przy nazwie sekcji lub punktu. Sekcje 12–17 zostały dopisane na podstawie planu poprawek.
+> **Uwaga.** Zadania poza podstawowym zakresem PRD są oznaczone tagiem `[plan]` przy nazwie sekcji lub punktu (sekcje 12–17).
 
-> **Ostatnia synchronizacja:** 2026-06-03 (branch `develop`). Refaktoryzacja architektury (fazy 0–5): `.docs/refactoring.md` §10 — **zakończona**. PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
+> **Ostatnia synchronizacja:** 2026-06-03 (branch `develop`). Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
 >
 > **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4–5, §9). Otwarte: pełna telemetria (§8/§13), A11y/QA (§9–10), `api` rate limit, edycja kwoty transferu bez unlink, `subject` w formularzu Transfer, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`.
 

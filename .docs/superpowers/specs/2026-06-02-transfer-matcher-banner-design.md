@@ -2,8 +2,8 @@
 
 **Date:** 2026-06-02  
 **Status:** Approved (brainstorming 2026-06-02)  
-**Related:** `.docs/checklist.md` §6.6, `.docs/improvement-plan.md` §4, PRD FR-I6, FR-T3  
-**Supersedes:** improvement-plan §4 step 6 (separate „Możliwe transfery" page + `GET /transfers/candidates` Inertia route)
+**Related:** `.docs/checklist.md` §6.6, PRD FR-I6, FR-T3  
+**Supersedes:** earlier plan for a separate „Możliwe transfery" page + `GET /transfers/candidates` Inertia route (replaced by banner UX)
 
 ## Problem
 

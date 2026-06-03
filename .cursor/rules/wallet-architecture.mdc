@@ -5,9 +5,11 @@ alwaysApply: true
 
 # Wallet Master — architecture (Variant A)
 
-Full migration plan: `.docs/refactoring.md` (phases, file moves, acceptance criteria, §10 status).
+Variant A structural migration (HTTP domain folders, `Data/`, Integrations, index getters) is **complete** (2026-05-28). All new `app/` code must follow the rules below.
 
 One domain = the same namespace segment across all layers (e.g. `Transactions` everywhere, never `Transaction` in one folder and `Transactions` in another).
+
+**Do not introduce:** `app/Services/`, `app/Modules/` (vertical modules), DDD `Domain/Application/Infrastructure` layers, or `app/ViewModels/`.
 
 ## Approved `app/` roots
 
@@ -16,14 +18,23 @@ One domain = the same namespace segment across all layers (e.g. `Transactions` e
 - `Http/Controllers|Requests|Resources/{Domain}/` — web layer only
 - `Support/{Domain}/` — stateless domain algorithms (no HTTP, no SDK clients)
 - `Integrations/{Name}/` — external clients and infrastructure repositories (e.g. Typesense, DescriptionMemory)
-- `Imports/` — import workflow and bank adapters (unchanged root)
+- `Imports/` — import workflow (`Workflow/`), bank adapters (`BankAdapters/`), matchers; root unchanged
 - `Models/`, `Policies/`, `Jobs/`, `Events/`, `Listeners/`, `Enums/`, `Console/`
 
-Do **not** add `Services/`, `Modules/`, or `ViewModels/` for new code.
+Static form data (enums, icons) → `Data/`. Lists from DB → Action getters, controller maps via Resource. Index filters/sort/page → `*IndexRequest`, never `Data/`.
 
 ## Domain names (always plural in folders)
 
 `Accounts`, `Transactions`, `Transfers`, `Imports`, `Auth`, `Settings`
+
+| Domain | Example models |
+|--------|----------------|
+| Accounts | Account, AccountBalanceAdjustment |
+| Transactions | Transaction |
+| Transfers | (logic on Transaction) |
+| Imports | Import |
+| Auth | User |
+| Settings | User (profile, password) |
 
 ## Layer responsibilities
 
@@ -34,8 +45,11 @@ Do **not** add `Services/`, `Modules/`, or `ViewModels/` for new code.
 | **Action** | use-case orchestration: queries, filters, sort, aggregates, pagination; write: `handle(User, array)` → `Model`; read index: `handle(*IndexRequest)` + typed getters | `Http\Resources\*`, `Inertia::render`, `number_format`, `asset()` |
 | **Data** | form options (`*FormOptions`), shared immutable DTOs | index read results, `Inertia::render`, Eloquent in DTO classes |
 | **Resource** | array shape for Vue/Inertia | authorization, business rules |
-| **Support/{Domain}** | pure algorithms (dedupe, relative dates) | HTTP/SDK clients |
+| **Support/{Domain}** | pure algorithms (dedupe, relative dates); import helpers e.g. `Support/Imports/AmountParser` | HTTP/SDK clients |
 | **Integrations** | API clients, infra repositories | wallet business rules |
+| **Imports/** | CSV parse, bank adapters, `CommitImport` workflow, `TransferMatcher` | account CRUD |
+| **Job** | queue dispatch, timeout, tags | CSV parsing in controller |
+| **Policy** | `view` / `update` / `delete` per model | field validation |
 | **Model** | relations, `casts()`, general scopes (`whereBelongsTo`) | full index workflow (date filters + sort + aggregates) |
 
 ## Data flow
@@ -65,10 +79,30 @@ Action uses `$request->getFilters()` / `getSorts()` for queries; `getFilters()` 
 - UI presentation (`asset()`, `label_key`, front-facing date format) only in Resource or Enum metadata.
 - Integrations: register bindings in `AppServiceProvider`.
 - Tests mirror domains: `tests/Feature/{Domain}/`, `tests/Unit/Data/` or `tests/Unit/Support/{Domain}/`.
+- `routes/{domain}.php` where present; on controller moves keep **same URI and route names**.
 
-## Refactoring PRs
+## Antipatterns
 
-One phase per PR (see `.docs/refactoring.md` §7). Update §10 status when done. Run verification per `wallet-dev-workflow.mdc` (Pint + Sail tests, domain filter).
+| Avoid | Why |
+|-------|-----|
+| `Services/` next to `Actions/` | Duplicate application layer |
+| `Http\Resources` inside Action | Hard to test; couples application to HTTP |
+| `Data/*Result` for index reads | Use Action getters; controller assembles Inertia props |
+| `Support/` for SDK/HTTP clients | Use `Integrations/` |
+| Big-bang rename of all of `app/` | Review/git conflict risk |
+| Changing URLs when moving controllers | Breaks bookmarks and E2E tests |
+
+## Architecture refactors (PR discipline)
+
+- One **domain** or one **concern** per PR; do not mix unrelated feature work unless the same files require it.
+- Preserve named routes and URIs when relocating controllers.
+- Verification: `wallet-dev-workflow.mdc` (Pint + Sail tests, domain `--filter`).
+
+## Front (Inertia + Vue)
+
+- `resources/js/pages/{domain}/` ↔ `Inertia::render('{domain}/...')`
+- Domain UI in `components/{domain}/` — not in `components/ui/`
+- Toast i18n keys: `{domain}.toast.*` in `locales/*.json`
 
 ## Where to put a new file
 
@@ -83,9 +117,10 @@ One phase per PR (see `.docs/refactoring.md` §7). Update §10 status when done.
 | Form options / shared DTO | `Data/{Domain}/` |
 | Index filters, sort, pagination | `Http/Requests/{Domain}/` (*IndexRequest) |
 | Domain algorithm | `Support/{Domain}/` |
+| Import parse helpers (amount, date, encoding) | `Support/Imports/` |
 | External API | `Integrations/{Name}/` |
 | DB entity | `Models/` |
-| CSV import workflow | `Imports/` |
+| CSV import workflow / bank adapter | `Imports/Workflow/`, `Imports/BankAdapters/` |
 | Queue job | `Jobs/` + dispatch from Action/Workflow |
 | HTTP test | `tests/Feature/{Domain}/` |
 | Pure logic test | `tests/Unit/...` |
