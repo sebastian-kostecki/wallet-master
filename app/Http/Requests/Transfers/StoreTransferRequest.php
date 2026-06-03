@@ -68,6 +68,7 @@ final class StoreTransferRequest extends FormRequest
             'date' => ['required', 'date_format:d-m-Y'],
             'amount' => ['required', 'numeric', 'decimal:0,2', 'gt:0'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'subject' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -78,6 +79,7 @@ final class StoreTransferRequest extends FormRequest
      *   date: string,
      *   amount: numeric-string|float|int,
      *   description?: ?string,
+     *   subject?: ?string,
      * }
      */
     public function validated($key = null, $default = null): array

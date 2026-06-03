@@ -131,7 +131,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Konto źródłowe != konto docelowe
   - [x] Użytkownik wpisuje kwotę dodatnią, system zapisuje `-X` i `+X` (walidacja wejścia)
   - [x] Data wspólna
-  - [ ] Opis (wspólny) + subject (opcjonalny) — brak pola `subject` w UI; backend zapisuje `subject = null`
+  - [x] Opis (wspólny) + subject (opcjonalny)
 - [x] Backend:
   - [x] Utworzyć 2 transakcje w jednej transakcji DB
   - [x] Ustawić `transfer_id` (wspólny identyfikator)
@@ -260,16 +260,16 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 9) UX jakościowe (do odhaczenia)
-- [ ] Wszystkie formularze mają:
-  - [ ] walidację inline
-  - [ ] czytelne komunikaty błędów po polsku
-  - [ ] stany loading/disabled podczas requestów
-- [ ] Empty states (konta/transakcje/import) mają jasne CTA.
-- [ ] A11y:
-  - [ ] pełna obsługa klawiaturą
-  - [ ] focus states widoczne
-  - [ ] poprawne `label`/aria
-  - [ ] kontrast WCAG AA
+- [x] Wszystkie formularze mają:
+  - [x] walidację inline
+  - [x] czytelne komunikaty błędów po polsku
+  - [x] stany loading/disabled podczas requestów
+- [x] Empty states (konta/transakcje/import) mają jasne CTA.
+- [x] A11y:
+  - [x] pełna obsługa klawiaturą
+  - [x] focus states widoczne
+  - [x] poprawne `label`/aria
+  - [x] kontrast WCAG AA
 
 ---
 

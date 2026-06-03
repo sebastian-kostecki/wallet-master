@@ -86,6 +86,53 @@ test('user can create a transfer and it creates two linked transactions and upda
     Event::assertDispatched(TransferCreated::class);
 });
 
+test('user can create a transfer with optional subject on both legs', function () {
+    Event::fake([TransferCreated::class]);
+
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $from = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'From',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 100,
+        'current_balance' => 100,
+    ]);
+
+    $to = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'To',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 50,
+        'current_balance' => 50,
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->post('/transfers', [
+            'from_account_id' => $from->id,
+            'to_account_id' => $to->id,
+            'date' => '24-04-2026',
+            'amount' => 5,
+            'subject' => 'Internal move',
+            'description' => 'Move money',
+        ])
+        ->assertSessionHasNoErrors();
+
+    $transactions = Transaction::query()
+        ->where('user_id', $user->id)
+        ->whereNotNull('transfer_id')
+        ->get();
+
+    expect($transactions)->toHaveCount(2);
+    expect($transactions->pluck('subject')->unique()->all())->toBe(['Internal move']);
+});
+
 test('cannot create a transfer to the same account', function () {
     Event::fake([TransferFailedValidation::class]);
 

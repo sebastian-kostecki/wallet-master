@@ -69,12 +69,14 @@ const form = useForm<{
     to_account_id: number | null;
     date: string;
     amount: string;
+    subject: string;
     description: string;
 }>({
     from_account_id: defaultFromId.value,
     to_account_id: defaultToId.value,
     date: todayDdMmYyyy(),
     amount: '0,00',
+    subject: '',
     description: '',
 });
 
@@ -284,6 +286,18 @@ function submit() {
                             </FormField>
                         </div>
 
+                        <FormField for-id="subject" :label="t('transfers.form.subjectOptional')" :error="form.errors.subject">
+                            <template #default="{ errorId, hasError }">
+                            <Input
+                                id="subject"
+                                v-model="form.subject"
+                                :disabled="form.processing"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                            />
+                            </template>
+                        </FormField>
+
                         <FormField for-id="description" :label="t('transfers.form.descriptionOptional')" :error="form.errors.description">
                             <template #default="{ errorId, hasError }">
                             <textarea
@@ -307,7 +321,7 @@ function submit() {
                                 <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
                             </Button>
 
-                            <Button type="submit" :disabled="form.processing || isSameAccount">
+                            <Button type="submit" :disabled="form.processing || isSameAccount" :aria-busy="form.processing || undefined">
                                 {{ form.processing ? t('transfers.form.saving') : t('transfers.form.submit') }}
                             </Button>
                         </div>

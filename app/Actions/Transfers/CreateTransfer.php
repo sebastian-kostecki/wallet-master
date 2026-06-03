@@ -22,6 +22,7 @@ final class CreateTransfer
      *   date: string,
      *   amount: numeric-string|float|int,
      *   description?: ?string,
+     *   subject?: ?string,
      * } $validated
      * @return array{
      *   withdrawal: Transaction,
@@ -74,6 +75,10 @@ final class CreateTransfer
                 ? $validated['description']
                 : null;
 
+            $subject = isset($validated['subject']) && $validated['subject'] !== ''
+                ? $validated['subject']
+                : null;
+
             $withdrawDescription = $description ?? "Transfer to {$to->name}";
             $depositDescription = $description ?? "Transfer from {$from->name}";
 
@@ -92,7 +97,7 @@ final class CreateTransfer
                 'amount' => $withdrawAmount,
                 'type' => TransactionType::Expense,
                 'description' => $withdrawDescription,
-                'subject' => null,
+                'subject' => $subject,
                 'normalized_description' => $withdrawNormalized,
                 'dedupe_hash' => $withdrawDedupeHash,
                 'transfer_id' => $transferId,
@@ -107,7 +112,7 @@ final class CreateTransfer
                 'amount' => $depositAmount,
                 'type' => TransactionType::Income,
                 'description' => $depositDescription,
-                'subject' => null,
+                'subject' => $subject,
                 'normalized_description' => $depositNormalized,
                 'dedupe_hash' => $depositDedupeHash,
                 'transfer_id' => $transferId,
