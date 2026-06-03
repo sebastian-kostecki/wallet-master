@@ -103,7 +103,7 @@
         "fields": {
             "email": {
                 "label": "Adres e-mail",
-                "placeholder": "np. jan@example.com"
+                "placeholder": "np. jan{'@'}example.com"
             },
             "password": {
                 "label": "Hasło",
