@@ -1,3 +1,5 @@
+> **⚠️ Deprecated (2026-06-03):** Ten plan opisuje ręczne mapowanie kolumn i 2-etapowy UX z mapowaniem w UI. **Obowiązuje `.docs/prd.md`** (FR-I1, FR-I4: adapter-only, auto-commit). Implementacja: `PrepareImportUpload`, `CommitImport`, adaptery w `app/Imports/BankAdapters/`.
+
 ## FR summary
 MVP import ma pozwalać użytkownikowi wczytać transakcje z CSV/XLSX do wybranego konta. Flow UX: **widok transakcji → Import → wybór konta → upload → mapowanie kolumn → auto-commit (bez preview) → wynik**.
 System:

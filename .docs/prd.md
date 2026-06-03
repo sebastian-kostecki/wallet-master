@@ -13,14 +13,15 @@
 - **Mapowanie (kolumn)**: przypisanie kolumn pliku do pól transakcji (data, kwota, opis, opcjonalnie `subject`) wykonywane **automatycznie przez adapter banku** na podstawie nagłówków wyciągu — użytkownik nie mapuje kolumn ręcznie w UI.
 - **Subject**: pole tekstowe “nadawca/odbiorca” przechowywane osobno od opisu.
 - **Duplikat (importu)**: transakcja o identycznej dacie, kwocie i znormalizowanym opisie na tym samym koncie. Podczas importu zawsze pomijana. Ręczne dodanie identycznej transakcji jest dozwolone. **Uzasadnienie**: wspierane banki (BNP Paribas, mBank) nie eksportują w wyciągach unikalnych identyfikatorów transakcji, więc dedupe opieramy wyłącznie na heurystyce `date + amount + normalized_description`.
-- **Aktywny użytkownik**: użytkownik, który wykonał min. 1 akcję produktową (np. import lub dodanie transakcji) w ostatnich 7 dniach. **[Assumption]**
+- **Aktywny użytkownik (retention)**: użytkownik, który wykonał min. 1 akcję produktową (np. import lub dodanie transakcji) w ostatnich 7 dniach. **[Assumption]**
+- **Nowy użytkownik (aktywacja importu)**: użytkownik w oknie 7 dni od rejestracji (`user_registered`); metryka „Activation import” w §2 mierzy odsetek tej kohorty wykonującej ≥1 import.
 
 ---
 
 ## 1. Overview
 Budujemy webową aplikację do zarządzania budżetem domowym: użytkownik tworzy konta, dodaje/ogląda transakcje i importuje je z wyciągów bankowych (CSV/XLSX). MVP ma dać szybki “time-to-value”: sprawne dodawanie transakcji ręcznie oraz wysoki sukces importu z minimalną korektą.
 
-Źródło wymagań produktu: `.docs/mvp.md` (MVP scope, sukces, persona) + `.docs/tech-stack.md` (stack i ograniczenia).
+Źródło wymagań produktu: **ten dokument (PRD)** jest kanoniczny. `.docs/mvp.md` — skrót wave 1 (subset Must). `.docs/tech-stack.md` — stack i ograniczenia techniczne.
 
 ---
 
@@ -37,7 +38,7 @@ Budujemy webową aplikację do zarządzania budżetem domowym: użytkownik tworz
   - Pomiar: w imporcie liczyć `rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`.
 - **Time-to-add (manual)**: mediana czasu ręcznego dodania transakcji < **30s** (od kliknięcia “Dodaj transakcję” do sukcesu zapisu).
   - Pomiar: event `transaction_create_opened` + `transaction_created` z różnicą czasu po stronie frontendu.
-- **Activation import**: min. **70% aktywnych** wykonuje ≥1 import w ciągu 7 dni od rejestracji.
+- **Activation import**: min. **70% nowo zarejestrowanych użytkowników** wykonuje ≥1 import w ciągu 7 dni od rejestracji.
   - Pomiar: `user_registered` + `import_completed` w 7-dniowym oknie.
 - **Data isolation**: **0** incydentów wycieku danych między użytkownikami.
   - Pomiar: testy automatyczne (feature), manual QA checklist.
@@ -155,8 +156,12 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
   - Given konto użytkownika  
     When edytuje nazwę/saldo początkowe  
     Then zmiany zapisują się, a saldo bieżące jest aktualizowane zgodnie z zasadami (FR-S1, FR-T1).
+  - Given konto z `opening_balance = O1` i `current_balance = C`  
+    When użytkownik zmienia `opening_balance` na `O2` (bez zmiany transakcji)  
+    Then `opening_balance = O2` i `current_balance = C + (O2 − O1)` (delta salda początkowego).
 - **Edge cases**
   - Nazwa pusta/zbyt długa.
+  - Zmiana `opening_balance` nie tworzy transakcji `adjustment`; korekta bieżącego salda bez zmiany historii transakcji → FR-S1 (akcja „Ustaw saldo”).
   - Waluta w MVP ograniczona do PLN w UI, ale istnieje jako encja (tabela) dla przyszłej rozbudowy. **[Assumption]**
   - Typ konta i bank muszą pochodzić z dozwolonej listy (enum).
 - **Telemetry/Events**
@@ -268,6 +273,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
     Then komenda raportuje 0 różnic między `current_balance` a `opening_balance + SUM(amount)`.
 - **Edge cases**
   - Korekta salda nie nadpisuje historii; jest nowym wpisem księgowym (`adjustment`) i pozostawia pełny ślad audytowy.
+  - Edycja `opening_balance` — patrz FR-K1 (delta na `current_balance`, nie `adjustment`).
   - Adjustment jest widoczny na liście transakcji (z badge „Korekta").
 - **Telemetry/Events**
   - `account_balance_adjusted` (stare→nowe, reason opcjonalny) **[Assumption]**
@@ -302,6 +308,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
   - CSV: separator wykrywany automatycznie.
   - Nagłówki kolumn są wymagane (mapping po nazwach nagłówków).
   - Kwota = 0 jest odrzucana (`rows_failed_validation++`).
+  - Status `draft` (§12): stan techniczny po uploadzie, przed `queued`; użytkownik nie przechodzi podglądu ani ręcznego mapowania.
 - **Telemetry/Events**
   - `import_started`, `import_completed`, `import_failed`
 
@@ -373,11 +380,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Telemetry/Events**
   - `import_enrichment_typesense_hit`, `import_enrichment_typesense_miss` **[Assumption]**
 
-**Options + Recommendation + Rationale**
-- **Opcja 1**: tylko “szablony mapowania” w DB (konfigurowalne przez usera).
-- **Opcja 2**: “bank adapters” w kodzie + możliwość zapisu mapowania (hybryda).
-- **Recommendation**: Opcja 2
-- **Rationale**: wspiera ekstrakcję `subject` i ułatwia utrzymanie wielu formatów, bez blokowania importu.
+**Implementation note:** Enrichment jest best-effort przez Typesense (`import_description_memory`). Brak dopasowania lub niedostępność Typesense nie blokuje importu. Mapowanie kolumn pliku — wyłącznie adaptery banku (FR-I4); w MVP brak szablonów mapowania edytowalnych przez użytkownika.
 
 #### FR-I6 Identyfikacja transferów podczas importu (matcher)
 - **Opis**: po zakończonym imporcie system próbuje rozpoznać, że nowo dodana transakcja jest jedną z dwóch nóg transferu między kontami tego samego użytkownika i automatycznie łączy ją ze sparowaną transakcją na innym koncie wspólnym `transfer_id`. Dla niejednoznacznych przypadków oznacza je jako kandydatów do ręcznego potwierdzenia.
@@ -424,9 +427,8 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 
 ### Mapa nawigacji
 - Konta
-- Transakcje (w tym baner kandydatów transferu z liczbą oczekujących par)
-- Import
-- (opcjonalnie) Ustawienia profilu **[Assumption]**
+- Transakcje (filtry, podsumowanie, **Import** jako akcja/modal z tego widoku, baner kandydatów transferu z liczbą oczekujących par)
+- (Post-MVP / opcjonalnie) Ustawienia profilu **[Assumption]**
 
 ---
 
@@ -486,7 +488,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 Integracje zewnętrzne: Typesense (wewnątrz infrastruktury); import plików tylko lokalny upload.
 
 Wymagania dot. kontraktów (na poziomie PRD):
-- Import jako proces 1-etapowy: `commit` (walidacja + dedupe + zapis) bez etapu preview; użytkownik widzi wyłącznie wynik. **[Assumption]**
+- Import jako proces 1-etapowy: `commit` (walidacja + dedupe + zapis) bez etapu preview; użytkownik widzi wyłącznie wynik. Status `draft` w §12 jest stanem technicznym po uploadzie. **[Assumption]**
 - Commit importu realizowany asynchronicznie (`queued` → `processing` → `committed|failed`) z aktualizacją statusu realtime (Reverb) i fallbackiem polling. **[Assumption]**
 
 ### Architektura importu “per bank” (adaptery)
@@ -529,6 +531,7 @@ Kluczowe encje i relacje:
 - **Import**
   - należy do User i Account
   - ma status (`draft` / `queued` / `processing` / `committed` / `failed`), liczniki wierszy (`rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`), mapowanie kolumn
+  - **`draft`:** stan techniczny po uploadzie pliku, przed kolejkowaniem (`queued`). Użytkownik nie przechodzi etapu podglądu ani ręcznego mapowania; UX to upload → oczekiwanie → wynik.
   - ma `details` (JSON) na metadane techniczne importu (`mapping_used`, `source_file`, `parser`, `bank`, `headers`, `diagnostics`).
 - **AccountBalanceAdjustment** (audyt)
   - wpis przy każdej akcji „Ustaw saldo" (kto, kiedy, stare→nowe saldo)
@@ -582,7 +585,7 @@ Feature flags / rollout / migracje:
 - Migracje: dodanie tabel walut, importów, powiązań transferu.
 
 Plan komunikacji i supportu (minimum):
-- Ekran pomocy importu (krótko: jak wyeksportować plik i jak mapować). **[Assumption]**
+- Ekran pomocy importu (krótko: jak wyeksportować plik CSV/XLSX z banku i wybrać właściwe konto w aplikacji; **bez** ręcznego mapowania kolumn — mapowanie z adaptera, FR-I4). **[Assumption]**
 - Kanał feedbacku (np. email). **[Assumption]**
 
 ---
@@ -619,13 +622,21 @@ Brak pytań blokujących na ten moment.
 - `.docs/mvp.md`: “Rejestracja i logowanie użytkownika; izolacja danych per użytkownik…”
 - `.docs/mvp.md`: “Zarządzanie kontami bankowym… walutę domyślną (na MVP: PLN) i saldo początkowe”
 - `.docs/mvp.md`: “Zarządzanie operacjami… typ (przychód / wydatek / transfer)… opcjonalnie kontrahenta”
-- `.docs/mvp.md`: “Import operacji… CSV/XLSX z mapowaniem kolumn… podglądem… wykrywaniem i pomijaniem duplikatów…”
-- `.docs/mvp.md`: Kryteria sukcesu (90% importu, <30s manual, 70% import w 7 dni, 0 wycieków).
+- `.docs/mvp.md`: “Import operacji… CSV/XLSX…” (historycznie z podglądem — zastąpione przez PRD FR-I1: auto-commit).
+- `.docs/mvp.md`: Kryteria sukcesu (90% importu, <30s manual, 70% nowo zarejestrowanych użytkowników z importem w 7 dni, 0 wycieków).
 - `.docs/tech-stack.md`: Laravel 13 + Inertia v2 + Vue 3 + TS + Vite 6 + Tailwind 3; DB SQLite/MySQL; Pest/PHPUnit; auth sesyjny.
 
-### Conflicts
-- Brak bezpośrednich sprzeczności między `.docs/mvp.md` i `.docs/tech-stack.md` wykrytych na poziomie wymagań.
-- Potencjalne napięcie: “MVP: PLN” vs “waluta jako wpis w tabeli pod przyszłe waluty” — rozwiązanie: encja waluty + UI ograniczone do PLN w MVP.
+### Conflicts (historyczne vs PRD — rozstrzygnięte)
+
+| Temat | Legacy `.docs/mvp.md` | PRD (kanoniczny) |
+|-------|----------------------|------------------|
+| Podgląd importu | Ekran podglądu przed zapisem | Auto-commit bez preview (FR-I1) |
+| Typ transakcji w imporcie | Kolumna „typ” w mapowaniu | Typ ze znaku kwoty (FR-I2) |
+| Zakres dokumentów | Minimalna lista funkcji | PRD = pełny katalog; `mvp.md` = subset wave 1 |
+
+- `.docs/tech-stack.md`: brak sprzeczności wymagań produktowych z PRD.
+- Napięcie rozwiązane: „MVP: PLN” vs encja `Currency` pod przyszłe waluty — encja waluty + UI ograniczone do PLN w MVP.
+- `.docs/mvp.md` utrzymywany jako skrót; w razie rozbieżności obowiązuje ten PRD.
 
 ---
 
