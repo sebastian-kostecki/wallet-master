@@ -10,6 +10,7 @@ use App\Models\AccountBalanceAdjustment;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Transactions\TransactionDedupe;
+use App\Telemetry\Event;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -65,6 +66,12 @@ final class AdjustAccountBalance
                 'old_balance' => $oldBalance,
                 'new_balance' => $normalizedNew,
             ]);
+
+            Event::record('account_balance_adjusted', [
+                'account_id' => $locked->id,
+                'old_balance' => $oldBalance,
+                'new_balance' => $normalizedNew,
+            ], $user->id);
         });
     }
 }

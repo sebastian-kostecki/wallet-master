@@ -5,6 +5,7 @@ namespace App\Actions\Accounts;
 use App\Enums\AccountType;
 use App\Enums\Bank;
 use App\Models\Account;
+use App\Telemetry\Event;
 use Illuminate\Support\Facades\DB;
 
 final class UpdateAccountDetails
@@ -36,6 +37,8 @@ final class UpdateAccountDetails
             $locked->opening_balance = $newOpening;
             $locked->current_balance = bcadd((string) $locked->current_balance, $delta, 2);
             $locked->save();
+
+            Event::record('account_updated', ['account_id' => $locked->id]);
         });
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Resources\Accounts\AccountResource;
 use App\Models\Account;
 use App\Models\Currency;
+use App\Telemetry\Event;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -81,6 +82,14 @@ class AccountController extends Controller
 
     public function destroy(Account $account): RedirectResponse
     {
+        $transactionCount = $account->transactions()->count();
+
+        Event::record('account_deleted', ['account_id' => $account->id]);
+        Event::record('account_deleted_with_transactions', [
+            'account_id' => $account->id,
+            'transaction_count' => $transactionCount,
+        ]);
+
         $account->delete();
 
         return to_route('accounts.index');

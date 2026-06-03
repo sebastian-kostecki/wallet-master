@@ -8,6 +8,7 @@ use App\Enums\AccountType;
 use App\Enums\Bank;
 use App\Models\Account;
 use App\Models\User;
+use App\Telemetry\Event;
 
 final class StoreAccount
 {
@@ -24,7 +25,7 @@ final class StoreAccount
     {
         $openingBalance = (string) $validated['opening_balance'];
 
-        return Account::query()->create([
+        $account = Account::query()->create([
             'user_id' => $user->id,
             'currency_id' => $validated['currency_id'],
             'name' => $validated['name'],
@@ -33,5 +34,9 @@ final class StoreAccount
             'opening_balance' => $openingBalance,
             'current_balance' => $openingBalance,
         ]);
+
+        Event::record('account_created', ['account_id' => $account->id], $user->id);
+
+        return $account;
     }
 }
