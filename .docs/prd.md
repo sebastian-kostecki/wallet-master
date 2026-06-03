@@ -7,12 +7,13 @@
 
 - **Źródło prawdy:** ten plik = *co* budujemy; `.docs/tech-stack.md` = *jak* uruchamiamy projekt i jaki stack.
 - **MVP:** implementuj wymagania z **Priorytet: Must**, chyba że zadanie wyraźnie obejmuje **Should**.
-- **Izolacja danych:** konta, transakcje, importy — wyłącznie w scope `user_id` zalogowanego użytkownika.
+- **Izolacja danych:** konta, transakcje, importy, kategorie, szacunki — wyłącznie w scope `user_id` zalogowanego użytkownika.
 - **Konto usunięte (soft delete):** transakcje pozostają w historii, **read-only**; import i transfer na takie konto — zablokowane.
 - **Import:** konto → upload CSV/XLSX → auto-mapowanie adaptera banku → auto-commit **bez podglądu**; `draft` to stan techniczny między uploadem a kolejką.
 - **Dedupe (import):** klucz `date + amount + normalized_description` na koncie; pominięcie duplikatu przy imporcie; ręczne dodanie identycznej transakcji — dozwolone (`dedupe_hash` z sufiksem UUID).
 - **Saldo:** `current_balance` aktualizowane przy zmianach transakcji; komenda `accounts:recalculate-balance` jako safety net.
 - **Lista transakcji:** filtry, sort i podsumowanie po dacie okresu (`booked_at`; UI kolumny: `COALESCE(booked_at, date)`); sumy wpływów/wydatków **bez** wewnętrznych transferów (`transfer_id` pusty).
+- **Kategorie i szacunki (wave 2):** każda transakcja ma `category_id`; szacunki roczne (kanoniczne) + opcjonalne nadpisania miesięczne; widok miesięczny (plan vs fakty + transfery) i roczny (plan vs fakty bez transferów) — §3.1a, FR-C1–C7.
 - **Poza zakresem:** §3.2 — nie implementuj bez rozszerzenia tego dokumentu.
 
 ---
@@ -33,12 +34,17 @@
 - **Duplikat (importu):** ten sam `date + amount + normalized_description` na koncie — pomijany przy imporcie; ręczny duplikat dozwolony. Banki MVP nie eksportują unikalnych ID transakcji.
 - **Aktywny użytkownik (retention):** ≥1 akcja produktowa (import lub transakcja) w ostatnich 7 dniach — metryka analityczna poza MVP.
 - **Nowy użytkownik (aktywacja importu):** do 7 dni od `user_registered`; metryka „Activation import” (§3.3).
+- **Kategoria:** wpis w katalogu użytkownika (`income` \| `expense`) z kolejnością wyświetlania; przypisana do każdej transakcji.
+- **Szacunek roczny:** planowana kwota na rok kalendarzowy per kategoria (przychód lub wydatek); można przekroczyć — to nie jest twardy limit.
+- **Szacunek miesięczny:** opcjonalne nadpisanie planu na dany miesiąc; może różnić się od `szacunek_roczny ÷ 12`.
+- **Widok budżetu miesięczny:** plan vs wykonanie per kategoria w miesiącu + sekcja transferów (oszczędności).
+- **Widok budżetu roczny:** szacunek roczny vs wykonanie per kategoria w roku; bez agregacji transferów wewnętrznych.
 
 ---
 
 ## 2. Streszczenie produktu
 
-Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/XLSX. MVP optymalizuje **time-to-value** — szybkie ręczne dodawanie transakcji i wysoki sukces importu przy minimalnej korekcie.
+Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/XLSX, kategorie operacji oraz szacunki plan vs wykonanie (miesięcznie i rocznie). MVP optymalizuje **time-to-value** — szybkie ręczne dodawanie transakcji i wysoki sukces importu przy minimalnej korekcie. Wave 2 (pre-release) dodaje kategoryzację i widoki budżetu ze **szacunkami** (nie limitami).
 
 ---
 
@@ -56,14 +62,27 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 
 **Should w MVP (wdrażaj gdy w scope zadania):** reset hasła (FR-A2), pamięć opisów (FR-I5), matcher transferów (FR-I6).
 
+### 3.1a Wave 2 (pre-release) — kategorie i szacunki — Must
+
+1. CRUD kategorii + zestaw startowy (FR-C1)
+2. Kategoria wymagana na transakcji, transferze i imporcie (FR-C2, FR-C7)
+3. Szacunki roczne i miesięczne per kategoria (FR-C3, FR-C4)
+4. Widok budżetu miesięczny i roczny (FR-C5, FR-C6)
+
+**Should w wave 2:** filtr/kolumna kategorii na liście transakcji (FR-C8).
+
 ### 3.2 Poza zakresem (Out of scope)
 
-- Kategoryzacja transakcji i AI kategorii
+- AI do sugerowania kategorii (automatyczna klasyfikacja ML)
+- Mapowanie kategorii z kolumny wyciągu bankowego (np. mBank `Kategoria`) — kategoria z pamięci lub fallback (FR-C7)
 - Wielowalutowość i przeliczenia (MVP: PLN w UI; pole waluty w danych)
 - Współdzielenie danych między użytkownikami
 - Import inny niż CSV/XLSX (PDF, MT940, OCR)
-- Załączniki, eksport, raporty, wykresy
-- Budżetowanie i szacowania
+- Załączniki, eksport danych
+- Wykresy i zaawansowane raporty (poza tabelarycznymi widokami budżetu FR-C5/C6)
+- Twarde limity budżetu z blokadą transakcji / alertami push
+- Szacunki oszczędności per konto (zamiast kategorii „Oszczędności” + sekcja transferów)
+- Rok fiskalny niestandardowy (poza rokiem kalendarzowym)
 - Integracje z bankami / API zewnętrzne
 - Aplikacje mobilne natywne
 - Masowe operacje, szablony, duplikowanie transakcji
@@ -96,6 +115,10 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 | `import_bank_resolved_from_account`, `import_headers_unrecognized` | Adapter | FR-I4 |
 | `import_enrichment_typesense_hit`, `import_enrichment_typesense_miss` | Pamięć opisów | FR-I5 |
 | `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous` | Matcher | FR-I6 |
+| `category_created`, `category_updated` | Kategorie | FR-C1 |
+| `category_estimate_annual_saved`, `category_estimate_monthly_saved` | Szacunki | FR-C3, FR-C4 |
+| `budget_view_monthly`, `budget_view_yearly` | Widoki budżetu | FR-C5, FR-C6 |
+| `category_memory_hit`, `category_memory_miss` | Pamięć kategorii (import) | FR-C7 |
 
 Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 
@@ -117,11 +140,13 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 
 **D — Usunięcie konta:** Usuń konto → znika z listy (soft delete) → transakcje w historii, **nieedytowalne**.
 
+**E — Budżet i kategorie:** Rejestracja (kategorie startowe) → ustaw szacunki roczne → widok miesięczny (plan vs fakty, sekcja transferów) → korekta kategorii na transakcjach / import → widok roczny (podsumowanie roku bez transferów). *Alt:* brak szacunku rocznego — tylko kolumna wykonania; przekroczenie szacunku — dozwolone, bez blokady.
+
 ---
 
 ## 5. Model domeny
 
-**Relacje:** User 1—N Accounts, Transactions, Imports · Account 1—N Transactions · Transfer = 2 Transactions, ten sam `transfer_id`.
+**Relacje:** User 1—N Accounts, Transactions, Imports, Categories · Account 1—N Transactions · Category 1—N Transactions · Transfer = 2 Transactions, ten sam `transfer_id` · Category 1—N CategoryAnnualEstimate, CategoryMonthlyEstimate.
 
 ### Account
 
@@ -147,6 +172,31 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 | `transfer_match_status` | `none`, `auto`, `manual`, `rejected` |
 | `transfer_candidate_for_id` | FK — kandydat pary (status `manual`) |
 | `import_id`, `raw_statement_description` | Metadane importu |
+| `category_id` | FK → Category (wymagane po wave 2) |
+
+### Category
+
+| Pole | Opis |
+|------|------|
+| `user_id` | Właściciel |
+| `name` | Nazwa wyświetlana |
+| `type` | `income`, `expense` |
+| `sort_order` | Kolejność listy; fallback importu = pierwsza kategoria danego typu |
+| `is_system` | Kategoria systemowa (np. „Oszczędności”) — nieusuwalna w v1 |
+
+### CategoryAnnualEstimate
+
+| Pole | Opis |
+|------|------|
+| `category_id`, `year` | Rok kalendarzowy; unikalna para |
+| `amount` | Szacunek roczny (nullable = brak planu) |
+
+### CategoryMonthlyEstimate
+
+| Pole | Opis |
+|------|------|
+| `category_id`, `year`, `month` | Miesiąc 1–12; unikalna trójka |
+| `amount` | Nadpisanie szacunku miesięcznego (nullable = brak zapisanego nadpisania; UI może pokazać `roczny ÷ 12`) |
 
 ### Import
 
@@ -273,11 +323,12 @@ Usunięcie konta nie usuwa transakcji; blokuje ich edycję i usuwanie.
 | **Domena** | Transactions |
 
 **Zachowanie**
-Dodawanie, edycja, usuwanie na aktywnym koncie; wpływ na `current_balance`.
+Dodawanie, edycja, usuwanie na aktywnym koncie; wpływ na `current_balance`. Od wave 2: wymagane pole `category_id` (FR-C2).
 
 **Kryteria akceptacji**
-1. Given aktywne konto When dodanie z `date`, opcjonalnie `booked_at` (default = `date`), kwota, opis, opcjonalnie `subject` Then wpis na liście, saldo zaktualizowane (ujemna zmniejsza, dodatnia zwiększa).
+1. Given aktywne konto When dodanie z `date`, opcjonalnie `booked_at` (default = `date`), kwota, opis, opcjonalnie `subject`, **kategoria** Then wpis na liście, saldo zaktualizowane (ujemna zmniejsza, dodatnia zwiększa).
 2. Given istniejąca transakcja When edycja pól Then zapis i korekta salda; zmiana samego `booked_at` **nie** zmienia salda bieżącego.
+3. Given wave 2 When zapis bez `category_id` Then 422.
 
 **Reguły**
 - Konto usunięte: brak edycji/usuwania.
@@ -285,6 +336,7 @@ Dodawanie, edycja, usuwanie na aktywnym koncie; wpływ na `current_balance`.
 - Data w przyszłości: dozwolona.
 - `booked_at` dowolny względem `date`; default `booked_at = date`.
 - Ręczny duplikat (ta sama data, kwota, opis): **dozwolony** — `dedupe_hash` z sufiksem UUID.
+- `category_id`: wymagane; typ kategorii musi pasować do typu ekonomicznego transakcji (`income` / `expense` ze znaku kwoty).
 
 **Zdarzenia:** `transaction_created`, `transaction_updated`, `transaction_deleted`
 
@@ -322,15 +374,17 @@ Lista z filtrem konta i dat (`booked_at`), sort, paginacja, suma wpływów i wyd
 | **Domena** | Transactions |
 
 **Zachowanie**
-Jedna akcja UI → 2 transakcje, wspólna data, przeciwne kwoty, wspólny `transfer_id`.
+Jedna akcja UI → 2 transakcje, wspólna data, przeciwne kwoty, wspólny `transfer_id`. Od wave 2: jedna wybrana kategoria przypisana do **obu** nóg (FR-C2).
 
 **Kryteria akceptacji**
 1. Given dwa różne konta When transfer kwoty X w dacie D Then na źródle `-X`, na celu `+X`, salda obu kont zaktualizowane.
+2. Given wave 2 When transfer Then obie nogi mają ten sam `category_id`.
 
 **Reguły**
 - To samo konto jako źródło i cel — zabronione.
 - Usunięte konto — blokada.
 - Formularz: kwota dodatnia; system zapisuje znaki na transakcjach.
+- Domyślna kategoria w formularzu transferu: „Oszczędności” (rekomendacja UX).
 
 **Zdarzenia:** `transfer_created`, `transfer_failed_validation`
 
@@ -464,14 +518,15 @@ Mapowanie kolumn w adapterze banku; użytkownik wybiera tylko konto (`bank` z ko
 | **Domena** | Import |
 
 **Zachowanie**
-Po edycji `subject`/`description` na transakcji z importu system zapamiętuje mapowanie z `raw_statement_description` i stosuje przy kolejnym imporcie (best-effort, wyszukiwarka opisów w infrastrukturze).
+Po edycji `subject`/`description` na transakcji z importu system zapamiętuje mapowanie z `raw_statement_description` i stosuje przy kolejnym imporcie (best-effort, wyszukiwarka opisów w infrastrukturze). Od wave 2: ta sama pamięć może przechowywać `category_id` (patrz FR-C7).
 
 **Kryteria akceptacji**
 1. Given edycja zaimportowanej transakcji When zapis Then pamięć per user + bank.
 2. Given kolejny import z tym samym (znormalizowanym) surowym opisem When commit Then uzupełnione `subject`/`description` jeśli jest dopasowanie.
+3. Given wave 2 i edycja kategorii na zaimportowanej transakcji When kolejny import Then ta sama kategoria, jeśli pamięć trafi (FR-C7).
 
 **Reguły**
-- Brak dopasowania: puste `subject`, `description` z surowego opisu.
+- Brak dopasowania: puste `subject`, `description` z surowego opisu; kategoria wg FR-C7 (fallback).
 - Izolacja per `user_id` (+ bank w filtrze).
 - Niedostępność usługi wyszukiwania **nie** blokuje importu.
 - Brak edytowalnych szablonów mapowania kolumn w UI (FR-I4).
@@ -509,7 +564,175 @@ Po commicie importu matcher łączy przeciwne kwoty między kontami użytkownika
 
 ---
 
-### 6.6 Szablon: dodawanie FR-XX
+### 6.6 Kategorie
+
+### FR-C1 — CRUD kategorii + zestaw startowy
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Must |
+| **Domena** | Categories |
+
+**Zachowanie**
+Użytkownik zarządza katalogiem kategorii. Przy pierwszym użyciu (rejestracja lub pierwsze wejście) system tworzy **zestaw startowy** (wydatki, przychody, kategoria systemowa **Oszczędności**). Użytkownik dodaje, zmienia nazwę, ustawia kolejność (`sort_order`). Usunięcie kategorii z przypisanymi transakcjami — zablokowane (v1). Zmiana `type` kategorii — zablokowana, gdy istnieją transakcje.
+
+**Kryteria akceptacji**
+1. Given nowy użytkownik When pierwszy dostęp do kategorii/budżetu Then istnieje zestaw startowy.
+2. Given kategoria z transakcjami When usunięcie Then błąd walidacji, kategoria pozostaje.
+3. Given kategoria systemowa „Oszczędności” When usunięcie Then blokada.
+
+**Reguły**
+- Izolacja per `user_id`.
+- Zestaw startowy (przykład): wydatki — Jedzenie, Transport, Mieszkanie, Zdrowie, Rozrywka, Oszczędności (system), Inne; przychody — Pensja, Inne przychody.
+- `sort_order` decyduje o „pierwszej możliwej” kategorii przy imporcie (FR-C7).
+
+**Zdarzenia:** `category_created`, `category_updated`
+
+---
+
+### FR-C2 — Kategoria wymagana na transakcji
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Must |
+| **Domena** | Transactions |
+
+**Zachowanie**
+Ręczne dodanie/edycja, transfer i wiersz importu wymagają `category_id` należącego do użytkownika. Typ kategorii musi pasować do typu ekonomicznego transakcji (`income` / `expense` ze znaku kwoty / `TransactionType`). Transfer: **jedna** kategoria w formularzu → ten sam `category_id` na obu nogach. `adjustment`: kategoria wymagana.
+
+**Kryteria akceptacji**
+1. Given tworzenie transakcji When brak kategorii Then 422.
+2. Given wydatek When kategoria przychodowa Then 422.
+3. Given transfer When zapis Then obie nogi mają ten sam `category_id`.
+
+**Reguły**
+- Pre-release: migracja przypisuje kategorię wszystkim istniejącym transakcjom; po release brak trwałego stanu „bez kategorii”.
+- Transakcje na usuniętym koncie: read-only (bez zmiany kategorii).
+
+---
+
+### 6.7 Budżet i szacunki
+
+### FR-C3 — Szacunki roczne
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Must |
+| **Domena** | Budgets |
+
+**Zachowanie**
+Użytkownik ustawia opcjonalny **szacunek roczny** per kategoria i rok kalendarzowy (przychód i wydatek). Przekroczenie szacunku przez wykonanie jest dozwolone — wyłącznie informacja w UI (różnica plan vs fakty).
+
+**Kryteria akceptacji**
+1. Given kategoria i rok 2026 When zapis szacunku 12000 Then widok roczny pokazuje plan 12000.
+2. Given wykonanie 13000 When widok roczny Then wykonanie 13000, różnica +1000, bez błędu.
+
+**Reguły**
+- Kwoty ≥ 0; skala decimal jak w reszcie aplikacji.
+- Brak szacunku rocznego: widok pokazuje tylko wykonanie (plan „—”).
+
+**Zdarzenia:** `category_estimate_annual_saved`
+
+---
+
+### FR-C4 — Szacunki miesięczne (nadpisania)
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Must |
+| **Domena** | Budgets |
+
+**Zachowanie**
+Użytkownik może nadpisać plan na konkretny miesiąc. Gdy brak nadpisania, widok miesięczny pokazuje **`szacunek_roczny ÷ 12`**, jeśli roczny istnieje. Suma 12 nadpisań może różnić się od rocznego — **miękka informacja** (bez blokady zapisu); istotna głównie na początku roku.
+
+**Kryteria akceptacji**
+1. Given roczny 5000 i nadpisanie marca = 1500 When widok marzec Then plan 1500 dla kategorii.
+2. Given suma nadpisań 4200 i roczny 5000 When styczeń Then opcjonalna wskazówka „4200 / 5000”, zapis dozwolony.
+
+**Zdarzenia:** `category_estimate_monthly_saved`
+
+---
+
+### FR-C5 — Widok budżetu miesięczny
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Must |
+| **Domena** | Budgets |
+
+**Zachowanie**
+Dla wybranego miesiąca i roku kalendarzowego: tabela kategorii (sekcje przychody / wydatki) z kolumnami: szacunek miesiąca, wykonanie, różnica. Okres i agregacja fakty: `COALESCE(booked_at, date)` w granicach miesiąca. Fakty kategorii P&L: **bez** wierszy z `transfer_id` (jak podsumowanie FR-T2). **Sekcja „Transfery i oszczędności”:** plan = szacunek miesięczny kategorii „Oszczędności”; wykonanie = suma transferów w miesiącu (v1: głównie na konta `type = Savings`); różnica informacyjna.
+
+**Kryteria akceptacji**
+1. Given wydatek w kategorii Jedzenie w marcu When widok marzec Then wykonanie w Jedzeniu.
+2. Given transfer wewnętrzny When tabela kategorii Then transfer nie wliczony do wykonania wydatków kategorii.
+3. Given szacunek oszczędności 2000 i transfery 1500 When sekcja transferów Then plan 2000, wykonanie 1500.
+
+**Reguły**
+- `adjustment` w wykonaniu kategorii — wg znaku kwoty (zgodnie z FR-T2).
+
+**Zdarzenia:** `budget_view_monthly`
+
+---
+
+### FR-C6 — Widok budżetu roczny
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Must |
+| **Domena** | Budgets |
+
+**Zachowanie**
+Dla wybranego roku kalendarzowego: per kategoria szacunek roczny vs wykonanie (przychody i wydatki osobno lub z oznaczeniem typu). **Bez** sekcji transferów; **bez** rozbicia na miesięczne nadpisania. Agregacja fakty: `transfer_id IS NULL`; okres po `COALESCE(booked_at, date)` w roku.
+
+**Kryteria akceptacji**
+1. Given transakcje w 2026 When widok roczny 2026 Then sumy per kategoria bez transferów wewnętrznych.
+2. Given plan oszczędności miesięczny When widok roczny Then kategoria Oszczędności pokazuje **fakty** P&L, bez sekcji planu transferów.
+
+**Zdarzenia:** `budget_view_yearly`
+
+---
+
+### FR-C7 — Pamięć kategorii przy imporcie
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Must |
+| **Domena** | Import |
+
+**Zachowanie**
+**Nie** mapować kolumny kategorii z wyciągu banku. Przy commicie: `category_id` z pamięci opisu (ten sam klucz co FR-I5: `user_id` + bank + znormalizowany surowy opis). Przy trafieniu — zapisana kategoria. Przy braku — pierwsza kategoria pasującego typu (`income` / `expense`) wg `sort_order`. Niedostępność Typesense **nie** blokuje importu (fallback jak FR-I5).
+
+**Kryteria akceptacji**
+1. Given wcześniejsza ręczna kategoria dla opisu When ponowny import tego opisu Then ta sama kategoria.
+2. Given brak pamięci When import wydatku Then pierwsza kategoria wydatkowa wg `sort_order`.
+3. Given plik mBank z kolumną Kategoria When import Then kolumna ignorowana przy przypisaniu kategorii.
+
+**Reguły**
+- Po ręcznej edycji kategorii na transakcji z importu — zapamiętaj mapowanie (rozszerzenie pamięci opisów o `category_id`).
+- Pamięć per `user_id` (+ bank w filtrze).
+
+**Zdarzenia:** `category_memory_hit`, `category_memory_miss`
+
+---
+
+### FR-C8 — Kategoria na liście transakcji
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Should |
+| **Domena** | Transactions |
+
+**Zachowanie**
+Lista transakcji wyświetla nazwę kategorii; opcjonalny filtr po `category_id`.
+
+**Kryteria akceptacji**
+1. Given lista When wiersz transakcji Then widoczna nazwa kategorii.
+2. Given filtr kategorii When zastosowanie Then tylko pasujące wiersze.
+
+---
+
+### 6.8 Szablon: dodawanie FR-XX
 
 ```markdown
 ### FR-XX — Tytuł
@@ -517,7 +740,7 @@ Po commicie importu matcher łączy przeciwne kwoty między kontami użytkownika
 | Pole | Wartość |
 |------|---------|
 | **Priorytet** | Must \| Should \| Could |
-| **Domena** | Auth \| Accounts \| Transactions \| Balances \| Import |
+| **Domena** | Auth \| Accounts \| Transactions \| Balances \| Import \| Categories \| Budgets |
 
 **Zachowanie**
 …
@@ -540,9 +763,9 @@ Po dodaniu: uzupełnij **Indeks identyfikatorów FR** i tabelę zdarzeń w §3.4
 
 **Język UI:** polski. Architektura pod przyszłe i18n (formatowanie dat/kwot), bez pełnego i18n w MVP.
 
-**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista, dodaj, edytuj) · Transakcje (lista, dodaj, edytuj, transfer, baner kandydatów FR-I6) · Import (modal z transakcji: konto, upload, status, podsumowanie).
+**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista, dodaj, edytuj) · Transakcje (lista, dodaj, edytuj, transfer, baner kandydatów FR-I6; **kategoria** wymagana w formularzach od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny, widok roczny) · **Kategorie** (CRUD, szacunki roczne, kolejność).
 
-**Nawigacja:** Konta · Transakcje (Import jako akcja/modal, baner kandydatów z licznikiem).
+**Nawigacja:** Konta · Transakcje (Import jako akcja/modal, baner kandydatów z licznikiem) · **Budżet** (przełącznik miesięczny / roczny).
 
 **Formaty:** data **DD-MM-YYYY**; kwota w UI — PL (przecinek), tolerancja kropki; import — patrz FR-I1.
 
@@ -557,14 +780,14 @@ Po dodaniu: uzupełnij **Indeks identyfikatorów FR** i tabelę zdarzeń w §3.4
 ## 8. Wymagania niefunkcjonalne
 
 **Wydajność**
-- Lista: paginacja backend; indeksy złożone na `(account_id, booked_at)`, `(user_id, booked_at)`.
+- Lista: paginacja backend; indeksy złożone na `(account_id, booked_at)`, `(user_id, booked_at)`; po wave 2: `(category_id, booked_at)` lub `(user_id, category_id, booked_at)` pod agregacje budżetu.
 - Import: chunk domyślnie 500 wierszy, krótkie transakcje DB, bulk insert; `lockForUpdate` konta tylko przy finalnej aktualizacji salda.
 - Realtime import: broadcast statusu + liczników per chunk; polling 5 s przy rozłączeniu WebSocket.
 
 **Bezpieczeństwo**
 - OWASP baseline (CSRF, XSS, auth hardening).
 - Rate limit: logowanie/reset 6/min per IP; import upload/commit 10/min per user; API 60/min per user.
-- Autoryzacja per zasób (Policy); pamięć opisów izolowana per user (+ bank).
+- Autoryzacja per zasób (Policy); pamięć opisów i kategorii izolowana per user (+ bank).
 - Produkcyjne logi: bez surowych plików importu i pełnych wierszy.
 - Mass assignment: `$fillable`; `Model::shouldBeStrict()` poza produkcją.
 
@@ -592,13 +815,17 @@ Po dodaniu: uzupełnij **Indeks identyfikatorów FR** i tabelę zdarzeń w §3.4
 
 ## 10. Granice release
 
-### MVP (obecny zakres)
+### MVP (wave 1 — wdrożone)
 
 Auth · Konta + saldo + `adjustment` + rekalkulacja · Transakcje (`date`, `booked_at`, lista, summary) · Transfer UI · Import (auto-map, auto-commit, dedupe, chunked, realtime) · Matcher + baner (FR-I6) · Pamięć opisów best-effort (FR-I5) · Telemetria · Rate limiting importu.
 
-### Po MVP (kierunek, bez zobowiązania)
+### Wave 2 (pre-release — kategorie i szacunki)
 
-Kategorie, raporty, eksport, multiwaluta, współdzielenie, integracje bankowe, aplikacje mobilne.
+Kategorie (FR-C1, FR-C2) · Szacunki roczne i miesięczne (FR-C3, FR-C4) · Widoki budżetu miesięczny i roczny (FR-C5, FR-C6) · Pamięć kategorii przy imporcie (FR-C7) · Opcjonalnie filtr kategorii na liście (FR-C8).
+
+### Po wave 2 (kierunek, bez zobowiązania)
+
+AI kategorii, mapowanie kategorii z banku, wykresy, eksport, szacunki per konto oszczędnościowego, twarde limity z alertami, multiwaluta, współdzielenie, integracje bankowe, aplikacje mobilne.
 
 ---
 
@@ -615,6 +842,8 @@ Kategorie, raporty, eksport, multiwaluta, współdzielenie, integracje bankowe, 
 | 7 | Fałszywe linki transferów | Tokeny + 1 kandydat auto; reszta manual | FR-I6 |
 | 8 | Długie locki importu | Chunki, krótkie TX | FR-I1 |
 | 9 | Błędy 500 zamiast produktowych | 422 + `message_key` (np. Cash) | FR-I4 |
+| 10 | Złe kategorie po imporcie | Pamięć + edycja; fallback pierwsza wg typu | FR-C7 |
+| 11 | Rozjazd sumy miesięcznych vs rocznej | Miękka informacja, bez blokady | FR-C4 |
 
 ---
 
@@ -651,3 +880,11 @@ Kategorie, raporty, eksport, multiwaluta, współdzielenie, integracje bankowe, 
 | FR-I4 | Adaptery banków | Must | §6.5 |
 | FR-I5 | Pamięć opisów | Should | §6.5 |
 | FR-I6 | Matcher transferów | Should | §6.5 |
+| FR-C1 | CRUD kategorii + zestaw startowy | Must | §6.6 |
+| FR-C2 | Kategoria wymagana na transakcji | Must | §6.6 |
+| FR-C3 | Szacunki roczne | Must | §6.7 |
+| FR-C4 | Szacunki miesięczne | Must | §6.7 |
+| FR-C5 | Widok budżetu miesięczny | Must | §6.7 |
+| FR-C6 | Widok budżetu roczny | Must | §6.7 |
+| FR-C7 | Pamięć kategorii przy imporcie | Must | §6.7 |
+| FR-C8 | Kategoria na liście transakcji | Should | §6.7 |
