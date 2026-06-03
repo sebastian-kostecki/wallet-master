@@ -11,7 +11,8 @@ import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { track } from '@/lib/telemetry';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type Account = {
@@ -28,6 +29,10 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const { transactionsIndexSearch, transactionsIndexHref } = useTransactionsIndexSearch();
+
+onMounted(() => {
+    track('transaction_create_opened');
+});
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {

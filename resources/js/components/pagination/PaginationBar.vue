@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import { Button } from '@/components/ui/button';
+import { track } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -152,7 +153,13 @@ const middleLinks = computed(() => {
     }));
 });
 
+function trackPageChanged(page: number): void {
+    track('transactions_page_changed', { page, per_page: perPage.value });
+}
+
 function changePerPage(next: number) {
+    trackPageChanged(1);
+
     router.get(
         route('transactions.index'),
         {
@@ -191,7 +198,7 @@ function changePerPage(next: number) {
 
         <nav class="flex items-center gap-1" :aria-label="t('transactions.index.pagination.aria')">
             <Button variant="outline" size="sm" as-child :disabled="!prevUrl">
-                <Link :href="prevUrl ?? ''" :preserve-scroll="preserveScroll">
+                <Link :href="prevUrl ?? ''" :preserve-scroll="preserveScroll" @click="trackPageChanged(Math.max(1, currentPage - 1))">
                     {{ t('transactions.index.pagination.prev') }}
                 </Link>
             </Button>
@@ -202,6 +209,7 @@ function changePerPage(next: number) {
                     :key="link.label"
                     :href="link.url ?? ''"
                     :preserve-scroll="preserveScroll"
+                    @click="() => link.url && trackPageChanged(Number.parseInt(link.label, 10) || currentPage)"
                     :class="
                         cn(
                             'inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors',
@@ -215,7 +223,7 @@ function changePerPage(next: number) {
             </div>
 
             <Button variant="outline" size="sm" as-child :disabled="!nextUrl">
-                <Link :href="nextUrl ?? ''" :preserve-scroll="preserveScroll">
+                <Link :href="nextUrl ?? ''" :preserve-scroll="preserveScroll" @click="trackPageChanged(Math.min(lastPage, currentPage + 1))">
                     {{ t('transactions.index.pagination.next') }}
                 </Link>
             </Button>

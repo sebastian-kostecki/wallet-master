@@ -2,6 +2,7 @@
 import DateRangePickerInput from '@/components/forms/DateRangePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import InputError from '@/components/InputError.vue';
+import { track } from '@/lib/telemetry';
 import { router } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
@@ -129,7 +130,15 @@ function applyFiltersNow() {
         return;
     }
 
-    router.get(route('transactions.index'), buildQuery(), {
+    const query = buildQuery();
+
+    track('transactions_filtered', {
+        account_id: query.account_id ?? null,
+        from: query.from ?? null,
+        to: query.to ?? null,
+    });
+
+    router.get(route('transactions.index'), query, {
         preserveScroll: true,
         replace: true,
         preserveState: 'errors',

@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
+import { track } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -308,6 +309,8 @@ function setSort(sort: 'date' | 'amount') {
 
     const wasSame = currentSort === sort;
     const nextDirection = wasSame ? (currentDirection === 'asc' ? 'desc' : 'asc') : sort === 'date' ? 'desc' : 'asc';
+
+    track('transactions_sorted', { sort, direction: nextDirection });
 
     router.get(
         route('transactions.index'),
