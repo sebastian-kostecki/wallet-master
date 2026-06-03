@@ -14,6 +14,9 @@ final class ImportCommitCounters
 
     public int $rowsFailedValidation = 0;
 
+    /** @var array<string, int> */
+    public array $inferredTypes = [];
+
     /** @var numeric-string */
     public string $importedAmountSum = '0.00';
 

@@ -9,6 +9,7 @@ use App\Events\ImportStatusUpdated;
 use App\Imports\Workflow\CommitImport;
 use App\Imports\Workflow\PreserveFailedImportSourceFile;
 use App\Models\Import;
+use App\Telemetry\Event;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -51,6 +52,10 @@ final class CommitImportJob implements ShouldBeUnique, ShouldQueue
                 $import->status = ImportStatus::Failed->value;
                 $import->error_summary = 'Import failed due to a system error.';
                 $import->save();
+
+                Event::record('import_failed', [
+                    'import_id' => $import->id,
+                ], $import->user_id);
 
                 app(PreserveFailedImportSourceFile::class)->execute($import->fresh() ?? $import);
 

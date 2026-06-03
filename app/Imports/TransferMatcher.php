@@ -9,9 +9,9 @@ use App\Enums\TransferMatchStatus;
 use App\Models\Import;
 use App\Models\Transaction;
 use App\Support\Transactions\TransactionDedupe;
+use App\Telemetry\Event;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 final class TransferMatcher
@@ -42,13 +42,11 @@ final class TransferMatcher
             if ($candidates->count() > 1) {
                 $result->ambiguousSkipped++;
 
-                Log::channel('telemetry')->info('transfer_match_skipped_ambiguous', [
-                    'event' => 'transfer_match_skipped_ambiguous',
+                Event::record('transfer_match_skipped_ambiguous', [
                     'import_id' => $import->id,
-                    'user_id' => $import->user_id,
                     'transaction_id' => $transaction->id,
                     'candidate_count' => $candidates->count(),
-                ]);
+                ], $import->user_id);
             }
 
             $best = $this->pickBestCandidate($transaction, $candidates);
@@ -58,13 +56,11 @@ final class TransferMatcher
                 $transferId = $this->autoLink($transaction, $best);
                 $result->autoLinked++;
 
-                Log::channel('telemetry')->info('transfer_auto_linked', [
-                    'event' => 'transfer_auto_linked',
+                Event::record('transfer_auto_linked', [
                     'import_id' => $import->id,
-                    'user_id' => $import->user_id,
                     'transfer_id' => $transferId,
                     'transaction_ids' => [$transaction->id, $best->id],
-                ]);
+                ], $import->user_id);
             } else {
                 $this->manualLink($transaction, $best);
                 $result->manualLinked++;

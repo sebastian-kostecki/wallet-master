@@ -18,6 +18,7 @@ use App\Models\ImportFailedRow;
 use App\Models\Transaction;
 use App\Support\Imports\ImportRowRawSnapshot;
 use App\Support\Transactions\TransactionDedupe;
+use App\Telemetry\Event;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -90,6 +91,10 @@ final class CommitImport
         $adapter = $setup['adapter'];
         /** @var array{date: string, amount: string, description: string, subject?: ?string} $mapping */
         $mapping = $setup['mapping'];
+
+        Event::record('import_started', [
+            'import_id' => $lockedImport->id,
+        ], $lockedImport->user_id);
 
         $counters = new ImportCommitCounters;
         /** @var array<string, true> $seenDedupeHashes */
@@ -169,6 +174,18 @@ final class CommitImport
         $import->refresh();
 
         Storage::disk('local')->delete($deleteRelativePath);
+
+        Event::record('import_completed', [
+            'import_id' => $lockedImport->id,
+            'rows_total' => $counters->rowsTotal,
+            'rows_imported' => $counters->rowsImported,
+            'rows_skipped_duplicate' => $counters->rowsSkippedDuplicate,
+            'rows_failed_validation' => $counters->rowsFailedValidation,
+        ], $lockedImport->user_id);
+
+        if ($counters->inferredTypes !== []) {
+            Event::record('import_type_inferred', $counters->inferredTypes, $lockedImport->user_id);
+        }
 
         event(new ImportStatusUpdated($import));
 
@@ -259,6 +276,7 @@ final class CommitImport
         }
 
         $counters->rowsImported++;
+        $counters->inferredTypes[$transactionType->value] = ($counters->inferredTypes[$transactionType->value] ?? 0) + 1;
         $counters->importedAmountSum = bcadd($counters->importedAmountSum, $parsedRow->amount, 2);
 
         return [
@@ -309,14 +327,12 @@ final class CommitImport
             'updated_at' => $timestamp,
         ];
 
-        Log::channel('telemetry')->info('import_row_validation_failed', [
-            'event' => 'import_row_validation_failed',
+        Event::record('import_row_validation_failed', [
             'import_id' => $lockedImport->id,
             'account_id' => $account->id,
-            'user_id' => $lockedImport->user_id,
             'row_number' => $counters->rowIndex,
             'reason_code' => $reasonCode->value,
-        ]);
+        ], $lockedImport->user_id);
 
         Log::debug('Import row validation failed.', [
             'import_id' => $lockedImport->id,
@@ -391,6 +407,11 @@ final class CommitImport
         if ($bank === null || ! $bank->supportsImport()) {
             throw new RuntimeException('This account bank does not support imports.');
         }
+
+        Event::record('import_bank_resolved_from_account', [
+            'import_id' => $lockedImport->id,
+            'bank' => $bank->value,
+        ], $lockedImport->user_id);
 
         return $bank->makeImportAdapter();
     }

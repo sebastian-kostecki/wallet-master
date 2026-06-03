@@ -8,9 +8,9 @@ use App\Enums\TransactionType;
 use App\Enums\TransferMatchStatus;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Telemetry\Event;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 final class UnlinkTransfer
 {
@@ -37,12 +37,10 @@ final class UnlinkTransfer
                 ]);
             }
 
-            Log::channel('telemetry')->info('transfer_unlinked', [
-                'event' => 'transfer_unlinked',
-                'user_id' => $user->id,
+            Event::record('transfer_unlinked', [
                 'transfer_id' => $transferId,
                 'transaction_ids' => $transactions->pluck('id')->all(),
-            ]);
+            ], $user->id);
         });
     }
 }

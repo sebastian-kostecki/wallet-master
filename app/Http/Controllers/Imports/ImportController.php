@@ -15,6 +15,7 @@ use App\Models\Account;
 use App\Models\Import;
 use App\Models\ImportFailedRow;
 use App\Support\Transactions\TransactionsIndexQuery;
+use App\Telemetry\Event;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -96,6 +97,13 @@ final class ImportController extends Controller
         $result = $prepareImportUpload->execute($account, $request->user(), $request->file('file'));
 
         if (! $result->success) {
+            if ($result->code === 'unrecognized_headers') {
+                Event::record('import_headers_unrecognized', [
+                    'account_id' => $account->id,
+                    'bank' => $account->bank?->value,
+                ], $request->user()->id);
+            }
+
             $errorField = $result->code === 'bank_unsupported' ? 'account_id' : 'file';
 
             return response()->json([

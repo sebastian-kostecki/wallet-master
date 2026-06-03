@@ -8,8 +8,8 @@ use App\Enums\TransactionType;
 use App\Enums\TransferMatchStatus;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Telemetry\Event;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 final class ConfirmTransferCandidate
@@ -60,12 +60,10 @@ final class ConfirmTransferCandidate
                 ]);
             }
 
-            Log::channel('telemetry')->info('transfer_manually_linked', [
-                'event' => 'transfer_manually_linked',
-                'user_id' => $user->id,
+            Event::record('transfer_manually_linked', [
                 'transfer_id' => $transferId,
                 'transaction_ids' => [$anchor->id, $partner->id],
-            ]);
+            ], $user->id);
 
             return $transferId;
         });

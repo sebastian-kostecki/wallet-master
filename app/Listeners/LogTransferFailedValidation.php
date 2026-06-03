@@ -3,15 +3,14 @@
 namespace App\Listeners;
 
 use App\Events\TransferFailedValidation;
-use Illuminate\Support\Facades\Log;
+use App\Telemetry\Event;
 
 final class LogTransferFailedValidation
 {
     public function handle(TransferFailedValidation $event): void
     {
-        Log::warning('transfer_failed_validation', [
-            'user_id' => $event->userId,
+        Event::record('transfer_failed_validation', [
             'fields' => $event->fields,
-        ]);
+        ], $event->userId);
     }
 }
