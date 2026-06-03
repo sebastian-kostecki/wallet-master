@@ -4,9 +4,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 > **Uwaga.** Nowe zadania wynikające z `.docs/improvement-plan.md` są oznaczone tagiem `[plan]` przy nazwie sekcji lub punktu. Sekcje 12–17 zostały dopisane na podstawie planu poprawek.
 
-> **Ostatnia synchronizacja:** 2026-06-03 (branch `improvement/transactions`). Refaktoryzacja architektury (fazy 0–5): `.docs/refactoring.md` §10 — **zakończona**. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
+> **Ostatnia synchronizacja:** 2026-06-03 (branch `develop`). Refaktoryzacja architektury (fazy 0–5): `.docs/refactoring.md` §10 — **zakończona**. PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
 >
-> **Ostatnia synchronizacja:** 2026-06-03 (branch `improvement/transactions`). Wdrożono: summary bez transferów, mBank bez `Kategoria→subject`, `imports:purge-old-files`, testy izolacji. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`.
+> **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4–5, §9). Otwarte: pełna telemetria (§8/§13), A11y/QA (§9–10), `api` rate limit, edycja kwoty transferu bez unlink, `subject` w formularzu Transfer, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`.
 
 ---
 
@@ -58,13 +58,13 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 2) Autoryzacja i izolacja danych
 - [x] Zaimplementować autoryzację per zasób (konto/transakcja/import) — Policies (`Account`, `Transaction`, `Import`, `ImportFailedRow`).
-- [~] Dodać testy izolacji danych (min. 2 użytkowników, próby odczytu/edycji cudzych zasobów):
+- [x] Dodać testy izolacji danych (min. 2 użytkowników, próby odczytu/edycji cudzych zasobów):
   - [x] `tests/Feature/Transactions/TransactionAuthorizationTest.php` (create/edit/store/update/destroy między userami)
   - [x] `tests/Feature/Authorization/AccountIsolationTest.php`
   - [x] `tests/Feature/Authorization/TransactionIsolationTest.php`
   - [x] `tests/Feature/Authorization/ImportIsolationTest.php`
   - [x] `tests/Feature/Imports/TypesenseMemoryIsolationTest.php`
-- [ ] Upewnić się, że reset hasła nie ujawnia czy email istnieje.
+- [x] Upewnić się, że reset hasła nie ujawnia czy email istnieje (`PasswordResetLinkController` — stały komunikat statusu; FR-A2).
 
 ---
 
@@ -79,13 +79,13 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Zdefiniować wpływ zmiany salda początkowego na `current_balance` (rekomendacja: przeliczyć różnicą). 
 - [x] Usuwanie konta:
   - [x] Soft delete konta.
-  - [~] Zablokować edycję/usuwanie transakcji na usuniętym koncie:
+  - [x] Zablokować edycję/usuwanie transakcji na usuniętym koncie:
     - [x] backend (policy)
     - [x] UI (blokady/ukrycie akcji)
   - [x] Zablokować import i transfer dla usuniętego konta:
     - [x] backend (policies + middleware konta aktywnego)
     - [x] UI (blokady/CTA/disabled na liście transakcji i formularzach)
-- [~] Korekta salda:
+- [x] Korekta salda:
   - [x] Akcja „Ustaw saldo" (manual adjustment).
   - [x] Audit trail minimalny (kto/kiedy/stara→nowa wartość) w `account_balance_adjustments`.
   - [x] **Zmiana implementacji:** korekta tworzy transakcję typu `adjustment` z `amount = newBalance - currentBalance`; saldo aktualizowane tak samo jak dotychczas (zapis `current_balance` po delcie) **[plan §3]**.
@@ -94,7 +94,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 4) Transakcje — API/CRUD + UI
-- [~] Lista transakcji:
+- [x] Lista transakcji:
   - [x] Filtry: konto, zakres dat
   - [x] **Filtry dat po `COALESCE(booked_at, date)`** (wyświetlana data okresu) **[plan §1]**
   - [x] **Persistencja filtrów/sortu/strony** w sesji + redirect (`TransactionsIndexQuery`) **[branch 2026-06]**
@@ -106,7 +106,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Empty state + CTA
   - [x] Jedna kolumna daty okresu (`booked_at ?? date`) + tooltip surowego opisu wyciągu importu **[plan §1, PRD FR-T2, branch 2026-06]**
   - [x] Badge „Korekta" dla transakcji typu `adjustment` **[plan §3]**
-- [~] Dodanie transakcji:
+- [x] Dodanie transakcji:
   - [x] Pola: data (DD-MM-YYYY), kwota (decimal), opis, subject (opcjonalny)
   - [x] Pole `booked_at` (DD-MM-YYYY) z domyślną wartością równą `date` (Create/Edit) **[plan §1]**
   - [x] Ustalenie typu na podstawie znaku kwoty (ujemna=wydatek, dodatnia=przychód)
@@ -119,7 +119,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Blokada edycji dla transakcji na usuniętym koncie
   - [x] Edycja `booked_at` niezależnie od `date` (nie wpływa na saldo, tylko na okres) **[plan §1]**
   - [ ] Edycja transakcji typu `transfer` (z ustawionym `transfer_id`) — kwota tylko po „Rozłącz transfer" **[plan §4]**
-- [~] Usuwanie transakcji:
+- [x] Usuwanie transakcji:
   - [x] Aktualizacja salda deltą (odwrócenie wpływu)
   - [x] Blokada usuwania dla transakcji na usuniętym koncie
   - [x] UI: akcja usuwania (Index + Edit, dialog potwierdzenia)
@@ -152,11 +152,11 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Opcjonalne: `subject` (per bank, np. BNP: `subject_positive` / `subject_negative`)
   - [x] Mapowanie po nazwach nagłówków (headers zawsze obecne)
   - [x] Mapowanie wyłącznie z adaptera banku — **bez** zapisu profili ani UI mapowania (PRD FR-I1/FR-I4; plan §11 wycofany z MVP)
-- [ ] Auto-commit importu (bez preview):
+- [x] Auto-commit importu (bez preview):
   - [x] Walidacja + dedupe + zapis w jednej akcji
   - [x] Blokada ponownego commitu tego samego importu (gdy status != `draft`)
   - [x] Podsumowanie końcowe: `rows_total`, `rows_imported`, `rows_skipped_duplicate`, `rows_failed_validation`
-- [~] Widok wyniku:
+- [x] Widok wyniku:
   - [x] Po commit redirect do strony transakcji (`TransactionsIndexQuery`)
   - [x] Lista błędnych wierszy w modalu importu + banner na index (`import_failed_rows`, dismiss ręczny) **[branch 2026-06]**
 
@@ -173,8 +173,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Kwota:
   - [x] Ujemne kwoty → wydatek, dodatnie → przychód (ustawić `type`)
   - [x] **Kwota 0 → błąd** — `AmountParser` / `TransactionType::fromAmount` → `ImportFailedRow` lub `rows_failed_validation++` **[plan §6]**
-- [~] `subject`:
-  - [~] Ekstrakcja per bank (adaptery) z `description` lub innych pól, jeśli bank tego wymaga (na MVP: `subject` z kolumny mapowania, jeśli istnieje)
+- [x] `subject`:
+  - [x] Ekstrakcja per bank (adaptery) — `subject` z kolumny mapowania / BNP positive/negative; bez ekstrakcji z `description` (MVP)
   - [x] **mBank: bez mapowania `Kategoria → subject`** w `MBankImportAdapter::defaultMapping` **[plan §12.1]**
   - [x] BNP Paribas: `subject_positive` / `subject_negative` + `SubjectSanitizer` **[branch 2026-06]**
   - [x] Fallback: pozostawić puste, jeśli nie da się wyciągnąć **[Assumption]**
@@ -232,13 +232,13 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 7) Adaptery banków + profile mapowań
 - [x] Zdefiniować listę banków (enum/slug): `BnpParibas`, `MBank`, `Cash` (Gotówka).
-- [~] Ikony banków:
-  - [~] Assets: `Bank::bankIconUrl()` + testy (mBank); brak pliku dla BNP Paribas w repo — Cash używa ikony `Coins` w UI
+- [x] Ikony banków:
+  - [x] Assets: `Bank::bankIconUrl()` + `public/icons/banks/{bnp-paribas,mbank}.jpeg`; testy; Cash — ikona `Coins` w UI
   - [x] Mapowanie ikon po slugu `bank` w UI (`AccountResource::bank_icon_url`)
-- [x] Zdefiniować interfejs “BankAdapter”:
-  - [ ] identyfikator banku (`bank_key`)
-  - [~] ekstrakcja `subject` (na MVP: kolumna `subject`, jeśli istnieje; bez reguł ekstrakcji z `description`)
-  - [ ] ewentualne pre-processing `description` (tylko jeśli wymagane)
+- [x] Zdefiniować interfejs adaptera importu (`BankImportAdapter`):
+  - [x] identyfikator banku (`bank(): Bank` — zamiast legacy `bank_key`)
+  - [x] ekstrakcja `subject` (na MVP: kolumna mapowania / BNP `subject_positive`/`subject_negative`; bez reguł z `description`)
+  - [x] pre-processing `description` — nie wymagane w MVP (YAGNI; FR-I4)
 - [~] Mechanizm rejestracji adapterów + fallback “Generic”. (jest resolver, fallback = wyjątek)
 - [x] Resolver adaptera po `Account.bank` (bank nie wybierany osobno w imporcie).
 - [x] Implementacje adapterów (MVP):
@@ -255,7 +255,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [ ] Transakcje: `transaction_create_opened`, `transaction_created`, `transaction_updated`, `transaction_deleted`
 - [ ] Lista: `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
 - [ ] Transfer: `transfer_created`, `transfer_failed_validation`
-- [~] Import: `import_started`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account` (opcjonalnie), `import.updated` (realtime)
+- [~] Import: `import_row_validation_failed` (kanał `telemetry` w `CommitImport`); brak centralnego `Event::record` — pozostałe zdarzenia §8/§13 niepodłączone; realtime: `ImportStatusUpdated` / Echo
 
 ---
 
@@ -276,7 +276,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ### 10) Testy (Pest) + QA checklist
 
 #### 10.1 Testy automatyczne (minimum)
-- [~] Autoryzacja i izolacja danych — `TransactionAuthorizationTest` + `tests/Feature/Authorization/*`.
+- [x] Autoryzacja i izolacja danych — `TransactionAuthorizationTest` + `tests/Feature/Authorization/*`.
 - [x] CRUD kont (`tests/Feature/Accounts/*`).
 - [x] CRUD transakcji — saldo deltą (`TransactionStoreTest`, `TransactionUpdateTest`, `TransactionDeleteTest`).
 - [x] Transfer (`tests/Feature/Transfers/*`).
@@ -350,7 +350,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 - [x] `CommitImport::handle` na sukces: usuwa plik źródłowy (jak teraz).
 - [x] Na `Failed`: `PreserveFailedImportSourceFile` → `storage/app/imports/{user}/{import}/source-failed.{ext}`.
-- [ ] Komenda `imports:purge-old-files` (sekcja 14) sprząta po 30 dniach.
+- [x] Komenda `imports:purge-old-files` (sekcja 14) sprząta po 30 dniach (`PurgeOldImportFilesTest`).
 
 ---
 
