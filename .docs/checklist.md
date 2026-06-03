@@ -118,7 +118,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Zmiana pól i przeliczenie delty salda (stara kwota → nowa kwota)
   - [x] Blokada edycji dla transakcji na usuniętym koncie
   - [x] Edycja `booked_at` niezależnie od `date` (nie wpływa na saldo, tylko na okres) **[plan §1]**
-  - [ ] Edycja transakcji typu `transfer` (z ustawionym `transfer_id`) — kwota tylko po „Rozłącz transfer" **[plan §4]**
+  - [x] Edycja transakcji typu `transfer` (z ustawionym `transfer_id`) — kwota/konto zablokowane; unlink w Edit **[plan §4, 2026-06-03]**
 - [x] Usuwanie transakcji:
   - [x] Aktualizacja salda deltą (odwrócenie wpływu)
   - [x] Blokada usuwania dla transakcji na usuniętym koncie
@@ -224,7 +224,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Akcje:
   - [x] „Potwierdź transfer" (`POST /transfers/candidates/{id}/confirm`) — ustawia wspólny `transfer_id`, `type=transfer`, `transfer_match_status='manual'`.
   - [x] „To nie transfer" (`POST /transfers/candidates/{id}/reject`) — `transfer_match_status='rejected'` na obu, czyści `transfer_candidate_for_id`.
-- [x] Akcja „Rozłącz transfer" (`POST /transfers/{transferId}/unlink`) — czyści `transfer_id` na obu nogach, przywraca `type` na podstawie znaku `amount`, status `rejected` (backend; przycisk w Edit — poza tym PR).
+- [x] Akcja „Rozłącz transfer" (`POST /transfers/{transferId}/unlink`) — czyści `transfer_id` na obu nogach, przywraca `type` na podstawie znaku `amount`, status `rejected`; przycisk + dialog na `transactions/Edit`.
 - [x] Telemetria: `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`.
 - [x] Walidacja waluty: różne waluty → brak dopasowania (na MVP).
 

@@ -25,8 +25,8 @@ After importing statements from two banks, opposite transactions (e.g. mBank −
 - Dismiss-without-decision (unlike import failed rows).
 - Re-import / retry of matcher for historical data outside import commit.
 - Multi-currency transfer matching (MVP: skip when `currency_id` differs).
-- UI for „Rozłącz transfer" on Edit (backend endpoint in scope; Vue button post-MVP).
-- Blocking edit of `amount` on linked transfers (checklist item; separate small follow-up).
+- ~~UI for „Rozłącz transfer" on Edit~~ — done in `.docs/superpowers/plans/2026-06-03-transfer-edit-unlink.md` (2026-06-03).
+- ~~Blocking edit of `amount` on linked transfers~~ — done (same plan).
 
 ## Decisions (from brainstorming)
 

@@ -203,10 +203,16 @@
                 "title": "Uwaga",
                 "description": "Ta operacja jest nieodwracalna."
             },
+            "transfer": {
+                "bannerTitle": "Połączony transfer",
+                "bannerDescription": "Kwoty i konta są zablokowane. Aby je zmienić, najpierw rozłącz transfer.",
+                "unlinkAction": "Rozłącz transfer"
+            },
             "hints": {
                 "title": "Informacje",
                 "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
                 "amount": "Sprawdź znak kwoty (plus/minus). To wpływa na saldo konta.",
+                "amountTransfer": "Kwota jest zablokowana, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby ją zmienić.",
                 "save": "Po zapisaniu wrócisz do listy transakcji."
             },
             "statement": {
@@ -234,6 +240,11 @@
             "updated": "Transakcja zaktualizowana",
             "deleted": "Transakcja usunięta",
             "genericError": "Nie udało się zapisać zmian. Spróbuj ponownie."
+        },
+        "unlink": {
+            "title": "Rozłącz transfer?",
+            "description": "Obie powiązane transakcje staną się zwykłym przychodem i wydatkiem. Salda kont pozostaną bez zmian.",
+            "confirm": "Rozłącz"
         },
         "delete": {
             "action": "Usuń",

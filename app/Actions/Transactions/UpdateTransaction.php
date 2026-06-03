@@ -36,12 +36,14 @@ final class UpdateTransaction
      */
     public function handle(Transaction $transaction, array $validated): void
     {
-        DB::transaction(function () use ($transaction, $validated): void {
+        $newAmount = TransactionDedupe::amountToDecimalString($validated['amount']);
+        $this->assertLinkedTransferFieldsUnchanged($transaction, $validated, $newAmount);
+
+        DB::transaction(function () use ($transaction, $validated, $newAmount): void {
             $date = CarbonImmutable::createFromFormat('d-m-Y', $validated['date'])->toDateString();
             $bookedAt = ! empty($validated['booked_at'])
                 ? CarbonImmutable::createFromFormat('d-m-Y', $validated['booked_at'])->toDateString()
                 : $date;
-            $newAmount = TransactionDedupe::amountToDecimalString($validated['amount']);
 
             try {
                 $transactionType = $this->resolveTransactionType($transaction, $newAmount);
@@ -122,6 +124,39 @@ final class UpdateTransaction
 
             $this->rememberDescriptionMemoryAfterCommit($transaction, $newAccount->bank);
         });
+    }
+
+    /**
+     * @param  array{
+     *   account_id: int,
+     *   date: string,
+     *   booked_at?: ?string,
+     *   amount: numeric-string|float|int,
+     *   description: string,
+     *   subject?: ?string,
+     * }  $validated
+     * @param  numeric-string  $newAmount
+     */
+    private function assertLinkedTransferFieldsUnchanged(Transaction $transaction, array $validated, string $newAmount): void
+    {
+        $transferId = $transaction->transfer_id;
+        if ($transferId === null || $transferId === '') {
+            return;
+        }
+
+        $oldAmount = TransactionDedupe::amountToDecimalString((string) $transaction->amount);
+        if ($newAmount !== $oldAmount) {
+            throw ValidationException::withMessages([
+                'amount' => 'Kwoty połączonego transferu nie można zmienić. Najpierw rozłącz transfer.',
+            ]);
+        }
+
+        $newAccountId = (int) $validated['account_id'];
+        if ($newAccountId !== (int) $transaction->account_id) {
+            throw ValidationException::withMessages([
+                'account_id' => 'Konta połączonego transferu nie można zmienić. Najpierw rozłącz transfer.',
+            ]);
+        }
     }
 
     /**

@@ -198,10 +198,21 @@
         "edit": {
             "title": "Edit transaction",
             "back": "Back",
+            "deleteAction": "Delete transaction",
+            "dangerZone": {
+                "title": "Warning",
+                "description": "This action cannot be undone."
+            },
+            "transfer": {
+                "bannerTitle": "Linked transfer",
+                "bannerDescription": "Amount and account are locked. Unlink the transfer first to change them.",
+                "unlinkAction": "Unlink transfer"
+            },
             "hints": {
                 "title": "Info",
                 "scope": "You're editing an existing transaction — changes will be reflected in history.",
                 "amount": "Double-check the amount sign (+/−). It affects the account balance.",
+                "amountTransfer": "Amount is locked while the transfer is linked. Use “Unlink transfer” to change it.",
                 "save": "After saving, you'll be taken back to the transactions list."
             },
             "statement": {
@@ -223,9 +234,21 @@
             "income": "Income",
             "expense": "Expense"
         },
+        "unlink": {
+            "title": "Unlink transfer?",
+            "description": "Both linked transactions will become a regular income and expense. Account balances will not change.",
+            "confirm": "Unlink"
+        },
+        "delete": {
+            "title": "Delete transaction?",
+            "description": "The transaction will be permanently deleted.",
+            "descriptionTransfer": "This is a transfer — deleting it removes both linked transactions.",
+            "confirm": "Delete transaction"
+        },
         "toast": {
             "created": "Transaction added",
             "updated": "Transaction updated",
+            "deleted": "Transaction deleted",
             "genericError": "We couldn't save your changes. Please try again."
         }
     },

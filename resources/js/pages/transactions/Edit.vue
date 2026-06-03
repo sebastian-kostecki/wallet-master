@@ -4,6 +4,7 @@ import DropdownSelect, { type DropdownOption } from '@/components/forms/Dropdown
 import AdvancedSectionCard from '@/components/forms/AdvancedSectionCard.vue';
 import FormField from '@/components/forms/FormField.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
+import UnlinkTransferDialog from '@/components/transfers/UnlinkTransferDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -93,6 +94,8 @@ const selectedAccount = computed(() => {
     return accountsById.value.get(form.account_id) ?? null;
 });
 
+const isLinkedTransfer = computed(() => Boolean(props.transaction.transfer_id));
+
 function submit() {
     form.amount = normalizeAmount(form.amount);
     if ((form.booked_at ?? '').trim() === '') {
@@ -106,6 +109,8 @@ function submit() {
 
 const deleteDialogOpen = ref(false);
 const deleteProcessing = ref(false);
+const unlinkDialogOpen = ref(false);
+const unlinkProcessing = ref(false);
 
 function onDeleted() {
     router.visit(transactionsIndexHref.value);
@@ -119,6 +124,17 @@ function onDeleted() {
         <div class="flex flex-col gap-6 p-4">
             <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
                 <div class="flex flex-col gap-6">
+                    <div
+                        v-if="isLinkedTransfer"
+                        class="rounded-xl border border-primary/30 bg-primary/5 p-4 dark:border-primary/40 dark:bg-primary/10"
+                    >
+                        <p class="text-sm font-semibold text-foreground">{{ t('transactions.edit.transfer.bannerTitle') }}</p>
+                        <p class="mt-1 text-sm text-muted-foreground">{{ t('transactions.edit.transfer.bannerDescription') }}</p>
+                        <Button class="mt-3" type="button" variant="secondary" :disabled="unlinkProcessing" @click="unlinkDialogOpen = true">
+                            {{ t('transactions.edit.transfer.unlinkAction') }}
+                        </Button>
+                    </div>
+
                     <form
                         id="transaction-edit-form"
                         class="flex flex-col gap-6"
@@ -133,7 +149,7 @@ function onDeleted() {
                                 :model-value="form.account_id"
                                 :options="accountOptions"
                                 :placeholder="t('transactions.form.account')"
-                                :disabled="form.processing || accounts.length === 0"
+                                :disabled="form.processing || accounts.length === 0 || isLinkedTransfer"
                                 @update:model-value="(value) => (form.account_id = value)"
                             >
                                 <template #trigger-leading>
@@ -195,7 +211,7 @@ function onDeleted() {
                         </FormField>
 
                         <FormField for-id="amount" :label="t('transactions.form.amount')" :error="form.errors.amount">
-                            <Input id="amount" v-model="form.amount" inputmode="decimal" :disabled="form.processing" />
+                            <Input id="amount" v-model="form.amount" inputmode="decimal" :disabled="form.processing || isLinkedTransfer" />
                         </FormField>
 
                         <FormField for-id="subject" :label="t('transactions.form.subject')" :error="form.errors.subject">
@@ -245,7 +261,11 @@ function onDeleted() {
                                 {{ t('transactions.edit.hints.scope') }}
                             </div>
                             <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
-                                {{ t('transactions.edit.hints.amount') }}
+                                {{
+                                    isLinkedTransfer
+                                        ? t('transactions.edit.hints.amountTransfer')
+                                        : t('transactions.edit.hints.amount')
+                                }}
                             </div>
                             <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
                                 {{ t('transactions.edit.hints.save') }}
@@ -277,6 +297,13 @@ function onDeleted() {
                 </Button>
             </div>
         </div>
+
+        <UnlinkTransferDialog
+            v-model:open="unlinkDialogOpen"
+            :transfer-id="transaction.transfer_id"
+            :disabled="unlinkProcessing"
+            @processing="(value: boolean) => (unlinkProcessing = value)"
+        />
 
         <DeleteTransactionDialog
             v-model:open="deleteDialogOpen"

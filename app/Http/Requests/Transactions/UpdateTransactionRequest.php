@@ -18,8 +18,16 @@ final class UpdateTransactionRequest extends FormRequest
     }
 
     /**
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, string>
      */
+    public function messages(): array
+    {
+        return [
+            'amount' => 'Kwoty połączonego transferu nie można zmienić. Najpierw rozłącz transfer.',
+            'account_id' => 'Konta połączonego transferu nie można zmienić. Najpierw rozłącz transfer.',
+        ];
+    }
+
     public function rules(): array
     {
         $accountExistsRule = Rule::exists('accounts', 'id')
