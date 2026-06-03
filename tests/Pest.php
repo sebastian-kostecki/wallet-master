@@ -57,10 +57,11 @@ use Illuminate\Support\Facades\Storage;
 function captureTelemetryLogs(callable $callback): array
 {
     $captured = [];
-    $active = true;
+    $state = new stdClass;
+    $state->active = true;
 
-    Event::listen(MessageLogged::class, function (MessageLogged $logged) use (&$captured, &$active): void {
-        if (! $active || ! isset($logged->context['event'])) {
+    Event::listen(MessageLogged::class, function (MessageLogged $logged) use (&$captured, $state): void {
+        if (! $state->active || ! isset($logged->context['event'])) {
             return;
         }
 
@@ -74,14 +75,14 @@ function captureTelemetryLogs(callable $callback): array
     try {
         $callback();
     } finally {
-        $active = false;
+        $state->active = false;
     }
 
     return $captured;
 }
 
 /**
- * @param  array<string, mixed>  $context
+ * @param  list<array{level: string, message: string, context: array<string, mixed>}>  $logged
  */
 function assertTelemetryEvent(array $logged, string $event, ?callable $contextMatcher = null): void
 {
