@@ -75,7 +75,7 @@ it('returns null for BNP Paribas adapter when no description column is available
     expect($adapter->defaultMapping(['Data transakcji', 'Kwota']))->toBeNull();
 });
 
-it('resolves mBank default mapping with category as subject', function () {
+it('resolves mBank default mapping without mapping category to subject', function () {
     $adapter = new MBankImportAdapter;
 
     $mapping = $adapter->defaultMapping(['Data operacji', 'Opis operacji', 'Rachunek', 'Kategoria', 'Kwota']);
@@ -84,7 +84,6 @@ it('resolves mBank default mapping with category as subject', function () {
         'date' => 'Data operacji',
         'amount' => 'Kwota',
         'description' => 'Opis operacji',
-        'subject' => 'Kategoria',
     ]);
 });
 

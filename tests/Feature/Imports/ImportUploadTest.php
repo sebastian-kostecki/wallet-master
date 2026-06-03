@@ -61,7 +61,6 @@ test('user can upload import fixture file for own account', function (string $ba
             'date' => 'Data operacji',
             'amount' => 'Kwota',
             'description' => 'Opis operacji',
-            'subject' => 'Kategoria',
         ],
     ],
     [

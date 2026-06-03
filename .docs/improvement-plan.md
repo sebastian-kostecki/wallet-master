@@ -8,6 +8,27 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 
 ---
 
+## Status po audycie (2026-06-03, branch `improvement/transactions`)
+
+| Punkt | Status | Uwagi |
+|-------|--------|--------|
+| §1 `booked_at` | ✅ Done | |
+| §2 manualne duplikaty | ✅ Done | `manualDedupeHash()`; bez UI duplicate-check (wycofane) |
+| §3 adjustment | ✅ Done | |
+| §4 transfer matcher | ✅ Done | Baner zamiast osobnej strony |
+| §5 encoding/parsers | ✅ Done | |
+| §6 amount ≠ 0 | ✅ Done | |
+| §7 chunked import | ✅ Done | |
+| §8 Reverb + progress | ✅ Done | Polling inline w `ImportDialog.vue` |
+| §9 bezpieczeństwo | 🟡 Częściowo | imports throttle + Cash 422 ✅; api limiter, `$fillable`, `shouldBeStrict()` — open |
+| §10 telemetria | 🟡 Częściowo | Kanał `telemetry` + logi transferów/importu |
+| §11 ImportMapping | ❌ Wycofane | Sprzeczne z PRD FR-I1/FR-I4 |
+| §12 drobne | ✅ Done | §12.1 mBank, §12.2 summary, §12.5 sort; §12.6 account_deletions wycofane |
+| §13 testy izolacji | ✅ Done | `tests/Feature/Authorization/*`, TypesenseMemoryIsolationTest |
+| §14 purge failed files | ✅ Done | `imports:purge-old-files` + scheduler |
+
+---
+
 ## 1. Kolumna `booked_at` na transakcjach
 
 **Status.** Wykonane. Widok tabeli transakcji pozostaje przy obecnym UX: pokazuje datę operacji, a filtrowanie, sortowanie i podsumowanie działają po `booked_at`.
@@ -52,40 +73,19 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 
 ---
 
-## 2. Manualne duplikaty — zezwól z ostrzeżeniem UI
+## 2. Manualne duplikaty — zezwól (bez UI ostrzeżenia)
 
-**Kontekst.** Pierwotny plan zakładał dedupe po `bank_reference_id`. Po analizie fixtures `tests/Fixtures/import/{mbank-basic.csv, bnp-paribas-basic.xlsx}` ustalono, że żaden z wspieranych banków nie eksportuje takiego identyfikatora. Pomysł porzucony.
+**Status.** ✅ Wykonane. Import pomija duplikaty po `dedupe_hash`. Ręczne wpisy używają `TransactionDedupe::manualDedupeHash()` (UUID), więc unique index `(account_id, dedupe_hash)` zostaje dla importu.
 
-**Cel.** Synchronizacja kodu z PRD FR-I3: import nadal automatycznie pomija duplikaty po `dedupe_hash`, ale **ręczne dodanie identycznej transakcji jest dozwolone** (UI ostrzega i wymaga potwierdzenia).
+**Cel.** Ręczne dodanie identycznej transakcji jest dozwolone; import nadal deduplikuje.
 
-**Aktualna rozbieżność.** Kod blokuje ręczne duplikaty na dwóch poziomach: validator w `StoreTransactionRequest`/`UpdateTransactionRequest` oraz unique index `(account_id, dedupe_hash)` w DB.
-
-### Kroki
-1. Migracja `relax_transactions_dedupe_unique`:
-   - dropnąć unique `(account_id, dedupe_hash)`,
-   - dodać non-unique index o tych samych kolumnach (zachowuje wydajność lookupa w `CommitImport`).
-2. `StoreTransactionRequest` i `UpdateTransactionRequest`:
-   - usunąć custom rule sprawdzający `dedupe_hash` w polu `description`,
-   - zostają walidacje typów, `Rule::notIn([0])` na `amount`, `account_id` exists.
-3. `CommitImport::handle` — bez zmian (dalej pomija po `dedupe_hash`).
-4. Endpoint `GET /transactions/duplicate-check`:
-   - parametry: `account_id`, `date`, `amount`, `description`,
-   - response: `{ exists: bool, sample?: { id, date, amount, description } }`,
-   - autoryzacja: tylko własne konto.
-5. UI (`resources/js/pages/transactions/Create.vue`, `Edit.vue`):
-   - debounced preflight do `duplicate-check` po wypełnieniu wszystkich 4 pól,
-   - jeżeli `exists === true`: inline banner ostrzegawczy z linkiem do podobnej transakcji i przyciskami „Dodaj mimo to" / „Anuluj",
-   - przy submit z aktywnym ostrzeżeniem dorzucamy w payloadzie `confirmed_duplicate: true` (tylko do telemetrii; backend ignoruje w walidacji).
-
-### Akceptacja
-- Import dwóch wierszy z identycznymi `(date, amount, description)` → drugi pominięty (`rows_skipped_duplicate++`).
-- Manual POST identycznej drugiej transakcji → 201 Created.
-- W `Create.vue` po wpisaniu pól duplikatu pojawia się ostrzeżenie z opcją kontynuacji.
+### Kroki (zrealizowane)
+1. `StoreTransaction` / `UpdateTransactionRequest` — bez blokady duplikatów w walidacji.
+2. `CommitImport::handle` — bez zmian (dalej pomija po `dedupe_hash`).
 
 ### Testy
-- `tests/Feature/Transactions/ManualDuplicateAllowedTest.php` — 2× POST identyczne → 201 + 2 wiersze w DB.
-- `tests/Feature/Transactions/DuplicateCheckEndpointTest.php` — endpoint zwraca `exists=true` przy kolizji i `exists=false` przy braku; weryfikacja izolacji per user.
-- `tests/Feature/Imports/CommitImportDedupeStillWorksTest.php` — import duplikatów nadal pomija (regression).
+- `tests/Feature/Transactions/TransactionStoreTest.php` — tworzenie transakcji.
+- `tests/Feature/Imports/CommitImportDedupeStillWorksTest.php` — import duplikatów pomija (regression).
 
 ---
 
@@ -346,70 +346,49 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 
 ---
 
-## 11. ImportProfile — zapis i automatyczne podpowiedzi mapowania
+## 11. ~~ImportProfile~~ — wycofane z MVP
 
-**Cel.** PRD FR-I4 — mapowanie zapamiętane per `user_id + bank` jest sugerowane przy kolejnym imporcie.
+**Status (2026-06-03):** Wycofane. PRD FR-I1 i FR-I4 wymagają mapowania **wyłącznie z adaptera banku**, bez edycji w UI. W repo nie ma migracji `import_mappings`. Ewentualne zapamiętywanie mapowania per user to kierunek post-MVP, jeśli produkt zmieni decyzję.
 
-#### Kroki
-1. W tabeli `import_mappings` (już istnieje) dodać unique `(user_id, bank, format_fingerprint)`.
-2. Model `App\Models\ImportMapping` z relacjami i castem `mapping => array`.
-3. `App\Imports\Workflow\PrepareImportUpload::execute`:
-   - po `extractHeaders` zbuduj `formatFingerprint` (`sha1(implode('|', headers))`),
-   - jeżeli istnieje `ImportMapping` o pasującym `(user_id, bank, format_fingerprint)` → użyj jego `mapping` jako default zamiast `defaultMapping($headers)`,
-   - w przeciwnym razie fallback do `adapter->defaultMapping`.
-4. `QueueImportCommit::execute`:
-   - po sukcesie zaktualizuj/utwórz `ImportMapping` z bieżącym mapowaniem (`updateOrCreate`).
-   - emit `import_mapping_saved` lub `import_mapping_reused`.
-5. UI w modalu importu — krok 3 „Mapowanie kolumn":
-   - dropdowny per pole (date/amount/description/subject) z listą `headers`,
-   - checkbox „Zapisz to mapowanie dla tego banku",
-   - jeżeli mapowanie istnieje → pre-selected, etykieta „Wczytano poprzednie mapowanie".
-
-### Akceptacja
-- Drugi import z tymi samymi headerami → mapowanie podpowiedziane bez interakcji.
-- Zmiana headera w pliku → fingerprint inny → mapowanie nie sugerowane (fallback).
-
-### Testy
-- `tests/Feature/Imports/ImportMappingReuseTest.php`.
+~~**Cel.** PRD FR-I4 — mapowanie zapamiętane per `user_id + bank` jest sugerowane przy kolejnym imporcie.~~
 
 ---
 
 ## 12. Drobne, ale wpływające na jakość
 
-### 12.1 Subject z mBanku — nie używaj „Kategoria"
-- `MBankImportAdapter::defaultMapping` — usuń `subject => 'Kategoria'`. Subject na MVP zostaje pusty dla mBanku, użytkownik uzupełnia ręcznie. Pamięć Typesense w pkt 5.5 PRD i tak nadrobi przy następnym imporcie po edycji.
+**Status.** ✅ §12.1, §12.2, §12.4, §12.5 wdrożone. §12.6 (`account_deletions`) wycofane — wystarczy soft delete (`deleted_at`).
 
-### 12.2 Summary bez transferów
-- `TransactionController::index` — `summary` query dodatkowo filtruje `whereNull('transfer_id')`, żeby wewnętrzne transfery nie zawyżały income/expense w okresie. PRD doprecyzowuje (zmiana w `.docs/prd.md` FR-T2).
+### 12.1 Subject z mBanku — nie używaj „Kategoria" ✅
+- `MBankImportAdapter::defaultMapping` — bez `subject => Kategoria`.
+
+### 12.2 Summary bez transferów ✅
+- `ListTransactions::handleTransactions` — `summary` filtruje `whereNull('transfer_id')`.
 
 ### 12.3 Paginacja listy importów
-- `TransactionImportController::index` — `paginate(20)` zamiast `latest()->limit(30)`.
+- `ImportController::index` — `paginate(20)` zamiast `latest()->limit(30)` (opcjonalnie).
 
-### 12.4 Retencja pliku importu
-- `CommitImport::handle` — po `Failed` **nie** kasuj pliku źródłowego, zapisz go do `storage/app/imports/{user}/{import}/source-failed.{ext}`.
-- Dodać command `php artisan imports:purge-old-files {--days=30}` skasować pliki dla importów `Failed` starszych niż 30 dni; uruchamiać via scheduler.
+### 12.4 Retencja pliku importu ✅
+- `PreserveFailedImportSourceFile` — plik failed w `source-failed.{ext}`.
+- `php artisan imports:purge-old-files {--days=30}` + scheduler w `routes/console.php`.
 
-### 12.5 Sortowanie listy transakcji — tie-breaker
-- `TransactionController::index` — sort `amount` powinien mieć tie-breaker `booked_at desc, id desc` (po zmianach z pkt 1).
+### 12.5 Sortowanie listy transakcji — tie-breaker ✅
+- Sort `amount` z tie-breakerem `COALESCE(booked_at, date) desc, id desc`.
 
-### 12.6 Audit trail usunięcia konta
-- Tabela `account_deletions` (`id`, `account_id`, `user_id`, `transactions_count_at_delete`, `created_at`),
-- Zapis przy `AccountController::destroy` przed `delete()`.
-
-### Testy (po sekcjach)
-- `tests/Feature/Transactions/SummaryExcludesTransfersTest.php`.
-- `tests/Feature/Imports/FailedImportFileRetentionTest.php`.
-- `tests/Feature/Accounts/AccountDeletionAuditTest.php`.
+### Testy
+- `tests/Feature/Transactions/SummaryExcludesTransfersTest.php` ✅
+- `tests/Feature/Imports/PurgeOldImportFilesTest.php` ✅
 
 ---
 
-## 13. Plan testów izolacji danych (PRD sekcja 2 success metric)
+## 13. Plan testów izolacji danych
 
-#### Kroki
-1. `tests/Feature/Authorization/AccountIsolationTest.php` — user A nie widzi/edytuje/usuwa konta usera B (4 metody × 4 scenariusze).
-2. `tests/Feature/Authorization/TransactionIsolationTest.php` — analogicznie dla transakcji.
-3. `tests/Feature/Authorization/ImportIsolationTest.php` — analogicznie dla importów (view, commit).
-4. `tests/Feature/Imports/TypesenseMemoryIsolationTest.php` — pamięć Typesense user A nie wpływa na sugestie usera B (mock `DescriptionMemoryRepository`).
+**Status.** ✅ Wykonane.
+
+#### Kroki (zrealizowane)
+1. `tests/Feature/Authorization/AccountIsolationTest.php`
+2. `tests/Feature/Authorization/TransactionIsolationTest.php`
+3. `tests/Feature/Authorization/ImportIsolationTest.php`
+4. `tests/Feature/Imports/TypesenseMemoryIsolationTest.php`
 
 ### Akceptacja
 - `php artisan test --compact --filter=Isolation` zielone.
@@ -421,7 +400,7 @@ Kolejność wykonania: 1 → 12. Punkty 1–6 to baza danych + core domeny, musz
 **Sprint 1 (fundament danych):** 1, 2, 3, 6.
 **Sprint 2 (importer core):** 5, 7, 8.
 **Sprint 3 (transfer detection):** 4.
-**Sprint 4 (UX/produkcja):** 9, 10, 11, 12, 13.
+**Sprint 4 (UX/produkcja):** 9, 10, ~~11~~, 12, 13.
 
 ---
 

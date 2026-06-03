@@ -37,18 +37,11 @@ final class MBankImportAdapter extends AbstractBankImportAdapter
             return null;
         }
 
-        $mapping = [
+        return [
             'date' => $date,
             'amount' => $amount,
             'description' => $description,
         ];
-
-        $subject = $this->findHeader($headers, 'Kategoria');
-        if ($subject !== null) {
-            $mapping['subject'] = $subject;
-        }
-
-        return $mapping;
     }
 
     public function readRows(string $path): iterable

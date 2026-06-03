@@ -12,7 +12,7 @@
 - **Import**: proces wczytania transakcji z pliku CSV/XLSX z automatycznym mapowaniem kolumn (adapter banku) i zapisem bez etapu preview; system pomija duplikaty i pokazuje wynik.
 - **Mapowanie (kolumn)**: przypisanie kolumn pliku do pól transakcji (data, kwota, opis, opcjonalnie `subject`) wykonywane **automatycznie przez adapter banku** na podstawie nagłówków wyciągu — użytkownik nie mapuje kolumn ręcznie w UI.
 - **Subject**: pole tekstowe “nadawca/odbiorca” przechowywane osobno od opisu.
-- **Duplikat (importu)**: transakcja o identycznej dacie, kwocie i znormalizowanym opisie na tym samym koncie. Podczas importu zawsze pomijana. Ręczne dodanie identycznej transakcji jest dozwolone — UI pokazuje ostrzeżenie z opcją potwierdzenia. **Uzasadnienie**: wspierane banki (BNP Paribas, mBank) nie eksportują w wyciągach unikalnych identyfikatorów transakcji, więc dedupe opieramy wyłącznie na heurystyce `date + amount + normalized_description`.
+- **Duplikat (importu)**: transakcja o identycznej dacie, kwocie i znormalizowanym opisie na tym samym koncie. Podczas importu zawsze pomijana. Ręczne dodanie identycznej transakcji jest dozwolone. **Uzasadnienie**: wspierane banki (BNP Paribas, mBank) nie eksportują w wyciągach unikalnych identyfikatorów transakcji, więc dedupe opieramy wyłącznie na heurystyce `date + amount + normalized_description`.
 - **Aktywny użytkownik**: użytkownik, który wykonał min. 1 akcję produktową (np. import lub dodanie transakcji) w ostatnich 7 dniach. **[Assumption]**
 
 ---
@@ -210,9 +210,9 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
   - Kwota = 0: niedozwolona — egzekwowane w warstwie domeny (FormRequest + Akcja + Importer).
   - Data w przyszłości: dozwolona. **[Assumption]**
   - `booked_at` może być wcześniejszy lub późniejszy niż `date` (brak ograniczenia zakresu). Domyślnie `booked_at = date`.
-  - Ręczne dodanie transakcji o identycznych polach co istniejąca (sklep + kwota + dzień) jest **dozwolone**, ale UI pokazuje inline ostrzeżenie z opcjami „Dodaj mimo to" / „Anuluj" (preflight `GET /transactions/duplicate-check`). Po potwierdzeniu w payloadzie POST/PUT przesyłamy `confirmed_duplicate=true` (tylko do telemetrii).
+  - Ręczne dodanie transakcji o identycznych polach co istniejąca (sklep + kwota + dzień) jest **dozwolone**. W bazie wpisy ręczne używają unikalnego `dedupe_hash` (sufiks UUID), żeby nie kolidować z indeksem dedupe importu.
 - **Telemetry/Events**
-  - `transaction_created`, `transaction_updated`, `transaction_deleted`, `transaction_manual_duplicate_confirmed`
+  - `transaction_created`, `transaction_updated`, `transaction_deleted`
 
 #### FR-T2 Lista transakcji + filtry/sort/paginacja + podsumowanie
 - **Opis**: lista z filtrowaniem po koncie i przedziale dat (domyślnie po `booked_at`), sort po dacie/kwocie, paginacja, suma wpływów i wydatków w okresie.
@@ -229,7 +229,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
   - Zakres dat od>do: walidacja.
   - **Wewnętrzne transfery są wykluczone z `summary.total_income` i `summary.total_expense`** (filtr `transfer_id IS NULL`), żeby nie zawyżać sumy wpływów/wydatków o przepływy między własnymi kontami.
   - Korekty salda (`type=adjustment`) są wliczane do wpływów/wydatków zgodnie ze znakiem kwoty (delta dodatnia → income, ujemna → expense).
-  - Lista zawiera kolumnę „Data operacji" (`date`) i „Okres rozliczeniowy" (`booked_at`); domyślny sort po `booked_at desc, date desc, id desc`.
+  - Lista pokazuje **jedną kolumnę daty okresu** (`COALESCE(booked_at, date)`) z etykietą względną; faktyczna data operacji (`date`) jest widoczna w Create/Edit i w tooltipie surowego opisu importu, gdy różni się od daty okresu. Filtry, sort i podsumowanie operują po `COALESCE(booked_at, date)`; domyślny sort po tej dacie malejąco, tie-breaker `date desc, id desc`.
 - **Telemetry/Events**
   - `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
 
@@ -320,24 +320,22 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 - **Telemetry/Events**
   - `import_type_inferred`
 
-#### FR-I3 Deduplikacja: import pomija, ręczne dodanie z ostrzeżeniem
-- **Opis**: podczas importu system wykrywa duplikaty w obrębie tego samego konta i zawsze je pomija. Klucz dedupe: `date + amount + normalized_description`. Ręczne dodanie identycznej transakcji jest dozwolone — UI pokazuje ostrzeżenie i wymaga potwierdzenia przed zapisem.
+#### FR-I3 Deduplikacja: import pomija, ręczne dodanie dozwolone
+- **Opis**: podczas importu system wykrywa duplikaty w obrębie tego samego konta i zawsze je pomija. Klucz dedupe: `date + amount + normalized_description`. Ręczne dodanie identycznej transakcji jest dozwolone.
 - **Priorytet**: Must
 - **Acceptance Criteria (Given/When/Then)**
   - Given w pliku importu są dwa wiersze z identycznymi `date + amount + normalized_description`
     When import
     Then drugi wiersz jest pominięty, `rows_skipped_duplicate++`.
   - Given użytkownik dodaje ręcznie transakcję, której `date + amount + normalized_description` zgadza się z istniejącą na tym koncie
-    When wypełnia formularz
-    Then UI pokazuje inline ostrzeżenie „Wykryto podobną transakcję na tym koncie. Dodać mimo to?" z opcjami „Dodaj mimo to" i „Anuluj".
-    And po potwierdzeniu transakcja jest zapisywana, w bazie istnieją dwa rekordy.
+    When zapisuje formularz
+    Then transakcja jest zapisywana; w bazie istnieją dwa rekordy.
 - **Edge cases**
   - Normalizacja opisu (MVP): `trim` + `case-fold` + standaryzacja whitespace (wielokrotne spacje → jedna).
   - Dwa zakupy w tym samym sklepie tego samego dnia za tę samą kwotę: pierwszy import zapisuje, drugi pomija (znana, akceptowana wada MVP — telemetria `import_rows_skipped_duplicate` daje sygnał skali w razie potrzeby decyzji o zmianie strategii).
   - Wspierane banki (BNP Paribas, mBank) nie eksportują w wyciągach unikalnych identyfikatorów transakcji — dlatego nie używamy `bank_reference_id`.
 - **Telemetry/Events**
   - `import_rows_skipped_duplicate` (agregat)
-  - `transaction_manual_duplicate_confirmed` (gdy użytkownik potwierdził dodanie mimo ostrzeżenia)
 
 #### FR-I4 Adaptery banków (auto-mapowanie kolumn)
 - **Opis**: mapowanie kolumn jest częścią adaptera banku (`BankImportAdapter::defaultMapping`). Użytkownik nie edytuje mapowania w UI — wybiera tylko konto (bank wynika z `Account.bank`). Adapter rozpoznaje nagłówki wyciągu i mapuje je na pola transakcji; może zawierać logikę bankowo-specyficzną (parsowanie dat/kwot, format pliku, opcjonalna kolumna `subject`).
@@ -390,7 +388,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
     Then obie transakcje otrzymują wspólny `transfer_id`, `type = transfer`, `transfer_match_status = auto`. Saldo obu kont nie zmienia się względem stanu sprzed dopasowania.
   - Given dwie transakcje o przeciwnych znakach i tej samej kwocie bezwzględnej, ale **bez** tokenów „transfer" w opisie  
     When importer kończy commit  
-    Then transakcje **nie** są automatycznie łączone, ale obie otrzymują `transfer_match_status = manual` i wzajemny `transfer_candidate_for_id`. Pojawiają się w widoku „Możliwe transfery" do potwierdzenia/odrzucenia.
+    Then transakcje **nie** są automatycznie łączone, ale obie otrzymują `transfer_match_status = manual` i wzajemny `transfer_candidate_for_id`. Pojawiają się w **banerze kandydatów transferu** na liście transakcji do potwierdzenia/odrzucenia.
   - Given dla nowej transakcji znaleziono >1 kandydatkę  
     When matcher pracuje  
     Then **nie** linkuje automatycznie — wszyscy kandydaci są oznaczeni jako `manual`.
@@ -421,14 +419,12 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
 ### Ekrany/strony
 - **Auth**: Logowanie, Rejestracja, Reset hasła.
 - **Konta**: Lista kont, Dodaj konto, Edytuj konto.
-- **Transakcje**: Lista transakcji (filtry/sort/paginacja/podsumowanie, kolumny „Data operacji" i „Okres rozliczeniowy"), Dodaj transakcję, Edytuj transakcję, Dodaj transfer.
-- **Możliwe transfery** (FR-I6): lista par transakcji z `transfer_match_status = manual` z akcjami „Potwierdź transfer" / „To nie transfer".
+- **Transakcje**: Lista transakcji (filtry/sort/paginacja/podsumowanie, kolumna daty okresu `COALESCE(booked_at, date)`), Dodaj transakcję, Edytuj transakcję, Dodaj transfer; **baner kandydatów transferu** (FR-I6) na liście transakcji z akcjami „Potwierdź transfer" / „To nie transfer".
 - **Import**: (modal z widoku transakcji) Wybór konta, Upload pliku, Oczekiwanie na przetwarzanie (status realtime), Podsumowanie importu.
 
 ### Mapa nawigacji
 - Konta
-- Transakcje
-- Możliwe transfery (badge z liczbą oczekujących par)
+- Transakcje (w tym baner kandydatów transferu z liczbą oczekujących par)
 - Import
 - (opcjonalnie) Ustawienia profilu **[Assumption]**
 
@@ -465,7 +461,7 @@ Użytkownik usuwa konto → konto znika z listy kont (lub jest oznaczone jako us
   - Konto Cash przy próbie importu: czytelny komunikat 422 (nie 500).
 - **Observability**
   - Logi aplikacyjne + metryki produktowe (eventy z PRD) zapisywane do dedykowanego kanału loga `telemetry` (daily, JSON line).
-  - Minimalny audit trail: korekty salda (transakcja `adjustment` + wpis `account_balance_adjustments`), usunięcia kont (`account_deletions`).
+  - Minimalny audit trail: korekty salda (transakcja `adjustment` + wpis `account_balance_adjustments`); soft delete kont (`deleted_at`).
 - **Encoding & parser ścieżki krytyczne (importer)**
   - Detekcja kodowania pliku: `UTF-8`, `Windows-1250`, `ISO-8859-2`; konwersja do UTF-8 przed parsowaniem; usunięcie BOM.
   - Parser kwot wspiera separator tysięcy (spacja, NBSP, kropka), separator dziesiętny (kropka lub przecinek), nawiasy księgowe, przyrostki walut.
@@ -525,7 +521,7 @@ Kluczowe encje i relacje:
   - ma: `date` (data operacji), `booked_at` (data przypisania do okresu rozliczeniowego, default = `date`)
   - ma: `amount` (decimal 20,2, z ujemnymi dla wydatków), `currency`, `description`, `subject`
   - ma: `type` (`income` / `expense` / `transfer` / `adjustment`)
-  - ma: `normalized_description`, `dedupe_hash` (klucz dedupe importu; non-unique index — manualne duplikaty dozwolone)
+  - ma: `normalized_description`, `dedupe_hash` (klucz dedupe importu: deterministyczny hash `date + amount + normalized_description`; wpisy ręczne dostają unikalny hash z sufiksem UUID, żeby zachować unique index `(account_id, dedupe_hash)` bez blokowania ręcznych duplikatów)
   - opcjonalnie: `transfer_id` (UUID; dla dwóch transakcji transferu)
   - opcjonalnie: `transfer_match_status` (`none` / `auto` / `manual` / `rejected`) — dla matchera transferów (FR-I6)
   - opcjonalnie: `transfer_candidate_for_id` (FK na inną transakcję) — wskazuje proponowanego partnera transferu, gdy status `manual`
@@ -536,8 +532,6 @@ Kluczowe encje i relacje:
   - ma `details` (JSON) na metadane techniczne importu (`mapping_used`, `source_file`, `parser`, `bank`, `headers`, `diagnostics`).
 - **AccountBalanceAdjustment** (audyt)
   - wpis przy każdej akcji „Ustaw saldo" (kto, kiedy, stare→nowe saldo)
-- **AccountDeletion** (audyt)
-  - wpis przy soft-delete konta (kto, kiedy, liczba transakcji w momencie usunięcia)
 
 Własność danych, retencja, audyt:
 - Własność: wszystko per User.
@@ -545,7 +539,6 @@ Własność danych, retencja, audyt:
 - Retencja plików importu: 30 dni dla importów `Failed`; pliki sukcesowe usuwane od razu po commit.
 - Audyt:
   - korekty salda → transakcja `adjustment` na liście + wpis `account_balance_adjustments`,
-  - usunięcia kont → wpis `account_deletions`,
   - linkowanie/unlink transferów → eventy telemetryczne.
 
 ---
@@ -575,7 +568,7 @@ Zasady autoryzacji (produktowe):
 - Transakcje: CRUD + `date` i `booked_at` + lista + filtry/sort/paginacja + podsumowanie (z wykluczeniem transferów).
 - Transfer:
   - akcja użytkownika → 2 transakcje powiązane,
-  - automatyczne dopasowanie transferów podczas importu (FR-I6) + ekran „Możliwe transfery" do potwierdzenia niejednoznacznych par.
+  - automatyczne dopasowanie transferów podczas importu (FR-I6) + baner kandydatów na liście transakcji do potwierdzenia niejednoznacznych par.
 - Import CSV/XLSX: entrypoint z widoku transakcji + upload + auto-mapowanie (adapter banku) + auto-commit (bez preview, chunked) + dedupe po `date + amount + normalized_description` + ekstrakcja `subject` per bank + pamięć `subject/description` (Typesense, best-effort).
 - Realtime status importu (Reverb): `queued → processing → committed|failed` + przyrost liczników; fallback polling.
 - Telemetria podstawowa wg sekcji 2 i 7 (kanał loga `telemetry`).
