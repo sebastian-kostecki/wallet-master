@@ -132,12 +132,23 @@ const adjustProcessing = ref(false);
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                     <form @submit.prevent="submit" class="grid gap-6">
                         <FormField for-id="name" :label="t('accounts.create.fields.name.label')" :error="form.errors.name">
-                            <Input id="name" v-model="form.name" required />
+                            <template #default="{ errorId, hasError }">
+                            <Input
+                                id="name"
+                                v-model="form.name"
+                                required
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                            />
+                            </template>
                         </FormField>
 
                         <FormField for-id="bank" :label="t('accounts.create.fields.bank.label')" :error="form.errors.bank">
+                            <template #default="{ errorId, hasError }">
                             <DropdownSelect
                                 id="bank"
+                                :aria-invalid="hasError"
+                                :aria-describedby="hasError ? errorId : undefined"
                                 :model-value="form.bank"
                                 :options="bankOptions"
                                 :placeholder="t('accounts.create.fields.bank.placeholder')"
@@ -191,11 +202,15 @@ const adjustProcessing = ref(false);
                                     </span>
                                 </template>
                             </DropdownSelect>
+                            </template>
                         </FormField>
 
                         <FormField for-id="type" :label="t('accounts.create.fields.type.label')" :error="form.errors.type">
+                            <template #default="{ errorId, hasError }">
                             <DropdownSelect
                                 id="type"
+                                :aria-invalid="hasError"
+                                :aria-describedby="hasError ? errorId : undefined"
                                 :model-value="form.type"
                                 :options="accountTypeOptions"
                                 :placeholder="t('accounts.create.fields.type.placeholder')"
@@ -226,6 +241,7 @@ const adjustProcessing = ref(false);
                                     </span>
                                 </template>
                             </DropdownSelect>
+                            </template>
                         </FormField>
 
                         <FormField
@@ -233,8 +249,16 @@ const adjustProcessing = ref(false);
                             :label="t('accounts.create.fields.openingBalance.label')"
                             :error="form.errors.opening_balance"
                         >
+                            <template #default="{ errorId, hasError }">
                             <div class="relative">
-                                <Input id="opening_balance" inputmode="decimal" v-model="form.opening_balance" class="pr-10" />
+                                <Input
+                                    id="opening_balance"
+                                    inputmode="decimal"
+                                    v-model="form.opening_balance"
+                                    class="pr-10"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                />
                                 <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
                                     {{ currencySymbol }}
                                 </span>
@@ -242,6 +266,7 @@ const adjustProcessing = ref(false);
                             <p class="text-xs text-muted-foreground">
                                 {{ t('accounts.edit.openingBalanceHint') }}
                             </p>
+                            </template>
                         </FormField>
 
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

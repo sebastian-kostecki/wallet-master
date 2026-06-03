@@ -152,8 +152,11 @@ function submit() {
                         </div>
 
                         <FormField for-id="account_id" :label="t('transactions.form.account')" :error="form.errors.account_id">
+                            <template #default="{ errorId, hasError }">
                             <DropdownSelect
                                 id="account_id"
+                                :aria-invalid="hasError"
+                                :aria-describedby="hasError ? errorId : undefined"
                                 :model-value="form.account_id"
                                 :options="accountOptions"
                                 :placeholder="t('transactions.form.account')"
@@ -207,33 +210,59 @@ function submit() {
                                     </span>
                                 </template>
                             </DropdownSelect>
+                            </template>
                         </FormField>
 
                         <FormField for-id="date" :label="t('transactions.form.date')" :error="form.errors.date">
+                            <template #default="{ errorId, hasError }">
                             <DatePickerInput
                                 id="date"
+                                :aria-invalid="hasError"
+                                :aria-describedby="hasError ? errorId : undefined"
                                 :model-value="form.date"
                                 :disabled="form.processing"
                                 @update:model-value="(value) => (form.date = value)"
                             />
+                            </template>
                         </FormField>
 
                         <FormField for-id="amount" :label="t('transactions.form.amount')" :error="form.errors.amount">
-                            <Input id="amount" v-model="form.amount" inputmode="decimal" :disabled="form.processing" />
+                            <template #default="{ errorId, hasError }">
+                            <Input
+                                id="amount"
+                                v-model="form.amount"
+                                inputmode="decimal"
+                                :disabled="form.processing"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                            />
+                            </template>
                         </FormField>
 
                         <FormField for-id="subject" :label="t('transactions.form.subject')" :error="form.errors.subject">
-                            <Input id="subject" v-model="form.subject" :disabled="form.processing" />
+                            <template #default="{ errorId, hasError }">
+                            <Input
+                                id="subject"
+                                v-model="form.subject"
+                                :disabled="form.processing"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                            />
+                            </template>
                         </FormField>
 
                         <FormField for-id="description" :label="t('transactions.form.description')" :error="form.errors.description">
+                            <template #default="{ errorId, hasError }">
                             <textarea
                                 id="description"
                                 v-model="form.description"
                                 :disabled="form.processing"
                                 rows="4"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
                                 class="flex min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                             />
+                            </template>
                         </FormField>
 
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -250,12 +279,16 @@ function submit() {
                             <template #title>{{ t('advancedSection.toggle') }}</template>
                             <template #hint>{{ t('transactions.form.advancedDatesHint') }}</template>
                             <FormField for-id="booked_at" :label="t('transactions.form.booked_at')" :error="form.errors.booked_at">
+                                <template #default="{ errorId, hasError }">
                                 <DatePickerInput
                                     id="booked_at"
+                                    :aria-invalid="hasError"
+                                    :aria-describedby="hasError ? errorId : undefined"
                                     :model-value="form.booked_at"
                                     :disabled="form.processing"
                                     @update:model-value="(value) => (form.booked_at = value)"
                                 />
+                                </template>
                             </FormField>
                         </AdvancedSectionCard>
                     </form>

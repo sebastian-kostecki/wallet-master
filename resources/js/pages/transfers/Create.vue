@@ -117,14 +117,15 @@ function submit() {
                     <form v-else @submit.prevent="submit" class="grid gap-6" :aria-busy="form.processing ? 'true' : 'false'">
                         <div class="grid gap-4 md:grid-cols-2">
                             <FormField for-id="from_account_id" :label="t('transfers.form.fromAccount')" :error="form.errors.from_account_id">
+                                <template #default="{ errorId, hasError }">
                                 <DropdownSelect
                                     id="from_account_id"
                                     :model-value="form.from_account_id"
                                     :options="accountOptions"
                                     :placeholder="t('transfers.form.selectPlaceholder')"
                                     :disabled="form.processing"
-                                    :aria-invalid="Boolean(form.errors.from_account_id || (isSameAccount && form.to_account_id !== null))"
-                                    :aria-describedby="form.errors.from_account_id ? 'from_account_id-error' : undefined"
+                                    :aria-invalid="Boolean(hasError || (isSameAccount && form.to_account_id !== null))"
+                                    :aria-describedby="hasError ? errorId : undefined"
                                     @update:model-value="(value) => (form.from_account_id = value)"
                                 >
                                     <template #trigger-leading>
@@ -181,17 +182,19 @@ function submit() {
                                         </span>
                                     </template>
                                 </DropdownSelect>
+                                </template>
                             </FormField>
 
                             <FormField for-id="to_account_id" :label="t('transfers.form.toAccount')" :error="form.errors.to_account_id">
+                                <template #default="{ errorId, hasError }">
                                 <DropdownSelect
                                     id="to_account_id"
                                     :model-value="form.to_account_id"
                                     :options="accountOptions"
                                     :placeholder="t('transfers.form.selectPlaceholder')"
                                     :disabled="form.processing"
-                                    :aria-invalid="Boolean(form.errors.to_account_id || isSameAccount)"
-                                    :aria-describedby="form.errors.to_account_id ? 'to_account_id-error' : isSameAccount ? formErrorId : undefined"
+                                    :aria-invalid="Boolean(hasError || isSameAccount)"
+                                    :aria-describedby="hasError ? errorId : isSameAccount ? formErrorId : undefined"
                                     @update:model-value="(value) => (form.to_account_id = value)"
                                 >
                                     <template #trigger-leading>
@@ -248,38 +251,51 @@ function submit() {
                                         </span>
                                     </template>
                                 </DropdownSelect>
+                                </template>
                             </FormField>
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-2">
                             <FormField for-id="amount" :label="t('transfers.form.amount')" :error="form.errors.amount">
+                                <template #default="{ errorId, hasError }">
                                 <Input
                                     id="amount"
                                     v-model="form.amount"
                                     inputmode="decimal"
                                     :disabled="form.processing"
                                     :placeholder="t('transfers.form.amountPlaceholder')"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
                                 />
+                                </template>
                             </FormField>
 
                             <FormField for-id="date" :label="t('transfers.form.date')" :error="form.errors.date">
+                                <template #default="{ errorId, hasError }">
                                 <DatePickerInput
                                     id="date"
+                                    :aria-invalid="hasError"
+                                    :aria-describedby="hasError ? errorId : undefined"
                                     :model-value="form.date"
                                     :disabled="form.processing"
                                     @update:model-value="(value) => (form.date = value)"
                                 />
+                                </template>
                             </FormField>
                         </div>
 
                         <FormField for-id="description" :label="t('transfers.form.descriptionOptional')" :error="form.errors.description">
+                            <template #default="{ errorId, hasError }">
                             <textarea
                                 id="description"
                                 v-model="form.description"
                                 :disabled="form.processing"
                                 rows="3"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
                                 class="flex min-h-[84px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                             />
+                            </template>
                         </FormField>
 
                         <div v-if="isSameAccount" :id="formErrorId" class="text-sm text-rose-600 dark:text-rose-400">

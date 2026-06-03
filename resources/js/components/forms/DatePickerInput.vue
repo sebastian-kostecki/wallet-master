@@ -6,11 +6,18 @@ import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
-const props = defineProps<{
-    id?: string;
-    modelValue: string;
-    disabled?: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        id?: string;
+        modelValue: string;
+        disabled?: boolean;
+        ariaInvalid?: boolean;
+        ariaDescribedby?: string;
+    }>(),
+    {
+        ariaInvalid: false,
+    },
+);
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void;
@@ -81,6 +88,8 @@ function onSelect(nextIso: string) {
                 type="button"
                 variant="outline"
                 :disabled="disabled"
+                :aria-invalid="props.ariaInvalid ? 'true' : undefined"
+                :aria-describedby="props.ariaDescribedby"
                 :class="cn('h-10 w-full justify-between px-3 text-left font-normal', !displayValue ? 'text-muted-foreground' : '')"
                 @blur="emit('blur')"
             >
