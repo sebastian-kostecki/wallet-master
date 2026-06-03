@@ -15,6 +15,7 @@ use App\Listeners\LogImportEnrichmentTypesenseMiss;
 use App\Listeners\LogTransferCreated;
 use App\Listeners\LogTransferFailedValidation;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
@@ -60,6 +61,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (! $this->app->isProduction()) {
+            Model::shouldBeStrict();
+        }
+
         RateLimiter::for('imports', function (Request $request): Limit {
             return Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip()));
         });
