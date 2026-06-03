@@ -40,7 +40,18 @@ final class Account extends Model
             ->orderBy('name');
     }
 
-    protected $guarded = [];
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'user_id',
+        'currency_id',
+        'name',
+        'bank',
+        'type',
+        'opening_balance',
+        'current_balance',
+    ];
 
     /**
      * @return array<string, string>
