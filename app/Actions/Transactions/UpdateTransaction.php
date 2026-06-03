@@ -11,6 +11,7 @@ use App\Integrations\DescriptionMemory\DescriptionMemoryRepository;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Support\Transactions\TransactionDedupe;
+use App\Telemetry\Event;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -124,6 +125,11 @@ final class UpdateTransaction
 
             $this->rememberDescriptionMemoryAfterCommit($transaction, $newAccount->bank);
         });
+
+        Event::record('transaction_updated', [
+            'transaction_id' => $transaction->id,
+            'account_id' => (int) $transaction->account_id,
+        ], (int) $transaction->user_id);
     }
 
     /**

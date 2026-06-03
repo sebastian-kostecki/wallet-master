@@ -10,6 +10,7 @@ use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Transactions\TransactionDedupe;
+use App\Telemetry\Event;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -31,7 +32,7 @@ final class StoreTransaction
      */
     public function handle(User $user, array $validated): Transaction
     {
-        return DB::transaction(function () use ($user, $validated): Transaction {
+        $transaction = DB::transaction(function () use ($user, $validated): Transaction {
             $account = Account::query()
                 ->whereKey($validated['account_id'])
                 ->where('user_id', $user->id)
@@ -72,5 +73,12 @@ final class StoreTransaction
 
             return $transaction;
         });
+
+        Event::record('transaction_created', [
+            'transaction_id' => $transaction->id,
+            'account_id' => $transaction->account_id,
+        ], $user->id);
+
+        return $transaction;
     }
 }

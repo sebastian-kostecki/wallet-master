@@ -5,6 +5,7 @@ namespace App\Actions\Transactions;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Support\Transactions\TransactionDedupe;
+use App\Telemetry\Event;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -12,6 +13,10 @@ final class DeleteTransaction
 {
     public function handle(Transaction $transaction): void
     {
+        $transactionId = $transaction->id;
+        $accountId = (int) $transaction->account_id;
+        $userId = (int) $transaction->user_id;
+
         DB::transaction(function () use ($transaction): void {
             $transferId = $transaction->transfer_id;
 
@@ -37,6 +42,11 @@ final class DeleteTransaction
             $account->current_balance = bcsub((string) $account->current_balance, $amount, 2);
             $account->save();
         });
+
+        Event::record('transaction_deleted', [
+            'transaction_id' => $transactionId,
+            'account_id' => $accountId,
+        ], $userId);
     }
 
     private function deleteTransfer(Transaction $transaction): void
