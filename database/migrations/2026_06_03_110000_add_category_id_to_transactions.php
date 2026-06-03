@@ -43,6 +43,12 @@ return new class extends Migration
                 ->where('name', 'Oszczędności')
                 ->value('id') ?? $firstExpenseId;
 
+            if ($firstExpenseId === null || $firstIncomeId === null) {
+                throw new RuntimeException(
+                    "User {$user->id} is missing expense or income categories required for category backfill."
+                );
+            }
+
             Transaction::query()
                 ->where('user_id', $user->id)
                 ->whereNull('category_id')
@@ -72,9 +78,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
+            $table->dropForeign(['category_id']);
+        });
+
+        Schema::table('transactions', function (Blueprint $table) {
             $table->dropIndex(['category_id', 'booked_at']);
             $table->dropIndex(['user_id', 'category_id', 'booked_at']);
-            $table->dropConstrainedForeignId('category_id');
+            $table->dropColumn('category_id');
         });
     }
 };
