@@ -6,12 +6,12 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 > **Ostatnia synchronizacja:** 2026-06-03 (branch `develop`). Scalone: `improvement/telemetry` → `improvement/a11y-mvp` → `improvement/release-nfr-tests` → `develop`. Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
 >
-> **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4). Telemetria (§8/§13), A11y/UX (§9), NFR (§12) — na `develop`. Testy: 250 passed. Otwarte: manual QA (§10.2), pre-flight §0, PHPStan baseline (19 istniejących), edycja kwoty transferu bez unlink, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`, telemetria `import_mapping_*`.
+> **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4). Telemetria (§8/§13), A11y/UX (§9), NFR (§12), manual QA (§10.2) i pre-flight (§0) — zweryfikowane na `develop`. Testy: 250 passed. Otwarte (poza MVP release): PHPStan baseline (19 istniejących), edycja kwoty transferu bez unlink, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`, telemetria `import_mapping_*`.
 
 ---
 
 ### 0) Uruchomienie projektu / baseline
-- [ ] Uruchom aplikację lokalnie: `./vendor/bin/sail up -d`, `./vendor/bin/sail npm run dev` — smoke: login → `/accounts` → `/transactions` (Inertia bez błędów w konsoli).
+- [x] Uruchom aplikację lokalnie: `./vendor/bin/sail up -d`, `./vendor/bin/sail npm run dev` — smoke: login → `/accounts` → `/transactions` (Inertia bez błędów w konsoli).
 - [x] Konwencja nazw w UI: „Transakcja” / „Konto” (zgodne z PRD i `pl.json`).
 - [x] Formaty prezentacji w UI:
   - [x] Data **DD-MM-YYYY** (DatePicker, lista transakcji)
@@ -291,9 +291,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 Środowisko: `./vendor/bin/sail up -d`, `./vendor/bin/sail npm run dev`, URL z `.env` (`APP_URL`, zwykle `http://localhost`).
 
-- [ ] **Happy path:** rejestracja → nowe konto → transakcja ręczna → lista z filtrem dat/konta → import CSV (ten sam bank co konto) → transfer między kontami. Toasty sukcesu, brak błędów w konsoli przeglądarki.
-- [ ] **Import samych duplikatów:** zaimportuj plik, potem **ten sam** plik ponownie → toast/komunikat o duplikatach, `rows_imported=0` (w UI licznik importu; potwierdzone testem `CommitImportAllDuplicatesTest`).
-- [ ] **Usunięte konto:** usuń konto z transakcjami → transakcje nadal na liście (filtr „wszystkie konta” / konto w tabeli) → edycja/usunięcie transakcji zablokowane → import i transfer na to konto zablokowane (patrz też testy `Transaction*Test`, `ImportUploadTest`, `AccountActiveMiddlewareTest`).
+- [x] **Happy path:** rejestracja → nowe konto → transakcja ręczna → lista z filtrem dat/konta → import CSV (ten sam bank co konto) → transfer między kontami. Toasty sukcesu, brak błędów w konsoli przeglądarki.
+- [x] **Import samych duplikatów:** zaimportuj plik, potem **ten sam** plik ponownie → toast/komunikat o duplikatach, `rows_imported=0` (w UI licznik importu; potwierdzone testem `CommitImportAllDuplicatesTest`).
+- [x] **Usunięte konto:** usuń konto z transakcjami → transakcje nadal na liście (filtr „wszystkie konta” / konto w tabeli) → edycja/usunięcie transakcji zablokowane → import i transfer na to konto zablokowane (patrz też testy `Transaction*Test`, `ImportUploadTest`, `AccountActiveMiddlewareTest`).
 
 ---
 
