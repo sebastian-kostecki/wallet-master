@@ -26,6 +26,7 @@ final class StoreTransaction
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,
+     *   category_id: int,
      * }  $validated
      *
      * @throws Throwable
@@ -66,6 +67,7 @@ final class StoreTransaction
                 'subject' => $validated['subject'] ?? null,
                 'normalized_description' => $normalizedDescription,
                 'dedupe_hash' => $dedupeHash,
+                'category_id' => $validated['category_id'],
             ]);
 
             $account->current_balance = bcadd((string) $account->current_balance, $amount, 2);

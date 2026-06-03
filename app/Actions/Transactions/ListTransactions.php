@@ -35,6 +35,7 @@ final class ListTransactions
     /**
      * @var array{
      *   account_id: ?int,
+     *   category_id: ?int,
      *   from: ?string,
      *   to: ?string,
      *   sort: ?string,
@@ -136,18 +137,22 @@ final class ListTransactions
     private function baseQuery(User $user): Builder
     {
         return Transaction::query()
-            ->with(['account.currency', 'currency'])
+            ->with(['account.currency', 'currency', 'category'])
             ->whereBelongsTo($user);
     }
 
     /**
      * @param  Builder<Transaction>  $query
-     * @param  array{account_id: ?int, from: ?string, to: ?string}  $filters
+     * @param  array{account_id: ?int, category_id: ?int, from: ?string, to: ?string}  $filters
      */
     private function applyFilters(Builder $query, array $filters): void
     {
         if ($filters['account_id'] !== null) {
             $query->where('account_id', $filters['account_id']);
+        }
+
+        if (($filters['category_id'] ?? null) !== null) {
+            $query->where('category_id', $filters['category_id']);
         }
 
         if ($filters['from'] !== null) {
@@ -210,6 +215,7 @@ final class ListTransactions
     /**
      * @return array{
      *   account_id: ?int,
+     *   category_id: ?int,
      *   from: ?string,
      *   to: ?string,
      *   sort: ?string,

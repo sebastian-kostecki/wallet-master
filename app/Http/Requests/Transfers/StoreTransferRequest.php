@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Transfers;
 
 use App\Events\TransferFailedValidation;
+use App\Http\Requests\Concerns\ValidatesCategoryId;
 use App\Models\Account;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 final class StoreTransferRequest extends FormRequest
 {
+    use ValidatesCategoryId;
+
     public function authorize(): bool
     {
         return $this->user() !== null;
@@ -69,6 +72,7 @@ final class StoreTransferRequest extends FormRequest
             'amount' => ['required', 'numeric', 'decimal:0,2', 'gt:0'],
             'description' => ['nullable', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
+            ...$this->categoryIdRules(),
         ];
     }
 
@@ -80,6 +84,7 @@ final class StoreTransferRequest extends FormRequest
      *   amount: numeric-string|float|int,
      *   description?: ?string,
      *   subject?: ?string,
+     *   category_id: int,
      * }
      */
     public function validated($key = null, $default = null): array

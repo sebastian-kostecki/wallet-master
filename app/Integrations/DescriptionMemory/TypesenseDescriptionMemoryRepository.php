@@ -25,12 +25,13 @@ final readonly class TypesenseDescriptionMemoryRepository implements Description
         string $rawStatementDescription,
         ?string $subject,
         string $description,
+        ?int $categoryId = null,
     ): void {
         if ($bank === Bank::Cash) {
             return;
         }
 
-        if (trim($description) === '') {
+        if (trim($description) === '' && $categoryId === null) {
             return;
         }
 
@@ -42,7 +43,7 @@ final readonly class TypesenseDescriptionMemoryRepository implements Description
         $id = hash('sha256', "{$userId}|{$bank->value}|{$rawKey}");
 
         try {
-            $this->client->upsertDocument(self::COLLECTION, [
+            $document = [
                 'id' => $id,
                 'user_id' => $userId,
                 'bank' => $bank->value,
@@ -50,7 +51,13 @@ final readonly class TypesenseDescriptionMemoryRepository implements Description
                 'learned_subject' => $subject,
                 'learned_description' => $description,
                 'updated_at' => now()->timestamp,
-            ]);
+            ];
+
+            if ($categoryId !== null) {
+                $document['learned_category_id'] = $categoryId;
+            }
+
+            $this->client->upsertDocument(self::COLLECTION, $document);
         } catch (Throwable $e) {
             Log::warning('Typesense description memory remember failed.', [
                 'bank' => $bank->value,
@@ -117,7 +124,9 @@ final readonly class TypesenseDescriptionMemoryRepository implements Description
         $suggestedDescription = isset($document['learned_description']) ? (string) $document['learned_description'] : null;
         $suggestedDescription = $suggestedDescription !== null && trim($suggestedDescription) !== '' ? $suggestedDescription : null;
 
-        if ($suggestedSubject === null && $suggestedDescription === null) {
+        $categoryId = isset($document['learned_category_id']) ? (int) $document['learned_category_id'] : null;
+
+        if ($suggestedSubject === null && $suggestedDescription === null && $categoryId === null) {
             return null;
         }
 
@@ -126,6 +135,7 @@ final readonly class TypesenseDescriptionMemoryRepository implements Description
             description: $suggestedDescription,
             matchType: 'fuzzy',
             score: $score,
+            categoryId: $categoryId,
         );
     }
 }

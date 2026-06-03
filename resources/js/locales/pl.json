@@ -157,6 +157,9 @@
         "hintDefault": "Dodatkowe ustawienia — zwykle nie są potrzebne."
     },
     "transactions": {
+        "fields": {
+            "category": "Kategoria"
+        },
         "index": {
             "title": "Transakcje",
             "addTransaction": "Dodaj transakcję",
@@ -168,6 +171,10 @@
                 "account": {
                     "label": "Konto",
                     "all": "Wszystkie konta"
+                },
+                "category": {
+                    "label": "Kategoria",
+                    "all": "Wszystkie kategorie"
                 },
                 "from": "Od",
                 "to": "Do",
@@ -206,6 +213,7 @@
                 "description": "Opis",
                 "subject": "Subject",
                 "amount": "Kwota",
+                "category": "Kategoria",
                 "actions": "Akcje"
             },
             "badges": {
@@ -484,6 +492,66 @@
                 "zero_amount": "Kwota równa zero",
                 "invalid_row": "Niepoprawny wiersz"
             }
+        }
+    },
+    "categories": {
+        "index": {
+            "title": "Kategorie",
+            "add": "Dodaj kategorię",
+            "empty": "Brak kategorii.",
+            "fields": {
+                "name": "Nazwa",
+                "type": "Typ"
+            },
+            "types": {
+                "expense": "Wydatek",
+                "income": "Przychód"
+            },
+            "annualEstimate": "Szacunek roczny",
+            "annualEstimatePlaceholder": "np. 12000",
+            "system": "systemowa",
+            "moveUp": "Przesuń w górę",
+            "moveDown": "Przesuń w dół",
+            "delete": "Usuń kategorię",
+            "deleteConfirm": "Usunąć kategorię „{name}”?"
+        },
+        "enums": {
+            "type": {
+                "expense": "Wydatek",
+                "income": "Przychód"
+            }
+        },
+        "toast": {
+            "created": "Kategoria została dodana.",
+            "updated": "Kategoria została zaktualizowana.",
+            "deleted": "Kategoria została usunięta.",
+            "estimate_saved": "Szacunek został zapisany."
+        }
+    },
+    "budget": {
+        "nav": "Budżet",
+        "monthly": {
+            "title": "Budżet — miesięczny",
+            "plan": "Szacunek",
+            "actual": "Wykonanie",
+            "difference": "Różnica",
+            "transfers_section": "Transfery i oszczędności",
+            "allocation_hint": "Suma szacunków miesięcznych: {monthly} / roczny: {annual}",
+            "planPlaceholder": "Nadpisanie miesięczne"
+        },
+        "yearly": {
+            "title": "Budżet — roczny",
+            "plan": "Szacunek roczny",
+            "actual": "Wykonanie",
+            "difference": "Różnica"
+        },
+        "view": {
+            "monthly": "Miesięczny",
+            "yearly": "Roczny"
+        },
+        "sections": {
+            "expense": "Wydatki",
+            "income": "Przychody"
         }
     },
     "a11y": {

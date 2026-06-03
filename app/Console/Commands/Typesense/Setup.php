@@ -86,6 +86,7 @@ final class Setup extends Command
                 ['name' => 'raw_key', 'type' => 'string'],
                 ['name' => 'learned_subject', 'type' => 'string', 'optional' => true, 'index' => false],
                 ['name' => 'learned_description', 'type' => 'string', 'index' => false],
+                ['name' => 'learned_category_id', 'type' => 'int32', 'optional' => true, 'index' => false],
                 ['name' => 'updated_at', 'type' => 'int64'],
             ],
             'default_sorting_field' => 'updated_at',

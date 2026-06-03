@@ -89,6 +89,7 @@ test('cannot change amount on a linked transfer leg', function () {
             'amount' => -99,
             'description' => 'Transfer out',
             'subject' => null,
+            'category_id' => $withdrawal->category_id,
         ])
         ->assertSessionHasErrors(['amount']);
 
@@ -111,6 +112,7 @@ test('cannot change account on a linked transfer leg', function () {
             'amount' => -50,
             'description' => 'Transfer out',
             'subject' => null,
+            'category_id' => $withdrawal->category_id,
         ])
         ->assertSessionHasErrors(['account_id']);
 
@@ -131,6 +133,7 @@ test('can update description on a linked transfer leg', function () {
             'amount' => -50,
             'description' => 'Updated label',
             'subject' => 'Bank',
+            'category_id' => $withdrawal->category_id,
         ])
         ->assertSessionHasNoErrors()
         ->assertRedirect(route('transactions.edit', $withdrawal));

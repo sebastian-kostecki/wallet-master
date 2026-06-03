@@ -14,6 +14,7 @@ final class TransactionsIndexQuery
     /** @var list<string> */
     private const ALLOWED_KEYS = [
         'account_id',
+        'category_id',
         'from',
         'to',
         'sort',
@@ -75,7 +76,7 @@ final class TransactionsIndexQuery
                 continue;
             }
 
-            $filtered[$key] = $key === 'account_id' || $key === 'per_page'
+            $filtered[$key] = $key === 'account_id' || $key === 'category_id' || $key === 'per_page'
                 ? (int) $value
                 : (string) $value;
         }

@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests\Transactions;
 
+use App\Http\Requests\Concerns\ValidatesCategoryId;
 use App\Models\Transaction;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 final class StoreTransactionRequest extends FormRequest
 {
+    use ValidatesCategoryId;
+
     public function authorize(): bool
     {
         return $this->user()?->can('create', Transaction::class) ?? false;
@@ -36,7 +40,13 @@ final class StoreTransactionRequest extends FormRequest
             'amount' => ['required', 'numeric', 'decimal:0,2', Rule::notIn([0])],
             'description' => ['required', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
+            ...$this->categoryIdRules(),
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $this->validateCategoryMatchesAmount($validator);
     }
 
     /**
@@ -47,6 +57,7 @@ final class StoreTransactionRequest extends FormRequest
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,
+     *   category_id: int,
      * }
      */
     public function validated($key = null, $default = null): array

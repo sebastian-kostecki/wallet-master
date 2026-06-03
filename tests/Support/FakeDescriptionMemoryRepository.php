@@ -22,6 +22,7 @@ final class FakeDescriptionMemoryRepository implements DescriptionMemoryReposito
         string $rawStatementDescription,
         ?string $subject,
         string $description,
+        ?int $categoryId = null,
     ): void {
         $this->rememberCalls[] = [
             'user_id' => $userId,
@@ -29,6 +30,7 @@ final class FakeDescriptionMemoryRepository implements DescriptionMemoryReposito
             'raw' => $rawStatementDescription,
             'subject' => $subject,
             'description' => $description,
+            'category_id' => $categoryId,
         ];
     }
 

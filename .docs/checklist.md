@@ -4,7 +4,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 > **Uwaga.** Zadania poza podstawowym zakresem PRD są oznaczone tagiem `[plan]` przy nazwie sekcji lub punktu (sekcje 12–17).
 
-> **Ostatnia synchronizacja:** 2026-06-03 (branch `develop`). Scalone: `improvement/telemetry` → `improvement/a11y-mvp` → `improvement/release-nfr-tests` → `develop`. Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
+> **Ostatnia synchronizacja:** 2026-06-03 (branch `feat/categories` — kategorie i budżet; Task 14 zamknięty, 268 testów PASS). Scalone: `improvement/telemetry` → `improvement/a11y-mvp` → `improvement/release-nfr-tests` → `develop`. Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
 >
 > **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4). Telemetria (§8/§13), A11y/UX (§9), NFR (§12), manual QA (§10.2) i pre-flight (§0) — zweryfikowane na `develop`. Testy: 250 passed. Otwarte (poza MVP release): PHPStan baseline (19 istniejących), edycja kwoty transferu bez unlink, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`, telemetria `import_mapping_*`.
 
@@ -369,4 +369,20 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 - [ ] `ImportController::index` — `paginate(20)` zamiast `latest()->limit(30)` (jeśli endpoint listy importów jest w scope).
 - [x] Sortowanie listy transakcji po `amount` z tie-breakerem `COALESCE(booked_at, date) desc, id desc` **[plan §12.5]**.
+
+---
+
+### 18) Kategorie i budżet (wave 2, FR-C1–C8) **[plan kategorie/budżet]**
+
+- [x] Migracje: `categories`, `category_*_estimates`, `transactions.category_id` + backfill
+- [x] Zestaw startowy kategorii (`EnsureUserCategories`) przy rejestracji
+- [x] CRUD kategorii (backend + `categories/Index.vue`)
+- [x] Szacunki roczne i miesięczne (API + UI na kategoriach / budżecie miesięcznym)
+- [x] `category_id` wymagane na transakcji, transferze i imporcie
+- [x] Pamięć kategorii w DescriptionMemory + przypisanie przy imporcie
+- [x] Widoki budżetu: `budget/Monthly.vue`, `budget/Yearly.vue`
+- [x] Formularze transakcji/transferu — wybór kategorii
+- [x] Filtr i kolumna kategorii na liście transakcji (FR-C8)
+- [x] Nawigacja: „Budżet” w sidebarze
+- [x] Testy feature: Categories, Budgets, rozszerzenia Transactions/Imports
 

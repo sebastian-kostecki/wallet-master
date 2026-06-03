@@ -6,6 +6,7 @@ namespace App\Http\Resources\Transactions;
 
 use App\Http\Resources\Accounts\AccountResource;
 use App\Http\Resources\Accounts\CurrencyResource;
+use App\Http\Resources\Categories\CategoryResource;
 use App\Models\Transaction;
 use App\Support\Transactions\TransactionDateRelative;
 use Illuminate\Http\Request;
@@ -39,6 +40,13 @@ final class TransactionResource extends JsonResource
             'subject' => $this->subject,
             'raw_statement_description' => $this->raw_statement_description,
             'transfer_id' => $this->transfer_id,
+            'category_id' => $this->category_id,
+            'category' => $this->whenLoaded(
+                'category',
+                fn () => $this->category !== null
+                    ? CategoryResource::make($this->category)->resolve($request)
+                    : null,
+            ),
             'account' => $this->whenLoaded(
                 'account',
                 fn () => $this->account !== null

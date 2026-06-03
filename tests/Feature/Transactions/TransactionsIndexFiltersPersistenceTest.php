@@ -69,6 +69,7 @@ test('store redirects to index with remembered filters', function () {
             'date' => '10-04-2026',
             'amount' => -10,
             'description' => 'Test',
+            'category_id' => defaultCategoryId($user),
         ])
         ->assertRedirect(route('transactions.index', [
             'account_id' => $account->id,

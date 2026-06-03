@@ -23,6 +23,7 @@ final class CreateTransfer
      *   amount: numeric-string|float|int,
      *   description?: ?string,
      *   subject?: ?string,
+     *   category_id: int,
      * } $validated
      * @return array{
      *   withdrawal: Transaction,
@@ -101,6 +102,7 @@ final class CreateTransfer
                 'normalized_description' => $withdrawNormalized,
                 'dedupe_hash' => $withdrawDedupeHash,
                 'transfer_id' => $transferId,
+                'category_id' => $validated['category_id'],
             ]);
 
             $deposit = Transaction::query()->create([
@@ -116,6 +118,7 @@ final class CreateTransfer
                 'normalized_description' => $depositNormalized,
                 'dedupe_hash' => $depositDedupeHash,
                 'transfer_id' => $transferId,
+                'category_id' => $validated['category_id'],
             ]);
 
             $from->current_balance = bcadd((string) $from->current_balance, $withdrawAmount, 2);

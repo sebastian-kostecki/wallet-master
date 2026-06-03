@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $account_id
  * @property int $currency_id
  * @property int $user_id
+ * @property int $category_id
  * @property int|null $import_id
  * @property string|null $transfer_id
  * @property TransferMatchStatus $transfer_match_status
@@ -35,6 +36,7 @@ final class Transaction extends Model
         'user_id',
         'account_id',
         'currency_id',
+        'category_id',
         'import_id',
         'date',
         'booked_at',
@@ -48,6 +50,8 @@ final class Transaction extends Model
         'transfer_id',
         'transfer_match_status',
         'transfer_candidate_for_id',
+        'created_at',
+        'updated_at',
     ];
 
     protected $guarded = [];
@@ -69,6 +73,7 @@ final class Transaction extends Model
             'raw_statement_description' => 'string',
             'account_id' => 'integer',
             'currency_id' => 'integer',
+            'category_id' => 'integer',
             'user_id' => 'integer',
         ];
     }
@@ -87,6 +92,14 @@ final class Transaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    /**
+     * @return BelongsTo<Category, $this>
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     /**

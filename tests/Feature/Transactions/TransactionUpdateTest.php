@@ -51,6 +51,7 @@ test('updating a transaction updates balance by delta', function () {
             'amount' => -20,
             'description' => 'New',
             'subject' => null,
+            'category_id' => $transaction->category_id,
         ])
         ->assertSessionHasNoErrors();
 
@@ -95,6 +96,7 @@ test('cannot update a transaction on a deleted account', function () {
             'date' => '20-04-2026',
             'amount' => 20,
             'description' => 'Income',
+            'category_id' => $transaction->category_id,
         ])
         ->assertForbidden();
 });
@@ -152,6 +154,7 @@ test('updates an imported transaction and remembers user corrections (best-effor
             'amount' => -10,
             'description' => 'Cash withdrawal',
             'subject' => 'ATM',
+            'category_id' => $transaction->category_id,
         ])
         ->assertSessionHasNoErrors();
 

@@ -157,6 +157,9 @@
         "hintDefault": "Extra settings — rarely needed."
     },
     "transactions": {
+        "fields": {
+            "category": "Category"
+        },
         "index": {
             "title": "Transactions",
             "addTransaction": "Add transaction",
@@ -168,6 +171,10 @@
                 "account": {
                     "label": "Account",
                     "all": "All accounts"
+                },
+                "category": {
+                    "label": "Category",
+                    "all": "All categories"
                 },
                 "from": "From",
                 "to": "To",
@@ -206,6 +213,7 @@
                 "description": "Description",
                 "subject": "Subject",
                 "amount": "Amount",
+                "category": "Category",
                 "actions": "Actions"
             },
             "badges": {
@@ -479,6 +487,66 @@
                 "zero_amount": "Amount is zero",
                 "invalid_row": "Invalid row"
             }
+        }
+    },
+    "categories": {
+        "index": {
+            "title": "Categories",
+            "add": "Add category",
+            "empty": "No categories yet.",
+            "fields": {
+                "name": "Name",
+                "type": "Type"
+            },
+            "types": {
+                "expense": "Expense",
+                "income": "Income"
+            },
+            "annualEstimate": "Annual estimate",
+            "annualEstimatePlaceholder": "e.g. 12000",
+            "system": "system",
+            "moveUp": "Move up",
+            "moveDown": "Move down",
+            "delete": "Delete category",
+            "deleteConfirm": "Delete category “{name}”?"
+        },
+        "enums": {
+            "type": {
+                "expense": "Expense",
+                "income": "Income"
+            }
+        },
+        "toast": {
+            "created": "Category added.",
+            "updated": "Category updated.",
+            "deleted": "Category deleted.",
+            "estimate_saved": "Estimate saved."
+        }
+    },
+    "budget": {
+        "nav": "Budget",
+        "monthly": {
+            "title": "Budget — monthly",
+            "plan": "Estimate",
+            "actual": "Actual",
+            "difference": "Difference",
+            "transfers_section": "Transfers and savings",
+            "allocation_hint": "Monthly estimates total: {monthly} / annual: {annual}",
+            "planPlaceholder": "Monthly override"
+        },
+        "yearly": {
+            "title": "Budget — yearly",
+            "plan": "Annual estimate",
+            "actual": "Actual",
+            "difference": "Difference"
+        },
+        "view": {
+            "monthly": "Monthly",
+            "yearly": "Yearly"
+        },
+        "sections": {
+            "expense": "Expenses",
+            "income": "Income"
         }
     },
     "a11y": {

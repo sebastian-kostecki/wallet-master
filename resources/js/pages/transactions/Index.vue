@@ -53,6 +53,19 @@ type Currency = {
     precision: number;
 };
 
+type Category = {
+    id: number;
+    name: string;
+    type: string;
+};
+
+type TransactionCategory = {
+    id: number;
+    name: string;
+    type: string;
+    type_label_key: string;
+};
+
 type Transaction = {
     id: number;
     date: string; // YYYY-MM-DD
@@ -64,6 +77,8 @@ type Transaction = {
     subject: string | null;
     raw_statement_description: string | null;
     transfer_id: string | null;
+    category_id: number;
+    category: TransactionCategory | null;
     account: Account | null;
     currency: Currency | null;
 };
@@ -113,6 +128,7 @@ type Paginator<T> = FlattenedPaginator<T> | ResourcePaginator<T>;
 
 type Filters = {
     account_id: number | null;
+    category_id: number | null;
     from: string | null; // DD-MM-YYYY
     to: string | null; // DD-MM-YYYY
     sort: 'date' | 'amount' | string;
@@ -122,6 +138,7 @@ type Filters = {
 
 const props = defineProps<{
     accounts: Account[];
+    categories: Category[];
     filters: Filters;
     transactions: Paginator<Transaction>;
     summary: {
@@ -316,6 +333,7 @@ function setSort(sort: 'date' | 'amount') {
         route('transactions.index'),
         {
             account_id: props.filters.account_id ?? undefined,
+            category_id: props.filters.category_id ?? undefined,
             from: props.filters.from ?? undefined,
             to: props.filters.to ?? undefined,
             sort,
@@ -330,7 +348,12 @@ function setSort(sort: 'date' | 'amount') {
 }
 
 const hasActiveFilters = computed(() => {
-    return Boolean(props.filters.account_id !== null || (props.filters.from ?? '').trim() !== '' || (props.filters.to ?? '').trim() !== '');
+    return Boolean(
+        props.filters.account_id !== null
+            || props.filters.category_id !== null
+            || (props.filters.from ?? '').trim() !== ''
+            || (props.filters.to ?? '').trim() !== '',
+    );
 });
 
 const transactionTotal = computed(() => {
@@ -441,7 +464,13 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
 
         <template #headerActions>
             <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                <TransactionsIndexHeaderFilters :accounts="accounts" :filters="filters" :server-errors="serverErrors" :is-loading="isLoading" />
+                <TransactionsIndexHeaderFilters
+                    :accounts="accounts"
+                    :categories="categories"
+                    :filters="filters"
+                    :server-errors="serverErrors"
+                    :is-loading="isLoading"
+                />
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button class="sm:shrink-0">
@@ -569,6 +598,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                     </th>
                                     <th class="px-6 py-3" scope="col">{{ t('transactions.index.table.description') }}</th>
                                     <th class="w-72 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
+                                    <th class="w-40 px-6 py-3" scope="col">{{ t('transactions.index.table.category') }}</th>
                                     <th class="w-44 px-6 py-3" scope="col" :aria-sort="ariaSortFor('amount')">
                                         <button
                                             class="inline-flex items-center gap-2 hover:text-foreground"
@@ -746,6 +776,9 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                             </div>
                                         </div>
                                     </td>
+                                    <td class="px-6 py-4">
+                                        <p class="truncate text-sm">{{ tx.category?.name ?? '—' }}</p>
+                                    </td>
                                     <td class="whitespace-nowrap px-6 py-4 tabular-nums">
                                         <span
                                             :class="
@@ -887,6 +920,9 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                             <span v-if="!tx.account" class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                                                 {{ t('transactions.index.readOnly.badge') }}
                                             </span>
+                                        </p>
+                                        <p v-if="tx.category" class="mt-1 text-xs text-muted-foreground">
+                                            {{ t('transactions.index.table.category') }}: {{ tx.category.name }}
                                         </p>
 
                                         <TooltipProvider v-if="!hasRawStatementDescription(tx) && tx.subject" :delay-duration="0">

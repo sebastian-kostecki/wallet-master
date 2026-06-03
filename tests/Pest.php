@@ -44,7 +44,11 @@ expect()->extend('toBeOne', function () {
 |
 */
 
+use App\Actions\Categories\EnsureUserCategories;
+use App\Enums\CategoryType;
+use App\Enums\TransactionType;
 use App\Models\Account;
+use App\Models\Category;
 use App\Models\Import;
 use App\Models\User;
 use Illuminate\Log\Events\MessageLogged;
@@ -103,6 +107,41 @@ function assertTelemetryEvent(array $logged, string $event, ?callable $contextMa
     }
 
     expect($matched)->toBeTrue("Expected telemetry event [{$event}] to be logged.");
+}
+
+function ensureUserCategories(User $user): void
+{
+    app(EnsureUserCategories::class)->handle($user);
+}
+
+function defaultCategoryId(User $user, CategoryType $type = CategoryType::Expense): int
+{
+    ensureUserCategories($user);
+
+    return (int) Category::query()
+        ->where('user_id', $user->id)
+        ->where('type', $type)
+        ->ordered()
+        ->value('id');
+}
+
+/**
+ * @param  array<string, mixed>  $attributes
+ * @return array<string, mixed>
+ */
+function transactionWithCategory(User $user, array $attributes): array
+{
+    ensureUserCategories($user);
+
+    if (! array_key_exists('category_id', $attributes)) {
+        $type = $attributes['type'] ?? TransactionType::Expense;
+        $categoryType = ($type === TransactionType::Income || $type === 'income')
+            ? CategoryType::Income
+            : CategoryType::Expense;
+        $attributes['category_id'] = defaultCategoryId($user, $categoryType);
+    }
+
+    return $attributes;
 }
 
 function createImportWithFile(User $user, Account $account, string $content): Import

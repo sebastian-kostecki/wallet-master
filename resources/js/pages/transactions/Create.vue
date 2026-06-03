@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { filterCategoriesByType, firstCategoryId, type CategoryOption } from '@/lib/categories';
 import { normalizeAmount } from '@/lib/money';
 import { track } from '@/lib/telemetry';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type Account = {
@@ -25,6 +26,7 @@ type Account = {
 
 const props = defineProps<{
     accounts: Account[];
+    categories: CategoryOption[];
 }>();
 
 const { t } = useI18n();
@@ -48,8 +50,11 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 const accountOptions = computed<DropdownOption<number>[]>(() => props.accounts.map((a) => ({ value: a.id, label: a.name })));
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
 
+const transactionKind = ref<'income' | 'expense'>('expense');
+
 const form = useForm<{
     account_id: number | null;
+    category_id: number | null;
     date: string;
     booked_at: string;
     amount: string;
@@ -57,11 +62,26 @@ const form = useForm<{
     subject: string;
 }>({
     account_id: props.accounts[0]?.id ?? null,
+    category_id: firstCategoryId(filterCategoriesByType(props.categories, transactionKind.value)),
     date: todayDdMmYyyy(),
     booked_at: '',
     amount: '0,00',
     description: '',
     subject: '',
+});
+
+const categoryOptions = computed<DropdownOption<number>[]>(() =>
+    filterCategoriesByType(props.categories, transactionKind.value).map((c) => ({
+        value: c.id,
+        label: c.name,
+    })),
+);
+
+watch(transactionKind, (kind) => {
+    const filtered = filterCategoriesByType(props.categories, kind);
+    if (!filtered.some((c) => c.id === form.category_id)) {
+        form.category_id = firstCategoryId(filtered);
+    }
 });
 
 function todayDdMmYyyy(): string {
@@ -81,8 +101,6 @@ const selectedAccount = computed(() => {
     }
     return accountsById.value.get(form.account_id) ?? null;
 });
-
-const transactionKind = ref<'income' | 'expense'>('expense');
 
 function applyAmountSign(amount: string): string {
     const trimmed = amount.trim();
@@ -205,6 +223,21 @@ function submit() {
                                                 </span>
                                             </template>
                                         </DropdownSelect>
+                                    </template>
+                                </FormField>
+
+                                <FormField for-id="category_id" :label="t('transactions.fields.category')" :error="form.errors.category_id">
+                                    <template #default="{ errorId, hasError }">
+                                        <DropdownSelect
+                                            id="category_id"
+                                            :aria-invalid="hasError"
+                                            :aria-describedby="hasError ? errorId : undefined"
+                                            :model-value="form.category_id"
+                                            :options="categoryOptions"
+                                            :placeholder="t('transactions.fields.category')"
+                                            :disabled="form.processing || categoryOptions.length === 0"
+                                            @update:model-value="(value) => (form.category_id = value)"
+                                        />
                                     </template>
                                 </FormField>
 

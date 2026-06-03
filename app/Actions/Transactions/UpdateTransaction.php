@@ -77,6 +77,7 @@ final class UpdateTransaction
                 $transaction->subject = $validated['subject'] ?? null;
                 $transaction->normalized_description = $normalizedDescription;
                 $transaction->dedupe_hash = $dedupeHash;
+                $transaction->category_id = $validated['category_id'];
                 $transaction->save();
 
                 $account->current_balance = bcadd((string) $account->current_balance, $delta, 2);
@@ -115,6 +116,7 @@ final class UpdateTransaction
             $transaction->subject = $validated['subject'] ?? null;
             $transaction->normalized_description = $normalizedDescription;
             $transaction->dedupe_hash = $dedupeHash;
+            $transaction->category_id = $validated['category_id'];
             $transaction->save();
 
             $oldAccount->current_balance = bcsub((string) $oldAccount->current_balance, $oldAmount, 2);
@@ -204,6 +206,7 @@ final class UpdateTransaction
                 rawStatementDescription: $raw,
                 subject: $transaction->subject,
                 description: $description,
+                categoryId: (int) $transaction->category_id,
             );
         });
     }
