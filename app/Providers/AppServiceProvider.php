@@ -64,6 +64,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip()));
         });
 
+        RateLimiter::for('api', function (Request $request): Limit {
+            return Limit::perMinute(60)->by((string) ($request->user()?->id ?? $request->ip()));
+        });
+
         Event::listen(TransferCreated::class, LogTransferCreated::class);
         Event::listen(TransferFailedValidation::class, LogTransferFailedValidation::class);
         Event::listen(ImportEnrichmentTypesenseHit::class, LogImportEnrichmentTypesenseHit::class);
