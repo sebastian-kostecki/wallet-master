@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Coins } from 'lucide-vue-next';
-import { Trash2 } from 'lucide-vue-next';
+import { Coins, Trash2 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
 type Currency = {
@@ -77,7 +76,7 @@ defineEmits<{
                         <span class="inline-flex">
                             <button
                                 type="button"
-                                class="rounded-md p-2 text-muted-foreground hover:text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                class="focus:outline-hidden rounded-md p-2 text-muted-foreground hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                 :disabled="deleteDisabled"
                                 @click="$emit('delete', account.id)"
                                 :aria-label="t('accounts.card.deleteAria')"
@@ -103,9 +102,10 @@ defineEmits<{
 
             <div class="flex gap-2">
                 <Button variant="secondary" @click="$emit('edit', account.id)">{{ t('actions.edit') }}</Button>
-                <Button variant="outline" :disabled="adjustDisabled" @click="$emit('adjustBalance', account.id)">{{ t('actions.setBalance') }}</Button>
+                <Button variant="outline" :disabled="adjustDisabled" @click="$emit('adjustBalance', account.id)">{{
+                    t('actions.setBalance')
+                }}</Button>
             </div>
         </div>
     </div>
 </template>
-

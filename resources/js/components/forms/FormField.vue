@@ -24,4 +24,3 @@ const props = withDefaults(
         <p v-if="props.hint" class="text-sm text-muted-foreground">{{ props.hint }}</p>
     </div>
 </template>
-

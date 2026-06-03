@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
-import { computed, h, watch } from 'vue';
-import { toast, Toaster } from 'vue-sonner';
 import { usePage } from '@inertiajs/vue3';
 import { AlertTriangle, CheckCircle2, CircleAlert, Info } from 'lucide-vue-next';
+import { computed, h, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { toast, Toaster } from 'vue-sonner';
 
 type ToastKind = 'success' | 'error' | 'info' | 'warning';
 
@@ -22,8 +22,8 @@ const toastOptions = computed(() => ({
     unstyled: true,
     classes: {
         toast: cn(
-            'pointer-events-auto w-full max-w-xl mx-auto mb-4 flex items-start gap-3 rounded-lg border py-3 pl-4 pr-2 shadow-lg',
-            'bg-background text-foreground border-border',
+            'pointer-events-auto mx-auto mb-4 flex w-full max-w-xl items-start gap-3 rounded-lg border py-3 pl-4 pr-2 shadow-lg',
+            'border-border bg-background text-foreground',
         ),
         title: 'text-sm font-medium',
         description: 'text-sm text-muted-foreground',

@@ -44,7 +44,32 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+use App\Models\Account;
+use App\Models\Import;
+use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+
+function createTransferMatcherImport(User $user, Account $account, string $content): Import
 {
-    // ..
+    $sourceFile = "imports/{$user->id}/transfer-matcher-{$account->id}-".uniqid().'.csv';
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'queued',
+        'mapping' => [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+            'subject' => 'subject',
+        ],
+        'details' => [
+            'source_file' => $sourceFile,
+            'headers' => ['date', 'amount', 'description', 'subject'],
+        ],
+    ]);
+
+    Storage::disk('local')->put($sourceFile, $content);
+
+    return $import;
 }

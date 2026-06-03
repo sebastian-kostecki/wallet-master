@@ -3,13 +3,14 @@ import InputError from '@/components/InputError.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { apiFetch } from '@/lib/apiFetch';
 import { cn } from '@/lib/utils';
 import { router, usePage } from '@inertiajs/vue3';
 import { echo } from '@laravel/echo-vue';
-import { CheckCircle2, Coins, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
+import { CheckCircle2, ChevronDown, Coins, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import type { ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
 import { useI18n } from 'vue-i18n';
-import { toast } from 'vue-sonner';
 
 type Account = {
     id: number;
@@ -29,6 +30,8 @@ type ImportState = {
     rows_failed_validation: number | null;
     error_summary: string | null;
     committed_at: string | null;
+    failed_rows?: ImportFailedRow[];
+    failed_rows_total?: number;
 };
 
 const props = withDefaults(
@@ -66,7 +69,7 @@ const accountOptions = computed<DropdownOption<number>[]>(() =>
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
 
 const selectedAccountId = ref<number | null>(props.preselectedAccountId ?? null);
-const selectedAccount = computed(() => (selectedAccountId.value ? accountsById.value.get(selectedAccountId.value) ?? null : null));
+const selectedAccount = computed(() => (selectedAccountId.value ? (accountsById.value.get(selectedAccountId.value) ?? null) : null));
 const selectedBankLabel = computed(() => (selectedAccount.value ? t(`accounts.enums.bank.${selectedAccount.value.bank}`) : '—'));
 
 const file = ref<File | null>(null);
@@ -95,6 +98,25 @@ const longRunningSeconds = 60;
 const showLongRunning = ref(false);
 const longRunningTimer = ref<number | null>(null);
 
+const pollIntervalMs = 5000;
+const pollTimer = ref<number | null>(null);
+
+function clearPollTimer() {
+    if (pollTimer.value !== null) {
+        window.clearInterval(pollTimer.value);
+        pollTimer.value = null;
+    }
+}
+
+function startPollTimer() {
+    clearPollTimer();
+    pollTimer.value = window.setInterval(() => {
+        if (step.value === 'processing') {
+            void refreshImportState();
+        }
+    }, pollIntervalMs);
+}
+
 function clearLongRunningTimer() {
     if (longRunningTimer.value !== null) {
         window.clearTimeout(longRunningTimer.value);
@@ -110,7 +132,10 @@ function startLongRunningTimer() {
     }, longRunningSeconds * 1000);
 }
 
-onBeforeUnmount(() => clearLongRunningTimer());
+onBeforeUnmount(() => {
+    clearLongRunningTimer();
+    clearPollTimer();
+});
 
 function resetState() {
     step.value = 'form';
@@ -124,6 +149,7 @@ function resetState() {
     isUploadingOrCommitting.value = false;
     showLongRunning.value = false;
     clearLongRunningTimer();
+    clearPollTimer();
 }
 
 watch(
@@ -133,6 +159,7 @@ watch(
             resetState();
         } else {
             clearLongRunningTimer();
+            clearPollTimer();
         }
     },
 );
@@ -170,18 +197,20 @@ async function uploadImport(): Promise<{ import_id: number; headers?: string[] }
     form.append('account_id', String(selectedAccountId.value));
     form.append('file', file.value);
 
-    const res = await fetch(route('imports.upload'), {
+    const res = await apiFetch(route('imports.upload'), {
         method: 'POST',
         body: form,
-        headers: {
-            Accept: 'application/json',
-        },
     });
 
     if (!res.ok) {
         const data = await res.json().catch(() => null);
         const accountIdMessage = data?.errors?.account_id?.[0] ?? '';
         const code = (data?.code as string | undefined) ?? '';
+
+        if (code === 'bank_unsupported') {
+            accountError.value = t('imports.validation.cashBlocked');
+            throw new Error(t('imports.validation.cashBlocked'));
+        }
 
         accountError.value = accountIdMessage || '';
 
@@ -200,12 +229,8 @@ async function uploadImport(): Promise<{ import_id: number; headers?: string[] }
 }
 
 async function commitImport(nextImportId: number) {
-    const res = await fetch(route('imports.commit', nextImportId as any), {
+    const res = await apiFetch(route('imports.commit', nextImportId as any), {
         method: 'POST',
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
     });
 
     if (!res.ok) {
@@ -220,9 +245,7 @@ async function refreshImportState() {
         return;
     }
 
-    const res = await fetch(route('imports.show', importId.value as any), {
-        headers: { Accept: 'application/json' },
-    });
+    const res = await apiFetch(route('imports.show', importId.value as any));
 
     if (!res.ok) {
         return;
@@ -234,9 +257,18 @@ async function refreshImportState() {
     const status = json.status;
     if (status === 'committed' || status === 'failed') {
         clearLongRunningTimer();
+        clearPollTimer();
         step.value = 'result';
     }
 }
+
+watch(step, (nextStep) => {
+    if (nextStep === 'processing') {
+        startPollTimer();
+    } else {
+        clearPollTimer();
+    }
+});
 
 const page = usePage() as any;
 const currentUserId = computed<number | null>(() => (page.props.auth?.user?.id as number | undefined) ?? null);
@@ -256,6 +288,7 @@ function handleImportStatusUpdated(payload: ImportState) {
 
     if (payload.status === 'committed' || payload.status === 'failed') {
         clearLongRunningTimer();
+        clearPollTimer();
         step.value = 'result';
     }
 }
@@ -322,9 +355,6 @@ async function start() {
     step.value = 'processing';
 
     try {
-        toast.dismiss();
-        toast.message(t('imports.toast.started'));
-
         const upload = await uploadImport();
         importId.value = upload.import_id;
 
@@ -334,11 +364,28 @@ async function start() {
         startLongRunningTimer();
     } catch (e: any) {
         step.value = 'form';
-        toast.dismiss();
-        toast.error(typeof e?.message === 'string' ? e.message : t('imports.toast.startFailed'));
+        clearPollTimer();
+        const message = typeof e?.message === 'string' ? e.message : t('imports.toast.startFailed');
+        if (!accountError.value) {
+            fileError.value = message;
+        }
     } finally {
         isUploadingOrCommitting.value = false;
     }
+}
+
+const failedRowsExpanded = ref(false);
+
+const failedRows = computed(() => importState.value?.failed_rows ?? []);
+
+const failedRowsOverflow = computed(() => {
+    const total = importState.value?.failed_rows_total ?? failedRows.value.length;
+
+    return total > failedRows.value.length ? total - failedRows.value.length : 0;
+});
+
+function displayRawValue(value: string | null | undefined): string {
+    return value && value.trim() !== '' ? value : '—';
 }
 
 const resultSummary = computed(() => {
@@ -368,10 +415,17 @@ function goToTransactions() {
         return;
     }
 
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), 1);
+    const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const pad2 = (n: number) => String(n).padStart(2, '0');
+    const formatDdMmYyyy = (d: Date) => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+
     router.get(
         route('transactions.index'),
         {
-            import_id: importId.value,
+            from: formatDdMmYyyy(from),
+            to: formatDdMmYyyy(to),
             sort: 'date',
             direction: 'desc',
         },
@@ -533,7 +587,10 @@ function goToTransactions() {
                     </div>
                 </div>
 
-                <div v-if="showLongRunning && importState?.status !== 'committed' && importState?.status !== 'failed'" class="rounded-lg bg-muted/30 p-4">
+                <div
+                    v-if="showLongRunning && importState?.status !== 'committed' && importState?.status !== 'failed'"
+                    class="rounded-lg bg-muted/30 p-4"
+                >
                     <p class="text-sm text-muted-foreground">{{ t('imports.dialog.processing.longRunning') }}</p>
                     <div class="mt-3">
                         <Button variant="secondary" type="button" @click="refreshImportState">{{ t('imports.dialog.processing.refresh') }}</Button>
@@ -561,7 +618,54 @@ function goToTransactions() {
                             {{ importState.error_summary }}
                         </p>
                         <p v-if="(importState?.rows_failed_validation ?? 0) > 0" class="text-xs text-muted-foreground">
-                            {{ t('imports.result.validationHint') }}
+                            {{ t('imports.failed_rows.modal.hint') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    v-if="(importState?.rows_failed_validation ?? 0) > 0 && failedRows.length > 0"
+                    class="rounded-lg border border-amber-500/40 bg-amber-50/30 dark:border-amber-500/30 dark:bg-amber-950/10"
+                >
+                    <button
+                        type="button"
+                        class="flex w-full items-center justify-between gap-3 p-4 text-left"
+                        :aria-expanded="failedRowsExpanded"
+                        @click="failedRowsExpanded = !failedRowsExpanded"
+                    >
+                        <p class="text-sm font-medium text-foreground">{{ t('imports.failed_rows.modal.title') }}</p>
+                        <ChevronDown
+                            class="h-5 w-5 shrink-0 text-muted-foreground transition-transform"
+                            :class="failedRowsExpanded ? 'rotate-180' : ''"
+                            aria-hidden="true"
+                        />
+                    </button>
+
+                    <div v-if="failedRowsExpanded" class="border-t border-amber-500/20 px-4 pb-4 pt-2">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead class="text-xs text-muted-foreground">
+                                    <tr>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.row') }}</th>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.date') }}</th>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.amount') }}</th>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.description') }}</th>
+                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.reason') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="row in failedRows" :key="row.id" class="border-t border-sidebar-border/50">
+                                        <td class="px-2 py-2 tabular-nums">{{ row.row_number }}</td>
+                                        <td class="px-2 py-2 whitespace-nowrap">{{ displayRawValue(row.date_raw) }}</td>
+                                        <td class="px-2 py-2 whitespace-nowrap tabular-nums">{{ displayRawValue(row.amount_raw) }}</td>
+                                        <td class="max-w-xs truncate px-2 py-2">{{ displayRawValue(row.description_raw) }}</td>
+                                        <td class="px-2 py-2 text-xs text-muted-foreground">{{ t(row.reason_label_key) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p v-if="failedRowsOverflow > 0" class="mt-2 text-xs text-muted-foreground">
+                            {{ t('imports.failed_rows.modal.more_on_transactions', { count: failedRowsOverflow }) }}
                         </p>
                     </div>
                 </div>
@@ -608,4 +712,3 @@ function goToTransactions() {
         </DialogContent>
     </Dialog>
 </template>
-

@@ -25,7 +25,7 @@ final class StoreImportUploadRequest extends FormRequest
             ->where(fn ($query) => $query
                 ->whereNull('deleted_at')
                 ->where('user_id', $this->user()->id)
-                ->whereIn('bank', [Bank::BnpParibas->value, Bank::MBank->value])
+                ->whereIn('bank', Bank::importableValues())
             );
 
         return [

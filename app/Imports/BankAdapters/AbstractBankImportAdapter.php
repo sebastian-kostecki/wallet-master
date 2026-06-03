@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Imports\BankAdapters;
 
 use App\Imports\ParsedImportRow;
-use App\Support\Transactions\TransactionDedupe;
-use Carbon\CarbonImmutable;
+use App\Support\Imports\AmountParser;
+use App\Support\Imports\DateParser;
+use App\Support\Imports\FileEncodingNormalizer;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -112,12 +113,27 @@ abstract class AbstractBankImportAdapter implements BankImportAdapter
      */
     private function readCsv(string $path): array
     {
-        $handle = fopen($path, 'rb');
+        $normalizer = app(FileEncodingNormalizer::class);
+        $readablePath = $normalizer->resolveReadablePath($path);
+
+        try {
+            return $this->readCsvFromPath($readablePath, $path);
+        } finally {
+            $normalizer->cleanup($readablePath, $path);
+        }
+    }
+
+    /**
+     * @return array{headers:list<string>, rows:list<array<string, string>>}
+     */
+    private function readCsvFromPath(string $readablePath, string $originalPath): array
+    {
+        $handle = fopen($readablePath, 'rb');
         if ($handle === false) {
             throw new RuntimeException('Unable to open CSV file.');
         }
 
-        $delimiter = $this->detectCsvDelimiter($path);
+        $delimiter = $this->detectCsvDelimiter($readablePath);
         $headers = [];
         $rows = [];
 
@@ -263,17 +279,7 @@ abstract class AbstractBankImportAdapter implements BankImportAdapter
 
     private function parseDate(string $rawDate): string
     {
-        $formats = ['d-m-Y', 'Y-m-d', 'd/m/Y'];
-
-        foreach ($formats as $format) {
-            try {
-                return CarbonImmutable::createFromFormat($format, $rawDate)->toDateString();
-            } catch (\Throwable) {
-                continue;
-            }
-        }
-
-        throw new RuntimeException('Invalid transaction date.');
+        return DateParser::parse($rawDate);
     }
 
     /**
@@ -281,11 +287,6 @@ abstract class AbstractBankImportAdapter implements BankImportAdapter
      */
     private function parseAmount(string $rawAmount): string
     {
-        $normalized = str_replace([' ', ','], ['', '.'], $rawAmount);
-        if (! is_numeric($normalized)) {
-            throw new RuntimeException('Invalid transaction amount.');
-        }
-
-        return TransactionDedupe::amountToDecimalString($normalized);
+        return AmountParser::parse($rawAmount);
     }
 }

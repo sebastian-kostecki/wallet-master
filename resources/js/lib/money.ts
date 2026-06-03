@@ -5,4 +5,3 @@ export function normalizeAmount(input: string): string {
 export function displayAmount(input: string): string {
     return input.replace('.', ',');
 }
-

@@ -1,0 +1,64 @@
+---
+description: PHP conventions when editing app/ — namespaces, moves, and presentation split
+globs: app/**/*.php
+alwaysApply: false
+---
+
+# PHP `app/` conventions
+
+## Namespace ↔ path
+
+`App\Actions\Transactions\Foo` → `app/Actions/Transactions/Foo.php`
+
+After moving controllers/requests, update: class namespace, `routes/*.php`, Pest tests, Pint.
+
+## HTTP symmetry
+
+Match sibling domains:
+
+- `Http/Controllers/Transactions/` (not `Transaction/`)
+- `Http/Requests/Accounts/StoreAccountRequest.php` (not loose files in `Requests/` root)
+
+Import HTTP: `Http/Controllers/Imports/`, not under `Transactions/`.
+
+## Actions
+
+**Write** — pass primitives/models, not Form Requests:
+
+```php
+public function handle(User $user, array $validated): Transaction
+```
+
+**Read index** — Action orchestrates with getters; controller assembles props explicitly (reference: `ListTransactions` + `TransactionController::index()`):
+
+```php
+// ✅ Action — handle(): void + typed getters (one handle() per instance)
+public function handle(TransactionIndexRequest $request): void { /* private handle* steps */ }
+public function getFilters(): array { … }
+public function getTransactionPaginator(): LengthAwarePaginator { … }
+public function getAccounts(): Collection { … }
+public function getSummary(): array { … }
+
+// ✅ Controller — explicit mapping from each getter
+$listTransactions->handle($request);
+return Inertia::render('transactions/Index', [
+    'filters' => $listTransactions->getFilters(),
+    'accounts' => AccountResource::collection($listTransactions->getAccounts())->resolve(),
+    'transactions' => TransactionResource::collection($listTransactions->getTransactionPaginator()),
+    'summary' => $listTransactions->getSummary(),
+]);
+
+// ❌ Action formats for Inertia or returns Data/*Result
+return (new TransactionResource($transaction))->resolve();
+return new TransactionIndexResult(…);
+```
+
+Never import `App\Http\Resources\*` in Actions. Do not use `Data/*Result` for index reads — getters are canonical.
+
+## New integrations
+
+Typesense and similar → `app/Integrations/`, register bindings in `AppServiceProvider`.
+
+## Tests
+
+Move tests with code: `tests/Feature/{Domain}/`, `tests/Unit/Data/` or `tests/Unit/Support/{Domain}/`.

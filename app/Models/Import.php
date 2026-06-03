@@ -66,4 +66,12 @@ final class Import extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /**
+     * @return HasMany<ImportFailedRow, $this>
+     */
+    public function failedRows(): HasMany
+    {
+        return $this->hasMany(ImportFailedRow::class);
+    }
 }

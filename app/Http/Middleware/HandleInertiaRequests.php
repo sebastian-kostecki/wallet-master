@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Transactions\TransactionsIndexQuery;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -46,6 +47,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'toast' => fn () => $request->session()->get('toast'),
+            'transactionsIndexSearch' => fn () => TransactionsIndexQuery::toQueryString(),
         ]);
     }
 }

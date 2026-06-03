@@ -77,13 +77,7 @@ const { t } = useI18n();
                 <TooltipProvider :delay-duration="0">
                     <Tooltip>
                         <TooltipTrigger>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                :aria-label="t('actions.edit')"
-                                @click="$emit('edit', account.id)"
-                            >
+                            <Button variant="ghost" size="icon" type="button" :aria-label="t('actions.edit')" @click="$emit('edit', account.id)">
                                 <Pencil class="h-4 w-4" />
                             </Button>
                         </TooltipTrigger>

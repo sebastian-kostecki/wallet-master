@@ -33,4 +33,14 @@ final class TransactionDedupe
     {
         return md5($dateYmd.'|'.$amountDecimalString.'|'.$normalizedDescription, true);
     }
+
+    /**
+     * Unique hash for manual entries so identical rows are not blocked by account dedupe index.
+     *
+     * @param  numeric-string  $amountDecimalString
+     */
+    public static function manualDedupeHash(string $dateYmd, string $amountDecimalString, string $normalizedDescription): string
+    {
+        return md5($dateYmd.'|'.$amountDecimalString.'|'.$normalizedDescription.'|'.Str::uuid(), true);
+    }
 }

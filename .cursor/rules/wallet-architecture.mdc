@@ -1,0 +1,91 @@
+---
+description: Wallet Master backend architecture (Variant A). Read before refactoring or adding app/ code.
+alwaysApply: true
+---
+
+# Wallet Master — architecture (Variant A)
+
+Full migration plan: `.docs/refactoring.md` (phases, file moves, acceptance criteria, §10 status).
+
+One domain = the same namespace segment across all layers (e.g. `Transactions` everywhere, never `Transaction` in one folder and `Transactions` in another).
+
+## Approved `app/` roots
+
+- `Actions/{Domain}/` — use cases (write + read orchestration), `handle()`, no `Http/Resources`
+- `Data/{Domain}/` — static form options (`*FormOptions`) and shared DTOs reused across layers; **not** for index read results (use Action getters)
+- `Http/Controllers|Requests|Resources/{Domain}/` — web layer only
+- `Support/{Domain}/` — stateless domain algorithms (no HTTP, no SDK clients)
+- `Integrations/{Name}/` — external clients and infrastructure repositories (e.g. Typesense, DescriptionMemory)
+- `Imports/` — import workflow and bank adapters (unchanged root)
+- `Models/`, `Policies/`, `Jobs/`, `Events/`, `Listeners/`, `Enums/`, `Console/`
+
+Do **not** add `Services/`, `Modules/`, or `ViewModels/` for new code.
+
+## Domain names (always plural in folders)
+
+`Accounts`, `Transactions`, `Transfers`, `Imports`, `Auth`, `Settings`
+
+## Layer responsibilities
+
+| Layer | Does | Does not |
+|-------|------|----------|
+| **Controller** | `authorize*`, call Action, `Inertia::render` / redirect, toast `message_key`, map Action getters via `Http\Resources\*` (`->resolve()`) | `DB::transaction`, dedupe rules, `selectRaw` aggregations, business date parsing, full index query workflow |
+| **Form Request** | `rules()`, `authorize()`, filter/sort/page helpers (`getFilters()`, `getData()`, `getSorts()`, `Indexable`) | DB writes |
+| **Action** | use-case orchestration: queries, filters, sort, aggregates, pagination; write: `handle(User, array)` → `Model`; read index: `handle(*IndexRequest)` + typed getters | `Http\Resources\*`, `Inertia::render`, `number_format`, `asset()` |
+| **Data** | form options (`*FormOptions`), shared immutable DTOs | index read results, `Inertia::render`, Eloquent in DTO classes |
+| **Resource** | array shape for Vue/Inertia | authorization, business rules |
+| **Support/{Domain}** | pure algorithms (dedupe, relative dates) | HTTP/SDK clients |
+| **Integrations** | API clients, infra repositories | wallet business rules |
+| **Model** | relations, `casts()`, general scopes (`whereBelongsTo`) | full index workflow (date filters + sort + aggregates) |
+
+## Data flow
+
+- **Write:** `Request` → `Action` → `Model` (+ `Support` / `Integrations`) → redirect + toast.
+- **Read (index):** `*IndexRequest` → `Action::handle($request)` → getters → **Controller** maps `Http\Resources\*` → Inertia.
+
+Reference implementation: `App\Actions\Transactions\ListTransactions` + `TransactionController::index()`.
+
+## Read index pattern
+
+1. **Request** — validation; `getFilters()` for query constraints; `getData()` for UI state (`sort`, `direction`, `per_page`, `page`); `getSorts()` for Eloquent (`sort_by`, `sort_direction`).
+2. **Action** — `handle(*IndexRequest $request): void`; call `setSorts()` on the request when needed; store merged UI filters (`getFilters()` + `getData()`); run queries; expose **getters** (e.g. `getFilters()`, `getTransactionPaginator()`, `getAccounts()`, `getSummary()`).
+3. **Controller** — single `handle()` call; assemble Inertia props explicitly from getters + Resources (see `TransactionController::index()`).
+
+Action uses `$request->getFilters()` / `getSorts()` for queries; `getFilters()` returns the merged array (`getFilters()` + `getData()`) for the frontend.
+
+**Rules:** one `handle()` per Action instance (fresh DI per request); getter names describe what they return (`getTransactionPaginator`, not `getData()`).
+
+## Code conventions
+
+- Action: one public `handle()`, prefer `final`.
+- Write Actions: `handle(User $user, array $validated)` (or model + validated) → return `Model` / `void`.
+- Read-index Actions: `handle(*IndexRequest $request): void` + typed getters; **may** import `App\Http\Requests\{Domain}\*`. Do **not** return `Data\*Result` — getters are the canonical pattern.
+- Action **never** imports `App\Http\Resources\*`.
+- Index filters/sort/page live in `*IndexRequest` (`getFilters()`, `getData()`, `getSorts()`, `Indexable`) — not in `Data/`.
+- UI presentation (`asset()`, `label_key`, front-facing date format) only in Resource or Enum metadata.
+- Integrations: register bindings in `AppServiceProvider`.
+- Tests mirror domains: `tests/Feature/{Domain}/`, `tests/Unit/Data/` or `tests/Unit/Support/{Domain}/`.
+
+## Refactoring PRs
+
+One phase per PR (see `.docs/refactoring.md` §7). Update §10 status when done. Run verification per `wallet-dev-workflow.mdc` (Pint + Sail tests, domain filter).
+
+## Where to put a new file
+
+| Need… | Location |
+|-------|----------|
+| Inertia endpoint | `Http/Controllers/{Domain}/` |
+| Request validation | `Http/Requests/{Domain}/` |
+| JSON props shape | `Http/Resources/{Domain}/` |
+| Inertia index props (getters → Resource mapping) | `Http/Controllers/{Domain}/` |
+| Business operation | `Actions/{Domain}/` |
+| Read list orchestration (`*IndexRequest`, getters) | `Actions/{Domain}/` |
+| Form options / shared DTO | `Data/{Domain}/` |
+| Index filters, sort, pagination | `Http/Requests/{Domain}/` (*IndexRequest) |
+| Domain algorithm | `Support/{Domain}/` |
+| External API | `Integrations/{Name}/` |
+| DB entity | `Models/` |
+| CSV import workflow | `Imports/` |
+| Queue job | `Jobs/` + dispatch from Action/Workflow |
+| HTTP test | `tests/Feature/{Domain}/` |
+| Pure logic test | `tests/Unit/...` |

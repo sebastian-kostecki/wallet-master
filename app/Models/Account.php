@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\AccountType;
 use App\Enums\Bank;
 use Database\Factories\AccountFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,10 +15,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
+ * @property int $id
+ * @property int $user_id
+ * @property int $currency_id
+ * @property string $name
  * @property Bank|null $bank
  * @property AccountType|null $type
  * @property numeric-string $opening_balance
  * @property numeric-string $current_balance
+ * @property Currency $currency
  */
 final class Account extends Model
 {
@@ -26,33 +32,15 @@ final class Account extends Model
 
     use SoftDeletes;
 
+    public static function queryForUser(User $user): Builder
+    {
+        return self::query()
+            ->whereBelongsTo($user)
+            ->with('currency')
+            ->orderBy('name');
+    }
+
     protected $guarded = [];
-
-    public function getBankIconUrlAttribute(): ?string
-    {
-        $bank = $this->bank;
-
-        if ($bank === null) {
-            return null;
-        }
-
-        if ($bank === Bank::Cash) {
-            return null;
-        }
-
-        return asset("icons/banks/{$bank->value}.jpeg");
-    }
-
-    public function getTypeLabelKeyAttribute(): string
-    {
-        $type = $this->type;
-
-        if ($type === null) {
-            return '';
-        }
-
-        return $type->labelKey();
-    }
 
     /**
      * @return array<string, string>

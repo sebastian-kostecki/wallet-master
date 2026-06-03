@@ -3,12 +3,16 @@ import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { ArrowLeftRight, BookOpen, Folder, LayoutGrid, Wallet } from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
-const mainNavItems: NavItem[] = [
+const { transactionsIndexHref } = useTransactionsIndexSearch();
+
+const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
         href: '/dashboard',
@@ -21,10 +25,10 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Transakcje',
-        href: '/transactions',
+        href: transactionsIndexHref.value,
         icon: ArrowLeftRight,
     },
-];
+]);
 
 const footerNavItems: NavItem[] = [
     {

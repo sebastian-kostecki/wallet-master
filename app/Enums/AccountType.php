@@ -13,4 +13,12 @@ enum AccountType: string
     {
         return "accounts.enums.accountType.{$this->value}";
     }
+
+    public function iconName(): string
+    {
+        return match ($this) {
+            self::Checking => 'creditCard',
+            self::Savings => 'piggyBank',
+        };
+    }
 }

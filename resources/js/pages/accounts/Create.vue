@@ -135,7 +135,12 @@ function submit() {
                                         class="h-5 w-5 object-cover"
                                         loading="lazy"
                                     />
-                                    <Icon v-else :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    <Icon
+                                        v-else
+                                        :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'"
+                                        class="h-3.5 w-3.5"
+                                        aria-hidden="true"
+                                    />
                                 </span>
                             </template>
 

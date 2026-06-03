@@ -1,19 +1,20 @@
 <?php
 
-use App\Actions\Imports\CommitImport;
 use App\Enums\AccountType;
 use App\Enums\Bank;
 use App\Events\Imports\ImportEnrichmentTypesenseHit;
 use App\Events\Imports\ImportEnrichmentTypesenseMiss;
 use App\Events\ImportStatusUpdated;
+use App\Imports\BankAdapters\BnpParibasImportAdapter;
+use App\Imports\Workflow\CommitImport;
+use App\Integrations\DescriptionMemory\DescriptionMemoryRepository;
+use App\Integrations\DescriptionMemory\SuggestedFields;
 use App\Jobs\CommitImportJob;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\Import;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Support\DescriptionMemory\DescriptionMemoryRepository;
-use App\Support\DescriptionMemory\SuggestedFields;
 use Database\Seeders\CurrencySeeder;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
@@ -104,11 +105,60 @@ test('job commits valid rows and updates account balance', function () {
     expect($import->rows_failed_validation)->toBe(0);
     expect($account->current_balance)->toBe('187.66');
     expect(Transaction::query()->where('import_id', $import->id)->count())->toBe(2);
+    expect(Transaction::query()->where('import_id', $import->id)->whereColumn('booked_at', 'date')->count())->toBe(2);
 
     Event::assertDispatched(ImportStatusUpdated::class, function (ImportStatusUpdated $event) use ($user, $import): bool {
         return (int) $event->import->id === (int) $import->id
             && (int) $event->import->user_id === (int) $user->id;
     });
+});
+
+test('job uses typ transakcji for BNP rows when opis is empty', function () {
+    Event::fake([ImportStatusUpdated::class]);
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'BNP',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'queued',
+        'mapping' => [
+            'date' => 'Data transakcji',
+            'amount' => 'Kwota',
+            'description' => 'Opis',
+        ],
+        'details' => [
+            'source_file' => "imports/{$user->id}/bnp-opis-fallback.csv",
+            'headers' => ['Data transakcji', 'Kwota', 'Opis', 'Typ transakcji'],
+            'bank' => Bank::BnpParibas->value,
+            'parser' => BnpParibasImportAdapter::class,
+        ],
+    ]);
+
+    Storage::disk('local')->put(
+        data_get($import->details, 'source_file'),
+        "Data transakcji;Kwota;Opis;Typ transakcji\n24-04-2026;-12.34;Coffee shop;\n25-04-2026;100.00;;Przelew przychodzący"
+    );
+
+    app(CommitImportJob::class, ['importId' => $import->id])->handle(app(CommitImport::class));
+
+    $import->refresh();
+
+    expect($import->status)->toBe('committed');
+    expect($import->rows_imported)->toBe(2);
+    expect($import->rows_failed_validation)->toBe(0);
+    expect(Transaction::query()->where('import_id', $import->id)->where('description', 'Coffee shop')->exists())->toBeTrue();
+    expect(Transaction::query()->where('import_id', $import->id)->where('description', 'Przelew przychodzący')->exists())->toBeTrue();
 });
 
 test('job enriches imported transactions via description memory (typesense best-effort)', function () {
@@ -287,6 +337,50 @@ test('job processes both import fixtures', function () {
     expect($mbankImport->rows_imported)->toBeGreaterThan(0);
     expect($bnpImport->status)->toBe('committed');
     expect($bnpImport->rows_imported)->toBe(2);
+});
+
+test('job uses bank captured at upload when account bank is changed before processing', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = createImportWithFixture(
+        $user,
+        $account,
+        'tests/Fixtures/import/bnp-basic.csv',
+        [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+            'subject' => 'subject',
+        ],
+        ['date', 'amount', 'description', 'subject']
+    );
+
+    $import->details = array_merge((array) $import->details, [
+        'bank' => Bank::BnpParibas->value,
+        'parser' => BnpParibasImportAdapter::class,
+    ]);
+    $import->save();
+
+    $account->bank = Bank::MBank;
+    $account->save();
+
+    app(CommitImportJob::class, ['importId' => $import->id])->handle(app(CommitImport::class));
+
+    $import->refresh();
+
+    expect($import->status)->toBe('committed');
+    expect($import->rows_imported)->toBe(2);
 });
 
 test('duplicate commit import job dispatch is deduped while unique lock is held', function () {

@@ -68,10 +68,10 @@
         },
         "adjust": {
             "title": "Ustaw saldo",
-            "description": "Zmiana ustawi saldo bieżące na podaną wartość. Nie zmieniamy historii transakcji.",
+            "description": "Zapisujemy transakcję korekty (deltę potrzebną do osiągnięcia nowego salda) i aktualizujemy saldo bieżące. Nie zmieniamy istniejących transakcji.",
             "newBalanceLabel": "Nowe saldo",
             "newBalancePlaceholder": "np. 1234,56",
-            "confirmLabel": "Rozumiem, że ta operacja nie zmienia historii transakcji.",
+            "confirmLabel": "Rozumiem, że zostanie utworzona transakcja korekty salda.",
             "confirmHint": "Używaj tylko do korekty salda bieżącego."
         },
         "delete": {
@@ -98,11 +98,18 @@
         "cancel": "Anuluj",
         "save": "Zapisz"
     },
+    "advancedSection": {
+        "toggle": "Opcje zaawansowane",
+        "hintDefault": "Dodatkowe ustawienia — zwykle nie są potrzebne."
+    },
     "transactions": {
         "index": {
             "title": "Transakcje",
             "addTransaction": "Dodaj transakcję",
             "addTransfer": "Transfer",
+            "actionsMenu": {
+                "label": "Dodaj"
+            },
             "filters": {
                 "account": {
                     "label": "Konto",
@@ -147,6 +154,9 @@
                 "amount": "Kwota",
                 "actions": "Akcje"
             },
+            "badges": {
+                "adjustment": "Korekta"
+            },
             "readOnly": {
                 "badge": "Tylko odczyt",
                 "deletedAccount": "Usunięte konto",
@@ -167,7 +177,8 @@
             "a11y": {
                 "sortByDate": "Sortuj po dacie",
                 "sortByAmount": "Sortuj po kwocie",
-                "edit": "Edytuj transakcję: {description}"
+                "edit": "Edytuj transakcję: {description}",
+                "showStatementDescription": "Pokaż dane z wyciągu i pełny opis"
             },
             "importPreset": {
                 "label": "Zaimportowane przed chwilą",
@@ -187,6 +198,11 @@
         "edit": {
             "title": "Edytuj transakcję",
             "back": "Wróć",
+            "deleteAction": "Usuń transakcję",
+            "dangerZone": {
+                "title": "Uwaga",
+                "description": "Ta operacja jest nieodwracalna."
+            },
             "hints": {
                 "title": "Informacje",
                 "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
@@ -201,6 +217,9 @@
         "form": {
             "account": "Konto",
             "date": "Data",
+            "booked_at": "Data przypisania do okresu",
+            "advancedDates": "Zaawansowane: okres rozliczeniowy",
+            "advancedDatesHint": "Opcjonalnie ustaw inną datę przypisania do okresu niż data operacji.",
             "amount": "Kwota",
             "description": "Opis",
             "subject": "Nadawca/Odbiorca",
@@ -213,7 +232,16 @@
         "toast": {
             "created": "Transakcja dodana",
             "updated": "Transakcja zaktualizowana",
+            "deleted": "Transakcja usunięta",
             "genericError": "Nie udało się zapisać zmian. Spróbuj ponownie."
+        },
+        "delete": {
+            "action": "Usuń",
+            "iconLabel": "Usuń transakcję: {description}",
+            "title": "Usunąć transakcję?",
+            "description": "Transakcja zostanie trwale usunięta.",
+            "descriptionTransfer": "To jest transfer — usunięcie spowoduje usunięcie dwóch powiązanych transakcji.",
+            "confirm": "Usuń transakcję"
         }
     },
     "transfers": {
@@ -237,8 +265,29 @@
             "submit": "Wykonaj transfer",
             "saving": "Zapisywanie…"
         },
+        "candidates": {
+            "banner": {
+                "title": "{count} możliwych transferów do potwierdzenia",
+                "subtitle": "System dopasował pary transakcji z różnych kont. Potwierdź transfer lub oznacz, że to nie jest przelew wewnętrzny."
+            },
+            "table": {
+                "from": "Z konta",
+                "to": "Na konto",
+                "amount": "Kwota",
+                "dates": "Różnica dat",
+                "dateDelta": "±{days} dni",
+                "actions": "Akcje"
+            },
+            "actions": {
+                "confirm": "Potwierdź transfer",
+                "reject": "To nie transfer"
+            }
+        },
         "toast": {
             "created": "Transfer zapisany.",
+            "candidate_confirmed": "Transfer potwierdzony.",
+            "candidate_rejected": "Para oznaczona jako niebędąca transferem.",
+            "unlinked": "Transfer rozłączony.",
             "genericError": "Nie udało się wykonać transferu. Spróbuj ponownie."
         }
     },
@@ -300,6 +349,36 @@
                 "imported": "Zaimportowano",
                 "duplicates": "Duplikaty",
                 "failed": "Błędne wiersze"
+            }
+        },
+        "failed_rows": {
+            "banner": {
+                "title": "{count} wierszy z importu nie zostało dodanych",
+                "subtitle": "Saldo może być niezgodne z wyciągiem bankowym. Dodaj brakujące transakcje ręcznie lub oznacz jako rozwiązane."
+            },
+            "modal": {
+                "title": "Błędne wiersze z pliku",
+                "hint": "Te wiersze nie wpłynęły na saldo. Dodaj je ręcznie lub sprawdź dane w pliku źródłowym.",
+                "more_on_transactions": "i jeszcze {count} — pełna lista na stronie transakcji."
+            },
+            "table": {
+                "row": "Wiersz",
+                "date": "Data",
+                "amount": "Kwota",
+                "description": "Opis",
+                "reason": "Powód",
+                "actions": "Akcje"
+            },
+            "actions": {
+                "dismiss": "Oznacz jako rozwiązane",
+                "dismiss_all": "Oznacz wszystkie jako rozwiązane"
+            },
+            "reasons": {
+                "missing_fields": "Brak wymaganych pól (data, kwota lub opis)",
+                "invalid_date": "Niepoprawna data",
+                "invalid_amount": "Niepoprawna kwota",
+                "zero_amount": "Kwota równa zero",
+                "invalid_row": "Niepoprawny wiersz"
             }
         }
     },

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Typesense;
 
-use App\Support\Typesense\TypesenseClient;
+use App\Integrations\Typesense\TypesenseClient;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;

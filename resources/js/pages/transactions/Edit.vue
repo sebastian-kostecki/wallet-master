@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
-import FormField from '@/components/forms/FormField.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
+import AdvancedSectionCard from '@/components/forms/AdvancedSectionCard.vue';
+import FormField from '@/components/forms/FormField.vue';
+import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { displayAmount, normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { toast } from 'vue-sonner';
 
 type Account = {
     id: number;
@@ -25,11 +27,14 @@ type Transaction = {
     id: number;
     account_id: number;
     date: string; // YYYY-MM-DD from backend
+    booked_at: string; // YYYY-MM-DD from backend
     amount: string;
+    type?: string;
     description: string;
     subject: string | null;
     import_id: number | null;
     raw_statement_description: string | null;
+    transfer_id: string | null;
 };
 
 const props = defineProps<{
@@ -38,12 +43,7 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const page = usePage() as any;
-const currentSearch = computed(() => {
-    const url = page.url as string;
-    const idx = url.indexOf('?');
-    return idx >= 0 ? url.slice(idx) : '';
-});
+const { transactionsIndexSearch, transactionsIndexHref } = useTransactionsIndexSearch();
 
 function isoToDdMmYyyy(input: string): string {
     const trimmed = input.trim();
@@ -61,7 +61,7 @@ function isoToDdMmYyyy(input: string): string {
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('transactions.index.title'),
-        href: '/transactions',
+        href: transactionsIndexHref.value,
     },
     {
         title: t('transactions.edit.title'),
@@ -75,12 +75,15 @@ const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])
 const form = useForm<{
     account_id: number;
     date: string;
+    booked_at: string;
     amount: string;
     description: string;
     subject: string;
 }>({
     account_id: props.transaction.account_id,
     date: isoToDdMmYyyy(props.transaction.date),
+    booked_at:
+        props.transaction.booked_at === props.transaction.date ? '' : isoToDdMmYyyy(props.transaction.booked_at),
     amount: displayAmount(props.transaction.amount),
     description: props.transaction.description,
     subject: props.transaction.subject ?? '',
@@ -92,17 +95,20 @@ const selectedAccount = computed(() => {
 
 function submit() {
     form.amount = normalizeAmount(form.amount);
-    form.put(route('transactions.update', props.transaction.id), {
+    if ((form.booked_at ?? '').trim() === '') {
+        form.booked_at = form.date;
+    }
+    form.put(route('transactions.update', props.transaction.id) + transactionsIndexSearch.value, {
         onSuccess: () => {},
-        onError: (errors) => {
-            if (Object.keys(errors).length > 0) {
-                return;
-            }
-
-            toast.dismiss();
-            toast.error(t('transactions.toast.genericError'));
-        },
+        onError: () => {},
     });
+}
+
+const deleteDialogOpen = ref(false);
+const deleteProcessing = ref(false);
+
+function onDeleted() {
+    router.visit(transactionsIndexHref.value);
 }
 </script>
 
@@ -110,16 +116,17 @@ function submit() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('transactions.edit.title')" />
 
-        <template #headerActions>
-            <Button variant="secondary" as-child>
-                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
-            </Button>
-        </template>
-
         <div class="flex flex-col gap-6 p-4">
-            <div class="grid gap-6 lg:grid-cols-2">
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <form @submit.prevent="submit" class="grid gap-6" :aria-busy="form.processing ? 'true' : 'false'">
+            <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
+                <div class="flex flex-col gap-6">
+                    <form
+                        id="transaction-edit-form"
+                        class="flex flex-col gap-6"
+                        @submit.prevent="submit"
+                        :aria-busy="form.processing ? 'true' : 'false'"
+                    >
+                        <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                            <div class="grid gap-6">
                         <FormField for-id="account_id" :label="t('transactions.form.account')" :error="form.errors.account_id">
                             <DropdownSelect
                                 id="account_id"
@@ -205,41 +212,81 @@ function submit() {
                             />
                         </FormField>
 
-                        <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
+                            </Button>
+
                             <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
                         </div>
+                            </div>
+                        </div>
+
+                        <AdvancedSectionCard :disabled="form.processing">
+                            <template #title>{{ t('advancedSection.toggle') }}</template>
+                            <template #hint>{{ t('transactions.form.advancedDatesHint') }}</template>
+                            <FormField for-id="booked_at" :label="t('transactions.form.booked_at')" :error="form.errors.booked_at">
+                                <DatePickerInput
+                                    id="booked_at"
+                                    :model-value="form.booked_at"
+                                    :disabled="form.processing"
+                                    @update:model-value="(value) => (form.booked_at = value)"
+                                />
+                            </FormField>
+                        </AdvancedSectionCard>
                     </form>
                 </div>
 
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <h2 class="text-base font-semibold">{{ t('transactions.edit.hints.title') }}</h2>
-                    <div class="mt-3 grid gap-3 text-sm text-muted-foreground">
-                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
-                            {{ t('transactions.edit.hints.scope') }}
-                        </div>
-                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
-                            {{ t('transactions.edit.hints.amount') }}
-                        </div>
-                        <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
-                            {{ t('transactions.edit.hints.save') }}
+                <div class="flex flex-col gap-6">
+                    <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                        <h2 class="text-base font-semibold">{{ t('transactions.edit.hints.title') }}</h2>
+                        <div class="mt-3 grid gap-3 text-sm text-muted-foreground">
+                            <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                                {{ t('transactions.edit.hints.scope') }}
+                            </div>
+                            <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                                {{ t('transactions.edit.hints.amount') }}
+                            </div>
+                            <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
+                                {{ t('transactions.edit.hints.save') }}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div
-                    v-if="transaction.raw_statement_description && transaction.raw_statement_description.trim() !== ''"
-                    class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
-                >
-                    <h2 class="text-base font-semibold">{{ t('transactions.edit.statement.title') }}</h2>
-                    <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.statement.description') }}</p>
-                    <div class="mt-4 rounded-lg border border-sidebar-border/70 bg-muted/20 p-4 text-sm dark:border-sidebar-border">
-                        <p class="whitespace-pre-wrap break-words text-foreground">
-                            {{ transaction.raw_statement_description }}
-                        </p>
+                    <div
+                        v-if="transaction.raw_statement_description && transaction.raw_statement_description.trim() !== ''"
+                        class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
+                    >
+                        <h2 class="text-base font-semibold">{{ t('transactions.edit.statement.title') }}</h2>
+                        <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.statement.description') }}</p>
+                        <div class="mt-4 rounded-lg border border-sidebar-border/70 bg-muted/20 p-4 text-sm dark:border-sidebar-border">
+                            <p class="whitespace-pre-wrap break-words text-foreground">
+                                {{ transaction.raw_statement_description }}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 dark:border-destructive/40 dark:bg-destructive/10">
+                <p class="text-sm font-semibold text-destructive">{{ t('transactions.edit.dangerZone.title') }}</p>
+                <p class="mt-2 text-sm text-muted-foreground">{{ t('transactions.edit.dangerZone.description') }}</p>
+
+                <Button class="mt-4" variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
+                    {{ t('transactions.edit.deleteAction') }}
+                </Button>
+            </div>
         </div>
+
+        <DeleteTransactionDialog
+            v-model:open="deleteDialogOpen"
+            :transaction-id="transaction.id"
+            :description="transaction.description"
+            :is-transfer="Boolean(transaction.transfer_id)"
+            :disabled="deleteProcessing"
+            :return-search="transactionsIndexSearch"
+            @processing="(value: any) => (deleteProcessing = value)"
+            @success="onDeleted"
+        />
     </AppLayout>
 </template>
-

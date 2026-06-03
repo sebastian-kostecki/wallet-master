@@ -68,7 +68,7 @@
         },
         "adjust": {
             "title": "Set balance",
-            "description": "This will set the current balance to the provided value. Transaction history will not be changed.",
+            "description": "This records a balance adjustment transaction (the delta needed to reach the new balance) and updates the current balance. Existing transactions are not modified.",
             "newBalanceLabel": "New balance",
             "newBalancePlaceholder": "e.g. 1234.56",
             "confirmLabel": "I understand this operation does not change transaction history.",
@@ -98,11 +98,18 @@
         "cancel": "Cancel",
         "save": "Save"
     },
+    "advancedSection": {
+        "toggle": "Advanced options",
+        "hintDefault": "Extra settings — rarely needed."
+    },
     "transactions": {
         "index": {
             "title": "Transactions",
             "addTransaction": "Add transaction",
             "addTransfer": "Transfer",
+            "actionsMenu": {
+                "label": "Add"
+            },
             "filters": {
                 "account": {
                     "label": "Account",
@@ -147,6 +154,9 @@
                 "amount": "Amount",
                 "actions": "Actions"
             },
+            "badges": {
+                "adjustment": "Adjustment"
+            },
             "readOnly": {
                 "badge": "Read-only",
                 "deletedAccount": "Deleted account",
@@ -167,7 +177,8 @@
             "a11y": {
                 "sortByDate": "Sort by date",
                 "sortByAmount": "Sort by amount",
-                "edit": "Edit transaction: {description}"
+                "edit": "Edit transaction: {description}",
+                "showStatementDescription": "Show statement data and full description"
             },
             "importPreset": {
                 "label": "Imported just now",
@@ -201,6 +212,9 @@
         "form": {
             "account": "Account",
             "date": "Date",
+            "booked_at": "Booked date",
+            "advancedDates": "Advanced: booking period",
+            "advancedDatesHint": "Optionally assign a booked date that differs from the operation date.",
             "amount": "Amount",
             "description": "Description",
             "subject": "Subject"
@@ -299,6 +313,36 @@
                 "imported": "Imported",
                 "duplicates": "Duplicates",
                 "failed": "Failed rows"
+            }
+        },
+        "failed_rows": {
+            "banner": {
+                "title": "{count} import rows were not added",
+                "subtitle": "Your balance may not match the bank statement. Add missing transactions manually or mark as resolved."
+            },
+            "modal": {
+                "title": "Failed rows from file",
+                "hint": "These rows did not affect your balance. Add them manually or check the source file.",
+                "more_on_transactions": "and {count} more — see the full list on the transactions page."
+            },
+            "table": {
+                "row": "Row",
+                "date": "Date",
+                "amount": "Amount",
+                "description": "Description",
+                "reason": "Reason",
+                "actions": "Actions"
+            },
+            "actions": {
+                "dismiss": "Mark as resolved",
+                "dismiss_all": "Mark all as resolved"
+            },
+            "reasons": {
+                "missing_fields": "Missing required fields (date, amount, or description)",
+                "invalid_date": "Invalid date",
+                "invalid_amount": "Invalid amount",
+                "zero_amount": "Amount is zero",
+                "invalid_row": "Invalid row"
             }
         }
     },

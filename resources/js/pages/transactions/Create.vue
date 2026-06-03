@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
+import AdvancedSectionCard from '@/components/forms/AdvancedSectionCard.vue';
 import FormField from '@/components/forms/FormField.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { toast } from 'vue-sonner';
 
 type Account = {
     id: number;
@@ -26,17 +27,12 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-const page = usePage() as any;
-const currentSearch = computed(() => {
-    const url = page.url as string;
-    const idx = url.indexOf('?');
-    return idx >= 0 ? url.slice(idx) : '';
-});
+const { transactionsIndexSearch, transactionsIndexHref } = useTransactionsIndexSearch();
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('transactions.index.title'),
-        href: '/transactions',
+        href: transactionsIndexHref.value,
     },
     {
         title: t('transactions.create.title'),
@@ -50,12 +46,14 @@ const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])
 const form = useForm<{
     account_id: number | null;
     date: string;
+    booked_at: string;
     amount: string;
     description: string;
     subject: string;
 }>({
     account_id: props.accounts[0]?.id ?? null,
     date: todayDdMmYyyy(),
+    booked_at: '',
     amount: '0,00',
     description: '',
     subject: '',
@@ -97,16 +95,12 @@ function applyAmountSign(amount: string): string {
 function submit() {
     form.amount = normalizeAmount(form.amount);
     form.amount = applyAmountSign(form.amount);
-    form.post(route('transactions.store'), {
+    if ((form.booked_at ?? '').trim() === '') {
+        form.booked_at = form.date;
+    }
+    form.post(route('transactions.store') + transactionsIndexSearch.value, {
         onSuccess: () => {},
-        onError: (errors) => {
-            if (Object.keys(errors).length > 0) {
-                return;
-            }
-
-            toast.dismiss();
-            toast.error(t('transactions.toast.genericError'));
-        },
+        onError: () => {},
     });
 }
 </script>
@@ -115,16 +109,17 @@ function submit() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('transactions.create.title')" />
 
-        <template #headerActions>
-            <Button variant="secondary" as-child>
-                <Link :href="route('transactions.index') + currentSearch">{{ t('actions.cancel') }}</Link>
-            </Button>
-        </template>
-
         <div class="flex flex-col gap-6 p-4">
-            <div class="grid gap-6 lg:grid-cols-2">
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <form @submit.prevent="submit" class="grid gap-6" :aria-busy="form.processing ? 'true' : 'false'">
+            <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
+                <div class="flex flex-col gap-6">
+                    <form
+                        id="transaction-form"
+                        class="flex flex-col gap-6"
+                        @submit.prevent="submit"
+                        :aria-busy="form.processing ? 'true' : 'false'"
+                    >
+                        <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                            <div class="grid gap-6">
                         <div class="grid gap-2">
                             <span class="text-sm font-medium">{{ t('transactions.form.type') }}</span>
                             <div class="grid grid-cols-2 gap-1 rounded-lg border border-input bg-muted/30 p-1">
@@ -236,9 +231,28 @@ function submit() {
                             />
                         </FormField>
 
-                        <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
+                            </Button>
+
                             <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
                         </div>
+                            </div>
+                        </div>
+
+                        <AdvancedSectionCard :disabled="form.processing">
+                            <template #title>{{ t('advancedSection.toggle') }}</template>
+                            <template #hint>{{ t('transactions.form.advancedDatesHint') }}</template>
+                            <FormField for-id="booked_at" :label="t('transactions.form.booked_at')" :error="form.errors.booked_at">
+                                <DatePickerInput
+                                    id="booked_at"
+                                    :model-value="form.booked_at"
+                                    :disabled="form.processing"
+                                    @update:model-value="(value) => (form.booked_at = value)"
+                                />
+                            </FormField>
+                        </AdvancedSectionCard>
                     </form>
                 </div>
 
