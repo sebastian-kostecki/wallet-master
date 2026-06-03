@@ -98,6 +98,59 @@
         "cancel": "Anuluj",
         "save": "Zapisz"
     },
+    "auth": {
+        "fields": {
+            "email": {
+                "label": "Adres e-mail",
+                "placeholder": "np. jan@example.com"
+            },
+            "password": {
+                "label": "Hasło",
+                "placeholder": "Hasło"
+            },
+            "passwordConfirmation": {
+                "label": "Potwierdź hasło",
+                "placeholder": "Powtórz hasło"
+            },
+            "name": {
+                "label": "Imię i nazwisko",
+                "placeholder": "Jan Kowalski"
+            }
+        },
+        "submitLoading": "Przetwarzanie…",
+        "login": {
+            "title": "Zaloguj się",
+            "description": "Wpisz adres e-mail i hasło, aby się zalogować",
+            "headTitle": "Logowanie",
+            "remember": "Zapamiętaj mnie",
+            "forgotPassword": "Nie pamiętasz hasła?",
+            "submit": "Zaloguj się",
+            "noAccount": "Nie masz konta?",
+            "signUp": "Zarejestruj się"
+        },
+        "register": {
+            "title": "Utwórz konto",
+            "description": "Wpisz dane, aby utworzyć konto",
+            "headTitle": "Rejestracja",
+            "submit": "Utwórz konto",
+            "hasAccount": "Masz już konto?",
+            "logIn": "Zaloguj się"
+        },
+        "forgotPassword": {
+            "title": "Przypomnienie hasła",
+            "description": "Wpisz adres e-mail, aby otrzymać link do resetu hasła",
+            "headTitle": "Przypomnienie hasła",
+            "submit": "Wyślij link do resetu hasła",
+            "returnPrefix": "Lub wróć do",
+            "logIn": "logowania"
+        },
+        "resetPassword": {
+            "title": "Reset hasła",
+            "description": "Wpisz nowe hasło poniżej",
+            "headTitle": "Reset hasła",
+            "submit": "Zresetuj hasło"
+        }
+    },
     "advancedSection": {
         "toggle": "Opcje zaawansowane",
         "hintDefault": "Dodatkowe ustawienia — zwykle nie są potrzebne."

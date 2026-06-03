@@ -98,6 +98,59 @@
         "cancel": "Cancel",
         "save": "Save"
     },
+    "auth": {
+        "fields": {
+            "email": {
+                "label": "Email address",
+                "placeholder": "email@example.com"
+            },
+            "password": {
+                "label": "Password",
+                "placeholder": "Password"
+            },
+            "passwordConfirmation": {
+                "label": "Confirm password",
+                "placeholder": "Confirm password"
+            },
+            "name": {
+                "label": "Name",
+                "placeholder": "Full name"
+            }
+        },
+        "submitLoading": "Processing…",
+        "login": {
+            "title": "Log in to your account",
+            "description": "Enter your email and password below to log in",
+            "headTitle": "Log in",
+            "remember": "Remember me",
+            "forgotPassword": "Forgot password?",
+            "submit": "Log in",
+            "noAccount": "Don't have an account?",
+            "signUp": "Sign up"
+        },
+        "register": {
+            "title": "Create an account",
+            "description": "Enter your details below to create your account",
+            "headTitle": "Register",
+            "submit": "Create account",
+            "hasAccount": "Already have an account?",
+            "logIn": "Log in"
+        },
+        "forgotPassword": {
+            "title": "Forgot password",
+            "description": "Enter your email to receive a password reset link",
+            "headTitle": "Forgot password",
+            "submit": "Email password reset link",
+            "returnPrefix": "Or, return to",
+            "logIn": "log in"
+        },
+        "resetPassword": {
+            "title": "Reset password",
+            "description": "Please enter your new password below",
+            "headTitle": "Reset password",
+            "submit": "Reset password"
+        }
+    },
     "advancedSection": {
         "toggle": "Advanced options",
         "hintDefault": "Extra settings — rarely needed."
