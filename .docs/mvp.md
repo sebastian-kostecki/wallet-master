@@ -1,5 +1,7 @@
 # MVP — Wallet Master (wave 1, skrót)
 
+> **Deprecated:** Kanoniczne wymagania produktowe — `.docs/prd.md`. Ten plik nie jest utrzymywany.
+
 > **Canonical source:** Szczegóły wymagań, AC i NFR — `.docs/prd.md`.  
 > Ten plik opisuje **minimalny zestaw funkcjonalności (wave 1)** i kryteria sukcesu w skrócie. W razie rozbieżności obowiązuje PRD.
 
