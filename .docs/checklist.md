@@ -11,11 +11,11 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 0) Uruchomienie projektu / baseline
-- [ ] Uruchom aplikację lokalnie (Sail albo `composer run dev`) i potwierdź, że Inertia + Vue działa.
-- [ ] Ustal konwencję nazw: “Transakcja” (UI) / `Transaction` (model/tabela) / “Konto” / `Account`.
-- [ ] Ustal formaty prezentacji:
-  - [ ] Data prezentowana jako **DD-MM-YYYY**
-  - [ ] Kwoty formatowane pod PL (przecinek dziesiętny w UI)
+- [ ] Uruchom aplikację lokalnie: `./vendor/bin/sail up -d`, `./vendor/bin/sail npm run dev` — smoke: login → `/accounts` → `/transactions` (Inertia bez błędów w konsoli).
+- [x] Konwencja nazw w UI: „Transakcja” / „Konto” (zgodne z PRD i `pl.json`).
+- [x] Formaty prezentacji w UI:
+  - [x] Data **DD-MM-YYYY** (DatePicker, lista transakcji)
+  - [x] Kwoty PL (locale `pl`, separatory w Resource/Vue)
 
 ---
 
@@ -288,21 +288,21 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [ ] partial import przy błędzie krytycznym w jobie
 
 #### 10.2 Manual QA (minimum)
-- [ ] “Happy path” rejestracja → konto → transakcja → filtr → import → transfer.
-- [ ] Import: plik z samymi duplikatami → komunikat i `rows_imported=0`.
-- [ ] Usunięte konto:
-  - [ ] transakcje widoczne
-  - [ ] brak możliwości edycji/usuwania
-  - [ ] brak możliwości importu/transferu
+
+Środowisko: `./vendor/bin/sail up -d`, `./vendor/bin/sail npm run dev`, URL z `.env` (`APP_URL`, zwykle `http://localhost`).
+
+- [ ] **Happy path:** rejestracja → nowe konto → transakcja ręczna → lista z filtrem dat/konta → import CSV (ten sam bank co konto) → transfer między kontami. Toasty sukcesu, brak błędów w konsoli przeglądarki.
+- [ ] **Import samych duplikatów:** zaimportuj plik, potem **ten sam** plik ponownie → toast/komunikat o duplikatach, `rows_imported=0` (w UI licznik importu; potwierdzone testem `CommitImportAllDuplicatesTest`).
+- [ ] **Usunięte konto:** usuń konto z transakcjami → transakcje nadal na liście (filtr „wszystkie konta” / konto w tabeli) → edycja/usunięcie transakcji zablokowane → import i transfer na to konto zablokowane (patrz też testy `Transaction*Test`, `ImportUploadTest`, `AccountActiveMiddlewareTest`).
 
 ---
 
 ### 11) Quality gates przed merge
 - [x] `vendor/bin/pint --dirty --format agent`
 - [x] `php artisan test --compact` (uruchomić testy dotknięte zmianami)
-- [ ] `vendor/bin/phpstan analyse` (Larastan) bez nowych ostrzeżeń
-- [ ] `npm run lint` + `npm run format` (jeśli dotyczy)
-- [ ] Brak logowania wrażliwych danych importu w produkcji (przegląd logów/handlerów).
+- [ ] `vendor/bin/phpstan analyse` (Larastan) bez nowych ostrzeżeń — `./vendor/bin/sail php ./vendor/bin/phpstan analyse` (19 błędów w baseline repo, głównie sprzed NFR)
+- [x] `npm run lint` + `npm run format` (jeśli dotyczy)
+- [x] Brak logowania wrażliwych danych importu w produkcji (przegląd logów/handlerów) — `CommitImport` loguje `description_raw` max 80 znaków na `debug`; telemetria bez pełnych wierszy pliku
 
 ---
 
