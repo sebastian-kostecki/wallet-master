@@ -25,7 +25,22 @@ final class Import extends Model
     /** @use HasFactory<ImportFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'user_id',
+        'account_id',
+        'status',
+        'rows_total',
+        'rows_imported',
+        'rows_skipped_duplicate',
+        'rows_failed_validation',
+        'mapping',
+        'details',
+        'error_summary',
+        'committed_at',
+    ];
 
     /**
      * @return array<string, string>

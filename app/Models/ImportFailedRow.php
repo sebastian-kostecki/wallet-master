@@ -21,7 +21,21 @@ final class ImportFailedRow extends Model
     /** @use HasFactory<ImportFailedRowFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'import_id',
+        'user_id',
+        'account_id',
+        'row_number',
+        'reason_code',
+        'date_raw',
+        'amount_raw',
+        'description_raw',
+        'subject_raw',
+        'dismissed_at',
+    ];
 
     /**
      * @return array<string, string>
