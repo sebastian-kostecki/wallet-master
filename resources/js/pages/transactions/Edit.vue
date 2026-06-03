@@ -38,12 +38,14 @@ type Transaction = {
     raw_statement_description: string | null;
     transfer_id: string | null;
     category_id: number;
+    goal_id: number | null;
 };
 
 const props = defineProps<{
     transaction: Transaction;
     accounts: Account[];
     categories: CategoryOption[];
+    goals: { id: number; name: string }[];
 }>();
 
 const { t } = useI18n();
@@ -85,9 +87,18 @@ const categoryOptions = computed<DropdownOption<number>[]>(() =>
     })),
 );
 
+const goalOptions = computed<DropdownOption<number | null>[]>(() => [
+    { value: null, label: t('transactions.fields.goalNone') },
+    ...props.goals.map((g) => ({
+        value: g.id,
+        label: g.name,
+    })),
+]);
+
 const form = useForm<{
     account_id: number;
     category_id: number;
+    goal_id: number | null;
     date: string;
     booked_at: string;
     amount: string;
@@ -96,6 +107,7 @@ const form = useForm<{
 }>({
     account_id: props.transaction.account_id,
     category_id: props.transaction.category_id,
+    goal_id: props.transaction.goal_id,
     date: isoToDdMmYyyy(props.transaction.date),
     booked_at: props.transaction.booked_at === props.transaction.date ? '' : isoToDdMmYyyy(props.transaction.booked_at),
     amount: displayAmount(props.transaction.amount),
@@ -249,6 +261,21 @@ function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, in
                                             :placeholder="t('transactions.fields.category')"
                                             :disabled="form.processing || categoryOptions.length === 0"
                                             @update:model-value="(value) => (form.category_id = value)"
+                                        />
+                                    </template>
+                                </FormField>
+
+                                <FormField for-id="goal_id" :label="t('transactions.fields.goal')" :error="form.errors.goal_id">
+                                    <template #default="{ errorId, hasError }">
+                                        <DropdownSelect
+                                            id="goal_id"
+                                            :aria-invalid="hasError"
+                                            :aria-describedby="hasError ? errorId : undefined"
+                                            :model-value="form.goal_id"
+                                            :options="goalOptions"
+                                            :placeholder="t('transactions.fields.goal')"
+                                            :disabled="form.processing || goalOptions.length <= 1"
+                                            @update:model-value="(value) => (form.goal_id = value)"
                                         />
                                     </template>
                                 </FormField>

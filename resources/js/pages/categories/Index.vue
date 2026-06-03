@@ -17,12 +17,10 @@ type Category = {
     type_label_key: string;
     sort_order: number;
     is_system: boolean;
-    annual_estimate_amount: string | null;
 };
 
 const props = defineProps<{
     categories: Category[];
-    year: number;
 }>();
 
 const { t } = useI18n();
@@ -77,13 +75,6 @@ function saveName(cat: Category) {
     });
 }
 
-function saveAnnualEstimate(cat: Category, rawValue: string) {
-    const trimmed = rawValue.trim();
-    const amount = trimmed === '' ? null : trimmed.replace(',', '.');
-
-    router.patch(route('categories.estimates.annual', cat.id), { year: props.year, amount }, { preserveScroll: true });
-}
-
 function deleteCategory(cat: Category) {
     if (!window.confirm(t('categories.index.deleteConfirm', { name: cat.name }))) {
         return;
@@ -112,10 +103,6 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
         },
     );
 }
-
-function changeYear(delta: number) {
-    router.get(route('categories.index', { year: props.year + delta }), {}, { preserveScroll: true });
-}
 </script>
 
 <template>
@@ -127,11 +114,6 @@ function changeYear(delta: number) {
                 <Button variant="outline" as-child>
                     <Link :href="route('budget.monthly')">{{ t('budget.nav') }}</Link>
                 </Button>
-                <div class="flex items-center gap-2">
-                    <Button variant="outline" @click="changeYear(-1)">←</Button>
-                    <span class="text-sm font-medium">{{ year }}</span>
-                    <Button variant="outline" @click="changeYear(1)">→</Button>
-                </div>
             </div>
 
             <form
@@ -167,64 +149,48 @@ function changeYear(delta: number) {
                         :key="cat.id"
                         class="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                     >
-                        <div class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                            <div class="flex min-w-0 items-center gap-2">
-                                <div class="flex shrink-0 flex-col gap-0.5">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        class="h-6 w-6"
-                                        type="button"
-                                        :disabled="index === 0"
-                                        :aria-label="t('categories.index.moveUp')"
-                                        @click="moveCategory(cat, 'up', sectionCategories)"
-                                    >
-                                        <ArrowUp class="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        class="h-6 w-6"
-                                        type="button"
-                                        :disabled="index === sectionCategories.length - 1"
-                                        :aria-label="t('categories.index.moveDown')"
-                                        @click="moveCategory(cat, 'down', sectionCategories)"
-                                    >
-                                        <ArrowDown class="h-3 w-3" />
-                                    </Button>
-                                </div>
-
-                                <div v-if="editingId === cat.id" class="flex min-w-0 flex-1 items-center gap-2">
-                                    <Input v-model="editingName" class="h-8" @keyup.enter="saveName(cat)" @keyup.escape="cancelEdit" />
-                                    <Button size="sm" type="button" @click="saveName(cat)">{{ t('actions.save') }}</Button>
-                                    <Button size="sm" variant="ghost" type="button" @click="cancelEdit">{{ t('actions.cancel') }}</Button>
-                                </div>
-                                <button
-                                    v-else
+                        <div class="flex min-w-0 flex-1 items-center gap-2">
+                            <div class="flex shrink-0 flex-col gap-0.5">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-6 w-6"
                                     type="button"
-                                    class="truncate text-left font-medium hover:underline"
-                                    @click="startEdit(cat)"
+                                    :disabled="index === 0"
+                                    :aria-label="t('categories.index.moveUp')"
+                                    @click="moveCategory(cat, 'up', sectionCategories)"
                                 >
-                                    {{ cat.name }}
-                                    <span v-if="cat.is_system" class="ml-1 text-xs font-normal text-muted-foreground">
-                                        ({{ t('categories.index.system') }})
-                                    </span>
-                                </button>
+                                    <ArrowUp class="h-3 w-3" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-6 w-6"
+                                    type="button"
+                                    :disabled="index === sectionCategories.length - 1"
+                                    :aria-label="t('categories.index.moveDown')"
+                                    @click="moveCategory(cat, 'down', sectionCategories)"
+                                >
+                                    <ArrowDown class="h-3 w-3" />
+                                </Button>
                             </div>
 
-                            <div class="flex items-center gap-2 sm:w-48">
-                                <label class="sr-only" :for="`annual-${cat.id}`">{{ t('categories.index.annualEstimate') }}</label>
-                                <Input
-                                    :id="`annual-${cat.id}`"
-                                    :key="`${year}-${cat.id}-${cat.annual_estimate_amount ?? ''}`"
-                                    type="text"
-                                    inputmode="decimal"
-                                    class="h-8 tabular-nums"
-                                    :placeholder="t('categories.index.annualEstimatePlaceholder')"
-                                    :default-value="cat.annual_estimate_amount ?? ''"
-                                    @blur="(e) => saveAnnualEstimate(cat, (e.target as HTMLInputElement).value)"
-                                />
+                            <div v-if="editingId === cat.id" class="flex min-w-0 flex-1 items-center gap-2">
+                                <Input v-model="editingName" class="h-8" @keyup.enter="saveName(cat)" @keyup.escape="cancelEdit" />
+                                <Button size="sm" type="button" @click="saveName(cat)">{{ t('actions.save') }}</Button>
+                                <Button size="sm" variant="ghost" type="button" @click="cancelEdit">{{ t('actions.cancel') }}</Button>
                             </div>
+                            <button
+                                v-else
+                                type="button"
+                                class="truncate text-left font-medium hover:underline"
+                                @click="startEdit(cat)"
+                            >
+                                {{ cat.name }}
+                                <span v-if="cat.is_system" class="ml-1 text-xs font-normal text-muted-foreground">
+                                    ({{ t('categories.index.system') }})
+                                </span>
+                            </button>
                         </div>
 
                         <Button

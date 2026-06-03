@@ -8,6 +8,8 @@ use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
 use App\Models\Currency;
+use App\Models\Goal;
+use App\Models\GoalMonthlyEstimate;
 use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
@@ -71,10 +73,19 @@ test('monthly budget uses monthly override when set', function () {
     );
 });
 
-test('monthly budget transfers section sums savings account credits', function () {
+test('monthly budget goal row tracks save and release on savings account', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     ensureUserCategories($user);
+
+    $goal = Goal::factory()->create(['user_id' => $user->id, 'name' => 'Wakacje']);
+
+    GoalMonthlyEstimate::query()->create([
+        'goal_id' => $goal->id,
+        'year' => 2026,
+        'month' => 3,
+        'amount' => 500,
+    ]);
 
     $checking = Account::query()->create([
         'user_id' => $user->id,
@@ -101,20 +112,14 @@ test('monthly budget transfers section sums savings account credits', function (
         ->where('name', 'Oszczędności')
         ->firstOrFail();
 
-    CategoryMonthlyEstimate::query()->create([
-        'category_id' => $savingsCategory->id,
-        'year' => 2026,
-        'month' => 3,
-        'amount' => 500,
-    ]);
-
-    $transferId = 'monthly-transfer-uuid';
+    $saveTransferId = 'monthly-save-transfer-uuid';
 
     Transaction::query()->create([
         'user_id' => $user->id,
         'account_id' => $checking->id,
         'currency_id' => $plnId,
         'category_id' => $savingsCategory->id,
+        'goal_id' => $goal->id,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '-200.00',
@@ -122,7 +127,7 @@ test('monthly budget transfers section sums savings account credits', function (
         'description' => 'To savings',
         'normalized_description' => 'to savings',
         'dedupe_hash' => md5('xfer-out', true),
-        'transfer_id' => $transferId,
+        'transfer_id' => $saveTransferId,
     ]);
 
     Transaction::query()->create([
@@ -130,6 +135,7 @@ test('monthly budget transfers section sums savings account credits', function (
         'account_id' => $savings->id,
         'currency_id' => $plnId,
         'category_id' => $savingsCategory->id,
+        'goal_id' => $goal->id,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '200.00',
@@ -137,15 +143,51 @@ test('monthly budget transfers section sums savings account credits', function (
         'description' => 'To savings',
         'normalized_description' => 'to savings',
         'dedupe_hash' => md5('xfer-in', true),
-        'transfer_id' => $transferId,
+        'transfer_id' => $saveTransferId,
+    ]);
+
+    $releaseTransferId = 'monthly-release-transfer-uuid';
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $savings->id,
+        'currency_id' => $plnId,
+        'category_id' => $savingsCategory->id,
+        'goal_id' => $goal->id,
+        'date' => '2026-03-15',
+        'booked_at' => '2026-03-15',
+        'amount' => '-150.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'From savings',
+        'normalized_description' => 'from savings',
+        'dedupe_hash' => md5('xfer-out-release', true),
+        'transfer_id' => $releaseTransferId,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $checking->id,
+        'currency_id' => $plnId,
+        'category_id' => $savingsCategory->id,
+        'goal_id' => $goal->id,
+        'date' => '2026-03-15',
+        'booked_at' => '2026-03-15',
+        'amount' => '150.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'From savings',
+        'normalized_description' => 'from savings',
+        'dedupe_hash' => md5('xfer-in-release', true),
+        'transfer_id' => $releaseTransferId,
     ]);
 
     $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
-        ->where('transfers_summary.plan', '500.00')
-        ->where('transfers_summary.actual', '200.00')
-        ->where('transfers_summary.difference', '-300.00')
+        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['monthly_plan'] === '500.00')
+        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['saved'] === '200.00')
+        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['released'] === '150.00')
+        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['balance'] === '50.00')
+        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['linked_expenses'] === '0.00')
     );
 });

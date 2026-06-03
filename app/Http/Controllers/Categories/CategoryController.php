@@ -31,15 +31,9 @@ final class CategoryController extends Controller
 
     public function index(Request $request, ListCategories $listCategories): Response
     {
-        $year = (int) $request->query('year', (string) now()->year);
-        if ($year < 2000 || $year > 2100) {
-            $year = (int) now()->year;
-        }
-
-        $listCategories->handle($request->user(), $year);
+        $listCategories->handle($request->user());
 
         return Inertia::render('categories/Index', [
-            'year' => $year,
             'categories' => CategoryResource::collection($listCategories->getCategories())->resolve(),
         ]);
     }

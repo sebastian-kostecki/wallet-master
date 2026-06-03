@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Transfers;
 
 use App\Actions\Categories\ListCategories;
+use App\Actions\Goals\ListGoals;
 use App\Actions\Transfers\CreateTransfer;
 use App\Actions\Transfers\UnlinkTransfer;
 use App\Events\TransferCreated;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Transfers\StoreTransferRequest;
 use App\Http\Resources\Accounts\AccountResource;
 use App\Http\Resources\Categories\CategoryResource;
+use App\Http\Resources\Goals\GoalResource;
 use App\Models\Account;
 use App\Models\Category;
 use App\Support\Transactions\TransactionsIndexQuery;
@@ -20,7 +22,7 @@ use Inertia\Response;
 
 final class TransferController extends Controller
 {
-    public function create(Request $request, ListCategories $listCategories): Response
+    public function create(Request $request, ListCategories $listCategories, ListGoals $listGoals): Response
     {
         $accounts = AccountResource::collection(
             Account::query()
@@ -33,6 +35,9 @@ final class TransferController extends Controller
         $listCategories->handle($request->user());
         $categories = $listCategories->getCategories();
 
+        $listGoals->handle($request->user());
+        $goals = $listGoals->getGoals();
+
         $defaultCategoryId = $categories->first(
             fn (Category $c): bool => $c->is_system && $c->name === 'Oszczędności',
         )?->id ?? $categories->first()?->id;
@@ -40,6 +45,7 @@ final class TransferController extends Controller
         return Inertia::render('transfers/Create', [
             'accounts' => $accounts,
             'categories' => CategoryResource::collection($categories)->resolve(),
+            'goals' => GoalResource::collection($goals)->resolve(),
             'default_category_id' => $defaultCategoryId,
         ]);
     }

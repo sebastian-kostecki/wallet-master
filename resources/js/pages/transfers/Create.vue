@@ -11,7 +11,7 @@ import { filterCategoriesByType, firstCategoryId, type CategoryOption } from '@/
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type Account = {
@@ -19,13 +19,20 @@ type Account = {
     name: string;
     currency_id: number;
     bank: string;
+    type: string;
     is_deleted: boolean;
     bank_icon_url: string | null;
+};
+
+type GoalOption = {
+    id: number;
+    name: string;
 };
 
 const props = defineProps<{
     accounts: Account[];
     categories: CategoryOption[];
+    goals: GoalOption[];
     default_category_id: number | null;
 }>();
 
@@ -76,10 +83,18 @@ const categoryOptions = computed<DropdownOption<number>[]>(() =>
     })),
 );
 
+const goalOptions = computed<DropdownOption<number>[]>(() =>
+    props.goals.map((g) => ({
+        value: g.id,
+        label: g.name,
+    })),
+);
+
 const form = useForm<{
     from_account_id: number | null;
     to_account_id: number | null;
     category_id: number | null;
+    goal_id: number | null;
     date: string;
     amount: string;
     subject: string;
@@ -88,6 +103,7 @@ const form = useForm<{
     from_account_id: defaultFromId.value,
     to_account_id: defaultToId.value,
     category_id: props.default_category_id ?? firstCategoryId(transferCategories.value),
+    goal_id: null,
     date: todayDdMmYyyy(),
     amount: '0,00',
     subject: '',
@@ -100,6 +116,19 @@ const fromAccount = computed(() => (form.from_account_id !== null ? (accountsByI
 const toAccount = computed(() => (form.to_account_id !== null ? (accountsById.value.get(form.to_account_id) ?? null) : null));
 
 const isSameAccount = computed(() => form.from_account_id !== null && form.to_account_id !== null && form.from_account_id === form.to_account_id);
+
+const involvesSavings = computed(() => {
+    const from = form.from_account_id !== null ? (accountsById.value.get(form.from_account_id) ?? null) : null;
+    const to = form.to_account_id !== null ? (accountsById.value.get(form.to_account_id) ?? null) : null;
+
+    return from?.type === 'Savings' || to?.type === 'Savings';
+});
+
+watch(involvesSavings, (value) => {
+    if (!value) {
+        form.goal_id = null;
+    }
+});
 
 function submit() {
     if (!canTransfer.value) {
@@ -289,6 +318,26 @@ function submit() {
                                     :aria-invalid="hasError"
                                     :aria-describedby="hasError ? errorId : undefined"
                                     @update:model-value="(value) => (form.category_id = value)"
+                                />
+                            </template>
+                        </FormField>
+
+                        <FormField
+                            v-if="involvesSavings"
+                            for-id="goal_id"
+                            :label="t('transfers.form.goal')"
+                            :error="form.errors.goal_id"
+                        >
+                            <template #default="{ errorId, hasError }">
+                                <DropdownSelect
+                                    id="goal_id"
+                                    :model-value="form.goal_id"
+                                    :options="goalOptions"
+                                    :placeholder="t('transfers.form.goalPlaceholder')"
+                                    :disabled="form.processing"
+                                    :aria-invalid="hasError"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                    @update:model-value="(value) => (form.goal_id = value)"
                                 />
                             </template>
                         </FormField>

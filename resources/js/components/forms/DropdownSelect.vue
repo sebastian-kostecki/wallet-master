@@ -1,10 +1,10 @@
-<script setup lang="ts" generic="TValue extends string | number">
+<script setup lang="ts" generic="TValue extends string | number | null">
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Check, ChevronDown } from 'lucide-vue-next';
 import { computed } from 'vue';
 
-export type DropdownOption<TValue extends string | number> = {
+export type DropdownOption<TValue extends string | number | null> = {
     value: TValue;
     label: string;
     disabled?: boolean;
@@ -31,7 +31,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-    'update:modelValue': [value: TValue];
+    'update:modelValue': [value: TValue | null];
 }>();
 
 const selected = computed(() => {
@@ -70,7 +70,7 @@ const triggerClass = computed(() => {
         <DropdownMenuContent align="start" class="w-[--radix-dropdown-menu-trigger-width] min-w-56">
             <DropdownMenuItem
                 v-for="option in props.options"
-                :key="String(option.value)"
+                :key="option.value === null ? '__null__' : String(option.value)"
                 class="cursor-pointer justify-between"
                 :disabled="Boolean(option.disabled)"
                 @select="() => emit('update:modelValue', option.value)"

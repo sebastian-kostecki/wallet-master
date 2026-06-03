@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Transactions;
 
 use App\Actions\Categories\ListCategories;
+use App\Actions\Goals\ListGoals;
 use App\Actions\Transactions\DeleteTransaction;
 use App\Actions\Transactions\ListTransactions;
 use App\Actions\Transactions\StoreTransaction;
@@ -13,6 +14,7 @@ use App\Http\Requests\Transactions\TransactionIndexRequest;
 use App\Http\Requests\Transactions\UpdateTransactionRequest;
 use App\Http\Resources\Accounts\AccountResource;
 use App\Http\Resources\Categories\CategoryResource;
+use App\Http\Resources\Goals\GoalResource;
 use App\Http\Resources\Imports\ImportFailedRowResource;
 use App\Http\Resources\Transactions\TransactionEditResource;
 use App\Http\Resources\Transactions\TransactionResource;
@@ -58,14 +60,16 @@ final class TransactionController extends Controller
         ]);
     }
 
-    public function create(Request $request, ListCategories $listCategories): Response
+    public function create(Request $request, ListCategories $listCategories, ListGoals $listGoals): Response
     {
         $accounts = Account::queryForUser($request->user())->get();
         $listCategories->handle($request->user());
+        $listGoals->handle($request->user());
 
         return Inertia::render('transactions/Create', [
             'accounts' => AccountResource::collection($accounts)->resolve(),
             'categories' => CategoryResource::collection($listCategories->getCategories())->resolve(),
+            'goals' => GoalResource::collection($listGoals->getGoals())->resolve(),
         ]);
     }
 
@@ -82,16 +86,18 @@ final class TransactionController extends Controller
         ]);
     }
 
-    public function edit(Transaction $transaction, Request $request, ListCategories $listCategories): Response
+    public function edit(Transaction $transaction, Request $request, ListCategories $listCategories, ListGoals $listGoals): Response
     {
         $transaction->loadMissing(['account:id,name', 'currency:id,code,symbol,precision']);
         $accounts = Account::queryForUser($request->user())->get();
         $listCategories->handle($request->user());
+        $listGoals->handle($request->user());
 
         return Inertia::render('transactions/Edit', [
             'transaction' => new TransactionEditResource($transaction)->resolve(),
             'accounts' => AccountResource::collection($accounts)->resolve(),
             'categories' => CategoryResource::collection($listCategories->getCategories())->resolve(),
+            'goals' => GoalResource::collection($listGoals->getGoals())->resolve(),
         ]);
     }
 

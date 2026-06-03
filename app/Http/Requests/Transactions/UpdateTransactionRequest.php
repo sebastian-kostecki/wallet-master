@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Transactions;
 
 use App\Http\Requests\Concerns\ValidatesCategoryId;
+use App\Http\Requests\Concerns\ValidatesGoalId;
 use App\Models\Transaction;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -11,6 +12,7 @@ use Illuminate\Validation\Validator;
 final class UpdateTransactionRequest extends FormRequest
 {
     use ValidatesCategoryId;
+    use ValidatesGoalId;
 
     public function authorize(): bool
     {
@@ -51,6 +53,7 @@ final class UpdateTransactionRequest extends FormRequest
             'description' => ['required', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
             ...$this->categoryIdRules(),
+            ...$this->optionalGoalIdRules(),
         ];
     }
 
@@ -68,6 +71,7 @@ final class UpdateTransactionRequest extends FormRequest
      *   description: string,
      *   subject?: ?string,
      *   category_id: int,
+     *   goal_id?: ?int,
      * }
      */
     public function validated($key = null, $default = null): array

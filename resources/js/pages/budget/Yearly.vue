@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -37,6 +38,23 @@ function formatMoney(value: string | null) {
     }
     const n = Number(value);
     return Number.isNaN(n) ? value : money.format(n);
+}
+
+function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
+    const trimmed = rawValue.trim();
+    const normalized = trimmed.replace(',', '.');
+    const current = row.annual_plan ?? '';
+
+    if (normalized === current || (normalized === '' && current === '')) {
+        return;
+    }
+
+    const amount = trimmed === '' ? null : normalized;
+
+    router.patch(route('categories.estimates.annual', row.category_id), {
+        year: props.year,
+        amount,
+    }, { preserveScroll: true });
 }
 </script>
 
@@ -76,7 +94,21 @@ function formatMoney(value: string | null) {
                         <tbody>
                             <tr v-for="row in sectionRows" :key="row.category_id" class="border-b border-sidebar-border/40">
                                 <td class="py-2 pr-4">{{ row.name }}</td>
-                                <td class="py-2 pr-4">{{ formatMoney(row.annual_plan) }}</td>
+                                <td class="py-2 pr-4">
+                                    <label class="sr-only" :for="`annual-plan-${row.category_id}`">
+                                        {{ t('budget.yearly.plan') }} — {{ row.name }}
+                                    </label>
+                                    <Input
+                                        :id="`annual-plan-${row.category_id}`"
+                                        :key="`${year}-${row.category_id}-${row.annual_plan ?? ''}`"
+                                        type="text"
+                                        inputmode="decimal"
+                                        class="h-8 w-28 tabular-nums"
+                                        :default-value="row.annual_plan ?? ''"
+                                        :placeholder="t('budget.yearly.planPlaceholder')"
+                                        @blur="(e) => saveAnnualEstimate(row, (e.target as HTMLInputElement).value)"
+                                    />
+                                </td>
                                 <td class="py-2 pr-4">{{ formatMoney(row.actual) }}</td>
                                 <td class="py-2">{{ formatMoney(row.difference) }}</td>
                             </tr>
@@ -86,7 +118,7 @@ function formatMoney(value: string | null) {
             </section>
 
             <Button variant="secondary" as-child>
-                <Link :href="route('categories.index')">{{ t('categories.index.title') }}</Link>
+                <Link :href="route('categories.index')">{{ t('budget.yearly.manage_categories') }}</Link>
             </Button>
         </div>
     </AppLayout>

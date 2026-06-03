@@ -17,11 +17,21 @@ type BudgetRow = {
     difference: string | null;
 };
 
+type GoalRow = {
+    goal_id: number;
+    name: string;
+    monthly_plan: string | null;
+    saved: string;
+    released: string;
+    balance: string;
+    linked_expenses: string;
+};
+
 const props = defineProps<{
     year: number;
     month: number;
     rows: BudgetRow[];
-    transfers_summary: { plan: string | null; actual: string; difference: string | null };
+    goal_rows: GoalRow[];
     allocation_hint: { monthly_sum: string; annual_sum: string };
 }>();
 
@@ -70,6 +80,24 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
     const amount = trimmed === '' ? null : normalized;
 
     router.patch(route('categories.estimates.monthly', row.category_id), {
+        year: props.year,
+        month: props.month,
+        amount,
+    }, { preserveScroll: true });
+}
+
+function saveGoalMonthlyEstimate(row: GoalRow, rawValue: string) {
+    const trimmed = rawValue.trim();
+    const normalized = trimmed.replace(',', '.');
+    const current = row.monthly_plan ?? '';
+
+    if (normalized === current || (normalized === '' && current === '')) {
+        return;
+    }
+
+    const amount = trimmed === '' ? null : normalized;
+
+    router.patch(route('goals.estimates.monthly', row.goal_id), {
         year: props.year,
         month: props.month,
         amount,
@@ -141,26 +169,56 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
             </section>
 
             <section class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                <h2 class="mb-3 text-lg font-semibold">{{ t('budget.monthly.transfers_section') }}</h2>
-                <dl class="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                        <dt class="text-muted-foreground">{{ t('budget.monthly.plan') }}</dt>
-                        <dd class="font-medium">{{ formatMoney(transfers_summary.plan) }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-foreground">{{ t('budget.monthly.actual') }}</dt>
-                        <dd class="font-medium">{{ formatMoney(transfers_summary.actual) }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-muted-foreground">{{ t('budget.monthly.difference') }}</dt>
-                        <dd class="font-medium">{{ formatMoney(transfers_summary.difference) }}</dd>
-                    </div>
-                </dl>
+                <h2 class="mb-3 text-lg font-semibold">{{ t('budget.monthly.goals_section') }}</h2>
+                <p v-if="goal_rows.length === 0" class="text-sm text-muted-foreground">{{ t('goals.index.empty') }}</p>
+                <div v-else class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b text-left text-muted-foreground">
+                                <th class="py-2 pr-4">{{ t('goals.index.fields.name') }}</th>
+                                <th class="py-2 pr-4">{{ t('budget.monthly.plan') }}</th>
+                                <th class="py-2 pr-4">{{ t('budget.monthly.saved') }}</th>
+                                <th class="py-2 pr-4">{{ t('budget.monthly.released') }}</th>
+                                <th class="py-2 pr-4">{{ t('budget.monthly.balance') }}</th>
+                                <th class="py-2">{{ t('budget.monthly.linked_expenses') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="row in goal_rows" :key="row.goal_id" class="border-b border-sidebar-border/40">
+                                <td class="py-2 pr-4">{{ row.name }}</td>
+                                <td class="py-2 pr-4">
+                                    <label class="sr-only" :for="`goal-plan-${row.goal_id}`">
+                                        {{ t('budget.monthly.plan') }} — {{ row.name }}
+                                    </label>
+                                    <Input
+                                        :id="`goal-plan-${row.goal_id}`"
+                                        :key="`${year}-${month}-${row.goal_id}-${row.monthly_plan ?? ''}`"
+                                        type="text"
+                                        inputmode="decimal"
+                                        class="h-8 w-28 tabular-nums"
+                                        :default-value="row.monthly_plan ?? ''"
+                                        :placeholder="t('budget.monthly.planPlaceholder')"
+                                        @blur="(e) => saveGoalMonthlyEstimate(row, (e.target as HTMLInputElement).value)"
+                                    />
+                                </td>
+                                <td class="py-2 pr-4">{{ formatMoney(row.saved) }}</td>
+                                <td class="py-2 pr-4">{{ formatMoney(row.released) }}</td>
+                                <td class="py-2 pr-4">{{ formatMoney(row.balance) }}</td>
+                                <td class="py-2">{{ formatMoney(row.linked_expenses) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
-            <Button variant="secondary" as-child>
-                <Link :href="route('categories.index')">{{ t('categories.index.title') }}</Link>
-            </Button>
+            <div class="flex flex-wrap gap-2">
+                <Button variant="secondary" as-child>
+                    <Link :href="route('categories.index')">{{ t('categories.index.title') }}</Link>
+                </Button>
+                <Button variant="secondary" as-child>
+                    <Link :href="route('goals.index')">{{ t('budget.monthly.manage_goals') }}</Link>
+                </Button>
+            </div>
         </div>
     </AppLayout>
 </template>

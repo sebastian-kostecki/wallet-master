@@ -6,16 +6,20 @@ namespace App\Actions\Budgets;
 
 use App\Actions\Categories\EnsureUserCategories;
 use App\Actions\Categories\ListCategories;
-use App\Enums\AccountType;
 use App\Enums\CategoryType;
 use App\Http\Requests\Budgets\MonthlyBudgetRequest;
 use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
+use App\Models\Goal;
+use App\Models\GoalAnnualEstimate;
+use App\Models\GoalMonthlyEstimate;
 use App\Models\User;
 use App\Support\Budgets\BudgetPeriod;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Budgets\CategoryPlanAmount;
+use App\Support\Goals\GoalPlanAmount;
+use App\Support\Goals\GoalTransactionMetrics;
 use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -28,12 +32,8 @@ final class ListMonthlyBudget
     /** @var list<array<string, mixed>> */
     private array $rows = [];
 
-    /** @var array{plan: ?string, actual: string, difference: ?string} */
-    private array $transfersSummary = [
-        'plan' => null,
-        'actual' => '0.00',
-        'difference' => null,
-    ];
+    /** @var list<array<string, mixed>> */
+    private array $goalRows = [];
 
     /** @var Collection<int, Category> */
     private Collection $categories;
@@ -124,7 +124,7 @@ final class ListMonthlyBudget
             ];
         }
 
-        $this->transfersSummary = $this->buildTransfersSummary($user, $period, $monthlyByCategory, $annualByCategory);
+        $this->goalRows = $this->buildGoalRows($user, $period);
         $this->allocationHint = [
             'monthly_sum' => $monthlyPlansSum,
             'annual_sum' => $annualPlansSum,
@@ -132,49 +132,57 @@ final class ListMonthlyBudget
     }
 
     /**
-     * @param  Collection<int, CategoryMonthlyEstimate>  $monthlyByCategory
-     * @param  Collection<int, CategoryAnnualEstimate>  $annualByCategory
-     * @return array{plan: ?string, actual: string, difference: ?string}
+     * @return list<array<string, mixed>>
      */
-    private function buildTransfersSummary(
-        User $user,
-        BudgetPeriod $period,
-        Collection $monthlyByCategory,
-        Collection $annualByCategory,
-    ): array {
-        $savingsCategory = $this->categories->first(
-            fn (Category $c): bool => $c->is_system && $c->name === 'Oszczędności',
-        );
+    private function buildGoalRows(User $user, BudgetPeriod $period): array
+    {
+        $goals = Goal::query()
+            ->forUser($user->id)
+            ->ordered()
+            ->get();
 
-        $plan = null;
-        if ($savingsCategory !== null) {
-            $plan = CategoryPlanAmount::monthly(
-                $savingsCategory,
-                $this->year,
-                $this->month,
-                $annualByCategory->get($savingsCategory->id),
-                $monthlyByCategory->get($savingsCategory->id),
-            );
+        if ($goals->isEmpty()) {
+            return [];
         }
 
-        $transferQuery = BudgetTransactionQuery::forUser($user);
-        BudgetTransactionQuery::inPeriod($transferQuery, $period);
-        $transferQuery->whereNotNull('transfer_id');
+        $goalIds = $goals->pluck('id');
 
-        $actualSum = $transferQuery
-            ->whereHas('account', fn ($q) => $q->where('type', AccountType::Savings))
-            ->where('amount', '>', 0)
-            ->sum('amount');
+        $annualByGoal = GoalAnnualEstimate::query()
+            ->whereIn('goal_id', $goalIds)
+            ->where('year', $this->year)
+            ->get()
+            ->keyBy('goal_id');
 
-        $actual = number_format((float) $actualSum, 2, '.', '');
+        $monthlyByGoal = GoalMonthlyEstimate::query()
+            ->whereIn('goal_id', $goalIds)
+            ->where('year', $this->year)
+            ->where('month', $this->month)
+            ->get()
+            ->keyBy('goal_id');
 
-        $difference = $plan !== null ? bcsub($actual, $plan, 2) : null;
+        $rows = [];
 
-        return [
-            'plan' => $plan,
-            'actual' => $actual,
-            'difference' => $difference,
-        ];
+        foreach ($goals as $goal) {
+            $metrics = GoalTransactionMetrics::forMonth($user, $goal, $period);
+
+            $rows[] = [
+                'goal_id' => $goal->id,
+                'name' => $goal->name,
+                'monthly_plan' => GoalPlanAmount::monthly(
+                    $goal,
+                    $this->year,
+                    $this->month,
+                    $annualByGoal->get($goal->id),
+                    $monthlyByGoal->get($goal->id),
+                ),
+                'saved' => $metrics['saved'],
+                'released' => $metrics['released'],
+                'balance' => $metrics['balance'],
+                'linked_expenses' => $metrics['linked_expenses'],
+            ];
+        }
+
+        return $rows;
     }
 
     public function getYear(): int
@@ -196,11 +204,11 @@ final class ListMonthlyBudget
     }
 
     /**
-     * @return array{plan: ?string, actual: string, difference: ?string}
+     * @return list<array<string, mixed>>
      */
-    public function getTransfersSummary(): array
+    public function getGoalRows(): array
     {
-        return $this->transfersSummary;
+        return $this->goalRows;
     }
 
     /**

@@ -29,9 +29,10 @@ final class CategoryResource extends JsonResource
             'type_label_key' => $this->type->labelKey(),
             'sort_order' => $this->sort_order,
             'is_system' => $this->is_system,
-            'annual_estimate_amount' => $annualEstimate?->amount !== null
-                ? (string) $annualEstimate->amount
-                : null,
+            'annual_estimate_amount' => $this->when(
+                $this->relationLoaded('annualEstimates'),
+                $annualEstimate?->amount !== null ? (string) $annualEstimate->amount : null,
+            ),
         ];
     }
 }

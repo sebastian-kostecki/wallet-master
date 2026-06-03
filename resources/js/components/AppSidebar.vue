@@ -6,7 +6,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { ArrowLeftRight, BookOpen, Folder, LayoutGrid, PieChart, Tags, Wallet } from 'lucide-vue-next';
+import { ArrowLeftRight, BookOpen, Folder, LayoutGrid, PieChart, Tags, Target, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
@@ -37,6 +37,11 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: 'Kategorie',
         href: route('categories.index'),
         icon: Tags,
+    },
+    {
+        title: 'Cele',
+        href: route('goals.index'),
+        icon: Target,
     },
 ]);
 

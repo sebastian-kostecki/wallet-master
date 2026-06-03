@@ -28,7 +28,7 @@ final class BudgetController extends Controller
             'year' => $listMonthlyBudget->getYear(),
             'month' => $listMonthlyBudget->getMonth(),
             'rows' => $listMonthlyBudget->getRows(),
-            'transfers_summary' => $listMonthlyBudget->getTransfersSummary(),
+            'goal_rows' => $listMonthlyBudget->getGoalRows(),
             'allocation_hint' => $listMonthlyBudget->getAllocationHint(),
         ]);
     }

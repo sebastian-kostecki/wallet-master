@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int $currency_id
  * @property int $user_id
  * @property int $category_id
+ * @property int|null $goal_id
  * @property int|null $import_id
  * @property string|null $transfer_id
  * @property TransferMatchStatus $transfer_match_status
@@ -37,6 +38,7 @@ final class Transaction extends Model
         'account_id',
         'currency_id',
         'category_id',
+        'goal_id',
         'import_id',
         'date',
         'booked_at',
@@ -74,6 +76,7 @@ final class Transaction extends Model
             'account_id' => 'integer',
             'currency_id' => 'integer',
             'category_id' => 'integer',
+            'goal_id' => 'integer',
             'user_id' => 'integer',
         ];
     }
@@ -100,6 +103,14 @@ final class Transaction extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * @return BelongsTo<Goal, $this>
+     */
+    public function goal(): BelongsTo
+    {
+        return $this->belongsTo(Goal::class);
     }
 
     /**

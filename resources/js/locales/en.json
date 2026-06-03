@@ -158,7 +158,9 @@
     },
     "transactions": {
         "fields": {
-            "category": "Category"
+            "category": "Category",
+            "goal": "Goal",
+            "goalNone": "None"
         },
         "index": {
             "title": "Transactions",
@@ -337,6 +339,8 @@
             "date": "Date",
             "subjectOptional": "Subject (optional)",
             "descriptionOptional": "Description (optional)",
+            "goal": "Savings goal",
+            "goalPlaceholder": "Select a goal",
             "hint": "We'll save an expense on the source account and an income on the destination account.",
             "sameAccountError": "Choose a different destination account than the source account.",
             "deletedNotice": "This account is deleted — transfers are blocked.",
@@ -523,6 +527,27 @@
             "estimate_saved": "Estimate saved."
         }
     },
+    "goals": {
+        "index": {
+            "title": "Goals",
+            "add": "Add goal",
+            "listTitle": "Your goals",
+            "empty": "No goals yet.",
+            "fields": {
+                "name": "Name"
+            },
+            "annualEstimate": "Annual estimate",
+            "annualEstimatePlaceholder": "e.g. 2400",
+            "delete": "Delete goal",
+            "deleteConfirm": "Delete goal “{name}”?"
+        },
+        "toast": {
+            "created": "Goal added.",
+            "updated": "Goal updated.",
+            "deleted": "Goal deleted.",
+            "estimate_saved": "Estimate saved."
+        }
+    },
     "budget": {
         "nav": "Budget",
         "monthly": {
@@ -530,7 +555,12 @@
             "plan": "Estimate",
             "actual": "Actual",
             "difference": "Difference",
-            "transfers_section": "Transfers and savings",
+            "goals_section": "Savings goals",
+            "saved": "Saved",
+            "released": "Released",
+            "balance": "Balance",
+            "linked_expenses": "Linked expenses",
+            "manage_goals": "Manage goals",
             "allocation_hint": "Monthly estimates total: {monthly} / annual: {annual}",
             "planPlaceholder": "Monthly override"
         },
@@ -538,7 +568,9 @@
             "title": "Budget — yearly",
             "plan": "Annual estimate",
             "actual": "Actual",
-            "difference": "Difference"
+            "difference": "Difference",
+            "planPlaceholder": "e.g. 12000",
+            "manage_categories": "Manage categories"
         },
         "view": {
             "monthly": "Monthly",
