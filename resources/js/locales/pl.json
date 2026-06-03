@@ -226,9 +226,14 @@
                 "prev": "Poprzednia",
                 "next": "Następna",
                 "pageOf": "Strona {page} z {pages}",
+                "pageLink": "Strona {page}",
                 "perPageLabel": "Na stronę"
             },
             "a11y": {
+                "tableCaption": "Lista transakcji",
+                "filters": "Filtruj transakcje",
+                "sortInactive": "Sortuj po {column}",
+                "sortActive": "Sortuj po {column}, obecnie {direction}",
                 "sortByDate": "Sortuj po dacie",
                 "sortByAmount": "Sortuj po kwocie",
                 "edit": "Edytuj transakcję: {description}",
@@ -333,7 +338,10 @@
         "candidates": {
             "banner": {
                 "title": "{count} możliwych transferów do potwierdzenia",
-                "subtitle": "System dopasował pary transakcji z różnych kont. Potwierdź transfer lub oznacz, że to nie jest przelew wewnętrzny."
+                "subtitle": "System dopasował pary transakcji z różnych kont. Potwierdź transfer lub oznacz, że to nie jest przelew wewnętrzny.",
+                "a11y": {
+                    "toggle": "Kandydaci transferów, {count} par. Rozwiń lub zwiń szczegóły."
+                }
             },
             "table": {
                 "from": "Z konta",
@@ -345,7 +353,11 @@
             },
             "actions": {
                 "confirm": "Potwierdź transfer",
-                "reject": "To nie transfer"
+                "reject": "To nie transfer",
+                "a11y": {
+                    "confirm": "Potwierdź transfer z {from} na {to}",
+                    "reject": "Oznacz jako nie transfer z {from} na {to}"
+                }
             }
         },
         "toast": {
@@ -419,7 +431,10 @@
         "failed_rows": {
             "banner": {
                 "title": "{count} wierszy z importu nie zostało dodanych",
-                "subtitle": "Saldo może być niezgodne z wyciągiem bankowym. Dodaj brakujące transakcje ręcznie lub oznacz jako rozwiązane."
+                "subtitle": "Saldo może być niezgodne z wyciągiem bankowym. Dodaj brakujące transakcje ręcznie lub oznacz jako rozwiązane.",
+                "a11y": {
+                    "toggle": "Błędne wiersze importu, {count} wierszy. Rozwiń lub zwiń szczegóły."
+                }
             },
             "modal": {
                 "title": "Błędne wiersze z pliku",
@@ -436,7 +451,11 @@
             },
             "actions": {
                 "dismiss": "Oznacz jako rozwiązane",
-                "dismiss_all": "Oznacz wszystkie jako rozwiązane"
+                "dismiss_all": "Oznacz wszystkie jako rozwiązane",
+                "a11y": {
+                    "dismissRow": "Oznacz wiersz importu {row} jako rozwiązany",
+                    "dismissAll": "Oznacz wszystkie {count} błędne wiersze importu jako rozwiązane"
+                }
             },
             "reasons": {
                 "missing_fields": "Brak wymaganych pól (data, kwota lub opis)",

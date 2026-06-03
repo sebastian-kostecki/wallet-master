@@ -37,6 +37,9 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
+const bannerTitleId = 'transfer-candidates-banner-title';
+const bannerContentId = 'transfer-candidates-banner-content';
+
 const expanded = ref(false);
 const isSubmitting = ref(false);
 
@@ -108,16 +111,22 @@ function rejectPair(anchorTransactionId: number) {
 </script>
 
 <template>
-    <div class="rounded-lg border border-sky-500/40 bg-sky-50/40 dark:border-sky-500/30 dark:bg-sky-950/20">
+    <div
+        role="region"
+        :aria-labelledby="bannerTitleId"
+        class="rounded-lg border border-sky-500/40 bg-sky-50/40 dark:border-sky-500/30 dark:bg-sky-950/20"
+    >
         <button
             type="button"
             class="flex w-full items-start gap-3 p-4 text-left"
             :aria-expanded="expanded"
+            :aria-controls="bannerContentId"
+            :aria-label="t('transfers.candidates.banner.a11y.toggle', { count: pairs.length })"
             @click="expanded = !expanded"
         >
             <ArrowRightLeft class="mt-0.5 h-5 w-5 shrink-0 text-sky-600 dark:text-sky-400" aria-hidden="true" />
             <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-foreground">
+                <p :id="bannerTitleId" class="text-sm font-medium text-foreground">
                     {{ t('transfers.candidates.banner.title', { count: pairs.length }) }}
                 </p>
                 <p class="mt-1 text-xs text-muted-foreground">
@@ -131,7 +140,7 @@ function rejectPair(anchorTransactionId: number) {
             />
         </button>
 
-        <div v-if="expanded" class="border-t border-sky-500/20 px-4 pb-4 pt-3">
+        <div v-if="expanded" :id="bannerContentId" class="border-t border-sky-500/20 px-4 pb-4 pt-3">
             <div class="grid gap-4">
                 <div v-for="group in groupedPairs" :key="group.accountId" class="grid gap-2">
                     <p
@@ -187,6 +196,12 @@ function rejectPair(anchorTransactionId: number) {
                                                 size="sm"
                                                 type="button"
                                                 :disabled="isSubmitting"
+                                                :aria-label="
+                                                    t('transfers.candidates.actions.a11y.confirm', {
+                                                        from: pair.from_account.name,
+                                                        to: pair.to_account.name,
+                                                    })
+                                                "
                                                 @click="confirmPair(pair.anchor_transaction_id)"
                                             >
                                                 {{ t('transfers.candidates.actions.confirm') }}
@@ -196,6 +211,12 @@ function rejectPair(anchorTransactionId: number) {
                                                 size="sm"
                                                 type="button"
                                                 :disabled="isSubmitting"
+                                                :aria-label="
+                                                    t('transfers.candidates.actions.a11y.reject', {
+                                                        from: pair.from_account.name,
+                                                        to: pair.to_account.name,
+                                                    })
+                                                "
                                                 @click="rejectPair(pair.anchor_transaction_id)"
                                             >
                                                 {{ t('transfers.candidates.actions.reject') }}

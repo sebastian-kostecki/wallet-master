@@ -226,9 +226,14 @@
                 "prev": "Previous",
                 "next": "Next",
                 "pageOf": "Page {page} of {pages}",
+                "pageLink": "Page {page}",
                 "perPageLabel": "Items per page"
             },
             "a11y": {
+                "tableCaption": "Transactions list",
+                "filters": "Filter transactions",
+                "sortInactive": "Sort by {column}",
+                "sortActive": "Sort by {column}, currently {direction}",
                 "sortByDate": "Sort by date",
                 "sortByAmount": "Sort by amount",
                 "edit": "Edit transaction: {description}",
@@ -327,6 +332,31 @@
             "submit": "Make transfer",
             "saving": "Saving…"
         },
+        "candidates": {
+            "banner": {
+                "title": "{count} possible transfers to confirm",
+                "subtitle": "We matched transaction pairs across accounts. Confirm the transfer or mark that it is not an internal transfer.",
+                "a11y": {
+                    "toggle": "Transfer candidates, {count} pairs. Expand or collapse details."
+                }
+            },
+            "table": {
+                "from": "From account",
+                "to": "To account",
+                "amount": "Amount",
+                "dates": "Date difference",
+                "dateDelta": "±{days} days",
+                "actions": "Actions"
+            },
+            "actions": {
+                "confirm": "Confirm transfer",
+                "reject": "Not a transfer",
+                "a11y": {
+                    "confirm": "Confirm transfer from {from} to {to}",
+                    "reject": "Mark as not a transfer from {from} to {to}"
+                }
+            }
+        },
         "toast": {
             "created": "Transfer saved.",
             "genericError": "We couldn't make the transfer. Please try again."
@@ -395,7 +425,10 @@
         "failed_rows": {
             "banner": {
                 "title": "{count} import rows were not added",
-                "subtitle": "Your balance may not match the bank statement. Add missing transactions manually or mark as resolved."
+                "subtitle": "Your balance may not match the bank statement. Add missing transactions manually or mark as resolved.",
+                "a11y": {
+                    "toggle": "Import failed rows, {count} rows. Expand or collapse details."
+                }
             },
             "modal": {
                 "title": "Failed rows from file",
@@ -412,7 +445,11 @@
             },
             "actions": {
                 "dismiss": "Mark as resolved",
-                "dismiss_all": "Mark all as resolved"
+                "dismiss_all": "Mark all as resolved",
+                "a11y": {
+                    "dismissRow": "Mark import row {row} as resolved",
+                    "dismissAll": "Mark all {count} import failed rows as resolved"
+                }
             },
             "reasons": {
                 "missing_fields": "Missing required fields (date, amount, or description)",

@@ -32,6 +32,9 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
+const bannerTitleId = 'import-failed-rows-banner-title';
+const bannerContentId = 'import-failed-rows-banner-content';
+
 const expanded = ref(false);
 const isDismissing = ref(false);
 
@@ -107,16 +110,22 @@ function displayValue(value: string | null): string {
 </script>
 
 <template>
-    <div class="rounded-lg border border-amber-500/40 bg-amber-50/40 dark:border-amber-500/30 dark:bg-amber-950/20">
+    <div
+        role="region"
+        :aria-labelledby="bannerTitleId"
+        class="rounded-lg border border-amber-500/40 bg-amber-50/40 dark:border-amber-500/30 dark:bg-amber-950/20"
+    >
         <button
             type="button"
             class="flex w-full items-start gap-3 p-4 text-left"
             :aria-expanded="expanded"
+            :aria-controls="bannerContentId"
+            :aria-label="t('imports.failed_rows.banner.a11y.toggle', { count: rows.length })"
             @click="expanded = !expanded"
         >
             <ShieldAlert class="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
             <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-foreground">
+                <p :id="bannerTitleId" class="text-sm font-medium text-foreground">
                     {{ t('imports.failed_rows.banner.title', { count: rows.length }) }}
                 </p>
                 <p class="mt-1 text-xs text-muted-foreground">
@@ -130,9 +139,16 @@ function displayValue(value: string | null): string {
             />
         </button>
 
-        <div v-if="expanded" class="border-t border-amber-500/20 px-4 pb-4 pt-3">
+        <div v-if="expanded" :id="bannerContentId" class="border-t border-amber-500/20 px-4 pb-4 pt-3">
             <div class="mb-3 flex justify-end">
-                <Button variant="secondary" size="sm" type="button" :disabled="isDismissing" @click="dismissAll">
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    type="button"
+                    :disabled="isDismissing"
+                    :aria-label="t('imports.failed_rows.actions.a11y.dismissAll', { count: rows.length })"
+                    @click="dismissAll"
+                >
                     {{ t('imports.failed_rows.actions.dismiss_all') }}
                 </Button>
             </div>
@@ -172,7 +188,14 @@ function displayValue(value: string | null): string {
                                     </td>
                                     <td class="px-3 py-2 text-xs text-muted-foreground">{{ t(row.reason_label_key) }}</td>
                                     <td class="px-3 py-2 text-right">
-                                        <Button variant="ghost" size="sm" type="button" :disabled="isDismissing" @click="dismissRow(row.id)">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            type="button"
+                                            :disabled="isDismissing"
+                                            :aria-label="t('imports.failed_rows.actions.a11y.dismissRow', { row: row.row_number })"
+                                            @click="dismissRow(row.id)"
+                                        >
                                             {{ t('imports.failed_rows.actions.dismiss') }}
                                         </Button>
                                     </td>

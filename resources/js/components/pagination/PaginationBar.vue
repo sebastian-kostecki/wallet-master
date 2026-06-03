@@ -209,6 +209,8 @@ function changePerPage(next: number) {
                     :key="link.label"
                     :href="link.url ?? ''"
                     :preserve-scroll="preserveScroll"
+                    :aria-current="link.active ? 'page' : undefined"
+                    :aria-label="t('transactions.index.pagination.pageLink', { page: link.label })"
                     @click="() => link.url && trackPageChanged(Number.parseInt(link.label, 10) || currentPage)"
                     :class="
                         cn(

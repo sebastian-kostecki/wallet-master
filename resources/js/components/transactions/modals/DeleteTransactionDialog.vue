@@ -76,7 +76,13 @@ function destroy() {
                 <DialogClose as-child>
                     <Button type="button" variant="secondary">{{ t('actions.cancel') }}</Button>
                 </DialogClose>
-                <Button type="button" variant="destructive" :disabled="disabled || form.processing" @click="destroy">
+                <Button
+                    type="button"
+                    variant="destructive"
+                    :disabled="disabled || form.processing"
+                    :aria-busy="form.processing || undefined"
+                    @click="destroy"
+                >
                     {{ t('transactions.delete.confirm') }}
                 </Button>
             </DialogFooter>

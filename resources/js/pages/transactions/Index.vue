@@ -406,6 +406,33 @@ function openDeleteDialog(transactionId: number) {
     deletingTransactionId.value = transactionId;
     deleteDialogOpen.value = true;
 }
+
+function ariaSortFor(column: 'date' | 'amount'): 'ascending' | 'descending' | 'none' {
+    const currentSort = props.filters.sort ?? 'date';
+    if (currentSort !== column) {
+        return 'none';
+    }
+
+    const currentDirection = props.filters.direction ?? (currentSort === 'date' ? 'desc' : 'asc');
+
+    return currentDirection === 'asc' ? 'ascending' : 'descending';
+}
+
+function sortButtonAriaLabel(column: 'date' | 'amount'): string {
+    const isActive = (props.filters.sort ?? 'date') === column;
+    const columnLabel = column === 'date' ? t('transactions.index.sort.date') : t('transactions.index.sort.amount');
+
+    if (!isActive) {
+        return t('transactions.index.a11y.sortInactive', { column: columnLabel });
+    }
+
+    const direction =
+        (props.filters.direction ?? (column === 'date' ? 'desc' : 'asc')) === 'asc'
+            ? t('transactions.index.sort.asc')
+            : t('transactions.index.sort.desc');
+
+    return t('transactions.index.a11y.sortActive', { column: columnLabel, direction });
+}
 </script>
 
 <template>
@@ -518,13 +545,16 @@ function openDeleteDialog(transactionId: number) {
                 <div v-else>
                     <div class="hidden md:block">
                         <table class="w-full table-fixed text-sm">
+                            <caption class="sr-only">
+                                {{ t('transactions.index.a11y.tableCaption') }}
+                            </caption>
                             <thead class="border-b border-sidebar-border/70 text-left text-xs text-muted-foreground dark:border-sidebar-border">
                                 <tr>
-                                    <th class="w-36 px-6 py-3">
+                                    <th class="w-36 px-6 py-3" scope="col" :aria-sort="ariaSortFor('date')">
                                         <button
                                             class="inline-flex items-center gap-2 hover:text-foreground"
                                             type="button"
-                                            :aria-label="t('transactions.index.a11y.sortByDate')"
+                                            :aria-label="sortButtonAriaLabel('date')"
                                             @click="setSort('date')"
                                         >
                                             {{ t('transactions.index.table.date') }}
@@ -535,13 +565,13 @@ function openDeleteDialog(transactionId: number) {
                                             />
                                         </button>
                                     </th>
-                                    <th class="px-6 py-3">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="w-72 px-6 py-3">{{ t('transactions.index.table.account') }}</th>
-                                    <th class="w-44 px-6 py-3">
+                                    <th class="px-6 py-3" scope="col">{{ t('transactions.index.table.description') }}</th>
+                                    <th class="w-72 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
+                                    <th class="w-44 px-6 py-3" scope="col" :aria-sort="ariaSortFor('amount')">
                                         <button
                                             class="inline-flex items-center gap-2 hover:text-foreground"
                                             type="button"
-                                            :aria-label="t('transactions.index.a11y.sortByAmount')"
+                                            :aria-label="sortButtonAriaLabel('amount')"
                                             @click="setSort('amount')"
                                         >
                                             {{ t('transactions.index.table.amount') }}
@@ -552,7 +582,7 @@ function openDeleteDialog(transactionId: number) {
                                             />
                                         </button>
                                     </th>
-                                    <th class="w-28 px-6 py-3 text-right">{{ t('transactions.index.table.actions') }}</th>
+                                    <th class="w-28 px-6 py-3 text-right" scope="col">{{ t('transactions.index.table.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -907,7 +937,7 @@ function openDeleteDialog(transactionId: number) {
                                                             <Button variant="ghost" size="icon" as-child>
                                                                 <Link
                                                                     :href="route('transactions.edit', tx.id) + currentSearch"
-                                                                    :aria-label="t('actions.edit')"
+                                                                    :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
                                                                 >
                                                                     <Pencil class="h-4 w-4" aria-hidden="true" />
                                                                 </Link>
