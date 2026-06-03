@@ -66,12 +66,7 @@ function unlink() {
                         {{ t('actions.cancel') }}
                     </Button>
                 </DialogClose>
-                <Button
-                    type="button"
-                    :disabled="disabled || processing"
-                    :aria-busy="processing || undefined"
-                    @click="unlink"
-                >
+                <Button type="button" :disabled="disabled || processing" :aria-busy="processing || undefined" @click="unlink">
                     {{ t('transactions.unlink.confirm') }}
                 </Button>
             </DialogFooter>

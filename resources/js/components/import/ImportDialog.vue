@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import InputError from '@/components/InputError.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
+import type { ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,6 @@ import { router, usePage } from '@inertiajs/vue3';
 import { echo } from '@laravel/echo-vue';
 import { CheckCircle2, ChevronDown, Coins, Loader2, ShieldAlert, Upload } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import type { ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
 import { useI18n } from 'vue-i18n';
 
 type Account = {
@@ -623,7 +623,6 @@ function goToTransactions() {
                         @keydown.space.prevent="($refs.fileInput as HTMLInputElement | undefined)?.click()"
                         @click="($refs.fileInput as HTMLInputElement | undefined)?.click()"
                     >
-
                         <div class="flex items-start gap-4">
                             <div class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                                 <Upload class="h-5 w-5" aria-hidden="true" />
@@ -661,12 +660,7 @@ function goToTransactions() {
                     <div class="grid gap-1">
                         <p class="text-sm font-medium text-foreground">{{ t('imports.dialog.processing.title') }}</p>
                         <p class="text-xs text-muted-foreground">{{ processingHint }}</p>
-                        <p
-                            v-if="processingProgressText"
-                            role="status"
-                            aria-live="polite"
-                            class="text-xs text-muted-foreground tabular-nums"
-                        >
+                        <p v-if="processingProgressText" role="status" aria-live="polite" class="text-xs tabular-nums text-muted-foreground">
                             {{ processingProgressText }}
                         </p>
                     </div>
@@ -734,7 +728,9 @@ function goToTransactions() {
                         <div class="overflow-x-auto">
                             <table class="min-w-full text-sm">
                                 <caption class="sr-only">
-                                    {{ t('imports.failed_rows.modal.a11y.tableCaption') }}
+                                    {{
+                                        t('imports.failed_rows.modal.a11y.tableCaption')
+                                    }}
                                 </caption>
                                 <thead class="text-xs text-muted-foreground">
                                     <tr>
@@ -750,8 +746,8 @@ function goToTransactions() {
                                 <tbody>
                                     <tr v-for="row in failedRows" :key="row.id" class="border-t border-sidebar-border/50">
                                         <td class="px-2 py-2 tabular-nums">{{ row.row_number }}</td>
-                                        <td class="px-2 py-2 whitespace-nowrap">{{ displayRawValue(row.date_raw) }}</td>
-                                        <td class="px-2 py-2 whitespace-nowrap tabular-nums">{{ displayRawValue(row.amount_raw) }}</td>
+                                        <td class="whitespace-nowrap px-2 py-2">{{ displayRawValue(row.date_raw) }}</td>
+                                        <td class="whitespace-nowrap px-2 py-2 tabular-nums">{{ displayRawValue(row.amount_raw) }}</td>
                                         <td class="max-w-xs truncate px-2 py-2">{{ displayRawValue(row.description_raw) }}</td>
                                         <td class="px-2 py-2 text-xs text-muted-foreground">{{ t(row.reason_label_key) }}</td>
                                     </tr>

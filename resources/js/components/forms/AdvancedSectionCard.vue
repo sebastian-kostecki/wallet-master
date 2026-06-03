@@ -22,14 +22,11 @@ const isOpen = ref(false);
 </script>
 
 <template>
-    <section
-        class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border"
-        data-advanced-section
-    >
+    <section class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border" data-advanced-section>
         <Collapsible v-model:open="isOpen" class="w-full" :disabled="disabled">
             <CollapsibleTrigger
                 type="button"
-                class="flex w-full items-center justify-between gap-3 rounded-lg text-left outline-none ring-offset-background transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60 -m-1 p-1"
+                class="-m-1 flex w-full items-center justify-between gap-3 rounded-lg p-1 text-left outline-none ring-offset-background transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60"
             >
                 <span class="min-w-0 flex-1">
                     <span class="block text-base font-semibold text-foreground">
@@ -47,10 +44,7 @@ const isOpen = ref(false);
                 <p v-if="hasHint" class="mt-3 text-sm text-muted-foreground">
                     <slot name="hint" />
                 </p>
-                <fieldset
-                    class="mt-4 min-w-0 space-y-6 border-0 p-0 m-0 disabled:opacity-60"
-                    :disabled="disabled || !isOpen"
-                >
+                <fieldset class="m-0 mt-4 min-w-0 space-y-6 border-0 p-0 disabled:opacity-60" :disabled="disabled || !isOpen">
                     <slot />
                 </fieldset>
             </CollapsibleContent>

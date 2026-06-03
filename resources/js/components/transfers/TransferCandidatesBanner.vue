@@ -181,8 +181,8 @@ function rejectPair(anchorTransactionId: number) {
                                         </p>
                                         <p class="text-xs tabular-nums text-muted-foreground">{{ pair.to_transaction.date }}</p>
                                     </td>
-                                    <td class="px-3 py-2 whitespace-nowrap tabular-nums">{{ pair.amount }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-xs text-muted-foreground">
+                                    <td class="whitespace-nowrap px-3 py-2 tabular-nums">{{ pair.amount }}</td>
+                                    <td class="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">
                                         {{
                                             t('transfers.candidates.table.dateDelta', {
                                                 days: pair.date_delta_days,

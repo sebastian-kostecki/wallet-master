@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import ImportDialog from '@/components/import/ImportDialog.vue';
 import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
-import TransferCandidatesBanner, { type TransferCandidatePair } from '@/components/transfers/TransferCandidatesBanner.vue';
 import PaginationBar from '@/components/pagination/PaginationBar.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
+import TransferCandidatesBanner, { type TransferCandidatePair } from '@/components/transfers/TransferCandidatesBanner.vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { track } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
@@ -546,7 +546,9 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                     <div class="hidden md:block">
                         <table class="w-full table-fixed text-sm">
                             <caption class="sr-only">
-                                {{ t('transactions.index.a11y.tableCaption') }}
+                                {{
+                                    t('transactions.index.a11y.tableCaption')
+                                }}
                             </caption>
                             <thead class="border-b border-sidebar-border/70 text-left text-xs text-muted-foreground dark:border-sidebar-border">
                                 <tr>
@@ -642,12 +644,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                                                 {{ tx.raw_statement_description }}
                                                             </p>
                                                         </div>
-                                                        <div
-                                                            v-if="
-                                                                truncateText(tx.subject, 80).isTruncated &&
-                                                                (tx.subject ?? '').trim() !== ''
-                                                            "
-                                                        >
+                                                        <div v-if="truncateText(tx.subject, 80).isTruncated && (tx.subject ?? '').trim() !== ''">
                                                             <p class="text-xs font-medium text-muted-foreground">
                                                                 {{ t('transactions.index.table.subject') }}
                                                             </p>
@@ -825,17 +822,11 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         <TooltipProvider v-if="hasRawStatementDescription(tx)" :delay-duration="0">
                                             <Tooltip>
                                                 <TooltipTrigger as-child>
-                                                    <div
-                                                        class="cursor-pointer"
-                                                        :aria-label="t('transactions.index.a11y.showStatementDescription')"
-                                                    >
+                                                    <div class="cursor-pointer" :aria-label="t('transactions.index.a11y.showStatementDescription')">
                                                         <p class="text-sm font-medium">
                                                             {{ truncateText(tx.description, 90).text }}
                                                         </p>
-                                                        <p
-                                                            v-if="(tx.subject ?? '').trim() !== ''"
-                                                            class="mt-1 text-xs text-muted-foreground"
-                                                        >
+                                                        <p v-if="(tx.subject ?? '').trim() !== ''" class="mt-1 text-xs text-muted-foreground">
                                                             {{ truncateText(tx.subject, 70).text }}
                                                         </p>
                                                     </div>
@@ -850,12 +841,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                                                 {{ tx.raw_statement_description }}
                                                             </p>
                                                         </div>
-                                                        <div
-                                                            v-if="
-                                                                truncateText(tx.subject, 70).isTruncated &&
-                                                                (tx.subject ?? '').trim() !== ''
-                                                            "
-                                                        >
+                                                        <div v-if="truncateText(tx.subject, 70).isTruncated && (tx.subject ?? '').trim() !== ''">
                                                             <p class="text-xs font-medium text-muted-foreground">
                                                                 {{ t('transactions.index.table.subject') }}
                                                             </p>
@@ -890,7 +876,9 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                             </TooltipProvider>
                                         </template>
 
-                                        <p class="mt-1 text-xs tabular-nums text-muted-foreground">{{ formatDateIsoToDots(transactionDisplayDateIso(tx)) }}</p>
+                                        <p class="mt-1 text-xs tabular-nums text-muted-foreground">
+                                            {{ formatDateIsoToDots(transactionDisplayDateIso(tx)) }}
+                                        </p>
                                         <p class="mt-0.5 text-xs text-muted-foreground">
                                             {{ tx.date_relative || operationDateRelative(transactionDisplayDateIso(tx)) }}
                                         </p>

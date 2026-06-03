@@ -1,14 +1,14 @@
 <script setup lang="ts">
+import AdvancedSectionCard from '@/components/forms/AdvancedSectionCard.vue';
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
-import AdvancedSectionCard from '@/components/forms/AdvancedSectionCard.vue';
 import FormField from '@/components/forms/FormField.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import UnlinkTransferDialog from '@/components/transfers/UnlinkTransferDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { displayAmount, normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -83,8 +83,7 @@ const form = useForm<{
 }>({
     account_id: props.transaction.account_id,
     date: isoToDdMmYyyy(props.transaction.date),
-    booked_at:
-        props.transaction.booked_at === props.transaction.date ? '' : isoToDdMmYyyy(props.transaction.booked_at),
+    booked_at: props.transaction.booked_at === props.transaction.date ? '' : isoToDdMmYyyy(props.transaction.booked_at),
     amount: displayAmount(props.transaction.amount),
     description: props.transaction.description,
     subject: props.transaction.subject ?? '',
@@ -157,141 +156,141 @@ function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, in
                     >
                         <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                             <div class="grid gap-6">
-                        <FormField
-                            for-id="account_id"
-                            :label="t('transactions.form.account')"
-                            :error="form.errors.account_id"
-                            :hint="isLinkedTransfer ? t('transactions.edit.transfer.accountHint') : null"
-                        >
-                            <template #default="{ errorId, hintId, hasError }">
-                            <DropdownSelect
-                                id="account_id"
-                                :aria-invalid="hasError"
-                                :aria-disabled="isLinkedTransfer"
-                                :aria-describedby="fieldDescribedBy(errorId, hasError, hintId, isLinkedTransfer)"
-                                :model-value="form.account_id"
-                                :options="accountOptions"
-                                :placeholder="t('transactions.form.account')"
-                                :disabled="form.processing || accounts.length === 0 || isLinkedTransfer"
-                                @update:model-value="(value) => (form.account_id = value)"
-                            >
-                                <template #trigger-leading>
-                                    <span
-                                        v-if="selectedAccount"
-                                        class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
-                                        :class="
-                                            selectedAccount.bank === 'cash'
-                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
-                                                : 'bg-muted'
-                                        "
-                                        aria-hidden="true"
-                                    >
-                                        <img
-                                            v-if="selectedAccount.bank_icon_url"
-                                            :src="selectedAccount.bank_icon_url"
-                                            :alt="selectedAccount.name"
-                                            class="h-5 w-5 object-cover"
+                                <FormField
+                                    for-id="account_id"
+                                    :label="t('transactions.form.account')"
+                                    :error="form.errors.account_id"
+                                    :hint="isLinkedTransfer ? t('transactions.edit.transfer.accountHint') : null"
+                                >
+                                    <template #default="{ errorId, hintId, hasError }">
+                                        <DropdownSelect
+                                            id="account_id"
+                                            :aria-invalid="hasError"
+                                            :aria-disabled="isLinkedTransfer"
+                                            :aria-describedby="fieldDescribedBy(errorId, hasError, hintId, isLinkedTransfer)"
+                                            :model-value="form.account_id"
+                                            :options="accountOptions"
+                                            :placeholder="t('transactions.form.account')"
+                                            :disabled="form.processing || accounts.length === 0 || isLinkedTransfer"
+                                            @update:model-value="(value) => (form.account_id = value)"
+                                        >
+                                            <template #trigger-leading>
+                                                <span
+                                                    v-if="selectedAccount"
+                                                    class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                                    :class="
+                                                        selectedAccount.bank === 'cash'
+                                                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                            : 'bg-muted'
+                                                    "
+                                                    aria-hidden="true"
+                                                >
+                                                    <img
+                                                        v-if="selectedAccount.bank_icon_url"
+                                                        :src="selectedAccount.bank_icon_url"
+                                                        :alt="selectedAccount.name"
+                                                        class="h-5 w-5 object-cover"
+                                                    />
+                                                    <Coins v-else-if="selectedAccount.bank === 'cash'" class="h-3.5 w-3.5" />
+                                                    <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                        {{ selectedAccount.name.charAt(0).toUpperCase() }}
+                                                    </span>
+                                                </span>
+                                            </template>
+
+                                            <template #option-leading="{ option }">
+                                                <span
+                                                    class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                                    :class="
+                                                        accountsById.get(option.value)?.bank === 'cash'
+                                                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                            : 'bg-muted'
+                                                    "
+                                                    aria-hidden="true"
+                                                >
+                                                    <img
+                                                        v-if="accountsById.get(option.value)?.bank_icon_url"
+                                                        :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
+                                                        :alt="accountsById.get(option.value)?.name ?? ''"
+                                                        class="h-5 w-5 object-cover"
+                                                    />
+                                                    <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
+                                                    <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                        {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                                    </span>
+                                                </span>
+                                            </template>
+                                        </DropdownSelect>
+                                    </template>
+                                </FormField>
+
+                                <FormField for-id="date" :label="t('transactions.form.date')" :error="form.errors.date">
+                                    <template #default="{ errorId, hasError }">
+                                        <DatePickerInput
+                                            id="date"
+                                            :aria-invalid="hasError"
+                                            :aria-describedby="hasError ? errorId : undefined"
+                                            :model-value="form.date"
+                                            :disabled="form.processing"
+                                            @update:model-value="(value) => (form.date = value)"
                                         />
-                                        <Coins v-else-if="selectedAccount.bank === 'cash'" class="h-3.5 w-3.5" />
-                                        <span v-else class="text-[10px] font-semibold text-muted-foreground">
-                                            {{ selectedAccount.name.charAt(0).toUpperCase() }}
-                                        </span>
-                                    </span>
-                                </template>
+                                    </template>
+                                </FormField>
 
-                                <template #option-leading="{ option }">
-                                    <span
-                                        class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
-                                        :class="
-                                            accountsById.get(option.value)?.bank === 'cash'
-                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
-                                                : 'bg-muted'
-                                        "
-                                        aria-hidden="true"
-                                    >
-                                        <img
-                                            v-if="accountsById.get(option.value)?.bank_icon_url"
-                                            :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
-                                            :alt="accountsById.get(option.value)?.name ?? ''"
-                                            class="h-5 w-5 object-cover"
+                                <FormField
+                                    for-id="amount"
+                                    :label="t('transactions.form.amount')"
+                                    :error="form.errors.amount"
+                                    :hint="isLinkedTransfer ? t('transactions.edit.transfer.amountHint') : null"
+                                >
+                                    <template #default="{ errorId, hintId, hasError }">
+                                        <Input
+                                            id="amount"
+                                            v-model="form.amount"
+                                            inputmode="decimal"
+                                            :disabled="form.processing || isLinkedTransfer"
+                                            :aria-disabled="isLinkedTransfer ? true : undefined"
+                                            :aria-invalid="hasError ? true : undefined"
+                                            :aria-describedby="fieldDescribedBy(errorId, hasError, hintId, isLinkedTransfer)"
                                         />
-                                        <Coins v-else-if="accountsById.get(option.value)?.bank === 'cash'" class="h-3.5 w-3.5" />
-                                        <span v-else class="text-[10px] font-semibold text-muted-foreground">
-                                            {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
-                                        </span>
-                                    </span>
-                                </template>
-                            </DropdownSelect>
-                            </template>
-                        </FormField>
+                                    </template>
+                                </FormField>
 
-                        <FormField for-id="date" :label="t('transactions.form.date')" :error="form.errors.date">
-                            <template #default="{ errorId, hasError }">
-                            <DatePickerInput
-                                id="date"
-                                :aria-invalid="hasError"
-                                :aria-describedby="hasError ? errorId : undefined"
-                                :model-value="form.date"
-                                :disabled="form.processing"
-                                @update:model-value="(value) => (form.date = value)"
-                            />
-                            </template>
-                        </FormField>
+                                <FormField for-id="subject" :label="t('transactions.form.subject')" :error="form.errors.subject">
+                                    <template #default="{ errorId, hasError }">
+                                        <Input
+                                            id="subject"
+                                            v-model="form.subject"
+                                            :disabled="form.processing"
+                                            :aria-invalid="hasError ? true : undefined"
+                                            :aria-describedby="hasError ? errorId : undefined"
+                                        />
+                                    </template>
+                                </FormField>
 
-                        <FormField
-                            for-id="amount"
-                            :label="t('transactions.form.amount')"
-                            :error="form.errors.amount"
-                            :hint="isLinkedTransfer ? t('transactions.edit.transfer.amountHint') : null"
-                        >
-                            <template #default="{ errorId, hintId, hasError }">
-                            <Input
-                                id="amount"
-                                v-model="form.amount"
-                                inputmode="decimal"
-                                :disabled="form.processing || isLinkedTransfer"
-                                :aria-disabled="isLinkedTransfer ? true : undefined"
-                                :aria-invalid="hasError ? true : undefined"
-                                :aria-describedby="fieldDescribedBy(errorId, hasError, hintId, isLinkedTransfer)"
-                            />
-                            </template>
-                        </FormField>
+                                <FormField for-id="description" :label="t('transactions.form.description')" :error="form.errors.description">
+                                    <template #default="{ errorId, hasError }">
+                                        <textarea
+                                            id="description"
+                                            v-model="form.description"
+                                            :disabled="form.processing"
+                                            rows="4"
+                                            :aria-invalid="hasError ? true : undefined"
+                                            :aria-describedby="hasError ? errorId : undefined"
+                                            class="flex min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                        />
+                                    </template>
+                                </FormField>
 
-                        <FormField for-id="subject" :label="t('transactions.form.subject')" :error="form.errors.subject">
-                            <template #default="{ errorId, hasError }">
-                            <Input
-                                id="subject"
-                                v-model="form.subject"
-                                :disabled="form.processing"
-                                :aria-invalid="hasError ? true : undefined"
-                                :aria-describedby="hasError ? errorId : undefined"
-                            />
-                            </template>
-                        </FormField>
+                                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <Button variant="secondary" as-child>
+                                        <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
+                                    </Button>
 
-                        <FormField for-id="description" :label="t('transactions.form.description')" :error="form.errors.description">
-                            <template #default="{ errorId, hasError }">
-                            <textarea
-                                id="description"
-                                v-model="form.description"
-                                :disabled="form.processing"
-                                rows="4"
-                                :aria-invalid="hasError ? true : undefined"
-                                :aria-describedby="hasError ? errorId : undefined"
-                                class="flex min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                            />
-                            </template>
-                        </FormField>
-
-                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <Button variant="secondary" as-child>
-                                <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
-                            </Button>
-
-                            <Button type="submit" :disabled="form.processing" :aria-busy="form.processing || undefined">
-                                {{ t('actions.save') }}
-                            </Button>
-                        </div>
+                                    <Button type="submit" :disabled="form.processing" :aria-busy="form.processing || undefined">
+                                        {{ t('actions.save') }}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
 
@@ -300,14 +299,14 @@ function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, in
                             <template #hint>{{ t('transactions.form.advancedDatesHint') }}</template>
                             <FormField for-id="booked_at" :label="t('transactions.form.booked_at')" :error="form.errors.booked_at">
                                 <template #default="{ errorId, hasError }">
-                                <DatePickerInput
-                                    id="booked_at"
-                                    :aria-invalid="hasError"
-                                    :aria-describedby="hasError ? errorId : undefined"
-                                    :model-value="form.booked_at"
-                                    :disabled="form.processing"
-                                    @update:model-value="(value) => (form.booked_at = value)"
-                                />
+                                    <DatePickerInput
+                                        id="booked_at"
+                                        :aria-invalid="hasError"
+                                        :aria-describedby="hasError ? errorId : undefined"
+                                        :model-value="form.booked_at"
+                                        :disabled="form.processing"
+                                        @update:model-value="(value) => (form.booked_at = value)"
+                                    />
                                 </template>
                             </FormField>
                         </AdvancedSectionCard>
@@ -322,11 +321,7 @@ function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, in
                                 {{ t('transactions.edit.hints.scope') }}
                             </div>
                             <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
-                                {{
-                                    isLinkedTransfer
-                                        ? t('transactions.edit.hints.amountTransfer')
-                                        : t('transactions.edit.hints.amount')
-                                }}
+                                {{ isLinkedTransfer ? t('transactions.edit.hints.amountTransfer') : t('transactions.edit.hints.amount') }}
                             </div>
                             <div class="rounded-lg border border-sidebar-border/70 bg-muted/30 p-4 dark:border-sidebar-border">
                                 {{ t('transactions.edit.hints.save') }}

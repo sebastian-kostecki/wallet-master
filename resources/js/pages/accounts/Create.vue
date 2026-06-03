@@ -107,135 +107,135 @@ function submit() {
                 <form @submit.prevent="submit" class="grid gap-6">
                     <FormField for-id="name" :label="t('accounts.create.fields.name.label')" :error="form.errors.name">
                         <template #default="{ errorId, hasError }">
-                        <Input
-                            id="name"
-                            v-model="form.name"
-                            required
-                            autofocus
-                            :placeholder="t('accounts.create.fields.name.placeholder')"
-                            :aria-invalid="hasError ? true : undefined"
-                            :aria-describedby="hasError ? errorId : undefined"
-                        />
+                            <Input
+                                id="name"
+                                v-model="form.name"
+                                required
+                                autofocus
+                                :placeholder="t('accounts.create.fields.name.placeholder')"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                            />
                         </template>
                     </FormField>
 
                     <FormField for-id="bank" :label="t('accounts.create.fields.bank.label')" :error="form.errors.bank">
                         <template #default="{ errorId, hasError }">
-                        <DropdownSelect
-                            id="bank"
-                            :aria-invalid="hasError ? true : undefined"
-                            :aria-describedby="hasError ? errorId : undefined"
-                            :model-value="form.bank"
-                            :options="bankOptions"
-                            :placeholder="t('accounts.create.fields.bank.placeholder')"
-                            :disabled="form.processing"
-                            @update:model-value="(value) => (form.bank = value)"
-                        >
-                            <template #trigger-leading>
-                                <span
-                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
-                                    :class="
-                                        selectedBank?.value === 'cash'
-                                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
-                                            : 'bg-muted'
-                                    "
-                                    aria-hidden="true"
-                                >
-                                    <img
-                                        v-if="selectedBank?.icon_url"
-                                        :src="selectedBank.icon_url"
-                                        :alt="t(selectedBank.label_key)"
-                                        class="h-5 w-5 object-cover"
-                                        loading="lazy"
-                                    />
-                                    <Icon
-                                        v-else
-                                        :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'"
-                                        class="h-3.5 w-3.5"
+                            <DropdownSelect
+                                id="bank"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                                :model-value="form.bank"
+                                :options="bankOptions"
+                                :placeholder="t('accounts.create.fields.bank.placeholder')"
+                                :disabled="form.processing"
+                                @update:model-value="(value) => (form.bank = value)"
+                            >
+                                <template #trigger-leading>
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="
+                                            selectedBank?.value === 'cash'
+                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                : 'bg-muted'
+                                        "
                                         aria-hidden="true"
-                                    />
-                                </span>
-                            </template>
+                                    >
+                                        <img
+                                            v-if="selectedBank?.icon_url"
+                                            :src="selectedBank.icon_url"
+                                            :alt="t(selectedBank.label_key)"
+                                            class="h-5 w-5 object-cover"
+                                            loading="lazy"
+                                        />
+                                        <Icon
+                                            v-else
+                                            :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'"
+                                            class="h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+                                </template>
 
-                            <template #option-leading="{ option }">
-                                <span
-                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
-                                    :class="
-                                        option.value === 'cash'
-                                            ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
-                                            : 'bg-muted'
-                                    "
-                                    aria-hidden="true"
-                                >
-                                    <img
-                                        v-if="resolveBankIconUrl(option.value)"
-                                        :src="resolveBankIconUrl(option.value) ?? undefined"
-                                        :alt="option.label"
-                                        class="h-5 w-5 object-cover"
-                                        loading="lazy"
-                                    />
-                                    <Icon v-else :name="option.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
-                                </span>
-                            </template>
-                        </DropdownSelect>
+                                <template #option-leading="{ option }">
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="
+                                            option.value === 'cash'
+                                                ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                : 'bg-muted'
+                                        "
+                                        aria-hidden="true"
+                                    >
+                                        <img
+                                            v-if="resolveBankIconUrl(option.value)"
+                                            :src="resolveBankIconUrl(option.value) ?? undefined"
+                                            :alt="option.label"
+                                            class="h-5 w-5 object-cover"
+                                            loading="lazy"
+                                        />
+                                        <Icon v-else :name="option.value === 'cash' ? 'coins' : 'landmark'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    </span>
+                                </template>
+                            </DropdownSelect>
                         </template>
                     </FormField>
 
                     <FormField for-id="type" :label="t('accounts.create.fields.type.label')" :error="form.errors.type">
                         <template #default="{ errorId, hasError }">
-                        <DropdownSelect
-                            id="type"
-                            :aria-invalid="hasError ? true : undefined"
-                            :aria-describedby="hasError ? errorId : undefined"
-                            :model-value="form.type"
-                            :options="accountTypeOptions"
-                            :placeholder="t('accounts.create.fields.type.placeholder')"
-                            :disabled="form.processing"
-                            @update:model-value="(value) => (form.type = value)"
-                        >
-                            <template #trigger-leading>
-                                <span
-                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
-                                    :class="accountTypeIconClasses(selectedAccountType?.value)"
-                                    aria-hidden="true"
-                                >
-                                    <Icon :name="selectedAccountType?.icon_name ?? 'wallet'" class="h-3.5 w-3.5" aria-hidden="true" />
-                                </span>
-                            </template>
-
-                            <template #option-leading="{ option }">
-                                <span
-                                    class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
-                                    :class="accountTypeIconClasses(option.value)"
-                                    aria-hidden="true"
-                                >
-                                    <Icon
-                                        :name="props.accountTypes.find((a) => a.value === option.value)?.icon_name ?? 'wallet'"
-                                        class="h-3.5 w-3.5"
+                            <DropdownSelect
+                                id="type"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                                :model-value="form.type"
+                                :options="accountTypeOptions"
+                                :placeholder="t('accounts.create.fields.type.placeholder')"
+                                :disabled="form.processing"
+                                @update:model-value="(value) => (form.type = value)"
+                            >
+                                <template #trigger-leading>
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="accountTypeIconClasses(selectedAccountType?.value)"
                                         aria-hidden="true"
-                                    />
-                                </span>
-                            </template>
-                        </DropdownSelect>
+                                    >
+                                        <Icon :name="selectedAccountType?.icon_name ?? 'wallet'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                    </span>
+                                </template>
+
+                                <template #option-leading="{ option }">
+                                    <span
+                                        class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                        :class="accountTypeIconClasses(option.value)"
+                                        aria-hidden="true"
+                                    >
+                                        <Icon
+                                            :name="props.accountTypes.find((a) => a.value === option.value)?.icon_name ?? 'wallet'"
+                                            class="h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                        />
+                                    </span>
+                                </template>
+                            </DropdownSelect>
                         </template>
                     </FormField>
 
                     <FormField for-id="currency" :label="t('accounts.create.fields.currency.label')" :error="form.errors.currency_id">
                         <template #default="{ errorId, hasError }">
-                        <DropdownSelect
-                            id="currency"
-                            :aria-invalid="hasError ? true : undefined"
-                            :aria-describedby="hasError ? errorId : undefined"
-                            :model-value="form.currency_id"
-                            :options="currencyOptions"
-                            :placeholder="t('accounts.create.fields.currency.placeholder')"
-                            :disabled="form.processing || currencies.length === 0"
-                            @update:model-value="(value) => (form.currency_id = value)"
-                        >
-                            <template #trigger-leading>
-                                <Icon name="coins" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                            </template>
-                        </DropdownSelect>
+                            <DropdownSelect
+                                id="currency"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                                :model-value="form.currency_id"
+                                :options="currencyOptions"
+                                :placeholder="t('accounts.create.fields.currency.placeholder')"
+                                :disabled="form.processing || currencies.length === 0"
+                                @update:model-value="(value) => (form.currency_id = value)"
+                            >
+                                <template #trigger-leading>
+                                    <Icon name="coins" class="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                </template>
+                            </DropdownSelect>
                         </template>
                     </FormField>
 
@@ -245,14 +245,14 @@ function submit() {
                         :error="form.errors.opening_balance"
                     >
                         <template #default="{ errorId, hasError }">
-                        <Input
-                            id="opening_balance"
-                            inputmode="decimal"
-                            v-model="form.opening_balance"
-                            :placeholder="t('accounts.create.fields.openingBalance.placeholder')"
-                            :aria-invalid="hasError ? true : undefined"
-                            :aria-describedby="hasError ? errorId : undefined"
-                        />
+                            <Input
+                                id="opening_balance"
+                                inputmode="decimal"
+                                v-model="form.opening_balance"
+                                :placeholder="t('accounts.create.fields.openingBalance.placeholder')"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                            />
                         </template>
                     </FormField>
 

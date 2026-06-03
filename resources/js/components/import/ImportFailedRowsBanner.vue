@@ -90,10 +90,7 @@ function dismissAll() {
 
     isDismissing.value = true;
 
-    const data =
-        props.accountFilterId !== null && props.accountFilterId !== undefined
-            ? { account_id: props.accountFilterId }
-            : {};
+    const data = props.accountFilterId !== null && props.accountFilterId !== undefined ? { account_id: props.accountFilterId } : {};
 
     router.post(route('import-failed-rows.dismiss-all'), data, {
         preserveScroll: true,
@@ -165,7 +162,9 @@ function displayValue(value: string | null): string {
                     <div class="overflow-x-auto rounded-lg border border-sidebar-border/70 dark:border-sidebar-border">
                         <table class="min-w-full text-sm">
                             <caption class="sr-only">
-                                {{ t('imports.failed_rows.table.caption') }}
+                                {{
+                                    t('imports.failed_rows.table.caption')
+                                }}
                             </caption>
                             <thead class="bg-muted/40 text-xs text-muted-foreground">
                                 <tr>
@@ -180,14 +179,10 @@ function displayValue(value: string | null): string {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr
-                                    v-for="row in group.rows"
-                                    :key="row.id"
-                                    class="border-t border-sidebar-border/50 dark:border-sidebar-border"
-                                >
+                                <tr v-for="row in group.rows" :key="row.id" class="border-t border-sidebar-border/50 dark:border-sidebar-border">
                                     <td class="px-3 py-2 tabular-nums">{{ row.row_number }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap">{{ displayValue(row.date_raw) }}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap tabular-nums">{{ displayValue(row.amount_raw) }}</td>
+                                    <td class="whitespace-nowrap px-3 py-2">{{ displayValue(row.date_raw) }}</td>
+                                    <td class="whitespace-nowrap px-3 py-2 tabular-nums">{{ displayValue(row.amount_raw) }}</td>
                                     <td class="max-w-xs truncate px-3 py-2" :title="row.description_raw ?? undefined">
                                         {{ displayValue(row.description_raw) }}
                                     </td>

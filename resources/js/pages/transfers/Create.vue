@@ -5,8 +5,8 @@ import FormField from '@/components/forms/FormField.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -120,139 +120,146 @@ function submit() {
                         <div class="grid gap-4 md:grid-cols-2">
                             <FormField for-id="from_account_id" :label="t('transfers.form.fromAccount')" :error="form.errors.from_account_id">
                                 <template #default="{ errorId, hasError }">
-                                <DropdownSelect
-                                    id="from_account_id"
-                                    :model-value="form.from_account_id"
-                                    :options="accountOptions"
-                                    :placeholder="t('transfers.form.selectPlaceholder')"
-                                    :disabled="form.processing"
-                                    :aria-invalid="Boolean(hasError || (isSameAccount && form.to_account_id !== null))"
-                                    :aria-describedby="hasError ? errorId : undefined"
-                                    @update:model-value="(value) => (form.from_account_id = value)"
-                                >
-                                    <template #trigger-leading>
-                                        <span
-                                            v-if="fromAccount"
-                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
-                                            :class="
-                                                isCashBank(fromAccount.bank)
-                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
-                                                    : 'bg-muted'
-                                            "
-                                            aria-hidden="true"
-                                        >
-                                            <img
-                                                v-if="fromAccount.bank_icon_url && !isCashBank(fromAccount.bank)"
-                                                :src="fromAccount.bank_icon_url"
-                                                :alt="fromAccount.name"
-                                                class="h-5 w-5 object-cover"
-                                            />
-                                            <Icon v-else-if="isCashBank(fromAccount.bank)" :name="'coins'" class="h-3.5 w-3.5" aria-hidden="true" />
-                                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
-                                                {{ fromAccount.name.charAt(0).toUpperCase() }}
-                                            </span>
-                                        </span>
-                                    </template>
-
-                                    <template #option-leading="{ option }">
-                                        <span
-                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
-                                            :class="
-                                                isCashBank(accountsById.get(option.value)?.bank)
-                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
-                                                    : 'bg-muted'
-                                            "
-                                            aria-hidden="true"
-                                        >
-                                            <img
-                                                v-if="
-                                                    accountsById.get(option.value)?.bank_icon_url && !isCashBank(accountsById.get(option.value)?.bank)
+                                    <DropdownSelect
+                                        id="from_account_id"
+                                        :model-value="form.from_account_id"
+                                        :options="accountOptions"
+                                        :placeholder="t('transfers.form.selectPlaceholder')"
+                                        :disabled="form.processing"
+                                        :aria-invalid="Boolean(hasError || (isSameAccount && form.to_account_id !== null))"
+                                        :aria-describedby="hasError ? errorId : undefined"
+                                        @update:model-value="(value) => (form.from_account_id = value)"
+                                    >
+                                        <template #trigger-leading>
+                                            <span
+                                                v-if="fromAccount"
+                                                class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                                :class="
+                                                    isCashBank(fromAccount.bank)
+                                                        ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                        : 'bg-muted'
                                                 "
-                                                :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
-                                                :alt="accountsById.get(option.value)?.name ?? ''"
-                                                class="h-5 w-5 object-cover"
-                                            />
-                                            <Icon
-                                                v-else-if="isCashBank(accountsById.get(option.value)?.bank)"
-                                                :name="'coins'"
-                                                class="h-3.5 w-3.5"
                                                 aria-hidden="true"
-                                            />
-                                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
-                                                {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                            >
+                                                <img
+                                                    v-if="fromAccount.bank_icon_url && !isCashBank(fromAccount.bank)"
+                                                    :src="fromAccount.bank_icon_url"
+                                                    :alt="fromAccount.name"
+                                                    class="h-5 w-5 object-cover"
+                                                />
+                                                <Icon
+                                                    v-else-if="isCashBank(fromAccount.bank)"
+                                                    :name="'coins'"
+                                                    class="h-3.5 w-3.5"
+                                                    aria-hidden="true"
+                                                />
+                                                <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                    {{ fromAccount.name.charAt(0).toUpperCase() }}
+                                                </span>
                                             </span>
-                                        </span>
-                                    </template>
-                                </DropdownSelect>
+                                        </template>
+
+                                        <template #option-leading="{ option }">
+                                            <span
+                                                class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                                :class="
+                                                    isCashBank(accountsById.get(option.value)?.bank)
+                                                        ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                        : 'bg-muted'
+                                                "
+                                                aria-hidden="true"
+                                            >
+                                                <img
+                                                    v-if="
+                                                        accountsById.get(option.value)?.bank_icon_url &&
+                                                        !isCashBank(accountsById.get(option.value)?.bank)
+                                                    "
+                                                    :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
+                                                    :alt="accountsById.get(option.value)?.name ?? ''"
+                                                    class="h-5 w-5 object-cover"
+                                                />
+                                                <Icon
+                                                    v-else-if="isCashBank(accountsById.get(option.value)?.bank)"
+                                                    :name="'coins'"
+                                                    class="h-3.5 w-3.5"
+                                                    aria-hidden="true"
+                                                />
+                                                <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                    {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                                </span>
+                                            </span>
+                                        </template>
+                                    </DropdownSelect>
                                 </template>
                             </FormField>
 
                             <FormField for-id="to_account_id" :label="t('transfers.form.toAccount')" :error="form.errors.to_account_id">
                                 <template #default="{ errorId, hasError }">
-                                <DropdownSelect
-                                    id="to_account_id"
-                                    :model-value="form.to_account_id"
-                                    :options="accountOptions"
-                                    :placeholder="t('transfers.form.selectPlaceholder')"
-                                    :disabled="form.processing"
-                                    :aria-invalid="Boolean(hasError || isSameAccount)"
-                                    :aria-describedby="hasError ? errorId : isSameAccount ? formErrorId : undefined"
-                                    @update:model-value="(value) => (form.to_account_id = value)"
-                                >
-                                    <template #trigger-leading>
-                                        <span
-                                            v-if="toAccount"
-                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
-                                            :class="
-                                                isCashBank(toAccount.bank)
-                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
-                                                    : 'bg-muted'
-                                            "
-                                            aria-hidden="true"
-                                        >
-                                            <img
-                                                v-if="toAccount.bank_icon_url && !isCashBank(toAccount.bank)"
-                                                :src="toAccount.bank_icon_url"
-                                                :alt="toAccount.name"
-                                                class="h-5 w-5 object-cover"
-                                            />
-                                            <Icon v-else-if="isCashBank(toAccount.bank)" :name="'coins'" class="h-3.5 w-3.5" aria-hidden="true" />
-                                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
-                                                {{ toAccount.name.charAt(0).toUpperCase() }}
-                                            </span>
-                                        </span>
-                                    </template>
-
-                                    <template #option-leading="{ option }">
-                                        <span
-                                            class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
-                                            :class="
-                                                isCashBank(accountsById.get(option.value)?.bank)
-                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
-                                                    : 'bg-muted'
-                                            "
-                                            aria-hidden="true"
-                                        >
-                                            <img
-                                                v-if="
-                                                    accountsById.get(option.value)?.bank_icon_url && !isCashBank(accountsById.get(option.value)?.bank)
+                                    <DropdownSelect
+                                        id="to_account_id"
+                                        :model-value="form.to_account_id"
+                                        :options="accountOptions"
+                                        :placeholder="t('transfers.form.selectPlaceholder')"
+                                        :disabled="form.processing"
+                                        :aria-invalid="Boolean(hasError || isSameAccount)"
+                                        :aria-describedby="hasError ? errorId : isSameAccount ? formErrorId : undefined"
+                                        @update:model-value="(value) => (form.to_account_id = value)"
+                                    >
+                                        <template #trigger-leading>
+                                            <span
+                                                v-if="toAccount"
+                                                class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                                :class="
+                                                    isCashBank(toAccount.bank)
+                                                        ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                        : 'bg-muted'
                                                 "
-                                                :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
-                                                :alt="accountsById.get(option.value)?.name ?? ''"
-                                                class="h-5 w-5 object-cover"
-                                            />
-                                            <Icon
-                                                v-else-if="isCashBank(accountsById.get(option.value)?.bank)"
-                                                :name="'coins'"
-                                                class="h-3.5 w-3.5"
                                                 aria-hidden="true"
-                                            />
-                                            <span v-else class="text-[10px] font-semibold text-muted-foreground">
-                                                {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                            >
+                                                <img
+                                                    v-if="toAccount.bank_icon_url && !isCashBank(toAccount.bank)"
+                                                    :src="toAccount.bank_icon_url"
+                                                    :alt="toAccount.name"
+                                                    class="h-5 w-5 object-cover"
+                                                />
+                                                <Icon v-else-if="isCashBank(toAccount.bank)" :name="'coins'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                                <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                    {{ toAccount.name.charAt(0).toUpperCase() }}
+                                                </span>
                                             </span>
-                                        </span>
-                                    </template>
-                                </DropdownSelect>
+                                        </template>
+
+                                        <template #option-leading="{ option }">
+                                            <span
+                                                class="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded"
+                                                :class="
+                                                    isCashBank(accountsById.get(option.value)?.bank)
+                                                        ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                        : 'bg-muted'
+                                                "
+                                                aria-hidden="true"
+                                            >
+                                                <img
+                                                    v-if="
+                                                        accountsById.get(option.value)?.bank_icon_url &&
+                                                        !isCashBank(accountsById.get(option.value)?.bank)
+                                                    "
+                                                    :src="accountsById.get(option.value)?.bank_icon_url ?? ''"
+                                                    :alt="accountsById.get(option.value)?.name ?? ''"
+                                                    class="h-5 w-5 object-cover"
+                                                />
+                                                <Icon
+                                                    v-else-if="isCashBank(accountsById.get(option.value)?.bank)"
+                                                    :name="'coins'"
+                                                    class="h-3.5 w-3.5"
+                                                    aria-hidden="true"
+                                                />
+                                                <span v-else class="text-[10px] font-semibold text-muted-foreground">
+                                                    {{ (accountsById.get(option.value)?.name ?? '?').charAt(0).toUpperCase() }}
+                                                </span>
+                                            </span>
+                                        </template>
+                                    </DropdownSelect>
                                 </template>
                             </FormField>
                         </div>
@@ -260,55 +267,55 @@ function submit() {
                         <div class="grid gap-4 md:grid-cols-2">
                             <FormField for-id="amount" :label="t('transfers.form.amount')" :error="form.errors.amount">
                                 <template #default="{ errorId, hasError }">
-                                <Input
-                                    id="amount"
-                                    v-model="form.amount"
-                                    inputmode="decimal"
-                                    :disabled="form.processing"
-                                    :placeholder="t('transfers.form.amountPlaceholder')"
-                                    :aria-invalid="hasError ? true : undefined"
-                                    :aria-describedby="hasError ? errorId : undefined"
-                                />
+                                    <Input
+                                        id="amount"
+                                        v-model="form.amount"
+                                        inputmode="decimal"
+                                        :disabled="form.processing"
+                                        :placeholder="t('transfers.form.amountPlaceholder')"
+                                        :aria-invalid="hasError ? true : undefined"
+                                        :aria-describedby="hasError ? errorId : undefined"
+                                    />
                                 </template>
                             </FormField>
 
                             <FormField for-id="date" :label="t('transfers.form.date')" :error="form.errors.date">
                                 <template #default="{ errorId, hasError }">
-                                <DatePickerInput
-                                    id="date"
-                                    :aria-invalid="hasError"
-                                    :aria-describedby="hasError ? errorId : undefined"
-                                    :model-value="form.date"
-                                    :disabled="form.processing"
-                                    @update:model-value="(value) => (form.date = value)"
-                                />
+                                    <DatePickerInput
+                                        id="date"
+                                        :aria-invalid="hasError"
+                                        :aria-describedby="hasError ? errorId : undefined"
+                                        :model-value="form.date"
+                                        :disabled="form.processing"
+                                        @update:model-value="(value) => (form.date = value)"
+                                    />
                                 </template>
                             </FormField>
                         </div>
 
                         <FormField for-id="subject" :label="t('transfers.form.subjectOptional')" :error="form.errors.subject">
                             <template #default="{ errorId, hasError }">
-                            <Input
-                                id="subject"
-                                v-model="form.subject"
-                                :disabled="form.processing"
-                                :aria-invalid="hasError ? true : undefined"
-                                :aria-describedby="hasError ? errorId : undefined"
-                            />
+                                <Input
+                                    id="subject"
+                                    v-model="form.subject"
+                                    :disabled="form.processing"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                />
                             </template>
                         </FormField>
 
                         <FormField for-id="description" :label="t('transfers.form.descriptionOptional')" :error="form.errors.description">
                             <template #default="{ errorId, hasError }">
-                            <textarea
-                                id="description"
-                                v-model="form.description"
-                                :disabled="form.processing"
-                                rows="3"
-                                :aria-invalid="hasError ? true : undefined"
-                                :aria-describedby="hasError ? errorId : undefined"
-                                class="flex min-h-[84px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                            />
+                                <textarea
+                                    id="description"
+                                    v-model="form.description"
+                                    :disabled="form.processing"
+                                    rows="3"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                    class="flex min-h-[84px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                />
                             </template>
                         </FormField>
 

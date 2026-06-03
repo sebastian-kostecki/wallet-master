@@ -4,9 +4,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 > **Uwaga.** Zadania poza podstawowym zakresem PRD są oznaczone tagiem `[plan]` przy nazwie sekcji lub punktu (sekcje 12–17).
 
-> **Ostatnia synchronizacja:** 2026-06-03 (branch `improvement/a11y-mvp`). Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
+> **Ostatnia synchronizacja:** 2026-06-03 (branch `develop`). Scalone: `improvement/telemetry` → `improvement/a11y-mvp` → `improvement/release-nfr-tests` → `develop`. Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
 >
-> **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4). Telemetria produktowa (§8/§13) — wdrożona przez `App\Telemetry\Event::record`, kanał `telemetry`, `POST /telemetry/event`, `resources/js/lib/telemetry.ts`. UX jakościowe i A11y baseline (§9) — wdrożone na branchu `improvement/a11y-mvp`. Otwarte: manual QA (§10), edycja kwoty transferu bez unlink, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`, telemetria `import_mapping_*`.
+> **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4). Telemetria (§8/§13), A11y/UX (§9), NFR (§12) — na `develop`. Testy: 250 passed. Otwarte: manual QA (§10.2), pre-flight §0, PHPStan baseline (19 istniejących), edycja kwoty transferu bez unlink, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`, telemetria `import_mapping_*`.
 
 ---
 
