@@ -123,16 +123,22 @@ function openDeleteDialog(accountId: number) {
         <div class="flex flex-col gap-6 p-4">
             <AccountsSummaryCard :accounts="accounts" />
 
-            <div v-if="accounts.length === 0" class="rounded-xl border border-sidebar-border/70 p-8 text-center dark:border-sidebar-border">
-                <p class="text-sm text-muted-foreground">{{ t('accounts.index.empty.message') }}</p>
+            <section
+                v-if="accounts.length === 0"
+                role="region"
+                aria-labelledby="accounts-empty-heading"
+                class="rounded-xl border border-sidebar-border/70 p-8 text-center dark:border-sidebar-border"
+            >
+                <h2 id="accounts-empty-heading" class="text-lg font-semibold">{{ t('accounts.index.empty.heading') }}</h2>
+                <p class="mt-2 text-sm text-muted-foreground">{{ t('accounts.index.empty.message') }}</p>
                 <Link :href="route('accounts.create')" :class="cn(buttonVariants({}), 'mt-4')">{{ t('accounts.index.empty.cta') }}</Link>
-            </div>
+            </section>
 
             <div v-else class="flex items-center justify-end">
                 <AccountsViewToggle :model-value="viewMode" @update:model-value="setViewMode" />
             </div>
 
-            <div v-if="viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div v-if="accounts.length > 0 && viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <AccountCard
                     v-for="account in accounts"
                     :key="account.id"
@@ -147,7 +153,7 @@ function openDeleteDialog(accountId: number) {
                 />
             </div>
 
-            <div v-else class="flex flex-col gap-2">
+            <div v-else-if="accounts.length > 0" class="flex flex-col gap-2">
                 <AccountRow
                     v-for="account in accounts"
                     :key="account.id"

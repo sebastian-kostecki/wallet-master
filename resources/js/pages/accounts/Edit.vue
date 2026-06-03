@@ -147,7 +147,7 @@ const adjustProcessing = ref(false);
                             <template #default="{ errorId, hasError }">
                             <DropdownSelect
                                 id="bank"
-                                :aria-invalid="hasError"
+                                :aria-invalid="hasError ? true : undefined"
                                 :aria-describedby="hasError ? errorId : undefined"
                                 :model-value="form.bank"
                                 :options="bankOptions"
@@ -209,7 +209,7 @@ const adjustProcessing = ref(false);
                             <template #default="{ errorId, hasError }">
                             <DropdownSelect
                                 id="type"
-                                :aria-invalid="hasError"
+                                :aria-invalid="hasError ? true : undefined"
                                 :aria-describedby="hasError ? errorId : undefined"
                                 :model-value="form.type"
                                 :options="accountTypeOptions"
@@ -248,6 +248,7 @@ const adjustProcessing = ref(false);
                             for-id="opening_balance"
                             :label="t('accounts.create.fields.openingBalance.label')"
                             :error="form.errors.opening_balance"
+                            :hint="t('accounts.edit.openingBalanceHint')"
                         >
                             <template #default="{ errorId, hasError }">
                             <div class="relative">
@@ -263,9 +264,6 @@ const adjustProcessing = ref(false);
                                     {{ currencySymbol }}
                                 </span>
                             </div>
-                            <p class="text-xs text-muted-foreground">
-                                {{ t('accounts.edit.openingBalanceHint') }}
-                            </p>
                             </template>
                         </FormField>
 

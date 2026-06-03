@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import InputError from '@/components/InputError.vue';
+import FormField from '@/components/forms/FormField.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -92,25 +92,27 @@ function submit() {
             </DialogHeader>
 
             <form @submit.prevent="submit" class="grid gap-4">
-                <div class="grid gap-2">
-                    <Label for="new_balance">{{ t('accounts.adjust.newBalanceLabel') }}</Label>
-                    <div class="relative">
-                        <Input
-                            id="new_balance"
-                            inputmode="decimal"
-                            v-model="form.new_balance"
-                            :placeholder="t('accounts.adjust.newBalancePlaceholder')"
-                            class="pr-10"
-                        />
-                        <span
-                            v-if="props.currencySymbol"
-                            class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
-                        >
-                            {{ props.currencySymbol }}
-                        </span>
-                    </div>
-                    <InputError :message="form.errors.new_balance" />
-                </div>
+                <FormField for-id="new_balance" :label="t('accounts.adjust.newBalanceLabel')" :error="form.errors.new_balance">
+                    <template #default="{ errorId, hasError }">
+                        <div class="relative">
+                            <Input
+                                id="new_balance"
+                                inputmode="decimal"
+                                v-model="form.new_balance"
+                                :placeholder="t('accounts.adjust.newBalancePlaceholder')"
+                                class="pr-10"
+                                :aria-invalid="hasError ? true : undefined"
+                                :aria-describedby="hasError ? errorId : undefined"
+                            />
+                            <span
+                                v-if="props.currencySymbol"
+                                class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+                            >
+                                {{ props.currencySymbol }}
+                            </span>
+                        </div>
+                    </template>
+                </FormField>
 
                 <div class="flex items-start gap-3 rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
                     <Checkbox
@@ -126,7 +128,12 @@ function submit() {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="!canSubmit || disabled || form.processing">{{ t('actions.save') }}</Button>
+                    <Button type="button" variant="secondary" :disabled="disabled || form.processing" @click="emit('update:open', false)">
+                        {{ t('actions.cancel') }}
+                    </Button>
+                    <Button type="submit" :disabled="!canSubmit || disabled || form.processing" :aria-busy="form.processing || undefined">
+                        {{ t('actions.save') }}
+                    </Button>
                 </DialogFooter>
             </form>
         </DialogContent>

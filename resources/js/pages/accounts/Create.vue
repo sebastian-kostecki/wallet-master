@@ -123,7 +123,7 @@ function submit() {
                         <template #default="{ errorId, hasError }">
                         <DropdownSelect
                             id="bank"
-                            :aria-invalid="hasError"
+                            :aria-invalid="hasError ? true : undefined"
                             :aria-describedby="hasError ? errorId : undefined"
                             :model-value="form.bank"
                             :options="bankOptions"
@@ -185,7 +185,7 @@ function submit() {
                         <template #default="{ errorId, hasError }">
                         <DropdownSelect
                             id="type"
-                            :aria-invalid="hasError"
+                            :aria-invalid="hasError ? true : undefined"
                             :aria-describedby="hasError ? errorId : undefined"
                             :model-value="form.type"
                             :options="accountTypeOptions"
@@ -224,7 +224,7 @@ function submit() {
                         <template #default="{ errorId, hasError }">
                         <DropdownSelect
                             id="currency"
-                            :aria-invalid="hasError"
+                            :aria-invalid="hasError ? true : undefined"
                             :aria-describedby="hasError ? errorId : undefined"
                             :model-value="form.currency_id"
                             :options="currencyOptions"

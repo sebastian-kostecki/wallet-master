@@ -13,6 +13,7 @@
                 "list": "List"
             },
             "empty": {
+                "heading": "No accounts yet",
                 "message": "You don't have any accounts yet.",
                 "cta": "Add your first account"
             }
