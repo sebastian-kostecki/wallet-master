@@ -4,9 +4,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 > **Uwaga.** Zadania poza podstawowym zakresem PRD są oznaczone tagiem `[plan]` przy nazwie sekcji lub punktu (sekcje 12–17).
 
-> **Ostatnia synchronizacja:** 2026-06-03 (branch `develop`). Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
+> **Ostatnia synchronizacja:** 2026-06-03 (branch `improvement/telemetry`). Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
 >
-> **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4–5, §9). Otwarte: pełna telemetria (§8/§13), A11y/QA (§9–10), `api` rate limit, edycja kwoty transferu bez unlink, `subject` w formularzu Transfer, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`.
+> **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4–5, §9). Telemetria produktowa (§8/§13) — wdrożona przez `App\Telemetry\Event::record`, kanał `telemetry`, `POST /telemetry/event`, `resources/js/lib/telemetry.ts`. Otwarte: A11y/QA (§9–10), edycja kwoty transferu bez unlink, `subject` w formularzu Transfer, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`, telemetria `import_mapping_*`.
 
 ---
 
@@ -250,12 +250,12 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 8) Telemetria / eventy (min.)
-- [ ] Auth: `user_registered`, `user_logged_in`, `user_login_failed`
-- [ ] Konta: `account_created`, `account_updated`, `account_deleted`, `account_deleted_with_transactions`, `account_balance_adjusted`
-- [ ] Transakcje: `transaction_create_opened`, `transaction_created`, `transaction_updated`, `transaction_deleted`
-- [ ] Lista: `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
-- [ ] Transfer: `transfer_created`, `transfer_failed_validation`
-- [~] Import: `import_row_validation_failed` (kanał `telemetry` w `CommitImport`); brak centralnego `Event::record` — pozostałe zdarzenia §8/§13 niepodłączone; realtime: `ImportStatusUpdated` / Echo
+- [x] Auth: `user_registered`, `user_logged_in`, `user_login_failed`
+- [x] Konta: `account_created`, `account_updated`, `account_deleted`, `account_deleted_with_transactions`, `account_balance_adjusted`
+- [x] Transakcje: `transaction_create_opened`, `transaction_created`, `transaction_updated`, `transaction_deleted`
+- [x] Lista: `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`
+- [x] Transfer: `transfer_created`, `transfer_failed_validation`
+- [x] Import: `import_row_validation_failed`, `import_started`, `import_completed`, `import_failed` — `Event::record` w `CommitImport` / job / listenerach; realtime: `ImportStatusUpdated` / Echo
 
 ---
 
@@ -309,7 +309,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 #### 12.1 Rate limiting
 - [x] `RateLimiter::for('imports', ...)` w `AppServiceProvider::boot` — 10/min per `user_id` (fallback per IP).
-- [ ] `RateLimiter::for('api', ...)` — 60/min per zalogowanego użytkownika.
+- [x] `RateLimiter::for('api', ...)` — 60/min per zalogowanego użytkownika (`throttle:api` na `POST /telemetry/event`).
 - [x] Middleware `throttle:imports` na trasach upload/commit w `routes/imports.php`.
 
 #### 12.2 Konto Cash bez 500
@@ -325,16 +325,17 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 13) Telemetria **[plan §10]**
 
-- [ ] Klasa `App\Telemetry\Event::record(string $name, array $payload, ?int $userId = null)`.
-- [ ] Kanał loga `telemetry` w `config/logging.php` (daily, JSON line).
-- [ ] Wywołania w warstwie domeny / akcji:
-  - [ ] Auth: `user_registered`, `user_logged_in`, `user_login_failed`
-  - [ ] Konta: `account_created`, `account_updated`, `account_deleted`, `account_deleted_with_transactions`, `account_balance_adjusted`
-  - [ ] Transakcje: `transaction_created`, `transaction_updated`, `transaction_deleted`
-  - [ ] Lista (front-end POST `/telemetry/event`, throttle 60/min): `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`, `transaction_create_opened`
-  - [~] Transfer: `transfer_created`, `transfer_failed_validation`, `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous` (logi `telemetry`; eventy listenerów częściowo), `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`
-  - [ ] Import: `import_started`, `import_completed`, `import_failed`, `import_mapping_saved`, `import_mapping_reused`, `import_type_inferred`, `import_bank_resolved_from_account`, `import_enrichment_typesense_hit`, `import_enrichment_typesense_miss`
-- [ ] Helper front-end `resources/js/lib/telemetry.ts` z `track(name, payload)`.
+- [x] Klasa `App\Telemetry\Event::record(string $name, array $payload, ?int $userId = null)`.
+- [x] Kanał loga `telemetry` w `config/logging.php` (daily, JSON line).
+- [x] Wywołania w warstwie domeny / akcji:
+  - [x] Auth: `user_registered`, `user_logged_in`, `user_login_failed`
+  - [x] Konta: `account_created`, `account_updated`, `account_deleted`, `account_deleted_with_transactions`, `account_balance_adjusted`
+  - [x] Transakcje: `transaction_created`, `transaction_updated`, `transaction_deleted`
+  - [x] Lista (front-end POST `/telemetry/event`, throttle 60/min): `transactions_filtered`, `transactions_sorted`, `transactions_page_changed`, `transaction_create_opened`
+  - [x] Transfer: `transfer_created`, `transfer_failed_validation`, `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`
+  - [x] Import: `import_started`, `import_completed`, `import_failed`, `import_row_validation_failed`, `import_type_inferred`, `import_bank_resolved_from_account`, `import_enrichment_typesense_hit`, `import_enrichment_typesense_miss`
+  - [ ] Import (wycofane z MVP — brak UI mapowania): `import_mapping_saved`, `import_mapping_reused`
+- [x] Helper front-end `resources/js/lib/telemetry.ts` z `track(name, payload)`.
 
 ---
 
