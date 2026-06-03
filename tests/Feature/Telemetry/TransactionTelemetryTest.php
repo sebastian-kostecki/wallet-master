@@ -7,15 +7,12 @@ use App\Models\Currency;
 use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
-use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
 });
 
 test('creating transaction records transaction_created telemetry event', function () {
-    Log::fake();
-
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -29,29 +26,26 @@ test('creating transaction records transaction_created telemetry event', functio
         'current_balance' => 100,
     ]);
 
-    $this->actingAs($user)->post('/transactions', [
-        'account_id' => $account->id,
-        'date' => '24-04-2026',
-        'amount' => -12.34,
-        'description' => 'Coffee',
-    ])->assertSessionHasNoErrors();
+    $logged = captureTelemetryLogs(function () use ($user, $account): void {
+        $this->actingAs($user)->post('/transactions', [
+            'account_id' => $account->id,
+            'date' => '24-04-2026',
+            'amount' => -12.34,
+            'description' => 'Coffee',
+        ])->assertSessionHasNoErrors();
+    });
 
     $transaction = Transaction::query()->where('user_id', $user->id)->first();
     expect($transaction)->not->toBeNull();
 
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) use ($user, $transaction, $account) {
-        return $message === 'transaction_created'
-            && $context['event'] === 'transaction_created'
-            && $context['transaction_id'] === $transaction->id
+    assertTelemetryEvent($logged, 'transaction_created', function (array $context) use ($user, $transaction, $account) {
+        return $context['transaction_id'] === $transaction->id
             && $context['account_id'] === $account->id
-            && $context['user_id'] === $user->id
-            && isset($context['recorded_at']);
+            && $context['user_id'] === $user->id;
     });
 });
 
 test('updating transaction records transaction_updated telemetry event', function () {
-    Log::fake();
-
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -79,27 +73,24 @@ test('updating transaction records transaction_updated telemetry event', functio
         'dedupe_hash' => md5('2026-04-20|-10.00|old', true),
     ]);
 
-    $this->actingAs($user)->put("/transactions/{$transaction->id}", [
-        'account_id' => $account->id,
-        'date' => '20-04-2026',
-        'amount' => -20,
-        'description' => 'New',
-        'subject' => null,
-    ])->assertSessionHasNoErrors();
+    $logged = captureTelemetryLogs(function () use ($user, $transaction, $account): void {
+        $this->actingAs($user)->put("/transactions/{$transaction->id}", [
+            'account_id' => $account->id,
+            'date' => '20-04-2026',
+            'amount' => -20,
+            'description' => 'New',
+            'subject' => null,
+        ])->assertSessionHasNoErrors();
+    });
 
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) use ($user, $transaction, $account) {
-        return $message === 'transaction_updated'
-            && $context['event'] === 'transaction_updated'
-            && $context['transaction_id'] === $transaction->id
+    assertTelemetryEvent($logged, 'transaction_updated', function (array $context) use ($user, $transaction, $account) {
+        return $context['transaction_id'] === $transaction->id
             && $context['account_id'] === $account->id
-            && $context['user_id'] === $user->id
-            && isset($context['recorded_at']);
+            && $context['user_id'] === $user->id;
     });
 });
 
 test('deleting transaction records transaction_deleted telemetry event', function () {
-    Log::fake();
-
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -127,14 +118,13 @@ test('deleting transaction records transaction_deleted telemetry event', functio
         'dedupe_hash' => md5('2026-04-20|-20.00|expense', true),
     ]);
 
-    $this->actingAs($user)->delete("/transactions/{$transaction->id}")->assertRedirect('/transactions');
+    $logged = captureTelemetryLogs(function () use ($user, $transaction): void {
+        $this->actingAs($user)->delete("/transactions/{$transaction->id}")->assertRedirect('/transactions');
+    });
 
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) use ($user, $transaction, $account) {
-        return $message === 'transaction_deleted'
-            && $context['event'] === 'transaction_deleted'
-            && $context['transaction_id'] === $transaction->id
+    assertTelemetryEvent($logged, 'transaction_deleted', function (array $context) use ($user, $transaction, $account) {
+        return $context['transaction_id'] === $transaction->id
             && $context['account_id'] === $account->id
-            && $context['user_id'] === $user->id
-            && isset($context['recorded_at']);
+            && $context['user_id'] === $user->id;
     });
 });

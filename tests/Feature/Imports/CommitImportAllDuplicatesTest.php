@@ -6,7 +6,6 @@ use App\Imports\Workflow\CommitImport;
 use App\Jobs\CommitImportJob;
 use App\Models\Account;
 use App\Models\Currency;
-use App\Models\Import;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
 use Illuminate\Support\Facades\Storage;
@@ -15,29 +14,6 @@ beforeEach(function () {
     $this->seed(CurrencySeeder::class);
     Storage::fake('local');
 });
-
-function createImportWithFile(User $user, Account $account, string $content): Import
-{
-    $import = Import::query()->create([
-        'user_id' => $user->id,
-        'account_id' => $account->id,
-        'status' => 'queued',
-        'mapping' => [
-            'date' => 'date',
-            'amount' => 'amount',
-            'description' => 'description',
-            'subject' => 'subject',
-        ],
-        'details' => [
-            'source_file' => "imports/{$user->id}/source-{$account->id}.csv",
-            'headers' => ['date', 'amount', 'description', 'subject'],
-        ],
-    ]);
-
-    Storage::disk('local')->put(data_get($import->details, 'source_file'), $content);
-
-    return $import;
-}
 
 test('import with only duplicate rows commits with zero imported', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');

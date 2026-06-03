@@ -298,8 +298,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 11) Quality gates przed merge
-- [ ] `vendor/bin/pint --dirty --format agent`
-- [ ] `php artisan test --compact` (uruchomić testy dotknięte zmianami)
+- [x] `vendor/bin/pint --dirty --format agent`
+- [x] `php artisan test --compact` (uruchomić testy dotknięte zmianami)
 - [ ] `vendor/bin/phpstan analyse` (Larastan) bez nowych ostrzeżeń
 - [ ] `npm run lint` + `npm run format` (jeśli dotyczy)
 - [ ] Brak logowania wrażliwych danych importu w produkcji (przegląd logów/handlerów).

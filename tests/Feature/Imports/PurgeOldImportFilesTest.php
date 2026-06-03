@@ -40,21 +40,23 @@ test('purge command deletes failed import source files older than retention peri
     Storage::disk('local')->put($oldPath, 'old failed import');
     Storage::disk('local')->put($recentPath, 'recent failed import');
 
-    Import::query()->create([
+    $oldImport = Import::query()->create([
         'user_id' => $user->id,
         'account_id' => $account->id,
         'status' => ImportStatus::Failed->value,
-        'created_at' => now()->subDays(45),
         'details' => ['source_file' => $oldPath],
     ]);
+    $oldImport->created_at = now()->subDays(45);
+    $oldImport->saveQuietly();
 
-    Import::query()->create([
+    $recentImport = Import::query()->create([
         'user_id' => $user->id,
         'account_id' => $account->id,
         'status' => ImportStatus::Failed->value,
-        'created_at' => now()->subDays(5),
         'details' => ['source_file' => $recentPath],
     ]);
+    $recentImport->created_at = now()->subDays(5);
+    $recentImport->saveQuietly();
 
     $this->artisan(PurgeOldImportFiles::class, ['--days' => 30])
         ->assertSuccessful();
@@ -83,13 +85,14 @@ test('purge command dry run does not delete files', function () {
     $path = "imports/{$user->id}/9/source-failed.csv";
     Storage::disk('local')->put($path, 'failed import');
 
-    Import::query()->create([
+    $failedImport = Import::query()->create([
         'user_id' => $user->id,
         'account_id' => $account->id,
         'status' => ImportStatus::Failed->value,
-        'created_at' => now()->subDays(60),
         'details' => ['source_file' => $path],
     ]);
+    $failedImport->created_at = now()->subDays(60);
+    $failedImport->saveQuietly();
 
     $this->artisan(PurgeOldImportFiles::class, ['--days' => 30, '--dry-run' => true])
         ->assertSuccessful();

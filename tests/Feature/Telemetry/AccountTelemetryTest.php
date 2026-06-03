@@ -8,41 +8,34 @@ use App\Models\Currency;
 use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
-use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
 });
 
 test('creating account records account_created telemetry event', function () {
-    Log::fake();
-
     $user = User::factory()->create();
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
 
-    $this->actingAs($user)->post('/accounts', [
-        'name' => 'Konto testowe',
-        'bank' => 'cash',
-        'type' => 'checking',
-        'currency_id' => $plnId,
-        'opening_balance' => 100,
-    ])->assertSessionHasNoErrors();
+    $logged = captureTelemetryLogs(function () use ($user, $plnId): void {
+        $this->actingAs($user)->post('/accounts', [
+            'name' => 'Konto testowe',
+            'bank' => 'cash',
+            'type' => 'checking',
+            'currency_id' => $plnId,
+            'opening_balance' => 100,
+        ])->assertSessionHasNoErrors();
+    });
 
     $account = Account::query()->where('user_id', $user->id)->first();
     expect($account)->not->toBeNull();
 
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) use ($user, $account) {
-        return $message === 'account_created'
-            && $context['event'] === 'account_created'
-            && $context['account_id'] === $account->id
-            && $context['user_id'] === $user->id
-            && isset($context['recorded_at']);
+    assertTelemetryEvent($logged, 'account_created', function (array $context) use ($user, $account) {
+        return $context['account_id'] === $account->id && $context['user_id'] === $user->id;
     });
 });
 
 test('updating account records account_updated telemetry event', function () {
-    Log::fake();
-
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -56,25 +49,21 @@ test('updating account records account_updated telemetry event', function () {
         'current_balance' => 100,
     ]);
 
-    $this->actingAs($user)->patch("/accounts/{$account->id}", [
-        'name' => 'New name',
-        'bank' => 'mbank',
-        'type' => 'savings',
-        'opening_balance' => 120,
-    ])->assertSessionHasNoErrors();
+    $logged = captureTelemetryLogs(function () use ($user, $account): void {
+        $this->actingAs($user)->patch("/accounts/{$account->id}", [
+            'name' => 'New name',
+            'bank' => 'mbank',
+            'type' => 'savings',
+            'opening_balance' => 120,
+        ])->assertSessionHasNoErrors();
+    });
 
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) use ($user, $account) {
-        return $message === 'account_updated'
-            && $context['event'] === 'account_updated'
-            && $context['account_id'] === $account->id
-            && $context['user_id'] === $user->id
-            && isset($context['recorded_at']);
+    assertTelemetryEvent($logged, 'account_updated', function (array $context) use ($user, $account) {
+        return $context['account_id'] === $account->id && $context['user_id'] === $user->id;
     });
 });
 
 test('deleting account records account_deleted and account_deleted_with_transactions telemetry events', function () {
-    Log::fake();
-
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -114,29 +103,19 @@ test('deleting account records account_deleted and account_deleted_with_transact
         'dedupe_hash' => random_bytes(16),
     ]);
 
-    $this->actingAs($user)->delete("/accounts/{$account->id}")->assertRedirect('/accounts');
-
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) use ($user, $account) {
-        return $message === 'account_deleted'
-            && $context['event'] === 'account_deleted'
-            && $context['account_id'] === $account->id
-            && $context['user_id'] === $user->id
-            && isset($context['recorded_at']);
+    $logged = captureTelemetryLogs(function () use ($user, $account): void {
+        $this->actingAs($user)->delete("/accounts/{$account->id}")->assertRedirect('/accounts');
     });
 
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) use ($user, $account) {
-        return $message === 'account_deleted_with_transactions'
-            && $context['event'] === 'account_deleted_with_transactions'
-            && $context['account_id'] === $account->id
-            && $context['transaction_count'] === 2
-            && $context['user_id'] === $user->id
-            && isset($context['recorded_at']);
+    assertTelemetryEvent($logged, 'account_deleted', function (array $context) use ($user, $account) {
+        return $context['account_id'] === $account->id && $context['user_id'] === $user->id;
+    });
+    assertTelemetryEvent($logged, 'account_deleted_with_transactions', function (array $context) use ($account) {
+        return $context['account_id'] === $account->id && $context['transaction_count'] === 2;
     });
 });
 
 test('adjusting account balance records account_balance_adjusted telemetry event with decimal strings', function () {
-    Log::fake();
-
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -150,18 +129,17 @@ test('adjusting account balance records account_balance_adjusted telemetry event
         'current_balance' => 130,
     ]);
 
-    $this->actingAs($user)->patch("/accounts/{$account->id}/balance", [
-        'new_balance' => 999.99,
-    ])->assertSessionHasNoErrors();
+    $logged = captureTelemetryLogs(function () use ($user, $account): void {
+        $this->actingAs($user)->patch("/accounts/{$account->id}/balance", [
+            'new_balance' => 999.99,
+        ])->assertSessionHasNoErrors();
+    });
 
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) use ($user, $account) {
-        return $message === 'account_balance_adjusted'
-            && $context['event'] === 'account_balance_adjusted'
-            && $context['account_id'] === $account->id
+    assertTelemetryEvent($logged, 'account_balance_adjusted', function (array $context) use ($user, $account) {
+        return $context['account_id'] === $account->id
             && $context['old_balance'] === '130.00'
             && $context['new_balance'] === '999.99'
             && $context['user_id'] === $user->id
-            && ! array_key_exists('name', $context)
-            && isset($context['recorded_at']);
+            && ! array_key_exists('name', $context);
     });
 });

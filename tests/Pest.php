@@ -47,11 +47,116 @@ expect()->extend('toBeOne', function () {
 use App\Models\Account;
 use App\Models\Import;
 use App\Models\User;
+use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+
+/**
+ * @return list<array{level: string, message: string, context: array<string, mixed>}>
+ */
+function captureTelemetryLogs(callable $callback): array
+{
+    $captured = [];
+    $active = true;
+
+    Event::listen(MessageLogged::class, function (MessageLogged $logged) use (&$captured, &$active): void {
+        if (! $active || ! isset($logged->context['event'])) {
+            return;
+        }
+
+        $captured[] = [
+            'level' => $logged->level,
+            'message' => $logged->message,
+            'context' => $logged->context,
+        ];
+    });
+
+    try {
+        $callback();
+    } finally {
+        $active = false;
+    }
+
+    return $captured;
+}
+
+/**
+ * @param  array<string, mixed>  $context
+ */
+function assertTelemetryEvent(array $logged, string $event, ?callable $contextMatcher = null): void
+{
+    $matched = false;
+
+    foreach ($logged as $entry) {
+        if ($entry['message'] !== $event) {
+            continue;
+        }
+
+        if ($contextMatcher !== null && ! $contextMatcher($entry['context'])) {
+            continue;
+        }
+
+        $matched = true;
+
+        break;
+    }
+
+    expect($matched)->toBeTrue("Expected telemetry event [{$event}] to be logged.");
+}
+
+function createImportWithFile(User $user, Account $account, string $content): Import
+{
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'queued',
+        'mapping' => [
+            'date' => 'date',
+            'amount' => 'amount',
+            'description' => 'description',
+            'subject' => 'subject',
+        ],
+        'details' => [
+            'source_file' => "imports/{$user->id}/source-{$account->id}-".uniqid('', true).'.csv',
+            'headers' => ['date', 'amount', 'description', 'subject'],
+        ],
+    ]);
+
+    Storage::disk('local')->put((string) data_get($import->details, 'source_file'), $content);
+
+    return $import;
+}
+
+/**
+ * @param  array<string, string>  $mapping
+ * @param  list<string>  $headers
+ */
+function createImportWithFixture(User $user, Account $account, string $fixturePath, array $mapping, array $headers): Import
+{
+    $extension = pathinfo($fixturePath, PATHINFO_EXTENSION);
+    $sourceFile = "imports/{$user->id}/source-{$account->id}-".uniqid('', true).".{$extension}";
+    $content = file_get_contents(base_path($fixturePath));
+    expect($content)->not->toBeFalse();
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'queued',
+        'mapping' => $mapping,
+        'details' => [
+            'source_file' => $sourceFile,
+            'headers' => $headers,
+        ],
+    ]);
+
+    Storage::disk('local')->put($sourceFile, (string) $content);
+
+    return $import;
+}
 
 function createTransferMatcherImport(User $user, Account $account, string $content): Import
 {
-    $sourceFile = "imports/{$user->id}/transfer-matcher-{$account->id}-".uniqid().'.csv';
+    $sourceFile = "imports/{$user->id}/transfer-matcher-{$account->id}-".uniqid('', true).'.csv';
 
     $import = Import::query()->create([
         'user_id' => $user->id,

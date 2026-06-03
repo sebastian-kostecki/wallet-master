@@ -39,12 +39,18 @@ final class TransactionResource extends JsonResource
             'subject' => $this->subject,
             'raw_statement_description' => $this->raw_statement_description,
             'transfer_id' => $this->transfer_id,
-            'account' => $this->account !== null
-                ? AccountResource::make($this->account)->resolve($request)
-                : null,
-            'currency' => $this->currency !== null
-                ? CurrencyResource::make($this->currency)->resolve($request)
-                : null,
+            'account' => $this->whenLoaded(
+                'account',
+                fn () => $this->account !== null
+                    ? AccountResource::make($this->account)->resolve($request)
+                    : null,
+            ),
+            'currency' => $this->whenLoaded(
+                'currency',
+                fn () => $this->currency !== null
+                    ? CurrencyResource::make($this->currency)->resolve($request)
+                    : null,
+            ),
         ];
     }
 }

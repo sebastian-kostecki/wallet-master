@@ -1,18 +1,16 @@
 <?php
 
 use App\Telemetry\Event;
-use Illuminate\Support\Facades\Log;
 
 test('event record writes to telemetry channel with envelope', function () {
-    Log::fake();
-
-    Event::record('transaction_created', ['transaction_id' => 42], userId: 7);
-
-    Log::channel('telemetry')->assertLogged('info', function ($message, $context) {
-        return $message === 'transaction_created'
-            && $context['event'] === 'transaction_created'
-            && $context['user_id'] === 7
-            && $context['transaction_id'] === 42
-            && isset($context['recorded_at']);
+    $logged = captureTelemetryLogs(function (): void {
+        Event::record('transaction_created', ['transaction_id' => 42], userId: 7);
     });
+
+    expect($logged)->toHaveCount(1);
+    expect($logged[0]['message'])->toBe('transaction_created');
+    expect($logged[0]['context']['event'])->toBe('transaction_created');
+    expect($logged[0]['context']['user_id'])->toBe(7);
+    expect($logged[0]['context']['transaction_id'])->toBe(42);
+    expect($logged[0]['context'])->toHaveKey('recorded_at');
 });

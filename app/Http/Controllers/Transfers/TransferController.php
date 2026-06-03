@@ -24,7 +24,7 @@ final class TransferController extends Controller
                 ->withTrashed()
                 ->whereBelongsTo($request->user())
                 ->orderBy('name')
-                ->get(['id', 'name', 'currency_id', 'bank', 'deleted_at'])
+                ->get(['id', 'name', 'currency_id', 'bank', 'type', 'deleted_at'])
         )->resolve();
 
         return Inertia::render('transfers/Create', [

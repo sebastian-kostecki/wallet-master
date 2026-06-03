@@ -26,14 +26,14 @@ test('description memory suggestions are isolated per user during import enrichm
     );
 
     $ownerImport = Import::query()->make([
-        'id' => 10,
         'user_id' => 1,
     ]);
+    $ownerImport->id = 10;
 
     $otherImport = Import::query()->make([
-        'id' => 11,
         'user_id' => 2,
     ]);
+    $otherImport->id = 11;
 
     $enricher = app(EnrichImportRowDescription::class);
 

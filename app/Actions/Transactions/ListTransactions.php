@@ -69,8 +69,11 @@ final class ListTransactions
         $this->applyFilters($query, $request->getFilters());
         $this->applySort($query, $request->getSorts());
 
+        $summaryQuery = Transaction::query()->whereBelongsTo($request->user());
+        $this->applyFilters($summaryQuery, $request->getFilters());
+
         /** @var object{total_income: string|int|float, total_expense: string|int|float}|null $summary */
-        $summary = (clone $query)
+        $summary = $summaryQuery
             ->whereNull('transfer_id')
             ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as total_income')
             ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END), 0) as total_expense')
@@ -133,7 +136,7 @@ final class ListTransactions
     private function baseQuery(User $user): Builder
     {
         return Transaction::query()
-            ->with('account.currency')
+            ->with(['account.currency', 'currency'])
             ->whereBelongsTo($user);
     }
 

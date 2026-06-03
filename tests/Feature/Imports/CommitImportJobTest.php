@@ -26,52 +26,6 @@ beforeEach(function () {
     Storage::fake('local');
 });
 
-function createImportWithFile(User $user, Account $account, string $content): Import
-{
-    $import = Import::query()->create([
-        'user_id' => $user->id,
-        'account_id' => $account->id,
-        'status' => 'queued',
-        'mapping' => [
-            'date' => 'date',
-            'amount' => 'amount',
-            'description' => 'description',
-            'subject' => 'subject',
-        ],
-        'details' => [
-            'source_file' => "imports/{$user->id}/source-{$account->id}.csv",
-            'headers' => ['date', 'amount', 'description', 'subject'],
-        ],
-    ]);
-
-    Storage::disk('local')->put(data_get($import->details, 'source_file'), $content);
-
-    return $import;
-}
-
-function createImportWithFixture(User $user, Account $account, string $fixturePath, array $mapping, array $headers): Import
-{
-    $extension = pathinfo($fixturePath, PATHINFO_EXTENSION);
-    $sourceFile = "imports/{$user->id}/source-{$account->id}.{$extension}";
-    $content = file_get_contents(base_path($fixturePath));
-    expect($content)->not->toBeFalse();
-
-    $import = Import::query()->create([
-        'user_id' => $user->id,
-        'account_id' => $account->id,
-        'status' => 'queued',
-        'mapping' => $mapping,
-        'details' => [
-            'source_file' => $sourceFile,
-            'headers' => $headers,
-        ],
-    ]);
-
-    Storage::disk('local')->put($sourceFile, (string) $content);
-
-    return $import;
-}
-
 test('job commits valid rows and updates account balance', function () {
     Event::fake([ImportStatusUpdated::class]);
 
