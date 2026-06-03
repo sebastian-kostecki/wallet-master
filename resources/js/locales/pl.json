@@ -392,7 +392,10 @@
                 "label": "Plik",
                 "title": "Wgraj plik",
                 "description": "Wgraj plik CSV lub XLSX z nagłówkami kolumn.",
-                "change": "Zmień plik"
+                "change": "Zmień plik",
+                "a11y": {
+                    "dropzone": "Wgranie pliku. Naciśnij Enter lub Spację, aby wybrać plik, lub przeciągnij i upuść tutaj."
+                }
             },
             "warning": {
                 "title": "Uwaga",
@@ -403,6 +406,7 @@
             "processing": {
                 "title": "Import w toku…",
                 "hint": "Może to potrwać do kilku minut. Możesz zamknąć to okno — import dokończy się w tle.",
+                "progress": "Zaimportowano {imported} z {total}. Pominięte duplikaty: {duplicates}. Błędne wiersze: {failed}.",
                 "longRunning": "Import nadal trwa. Możesz odświeżyć status.",
                 "refresh": "Odśwież"
             },
@@ -449,9 +453,14 @@
             "modal": {
                 "title": "Błędne wiersze z pliku",
                 "hint": "Te wiersze nie wpłynęły na saldo. Dodaj je ręcznie lub sprawdź dane w pliku źródłowym.",
-                "more_on_transactions": "i jeszcze {count} — pełna lista na stronie transakcji."
+                "more_on_transactions": "i jeszcze {count} — pełna lista na stronie transakcji.",
+                "a11y": {
+                    "toggle": "Błędne wiersze z pliku. Rozwiń lub zwiń szczegóły.",
+                    "tableCaption": "Błędne wiersze importu"
+                }
             },
             "table": {
+                "caption": "Błędne wiersze importu",
                 "row": "Wiersz",
                 "date": "Data",
                 "amount": "Kwota",

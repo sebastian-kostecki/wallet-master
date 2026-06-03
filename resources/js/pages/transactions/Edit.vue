@@ -115,6 +115,20 @@ const unlinkProcessing = ref(false);
 function onDeleted() {
     router.visit(transactionsIndexHref.value);
 }
+
+function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, includeHint: boolean): string | undefined {
+    const ids: string[] = [];
+
+    if (hasError) {
+        ids.push(errorId);
+    }
+
+    if (includeHint) {
+        ids.push(hintId);
+    }
+
+    return ids.length > 0 ? ids.join(' ') : undefined;
+}
 </script>
 
 <template>
@@ -143,12 +157,18 @@ function onDeleted() {
                     >
                         <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                             <div class="grid gap-6">
-                        <FormField for-id="account_id" :label="t('transactions.form.account')" :error="form.errors.account_id">
-                            <template #default="{ errorId, hasError }">
+                        <FormField
+                            for-id="account_id"
+                            :label="t('transactions.form.account')"
+                            :error="form.errors.account_id"
+                            :hint="isLinkedTransfer ? t('transactions.edit.transfer.accountHint') : null"
+                        >
+                            <template #default="{ errorId, hintId, hasError }">
                             <DropdownSelect
                                 id="account_id"
                                 :aria-invalid="hasError"
-                                :aria-describedby="hasError ? errorId : undefined"
+                                :aria-disabled="isLinkedTransfer"
+                                :aria-describedby="fieldDescribedBy(errorId, hasError, hintId, isLinkedTransfer)"
                                 :model-value="form.account_id"
                                 :options="accountOptions"
                                 :placeholder="t('transactions.form.account')"
@@ -218,15 +238,21 @@ function onDeleted() {
                             </template>
                         </FormField>
 
-                        <FormField for-id="amount" :label="t('transactions.form.amount')" :error="form.errors.amount">
-                            <template #default="{ errorId, hasError }">
+                        <FormField
+                            for-id="amount"
+                            :label="t('transactions.form.amount')"
+                            :error="form.errors.amount"
+                            :hint="isLinkedTransfer ? t('transactions.edit.transfer.amountHint') : null"
+                        >
+                            <template #default="{ errorId, hintId, hasError }">
                             <Input
                                 id="amount"
                                 v-model="form.amount"
                                 inputmode="decimal"
                                 :disabled="form.processing || isLinkedTransfer"
+                                :aria-disabled="isLinkedTransfer ? true : undefined"
                                 :aria-invalid="hasError ? true : undefined"
-                                :aria-describedby="hasError ? errorId : undefined"
+                                :aria-describedby="fieldDescribedBy(errorId, hasError, hintId, isLinkedTransfer)"
                             />
                             </template>
                         </FormField>
@@ -262,7 +288,9 @@ function onDeleted() {
                                 <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
                             </Button>
 
-                            <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                            <Button type="submit" :disabled="form.processing" :aria-busy="form.processing || undefined">
+                                {{ t('actions.save') }}
+                            </Button>
                         </div>
                             </div>
                         </div>

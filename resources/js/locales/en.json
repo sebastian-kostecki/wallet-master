@@ -448,9 +448,14 @@
             "modal": {
                 "title": "Failed rows from file",
                 "hint": "These rows did not affect your balance. Add them manually or check the source file.",
-                "more_on_transactions": "and {count} more — see the full list on the transactions page."
+                "more_on_transactions": "and {count} more — see the full list on the transactions page.",
+                "a11y": {
+                    "toggle": "Failed rows from file. Expand or collapse details.",
+                    "tableCaption": "Failed import rows"
+                }
             },
             "table": {
+                "caption": "Failed import rows",
                 "row": "Row",
                 "date": "Date",
                 "amount": "Amount",

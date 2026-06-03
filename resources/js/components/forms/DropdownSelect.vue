@@ -19,6 +19,7 @@ const props = withDefaults(
         disabled?: boolean;
         size?: 'sm' | 'md';
         ariaInvalid?: boolean;
+        ariaDisabled?: boolean;
         ariaDescribedby?: string;
         ariaLabelledby?: string;
     }>(),
@@ -51,6 +52,7 @@ const triggerClass = computed(() => {
                 variant="outline"
                 :class="['w-full justify-between', triggerClass]"
                 :disabled="props.disabled"
+                :aria-disabled="props.ariaDisabled ? 'true' : undefined"
                 :aria-invalid="props.ariaInvalid ? 'true' : undefined"
                 :aria-describedby="props.ariaDescribedby"
                 :aria-labelledby="props.ariaLabelledby"

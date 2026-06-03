@@ -17,14 +17,16 @@ const props = withDefaults(
 );
 
 const errorId = computed(() => `${props.forId}-error`);
+const hintId = computed(() => `${props.forId}-hint`);
 const hasError = computed(() => Boolean(props.error));
+const hasHint = computed(() => Boolean(props.hint));
 </script>
 
 <template>
     <div class="grid gap-2">
         <Label :for="props.forId">{{ props.label }}</Label>
-        <slot :error-id="errorId" :has-error="hasError" />
+        <slot :error-id="errorId" :hint-id="hintId" :has-error="hasError" :has-hint="hasHint" />
         <InputError :id="errorId" :message="props.error ?? undefined" />
-        <p v-if="props.hint" class="text-sm text-muted-foreground">{{ props.hint }}</p>
+        <p v-if="props.hint" :id="hintId" class="text-sm text-muted-foreground">{{ props.hint }}</p>
     </div>
 </template>

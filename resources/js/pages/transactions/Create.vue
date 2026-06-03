@@ -125,8 +125,8 @@ function submit() {
                     >
                         <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                             <div class="grid gap-6">
-                        <div class="grid gap-2">
-                            <span class="text-sm font-medium">{{ t('transactions.form.type') }}</span>
+                        <fieldset class="grid gap-2 border-0 p-0" :disabled="form.processing">
+                            <legend class="text-sm font-medium">{{ t('transactions.form.type') }}</legend>
                             <div class="grid grid-cols-2 gap-1 rounded-lg border border-input bg-muted/30 p-1">
                                 <Button
                                     type="button"
@@ -149,7 +149,7 @@ function submit() {
                                     {{ t('transactions.types.expense') }}
                                 </Button>
                             </div>
-                        </div>
+                        </fieldset>
 
                         <FormField for-id="account_id" :label="t('transactions.form.account')" :error="form.errors.account_id">
                             <template #default="{ errorId, hasError }">
@@ -270,7 +270,9 @@ function submit() {
                                 <Link :href="transactionsIndexHref">{{ t('actions.cancel') }}</Link>
                             </Button>
 
-                            <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                            <Button type="submit" :disabled="form.processing" :aria-busy="form.processing || undefined">
+                                {{ t('actions.save') }}
+                            </Button>
                         </div>
                             </div>
                         </div>
