@@ -265,7 +265,9 @@
             "transfer": {
                 "bannerTitle": "Linked transfer",
                 "bannerDescription": "Amount and account are locked. Unlink the transfer first to change them.",
-                "unlinkAction": "Unlink transfer"
+                "unlinkAction": "Unlink transfer",
+                "accountHint": "Account is locked while the transfer is linked. Use “Unlink transfer” to change it.",
+                "amountHint": "Amount is locked while the transfer is linked. Use “Unlink transfer” to change it."
             },
             "hints": {
                 "title": "Info",
@@ -287,7 +289,8 @@
             "advancedDatesHint": "Optionally assign a booked date that differs from the operation date.",
             "amount": "Amount",
             "description": "Description",
-            "subject": "Subject"
+            "subject": "Subject",
+            "type": "Type"
         },
         "types": {
             "income": "Income",
@@ -366,6 +369,14 @@
         "cta": "Import",
         "dialog": {
             "title": "Import transactions",
+            "a11y": {
+                "stepTitle": "Step {current} of {total}: {step}",
+                "steps": {
+                    "form": "Upload",
+                    "processing": "Processing",
+                    "result": "Result"
+                }
+            },
             "context": "Account: {account} • Bank: {bank}",
             "contextEmpty": "Select an account to start the import.",
             "account": {
@@ -376,7 +387,10 @@
                 "label": "File",
                 "title": "Upload a file",
                 "description": "Upload a CSV or XLSX file with column headers.",
-                "change": "Change file"
+                "change": "Change file",
+                "a11y": {
+                    "dropzone": "File upload. Press Enter or Space to choose a file, or drag and drop here."
+                }
             },
             "warning": {
                 "title": "Warning",
@@ -387,6 +401,7 @@
             "processing": {
                 "title": "Import in progress…",
                 "hint": "This may take a few minutes. You can close this window — the import will continue in the background.",
+                "progress": "Imported {imported} of {total}. Duplicates skipped: {duplicates}. Failed rows: {failed}.",
                 "longRunning": "The import is still running. You can refresh the status.",
                 "refresh": "Refresh"
             },

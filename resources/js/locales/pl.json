@@ -265,7 +265,9 @@
             "transfer": {
                 "bannerTitle": "Połączony transfer",
                 "bannerDescription": "Kwoty i konta są zablokowane. Aby je zmienić, najpierw rozłącz transfer.",
-                "unlinkAction": "Rozłącz transfer"
+                "unlinkAction": "Rozłącz transfer",
+                "accountHint": "Konto jest zablokowane, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby je zmienić.",
+                "amountHint": "Kwota jest zablokowana, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby ją zmienić."
             },
             "hints": {
                 "title": "Informacje",
@@ -372,6 +374,14 @@
         "cta": "Importuj",
         "dialog": {
             "title": "Import transakcji",
+            "a11y": {
+                "stepTitle": "Krok {current} z {total}: {step}",
+                "steps": {
+                    "form": "Wgranie pliku",
+                    "processing": "Przetwarzanie",
+                    "result": "Wynik"
+                }
+            },
             "context": "Konto: {account} • Bank: {bank}",
             "contextEmpty": "Wybierz konto, aby rozpocząć import.",
             "account": {

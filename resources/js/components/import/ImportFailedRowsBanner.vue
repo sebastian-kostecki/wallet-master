@@ -164,14 +164,19 @@ function displayValue(value: string | null): string {
 
                     <div class="overflow-x-auto rounded-lg border border-sidebar-border/70 dark:border-sidebar-border">
                         <table class="min-w-full text-sm">
+                            <caption class="sr-only">
+                                {{ t('imports.failed_rows.table.caption') }}
+                            </caption>
                             <thead class="bg-muted/40 text-xs text-muted-foreground">
                                 <tr>
-                                    <th class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.row') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.date') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.amount') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.description') }}</th>
-                                    <th class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.reason') }}</th>
-                                    <th class="px-3 py-2 text-right font-medium">{{ t('imports.failed_rows.table.actions') }}</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.row') }}</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.date') }}</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.amount') }}</th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">
+                                        {{ t('imports.failed_rows.table.description') }}
+                                    </th>
+                                    <th scope="col" class="px-3 py-2 text-left font-medium">{{ t('imports.failed_rows.table.reason') }}</th>
+                                    <th scope="col" class="px-3 py-2 text-right font-medium">{{ t('imports.failed_rows.table.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>

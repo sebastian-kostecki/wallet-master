@@ -3,6 +3,7 @@ import InputError from '@/components/InputError.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/lib/apiFetch';
 import { cn } from '@/lib/utils';
 import { router, usePage } from '@inertiajs/vue3';
@@ -58,6 +59,25 @@ const { t } = useI18n();
 type Step = 'form' | 'processing' | 'result';
 const step = ref<Step>('form');
 
+const WIZARD_STEP_ORDER: Step[] = ['form', 'processing', 'result'];
+const importAccountErrorId = 'import_account_error';
+const importFileInputId = 'import_file_input';
+const importFileLabelId = 'import_file_label';
+const importFileErrorId = 'import_file_error';
+const importFormStatusId = 'import_dialog_form_status';
+const importFailedRowsTitleId = 'import-failed-rows-modal-title';
+const importFailedRowsContentId = 'import-failed-rows-modal-content';
+
+const wizardStepNumber = computed(() => WIZARD_STEP_ORDER.indexOf(step.value) + 1);
+
+const dialogTitle = computed(() =>
+    t('imports.dialog.a11y.stepTitle', {
+        current: wizardStepNumber.value,
+        total: WIZARD_STEP_ORDER.length,
+        step: t(`imports.dialog.a11y.steps.${step.value}`),
+    }),
+);
+
 const accountOptions = computed<DropdownOption<number>[]>(() =>
     props.accounts.map((a) => ({
         value: a.id,
@@ -80,6 +100,49 @@ const isDragging = ref(false);
 const importId = ref<number | null>(null);
 const importState = ref<ImportState | null>(null);
 const processingHint = computed(() => t('imports.dialog.processing.hint'));
+
+const accountDescribedBy = computed(() => (accountError.value.trim() !== '' ? importAccountErrorId : undefined));
+
+const fileDropzoneDescribedBy = computed(() => (fileError.value.trim() !== '' ? importFileErrorId : undefined));
+
+const processingProgressText = computed(() => {
+    if (step.value !== 'processing') {
+        return '';
+    }
+
+    const s = importState.value;
+    if (!s) {
+        return '';
+    }
+
+    const total = s.rows_total ?? 0;
+    if (total <= 0) {
+        return '';
+    }
+
+    return t('imports.dialog.processing.progress', {
+        imported: s.rows_imported ?? 0,
+        total,
+        duplicates: s.rows_skipped_duplicate ?? 0,
+        failed: s.rows_failed_validation ?? 0,
+    });
+});
+
+const formStatusMessage = computed(() => {
+    if (step.value !== 'form') {
+        return '';
+    }
+
+    if (fileError.value.trim() !== '') {
+        return fileError.value;
+    }
+
+    if (accountError.value.trim() !== '') {
+        return accountError.value;
+    }
+
+    return '';
+});
 
 const isUploadingOrCommitting = ref(false);
 const canStart = computed(() => {
@@ -439,7 +502,7 @@ function goToTransactions() {
     <Dialog :open="open" @update:open="(value) => emit('update:open', value)">
         <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
-                <DialogTitle>{{ t('imports.dialog.title') }}</DialogTitle>
+                <DialogTitle>{{ dialogTitle }}</DialogTitle>
                 <DialogDescription>
                     <span v-if="selectedAccount">
                         {{ t('imports.dialog.context', { account: selectedAccount.name, bank: selectedBankLabel }) }}
@@ -449,6 +512,10 @@ function goToTransactions() {
             </DialogHeader>
 
             <div v-if="step === 'form'" class="grid gap-6">
+                <div :id="importFormStatusId" role="status" aria-live="polite" class="sr-only">
+                    {{ formStatusMessage }}
+                </div>
+
                 <div class="grid gap-2">
                     <DropdownSelect
                         id="import_account_id"
@@ -458,6 +525,7 @@ function goToTransactions() {
                         :disabled="disabled || isUploadingOrCommitting || accounts.length === 0"
                         :aria-label="t('imports.dialog.account.label')"
                         :aria-invalid="accountError.trim() !== ''"
+                        :aria-describedby="accountDescribedBy"
                         @update:model-value="(value: any) => (selectedAccountId = value)"
                     >
                         <template #trigger-leading>
@@ -508,12 +576,25 @@ function goToTransactions() {
                         </template>
                     </DropdownSelect>
 
-                    <InputError :message="accountError" />
+                    <InputError :id="importAccountErrorId" :message="accountError" />
                     <p class="text-xs text-muted-foreground">{{ t('imports.dialog.account.hint') }}</p>
                 </div>
 
                 <div class="grid gap-2">
-                    <p class="text-sm font-medium">{{ t('imports.dialog.file.label') }}</p>
+                    <Label :id="importFileLabelId" :for="importFileInputId" class="text-sm font-medium">
+                        {{ t('imports.dialog.file.label') }}
+                    </Label>
+
+                    <input
+                        :id="importFileInputId"
+                        ref="fileInput"
+                        type="file"
+                        class="sr-only"
+                        accept=".csv,.txt,.xlsx"
+                        :aria-invalid="fileError.trim() !== ''"
+                        :aria-describedby="fileDropzoneDescribedBy"
+                        @change="(e: any) => onFileSelected((e.target?.files?.[0] as File | undefined) ?? null)"
+                    />
 
                     <div
                         class="relative rounded-lg border border-dashed p-6 transition-colors"
@@ -525,6 +606,9 @@ function goToTransactions() {
                         "
                         role="button"
                         tabindex="0"
+                        :aria-labelledby="importFileLabelId"
+                        :aria-describedby="fileDropzoneDescribedBy"
+                        :aria-label="t('imports.dialog.file.a11y.dropzone')"
                         @dragenter.prevent="isDragging = true"
                         @dragover.prevent="isDragging = true"
                         @dragleave.prevent="isDragging = false"
@@ -539,13 +623,6 @@ function goToTransactions() {
                         @keydown.space.prevent="($refs.fileInput as HTMLInputElement | undefined)?.click()"
                         @click="($refs.fileInput as HTMLInputElement | undefined)?.click()"
                     >
-                        <input
-                            ref="fileInput"
-                            type="file"
-                            class="hidden"
-                            accept=".csv,.txt,.xlsx"
-                            @change="(e: any) => onFileSelected((e.target?.files?.[0] as File | undefined) ?? null)"
-                        />
 
                         <div class="flex items-start gap-4">
                             <div class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -564,7 +641,7 @@ function goToTransactions() {
                         </div>
                     </div>
 
-                    <InputError :message="fileError" />
+                    <InputError :id="importFileErrorId" :message="fileError" />
                 </div>
 
                 <div class="flex items-start gap-3 rounded-lg border border-sidebar-border/70 bg-muted/20 p-4 text-sm dark:border-sidebar-border">
@@ -584,6 +661,14 @@ function goToTransactions() {
                     <div class="grid gap-1">
                         <p class="text-sm font-medium text-foreground">{{ t('imports.dialog.processing.title') }}</p>
                         <p class="text-xs text-muted-foreground">{{ processingHint }}</p>
+                        <p
+                            v-if="processingProgressText"
+                            role="status"
+                            aria-live="polite"
+                            class="text-xs text-muted-foreground tabular-nums"
+                        >
+                            {{ processingProgressText }}
+                        </p>
                     </div>
                 </div>
 
@@ -631,9 +716,13 @@ function goToTransactions() {
                         type="button"
                         class="flex w-full items-center justify-between gap-3 p-4 text-left"
                         :aria-expanded="failedRowsExpanded"
+                        :aria-controls="importFailedRowsContentId"
+                        :aria-label="t('imports.failed_rows.modal.a11y.toggle')"
                         @click="failedRowsExpanded = !failedRowsExpanded"
                     >
-                        <p class="text-sm font-medium text-foreground">{{ t('imports.failed_rows.modal.title') }}</p>
+                        <p :id="importFailedRowsTitleId" class="text-sm font-medium text-foreground">
+                            {{ t('imports.failed_rows.modal.title') }}
+                        </p>
                         <ChevronDown
                             class="h-5 w-5 shrink-0 text-muted-foreground transition-transform"
                             :class="failedRowsExpanded ? 'rotate-180' : ''"
@@ -641,16 +730,21 @@ function goToTransactions() {
                         />
                     </button>
 
-                    <div v-if="failedRowsExpanded" class="border-t border-amber-500/20 px-4 pb-4 pt-2">
+                    <div v-if="failedRowsExpanded" :id="importFailedRowsContentId" class="border-t border-amber-500/20 px-4 pb-4 pt-2">
                         <div class="overflow-x-auto">
                             <table class="min-w-full text-sm">
+                                <caption class="sr-only">
+                                    {{ t('imports.failed_rows.modal.a11y.tableCaption') }}
+                                </caption>
                                 <thead class="text-xs text-muted-foreground">
                                     <tr>
-                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.row') }}</th>
-                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.date') }}</th>
-                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.amount') }}</th>
-                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.description') }}</th>
-                                        <th class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.reason') }}</th>
+                                        <th scope="col" class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.row') }}</th>
+                                        <th scope="col" class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.date') }}</th>
+                                        <th scope="col" class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.amount') }}</th>
+                                        <th scope="col" class="px-2 py-2 text-left font-medium">
+                                            {{ t('imports.failed_rows.table.description') }}
+                                        </th>
+                                        <th scope="col" class="px-2 py-2 text-left font-medium">{{ t('imports.failed_rows.table.reason') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
