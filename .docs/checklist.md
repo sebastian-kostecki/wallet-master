@@ -283,6 +283,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [~] Import:
   - [x] walidacja, dedupe, liczniki, blokada ponownego commitu (`tests/Feature/Imports/*`)
   - [x] `ImportFailedRow` + dismiss (`CommitImportFailedRowsTest`, `ImportFailedRowDismissTest`)
+  - [x] import z samymi duplikatami → `rows_imported=0` (`CommitImportAllDuplicatesTest`)
   - [ ] retry joba: 3 próby tylko dla błędów technicznych
   - [ ] partial import przy błędzie krytycznym w jobie
 
@@ -318,8 +319,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] UI: toast w `ImportDialog.vue` dla `bank_unsupported`.
 
 #### 12.3 Mass assignment
-- [~] Modele — `Transaction` ma `$fillable`; pozostałe (`Account`, `Import`, `AccountBalanceAdjustment`) nadal `$guarded = []`.
-- [ ] `Model::shouldBeStrict()` w `AppServiceProvider::boot()` (poza prod).
+- [x] Modele domenowe — `$fillable` na `Transaction`, `Account`, `Import`, `ImportFailedRow`, `AccountBalanceAdjustment`; `User` / `Currency` bez zmian.
+- [x] `Model::shouldBeStrict()` w `AppServiceProvider::boot()` (poza prod).
 
 ---
 
