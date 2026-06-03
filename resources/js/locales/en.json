@@ -327,6 +327,7 @@
             "amount": "Amount",
             "amountPlaceholder": "e.g. 120.50",
             "date": "Date",
+            "subjectOptional": "Subject (optional)",
             "descriptionOptional": "Description (optional)",
             "hint": "We'll save an expense on the source account and an income on the destination account.",
             "sameAccountError": "Choose a different destination account than the source account.",
@@ -479,6 +480,9 @@
                 "invalid_row": "Invalid row"
             }
         }
+    },
+    "a11y": {
+        "skip_to_content": "Skip to main content"
     },
     "currency": {
         "defaultSymbol": "zł"

@@ -9,6 +9,7 @@ const props = defineProps<{
 
 <template>
     <main
+        id="main-content"
         :class="
             cn(
                 'relative flex min-h-svh flex-1 flex-col bg-background',

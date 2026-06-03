@@ -6,7 +6,7 @@ import type { Component } from 'vue';
 
 interface NavItem {
     title: string;
-    url: string;
+    href: string;
     icon: Component;
 }
 
@@ -23,7 +23,7 @@ const page = usePage<SharedData>();
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton as-child :is-active="item.href === page.href">
-                    <Link :href="item.href">
+                    <Link :href="item.href" :aria-current="item.href === page.href ? 'page' : undefined">
                         <component :is="item.icon" />
                         <span>{{ item.title }}</span>
                     </Link>
