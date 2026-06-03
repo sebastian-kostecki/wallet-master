@@ -18,7 +18,15 @@ final class AccountBalanceAdjustment extends Model
     /** @use HasFactory<AccountBalanceAdjustmentFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'account_id',
+        'user_id',
+        'old_balance',
+        'new_balance',
+    ];
 
     /**
      * @return array<string, string>
