@@ -34,7 +34,6 @@ Volumes: `sail-mysql`, `sail-redis`, `sail-typesense`. `laravel.test` depends on
 Agent workflow: `.cursor/rules/wallet-dev-workflow.mdc`.
 
 - **Sail:** `./vendor/bin/sail up -d` · `./vendor/bin/sail artisan migrate` · `./vendor/bin/sail npm run dev` · `./vendor/bin/sail artisan test --compact`
-- **WSL port 80:** If `http://localhost/login` returns Apache 404, set `APP_PORT=8000` and `APP_URL=http://localhost:8000` in `.env`, then `sail down && sail up -d`. Open **http://localhost:8000/login** (Vite: `sail npm run dev`).
 - **Host (without the full Docker stack):** `composer run dev` — `serve` + `queue:listen` + `pail` + `vite` (via `concurrently`)
 - **Tests / style:** Pest 4 + PHPUnit 12 · `./vendor/bin/sail artisan test --compact` · `vendor/bin/pint --dirty --format agent` · `npm run lint` / `npm run format` · ESLint 9 + Prettier 3 + vue-tsc
 - **Static analysis:** `./vendor/bin/phpstan analyse` (Larastan)
