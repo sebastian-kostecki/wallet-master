@@ -80,7 +80,7 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
 
         <div class="flex flex-col gap-6 p-4">
             <section
-                v-for="sectionKey in ['expense', 'income'] as const"
+                v-for="sectionKey in ['income', 'expense'] as const"
                 :key="sectionKey"
                 class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
             >
