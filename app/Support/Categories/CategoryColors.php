@@ -29,6 +29,13 @@ final class CategoryColors
             '#ff922b',
             '#ff6b6b',
             '#868e96',
+            '#22c55e',
+            '#84cc16',
+            '#f43f5e',
+            '#a855f7',
+            '#64748b',
+            '#78716c',
+            '#be185d',
         ];
     }
 }

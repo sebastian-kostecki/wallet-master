@@ -25,7 +25,7 @@ function iconLabel(icon: IconOption): string {
 </script>
 
 <template>
-    <div class="grid max-h-48 grid-cols-6 gap-2 overflow-y-auto sm:grid-cols-8" role="listbox" aria-label="Category icon">
+    <div class="grid max-h-52 grid-cols-6 gap-2 overflow-y-auto sm:grid-cols-8" role="listbox" aria-label="Category icon">
         <button
             v-for="icon in props.icons"
             :key="icon.value"
@@ -33,11 +33,11 @@ function iconLabel(icon: IconOption): string {
             role="option"
             :aria-selected="props.modelValue === icon.value"
             :aria-label="iconLabel(icon)"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-md border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             :class="cn(props.modelValue === icon.value ? 'border-foreground bg-muted' : 'border-transparent hover:bg-muted/60')"
             @click="emit('update:modelValue', icon.value)"
         >
-            <Icon :name="icon.value" class="h-4 w-4" aria-hidden="true" />
+            <Icon :name="icon.value" class="h-5 w-5" aria-hidden="true" />
         </button>
     </div>
 </template>
