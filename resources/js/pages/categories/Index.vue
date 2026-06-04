@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import DeleteCategoryDialog from '@/components/categories/modals/DeleteCategoryDialog.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { filterCategoriesByType, type CategoryOption } from '@/lib/categories';
@@ -36,12 +37,14 @@ function syncLists(): void {
 
 watch(() => props.categories, syncLists, { deep: true, immediate: true });
 
-function deleteCategory(cat: Category) {
-    if (!window.confirm(t('categories.index.deleteConfirm', { name: cat.name }))) {
-        return;
-    }
+const deletingCategoryId = ref<number | null>(null);
+const deleteDialogOpen = ref(false);
+const deleteProcessing = ref(false);
+const deletingCategory = computed(() => props.categories.find((c) => c.id === deletingCategoryId.value) ?? null);
 
-    router.delete(route('categories.destroy', cat.id), { preserveScroll: true });
+function openDeleteDialog(cat: Category) {
+    deletingCategoryId.value = cat.id;
+    deleteDialogOpen.value = true;
 }
 
 function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
@@ -66,19 +69,16 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('categories.index.title')" />
 
-        <div class="flex flex-col gap-6 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <Button as-child>
-                    <Link :href="route('categories.create')">
-                        <Plus class="mr-2 h-4 w-4" />
-                        {{ t('categories.index.add') }}
-                    </Link>
-                </Button>
-                <Button variant="outline" as-child>
-                    <Link :href="route('budget.monthly')">{{ t('budget.nav') }}</Link>
-                </Button>
-            </div>
+        <template #headerActions>
+            <Button as-child>
+                <Link :href="route('categories.create')">
+                    <Plus class="h-4 w-4" aria-hidden="true" />
+                    {{ t('categories.index.add') }}
+                </Link>
+            </Button>
+        </template>
 
+        <div class="flex flex-col gap-6 p-4">
             <section
                 v-for="sectionKey in ['expense', 'income'] as const"
                 :key="sectionKey"
@@ -141,8 +141,9 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                                 size="icon"
                                 type="button"
                                 class="no-drag"
+                                :disabled="deleteProcessing"
                                 :aria-label="t('categories.index.delete')"
-                                @click="deleteCategory(cat)"
+                                @click="openDeleteDialog(cat)"
                             >
                                 <Trash2 class="h-4 w-4 text-muted-foreground" />
                             </Button>
@@ -196,8 +197,9 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                                 size="icon"
                                 type="button"
                                 class="no-drag"
+                                :disabled="deleteProcessing"
                                 :aria-label="t('categories.index.delete')"
-                                @click="deleteCategory(cat)"
+                                @click="openDeleteDialog(cat)"
                             >
                                 <Trash2 class="h-4 w-4 text-muted-foreground" />
                             </Button>
@@ -206,5 +208,16 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                 </VueDraggable>
             </section>
         </div>
+
+        <DeleteCategoryDialog
+            v-model:open="deleteDialogOpen"
+            :category-id="deletingCategoryId"
+            :category-name="deletingCategory?.name ?? null"
+            :icon="deletingCategory?.icon ?? null"
+            :color="deletingCategory?.color ?? null"
+            :disabled="deleteProcessing"
+            @processing="(value) => (deleteProcessing = value)"
+            @success="deletingCategoryId = null"
+        />
     </AppLayout>
 </template>

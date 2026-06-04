@@ -530,8 +530,12 @@
             "annualEstimatePlaceholder": "np. 12000",
             "system": "systemowa",
             "dragHandle": "Przeciągnij, aby zmienić kolejność",
-            "delete": "Usuń kategorię",
-            "deleteConfirm": "Usunąć kategorię „{name}”?"
+            "delete": "Usuń kategorię"
+        },
+        "delete": {
+            "title": "Usunąć kategorię?",
+            "description": "Kategoria zostanie trwale usunięta. Kategorii używanych w transakcjach nie można usunąć.",
+            "confirm": "Usuń kategorię"
         },
         "enums": {
             "type": {

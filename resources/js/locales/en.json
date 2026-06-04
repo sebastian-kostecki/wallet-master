@@ -525,8 +525,12 @@
             "annualEstimatePlaceholder": "e.g. 12000",
             "system": "system",
             "dragHandle": "Drag to reorder",
-            "delete": "Delete category",
-            "deleteConfirm": "Delete category “{name}”?"
+            "delete": "Delete category"
+        },
+        "delete": {
+            "title": "Delete category?",
+            "description": "The category will be permanently removed. Categories used in transactions cannot be deleted.",
+            "confirm": "Delete category"
         },
         "enums": {
             "type": {
