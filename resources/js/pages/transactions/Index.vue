@@ -602,8 +602,8 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         </button>
                                     </th>
                                     <th class="px-6 py-3" scope="col">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="w-72 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
                                     <th class="w-40 px-6 py-3" scope="col">{{ t('transactions.index.table.category') }}</th>
+                                    <th class="w-72 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
                                     <th class="w-44 px-6 py-3" scope="col" :aria-sort="ariaSortFor('amount')">
                                         <button
                                             class="inline-flex items-center gap-2 hover:text-foreground"
@@ -748,6 +748,16 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
+                                        <CategoryBadge
+                                            v-if="tx.category"
+                                            :name="tx.category.name"
+                                            :icon="tx.category.icon"
+                                            :color="tx.category.color"
+                                            size="md"
+                                        />
+                                        <span v-else class="text-sm text-muted-foreground">—</span>
+                                    </td>
+                                    <td class="px-6 py-4">
                                         <div class="flex min-w-0 items-center gap-2">
                                             <div class="shrink-0">
                                                 <img
@@ -780,16 +790,6 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                                 </p>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <CategoryBadge
-                                            v-if="tx.category"
-                                            :name="tx.category.name"
-                                            :icon="tx.category.icon"
-                                            :color="tx.category.color"
-                                            size="md"
-                                        />
-                                        <span v-else class="text-sm text-muted-foreground">—</span>
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 tabular-nums">
                                         <span
@@ -927,12 +927,6 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         <p class="mt-0.5 text-xs text-muted-foreground">
                                             {{ tx.date_relative || operationDateRelative(transactionDisplayDateIso(tx)) }}
                                         </p>
-                                        <p class="mt-1 text-xs text-muted-foreground">
-                                            {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
-                                            <span v-if="!tx.account" class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                                                {{ t('transactions.index.readOnly.badge') }}
-                                            </span>
-                                        </p>
                                         <div v-if="tx.category" class="mt-1">
                                             <CategoryBadge
                                                 :name="tx.category.name"
@@ -941,6 +935,12 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                                 size="sm"
                                             />
                                         </div>
+                                        <p class="mt-1 text-xs text-muted-foreground">
+                                            {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
+                                            <span v-if="!tx.account" class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                                                {{ t('transactions.index.readOnly.badge') }}
+                                            </span>
+                                        </p>
 
                                         <TooltipProvider v-if="!hasRawStatementDescription(tx) && tx.subject" :delay-duration="0">
                                             <Tooltip v-if="truncateText(tx.subject, 70).isTruncated">
