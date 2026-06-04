@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 final class UpdateCategory
 {
     /**
-     * @param  array{name?: string, sort_order?: int}  $validated
+     * @param  array{name?: string, sort_order?: int, icon?: string, color?: string}  $validated
      */
     public function handle(Category $category, array $validated): Category
     {
@@ -21,6 +21,14 @@ final class UpdateCategory
 
         if (isset($validated['sort_order'])) {
             $category->sort_order = $validated['sort_order'];
+        }
+
+        if (isset($validated['icon'])) {
+            $category->icon = $validated['icon'];
+        }
+
+        if (isset($validated['color'])) {
+            $category->color = $validated['color'];
         }
 
         $category->save();

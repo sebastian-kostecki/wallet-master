@@ -499,6 +499,21 @@
         }
     },
     "categories": {
+        "create": {
+            "title": "Nowa kategoria"
+        },
+        "edit": {
+            "title": "Edycja kategorii"
+        },
+        "fields": {
+            "color": "Kolor",
+            "icon": "Ikona",
+            "preview": "Podgląd",
+            "previewHint": "Wybierz kolor, aby zobaczyć podgląd"
+        },
+        "validation": {
+            "colorRequired": "Wybierz kolor kategorii."
+        },
         "index": {
             "title": "Kategorie",
             "add": "Dodaj kategorię",
@@ -514,10 +529,13 @@
             "annualEstimate": "Szacunek roczny",
             "annualEstimatePlaceholder": "np. 12000",
             "system": "systemowa",
-            "moveUp": "Przesuń w górę",
-            "moveDown": "Przesuń w dół",
-            "delete": "Usuń kategorię",
-            "deleteConfirm": "Usunąć kategorię „{name}”?"
+            "dragHandle": "Przeciągnij, aby zmienić kolejność",
+            "delete": "Usuń kategorię"
+        },
+        "delete": {
+            "title": "Usunąć kategorię?",
+            "description": "Kategoria zostanie trwale usunięta. Kategorii używanych w transakcjach nie można usunąć.",
+            "confirm": "Usuń kategorię"
         },
         "enums": {
             "type": {

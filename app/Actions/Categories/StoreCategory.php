@@ -12,7 +12,7 @@ use App\Telemetry\Event;
 final class StoreCategory
 {
     /**
-     * @param  array{name: string, type: string}  $validated
+     * @param  array{name: string, type: string, icon: string, color: string}  $validated
      */
     public function handle(User $user, array $validated): Category
     {
@@ -24,6 +24,8 @@ final class StoreCategory
         $category = Category::query()->create([
             'user_id' => $user->id,
             'name' => $validated['name'],
+            'icon' => $validated['icon'],
+            'color' => $validated['color'],
             'type' => CategoryType::from($validated['type']),
             'sort_order' => $maxSort + 10,
             'is_system' => false,

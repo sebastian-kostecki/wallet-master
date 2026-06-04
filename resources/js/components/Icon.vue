@@ -19,9 +19,16 @@ const props = withDefaults(defineProps<Props>(), {
 
 const className = computed(() => cn('h-4 w-4', props.class));
 
+function toLucideComponentName(name: string): string {
+    return name
+        .split('-')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join('');
+}
+
 const icon = computed(() => {
-    const iconName = props.name.charAt(0).toUpperCase() + props.name.slice(1);
-    return (icons as Record<string, any>)[iconName];
+    const componentName = toLucideComponentName(props.name);
+    return (icons as Record<string, unknown>)[componentName] ?? icons.Tag;
 });
 </script>
 

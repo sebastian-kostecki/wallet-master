@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -10,6 +11,8 @@ import { useI18n } from 'vue-i18n';
 type BudgetRow = {
     category_id: number;
     name: string;
+    icon: string;
+    color: string;
     type: string;
     type_label_key: string;
     monthly_plan: string | null;
@@ -144,7 +147,9 @@ function saveGoalMonthlyEstimate(row: GoalRow, rawValue: string) {
                         </thead>
                         <tbody>
                             <tr v-for="row in sectionRows" :key="row.category_id" class="border-b border-sidebar-border/40">
-                                <td class="py-2 pr-4">{{ row.name }}</td>
+                                <td class="py-2 pr-4">
+                                    <CategoryBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
+                                </td>
                                 <td class="py-2 pr-4">
                                     <label class="sr-only" :for="`monthly-plan-${row.category_id}`">
                                         {{ t('budget.monthly.plan') }} — {{ row.name }}

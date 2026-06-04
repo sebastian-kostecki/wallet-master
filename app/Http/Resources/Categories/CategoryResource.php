@@ -25,6 +25,8 @@ final class CategoryResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'icon' => $this->icon,
+            'color' => $this->color,
             'type' => $this->type->value,
             'type_label_key' => $this->type->labelKey(),
             'sort_order' => $this->sort_order,

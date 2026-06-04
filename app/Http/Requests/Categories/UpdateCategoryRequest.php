@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Requests\Categories;
 
 use App\Models\Category;
+use App\Support\Categories\CategoryColors;
+use App\Support\Categories\CategoryIcons;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -38,6 +40,8 @@ final class UpdateCategoryRequest extends FormRequest
                     ->ignore($category->id),
             ],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
+            'icon' => ['sometimes', 'required', 'string', Rule::in(CategoryIcons::values())],
+            'color' => ['sometimes', 'required', 'string', Rule::in(CategoryColors::values())],
         ];
     }
 }

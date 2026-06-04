@@ -113,6 +113,8 @@ final class ListMonthlyBudget
             $this->rows[] = [
                 'category_id' => $category->id,
                 'name' => $category->name,
+                'icon' => $category->icon,
+                'color' => $category->color,
                 'type' => $category->type->value,
                 'type_label_key' => $category->type->labelKey(),
                 'is_system' => $category->is_system,

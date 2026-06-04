@@ -35,7 +35,7 @@
 - **Duplikat (importu):** ten sam `date + amount + normalized_description` na koncie — pomijany przy imporcie; ręczny duplikat dozwolony. Banki MVP nie eksportują unikalnych ID transakcji.
 - **Aktywny użytkownik (retention):** ≥1 akcja produktowa (import lub transakcja) w ostatnich 7 dniach — metryka analityczna poza MVP.
 - **Nowy użytkownik (aktywacja importu):** do 7 dni od `user_registered`; metryka „Activation import” (§3.3).
-- **Kategoria:** wpis w katalogu użytkownika (`income` \| `expense`) z kolejnością wyświetlania; przypisana do każdej transakcji.
+- **Kategoria:** wpis w katalogu użytkownika (`income` \| `expense`) z kolejnością wyświetlania, ikoną (Lucide) i kolorem (paleta hex); przypisana do każdej transakcji.
 - **Szacunek roczny:** planowana kwota na rok kalendarzowy per kategoria (przychód lub wydatek); można przekroczyć — to nie jest twardy limit.
 - **Szacunek miesięczny:** opcjonalne nadpisanie planu na dany miesiąc; może różnić się od `szacunek_roczny ÷ 12`.
 - **Cel (goal):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L**; planowane kwoty (szacunki roczne/miesięczne) i wykonanie śledzone przez transfery na kontach `Savings` (flow A: odkładanie → wypłata na ROR → wydatek na ROR z opcjonalnym powiązaniem celu).
@@ -200,6 +200,8 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 |------|------|
 | `user_id` | Właściciel |
 | `name` | Nazwa wyświetlana |
+| `icon` | Nazwa ikony Lucide (kebab-case), z whitelisty |
+| `color` | Kolor hex z palety stałych swatchy |
 | `type` | `income`, `expense` |
 | `sort_order` | Kolejność listy; fallback importu = pierwsza kategoria danego typu |
 | `is_system` | Kategoria systemowa (np. „Oszczędności”) — nieusuwalna w v1 |
@@ -623,7 +625,7 @@ Po commicie importu matcher łączy przeciwne kwoty między kontami użytkownika
 | **Domena** | Categories |
 
 **Zachowanie**
-Użytkownik zarządza katalogiem kategorii P&L (etykiety transakcji). Przy pierwszym użyciu (rejestracja lub pierwsze wejście) system tworzy **zestaw startowy** (wydatki, przychody, kategoria systemowa **Oszczędności**). Użytkownik dodaje, zmienia nazwę, ustawia kolejność (`sort_order`). Usunięcie kategorii z przypisanymi transakcjami — zablokowane (v1). Zmiana `type` kategorii — zablokowana, gdy istnieją transakcje. **Ekran kategorii nie zawiera pól szacunków** — plany P&L edytuje się wyłącznie na widokach budżetu (FR-UX1).
+Użytkownik zarządza katalogiem kategorii P&L (etykiety transakcji). Przy pierwszym użyciu (rejestracja lub pierwsze wejście) system tworzy **bogaty zestaw startowy** (wydatki, przychody, kategoria systemowa **Oszczędności**), każda z ikoną i kolorem. Użytkownik dodaje i edytuje kategorie na osobnych ekranach (nazwa, typ, ikona, kolor — kolor wymagany przy zapisie), ustawia kolejność (`sort_order`) na liście. Usunięcie kategorii z przypisanymi transakcjami — zablokowane (v1). Zmiana `type` kategorii — zablokowana, gdy istnieją transakcje. **Ekran kategorii nie zawiera pól szacunków** — plany P&L edytuje się wyłącznie na widokach budżetu (FR-UX1).
 
 **Kryteria akceptacji**
 1. Given nowy użytkownik When pierwszy dostęp do kategorii/budżetu Then istnieje zestaw startowy.
@@ -632,7 +634,7 @@ Użytkownik zarządza katalogiem kategorii P&L (etykiety transakcji). Przy pierw
 
 **Reguły**
 - Izolacja per `user_id`.
-- Zestaw startowy (przykład): wydatki — Jedzenie, Transport, Mieszkanie, Zdrowie, Rozrywka, Oszczędności (system), Inne; przychody — Pensja, Inne przychody.
+- Zestaw startowy: ~20 kategorii wydatków i 5 przychodów z ikonami/kolorami (np. Artykuły spożywcze, Transport, Wynagrodzenie) + **Oszczędności** (system).
 - `sort_order` decyduje o „pierwszej możliwej” kategorii przy imporcie (FR-C7).
 
 **Zdarzenia:** `category_created`, `category_updated`

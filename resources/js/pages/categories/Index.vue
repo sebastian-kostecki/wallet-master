@@ -1,21 +1,19 @@
 <script setup lang="ts">
-import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
-import FormField from '@/components/forms/FormField.vue';
+import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import DeleteCategoryDialog from '@/components/categories/modals/DeleteCategoryDialog.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { filterCategoriesByType, type CategoryOption } from '@/lib/categories';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import type { SortableEvent } from 'sortablejs';
+import { computed, ref, watch } from 'vue';
+import { VueDraggable } from 'vue-draggable-plus';
 import { useI18n } from 'vue-i18n';
 
-type Category = {
-    id: number;
-    name: string;
-    type: string;
+type Category = CategoryOption & {
     type_label_key: string;
-    sort_order: number;
     is_system: boolean;
 };
 
@@ -29,78 +27,40 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: t('categories.index.title'), href: route('categories.index') },
 ]);
 
-const typeOptions = computed<DropdownOption<string>[]>(() => [
-    { value: 'expense', label: t('categories.enums.type.expense') },
-    { value: 'income', label: t('categories.enums.type.income') },
-]);
+const expenseList = ref<Category[]>([]);
+const incomeList = ref<Category[]>([]);
 
-const createForm = useForm({
-    name: '',
-    type: 'expense' as string,
-});
-
-const editingId = ref<number | null>(null);
-const editingName = ref('');
-
-const expenseCategories = computed(() => props.categories.filter((c) => c.type === 'expense'));
-const incomeCategories = computed(() => props.categories.filter((c) => c.type === 'income'));
-
-function submitCreate() {
-    createForm.post(route('categories.store'), {
-        preserveScroll: true,
-        onSuccess: () => createForm.reset(),
-    });
+function syncLists(): void {
+    expenseList.value = filterCategoriesByType(props.categories, 'expense') as Category[];
+    incomeList.value = filterCategoriesByType(props.categories, 'income') as Category[];
 }
 
-function startEdit(cat: Category) {
-    editingId.value = cat.id;
-    editingName.value = cat.name;
+watch(() => props.categories, syncLists, { deep: true, immediate: true });
+
+const deletingCategoryId = ref<number | null>(null);
+const deleteDialogOpen = ref(false);
+const deleteProcessing = ref(false);
+const deletingCategory = computed(() => props.categories.find((c) => c.id === deletingCategoryId.value) ?? null);
+
+function openDeleteDialog(cat: Category) {
+    deletingCategoryId.value = cat.id;
+    deleteDialogOpen.value = true;
 }
 
-function cancelEdit() {
-    editingId.value = null;
-    editingName.value = '';
-}
-
-function saveName(cat: Category) {
-    const trimmed = editingName.value.trim();
-    if (trimmed === '' || trimmed === cat.name) {
-        cancelEdit();
+function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
+    if (event.oldIndex === undefined || event.newIndex === undefined || event.oldIndex === event.newIndex) {
         return;
     }
 
-    router.patch(route('categories.update', cat.id), { name: trimmed }, {
-        preserveScroll: true,
-        onSuccess: () => cancelEdit(),
-    });
-}
-
-function deleteCategory(cat: Category) {
-    if (!window.confirm(t('categories.index.deleteConfirm', { name: cat.name }))) {
-        return;
-    }
-
-    router.delete(route('categories.destroy', cat.id), { preserveScroll: true });
-}
-
-function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Category[]) {
-    const index = siblings.findIndex((c) => c.id === cat.id);
-    const swapIndex = direction === 'up' ? index - 1 : index + 1;
-    const neighbor = siblings[swapIndex];
-
-    if (neighbor === undefined) {
-        return;
-    }
+    const list = type === 'expense' ? expenseList.value : incomeList.value;
 
     router.patch(
-        route('categories.update', cat.id),
-        { sort_order: neighbor.sort_order },
+        route('categories.reorder'),
         {
-            preserveScroll: true,
-            onSuccess: () => {
-                router.patch(route('categories.update', neighbor.id), { sort_order: cat.sort_order }, { preserveScroll: true });
-            },
+            type,
+            ids: list.map((c) => c.id),
         },
+        { preserveScroll: true },
     );
 }
 </script>
@@ -109,29 +69,18 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('categories.index.title')" />
 
+        <template #headerActions>
+            <Button as-child>
+                <Link :href="route('categories.create')">
+                    <Plus class="h-4 w-4" aria-hidden="true" />
+                    {{ t('categories.index.add') }}
+                </Link>
+            </Button>
+        </template>
+
         <div class="flex flex-col gap-6 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <Button variant="outline" as-child>
-                    <Link :href="route('budget.monthly')">{{ t('budget.nav') }}</Link>
-                </Button>
-            </div>
-
-            <form
-                class="flex max-w-md flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
-                @submit.prevent="submitCreate"
-            >
-                <h2 class="text-lg font-semibold">{{ t('categories.index.add') }}</h2>
-                <FormField :label="t('categories.index.fields.name')" :error="createForm.errors.name">
-                    <Input v-model="createForm.name" />
-                </FormField>
-                <FormField :label="t('categories.index.fields.type')" :error="createForm.errors.type">
-                    <DropdownSelect v-model="createForm.type" :options="typeOptions" />
-                </FormField>
-                <Button type="submit" :disabled="createForm.processing">{{ t('categories.index.add') }}</Button>
-            </form>
-
             <section
-                v-for="(sectionCategories, sectionKey) in { expense: expenseCategories, income: incomeCategories }"
+                v-for="sectionKey in ['expense', 'income'] as const"
                 :key="sectionKey"
                 class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
             >
@@ -139,73 +88,136 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
                     {{ t(`budget.sections.${sectionKey}`) }}
                 </h2>
 
-                <p v-if="sectionCategories.length === 0" class="px-4 py-6 text-sm text-muted-foreground">
+                <p
+                    v-if="(sectionKey === 'expense' ? expenseList : incomeList).length === 0"
+                    class="px-4 py-6 text-sm text-muted-foreground"
+                >
                     {{ t('categories.index.empty') }}
                 </p>
 
-                <ul v-else class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border">
+                <VueDraggable
+                    v-else-if="sectionKey === 'expense'"
+                    v-model="expenseList"
+                    tag="ul"
+                    class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
+                    handle=".drag-handle"
+                    filter=".no-drag"
+                    :animation="150"
+                    ghost-class="opacity-50"
+                    chosen-class="bg-muted/30"
+                    @end="onReorderEnd('expense', $event)"
+                >
                     <li
-                        v-for="(cat, index) in sectionCategories"
+                        v-for="cat in expenseList"
                         :key="cat.id"
                         class="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                     >
                         <div class="flex min-w-0 flex-1 items-center gap-2">
-                            <div class="flex shrink-0 flex-col gap-0.5">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    class="h-6 w-6"
-                                    type="button"
-                                    :disabled="index === 0"
-                                    :aria-label="t('categories.index.moveUp')"
-                                    @click="moveCategory(cat, 'up', sectionCategories)"
-                                >
-                                    <ArrowUp class="h-3 w-3" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    class="h-6 w-6"
-                                    type="button"
-                                    :disabled="index === sectionCategories.length - 1"
-                                    :aria-label="t('categories.index.moveDown')"
-                                    @click="moveCategory(cat, 'down', sectionCategories)"
-                                >
-                                    <ArrowDown class="h-3 w-3" />
-                                </Button>
-                            </div>
-
-                            <div v-if="editingId === cat.id" class="flex min-w-0 flex-1 items-center gap-2">
-                                <Input v-model="editingName" class="h-8" @keyup.enter="saveName(cat)" @keyup.escape="cancelEdit" />
-                                <Button size="sm" type="button" @click="saveName(cat)">{{ t('actions.save') }}</Button>
-                                <Button size="sm" variant="ghost" type="button" @click="cancelEdit">{{ t('actions.cancel') }}</Button>
-                            </div>
                             <button
-                                v-else
                                 type="button"
-                                class="truncate text-left font-medium hover:underline"
-                                @click="startEdit(cat)"
+                                class="drag-handle shrink-0 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
+                                :aria-label="t('categories.index.dragHandle')"
                             >
-                                {{ cat.name }}
-                                <span v-if="cat.is_system" class="ml-1 text-xs font-normal text-muted-foreground">
+                                <GripVertical class="h-4 w-4" />
+                            </button>
+
+                            <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
+                                <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
+                                <span v-if="cat.is_system" class="shrink-0 text-xs font-normal text-muted-foreground">
                                     ({{ t('categories.index.system') }})
                                 </span>
-                            </button>
+                            </Link>
                         </div>
 
-                        <Button
-                            v-if="!cat.is_system"
-                            variant="ghost"
-                            size="icon"
-                            type="button"
-                            :aria-label="t('categories.index.delete')"
-                            @click="deleteCategory(cat)"
-                        >
-                            <Trash2 class="h-4 w-4 text-muted-foreground" />
-                        </Button>
+                        <div class="no-drag flex shrink-0 items-center gap-1">
+                            <Button variant="ghost" size="icon" as-child>
+                                <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
+                                    <Pencil class="h-4 w-4 text-muted-foreground" />
+                                </Link>
+                            </Button>
+                            <Button
+                                v-if="!cat.is_system"
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                class="no-drag"
+                                :disabled="deleteProcessing"
+                                :aria-label="t('categories.index.delete')"
+                                @click="openDeleteDialog(cat)"
+                            >
+                                <Trash2 class="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                        </div>
                     </li>
-                </ul>
+                </VueDraggable>
+
+                <VueDraggable
+                    v-else
+                    v-model="incomeList"
+                    tag="ul"
+                    class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
+                    handle=".drag-handle"
+                    filter=".no-drag"
+                    :animation="150"
+                    ghost-class="opacity-50"
+                    chosen-class="bg-muted/30"
+                    @end="onReorderEnd('income', $event)"
+                >
+                    <li
+                        v-for="cat in incomeList"
+                        :key="cat.id"
+                        class="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="flex min-w-0 flex-1 items-center gap-2">
+                            <button
+                                type="button"
+                                class="drag-handle shrink-0 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
+                                :aria-label="t('categories.index.dragHandle')"
+                            >
+                                <GripVertical class="h-4 w-4" />
+                            </button>
+
+                            <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
+                                <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
+                                <span v-if="cat.is_system" class="shrink-0 text-xs font-normal text-muted-foreground">
+                                    ({{ t('categories.index.system') }})
+                                </span>
+                            </Link>
+                        </div>
+
+                        <div class="no-drag flex shrink-0 items-center gap-1">
+                            <Button variant="ghost" size="icon" as-child>
+                                <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
+                                    <Pencil class="h-4 w-4 text-muted-foreground" />
+                                </Link>
+                            </Button>
+                            <Button
+                                v-if="!cat.is_system"
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                class="no-drag"
+                                :disabled="deleteProcessing"
+                                :aria-label="t('categories.index.delete')"
+                                @click="openDeleteDialog(cat)"
+                            >
+                                <Trash2 class="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                        </div>
+                    </li>
+                </VueDraggable>
             </section>
         </div>
+
+        <DeleteCategoryDialog
+            v-model:open="deleteDialogOpen"
+            :category-id="deletingCategoryId"
+            :category-name="deletingCategory?.name ?? null"
+            :icon="deletingCategory?.icon ?? null"
+            :color="deletingCategory?.color ?? null"
+            :disabled="deleteProcessing"
+            @processing="(value) => (deleteProcessing = value)"
+            @success="deletingCategoryId = null"
+        />
     </AppLayout>
 </template>

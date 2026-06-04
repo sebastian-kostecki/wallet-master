@@ -25,7 +25,7 @@ test('monthly budget uses annual divided by twelve when no monthly override', fu
 
     $food = Category::query()
         ->where('user_id', $user->id)
-        ->where('name', 'Jedzenie')
+        ->where('name', 'Artykuły spożywcze')
         ->firstOrFail();
 
     CategoryAnnualEstimate::query()->create([
@@ -49,7 +49,7 @@ test('monthly budget uses monthly override when set', function () {
 
     $food = Category::query()
         ->where('user_id', $user->id)
-        ->where('name', 'Jedzenie')
+        ->where('name', 'Artykuły spożywcze')
         ->firstOrFail();
 
     CategoryAnnualEstimate::query()->create([

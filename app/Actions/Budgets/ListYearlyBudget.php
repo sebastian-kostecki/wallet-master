@@ -76,6 +76,8 @@ final class ListYearlyBudget
             $this->rows[] = [
                 'category_id' => $category->id,
                 'name' => $category->name,
+                'icon' => $category->icon,
+                'color' => $category->color,
                 'type' => $category->type->value,
                 'type_label_key' => $category->type->labelKey(),
                 'annual_plan' => $plan,
