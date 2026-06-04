@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Goals\MigrateLegacySavingsEstimate;
+use App\Enums\CategoryType;
 use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
@@ -18,11 +19,13 @@ test('user with Oszczędności estimate gets default goal with same annual amoun
     $user = User::factory()->create();
     ensureUserCategories($user);
 
-    $savingsCategory = Category::query()
-        ->where('user_id', $user->id)
-        ->where('is_system', true)
-        ->where('name', 'Oszczędności')
-        ->firstOrFail();
+    $savingsCategory = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Oszczędności',
+        'type' => CategoryType::Expense,
+        'is_system' => true,
+        'sort_order' => 25,
+    ]);
 
     CategoryAnnualEstimate::query()->create([
         'category_id' => $savingsCategory->id,
@@ -63,11 +66,13 @@ test('legacy savings migration skips users who already have goals', function () 
 
     Goal::factory()->create(['user_id' => $user->id, 'name' => 'Wakacje']);
 
-    $savingsCategory = Category::query()
-        ->where('user_id', $user->id)
-        ->where('is_system', true)
-        ->where('name', 'Oszczędności')
-        ->firstOrFail();
+    $savingsCategory = Category::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Oszczędności',
+        'type' => CategoryType::Expense,
+        'is_system' => true,
+        'sort_order' => 25,
+    ]);
 
     CategoryAnnualEstimate::query()->create([
         'category_id' => $savingsCategory->id,

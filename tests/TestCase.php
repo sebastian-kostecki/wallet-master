@@ -19,6 +19,10 @@ abstract class TestCase extends BaseTestCase
                 return;
             }
 
+            if ($transaction->transfer_id !== null) {
+                return;
+            }
+
             $user = User::query()->find($transaction->user_id);
             if ($user === null) {
                 return;
@@ -27,6 +31,10 @@ abstract class TestCase extends BaseTestCase
             $type = $transaction->type;
             if (! $type instanceof TransactionType) {
                 $type = TransactionType::tryFrom((string) $type) ?? TransactionType::Expense;
+            }
+
+            if ($type === TransactionType::Transfer) {
+                return;
             }
 
             $transaction->category_id = DefaultCategoryId::for($user, $type);

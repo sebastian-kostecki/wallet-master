@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
@@ -8,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { categoriesByIdMap, filterCategoriesByType, firstCategoryId, type CategoryOption } from '@/lib/categories';
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -32,9 +30,7 @@ type GoalOption = {
 
 const props = defineProps<{
     accounts: Account[];
-    categories: CategoryOption[];
     goals: GoalOption[];
-    default_category_id: number | null;
 }>();
 
 const { t } = useI18n();
@@ -75,16 +71,6 @@ function todayDdMmYyyy(): string {
 const defaultFromId = computed(() => selectableAccounts.value[0]?.id ?? null);
 const defaultToId = computed(() => selectableAccounts.value[1]?.id ?? null);
 
-const transferCategories = computed(() => filterCategoriesByType(props.categories, 'expense'));
-const categoriesById = computed(() => categoriesByIdMap(props.categories));
-
-const categoryOptions = computed<DropdownOption<number>[]>(() =>
-    transferCategories.value.map((c) => ({
-        value: c.id,
-        label: c.name,
-    })),
-);
-
 const goalOptions = computed<DropdownOption<number>[]>(() =>
     props.goals.map((g) => ({
         value: g.id,
@@ -95,7 +81,6 @@ const goalOptions = computed<DropdownOption<number>[]>(() =>
 const form = useForm<{
     from_account_id: number | null;
     to_account_id: number | null;
-    category_id: number | null;
     goal_id: number | null;
     date: string;
     amount: string;
@@ -104,7 +89,6 @@ const form = useForm<{
 }>({
     from_account_id: defaultFromId.value,
     to_account_id: defaultToId.value,
-    category_id: props.default_category_id ?? firstCategoryId(transferCategories.value),
     goal_id: null,
     date: todayDdMmYyyy(),
     amount: '0,00',
@@ -308,40 +292,6 @@ function submit() {
                                 </template>
                             </FormField>
                         </div>
-
-                        <FormField for-id="category_id" :label="t('transactions.fields.category')" :error="form.errors.category_id">
-                            <template #default="{ errorId, hasError }">
-                                <DropdownSelect
-                                    id="category_id"
-                                    :model-value="form.category_id"
-                                    :options="categoryOptions"
-                                    :placeholder="t('transactions.fields.category')"
-                                    :disabled="form.processing"
-                                    :aria-invalid="hasError"
-                                    :aria-describedby="hasError ? errorId : undefined"
-                                    @update:model-value="(value) => (form.category_id = value)"
-                                >
-                                    <template #trigger-leading>
-                                        <CategoryBadge
-                                            v-if="form.category_id !== null && categoriesById.get(form.category_id)"
-                                            :icon="categoriesById.get(form.category_id)!.icon"
-                                            :color="categoriesById.get(form.category_id)!.color"
-                                            size="sm"
-                                            :show-name="false"
-                                        />
-                                    </template>
-                                    <template #option-leading="{ option }">
-                                        <CategoryBadge
-                                            v-if="categoriesById.get(option.value)"
-                                            :icon="categoriesById.get(option.value)!.icon"
-                                            :color="categoriesById.get(option.value)!.color"
-                                            size="sm"
-                                            :show-name="false"
-                                        />
-                                    </template>
-                                </DropdownSelect>
-                            </template>
-                        </FormField>
 
                         <FormField
                             v-if="involvesSavings"

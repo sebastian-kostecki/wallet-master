@@ -77,6 +77,8 @@ test('transfer matcher auto links import row with existing opposite transaction 
     expect($existing->transfer_match_status)->toBe(TransferMatchStatus::Auto);
     expect($imported->type)->toBe(TransactionType::Transfer);
     expect($existing->type)->toBe(TransactionType::Transfer);
+    expect($imported->category_id)->toBeNull();
+    expect($existing->category_id)->toBeNull();
     expect((string) $accountA->fresh()->current_balance)->toBe('-200.00');
     expect((string) $accountB->fresh()->current_balance)->toBe($balanceBBefore);
 });

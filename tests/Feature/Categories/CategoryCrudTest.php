@@ -47,7 +47,7 @@ test('category resource includes icon and color on index', function () {
     ensureUserCategories($user);
 
     $this->actingAs($user)->get('/categories')->assertOk()->assertInertia(fn ($page) => $page
-        ->has('categories', 26)
+        ->has('categories', 25)
         ->where('categories.0.icon', fn ($v) => is_string($v) && $v !== '')
         ->where('categories.0.color', fn ($v) => is_string($v) && str_starts_with($v, '#'))
     );
@@ -128,13 +128,4 @@ test('categories index only lists own categories', function () {
         ->has('categories')
         ->where('categories', fn ($categories) => collect($categories)->pluck('name')->doesntContain('Only A'))
     );
-});
-
-test('cannot delete system savings category', function () {
-    $user = User::factory()->create();
-    ensureUserCategories($user);
-
-    $savings = Category::where('user_id', $user->id)->where('name', 'Oszczędności')->firstOrFail();
-
-    $this->actingAs($user)->delete("/categories/{$savings->id}")->assertForbidden();
 });

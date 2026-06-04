@@ -23,7 +23,6 @@ final class CreateTransfer
      *   amount: numeric-string|float|int,
      *   description?: ?string,
      *   subject?: ?string,
-     *   category_id: int,
      *   goal_id?: int,
      * } $validated
      * @return array{
@@ -99,13 +98,13 @@ final class CreateTransfer
                 'date' => $dateYmd,
                 'booked_at' => $dateYmd,
                 'amount' => $withdrawAmount,
-                'type' => TransactionType::Expense,
+                'type' => TransactionType::Transfer,
                 'description' => $withdrawDescription,
                 'subject' => $subject,
                 'normalized_description' => $withdrawNormalized,
                 'dedupe_hash' => $withdrawDedupeHash,
                 'transfer_id' => $transferId,
-                'category_id' => $validated['category_id'],
+                'category_id' => null,
                 'goal_id' => $goalId,
             ]);
 
@@ -116,13 +115,13 @@ final class CreateTransfer
                 'date' => $dateYmd,
                 'booked_at' => $dateYmd,
                 'amount' => $depositAmount,
-                'type' => TransactionType::Income,
+                'type' => TransactionType::Transfer,
                 'description' => $depositDescription,
                 'subject' => $subject,
                 'normalized_description' => $depositNormalized,
                 'dedupe_hash' => $depositDedupeHash,
                 'transfer_id' => $transferId,
-                'category_id' => $validated['category_id'],
+                'category_id' => null,
                 'goal_id' => $goalId,
             ]);
 

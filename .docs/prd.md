@@ -13,7 +13,7 @@
 - **Dedupe (import):** klucz `date + amount + normalized_description` na koncie; pominięcie duplikatu przy imporcie; ręczne dodanie identycznej transakcji — dozwolone (`dedupe_hash` z sufiksem UUID).
 - **Saldo:** `current_balance` aktualizowane przy zmianach transakcji; komenda `accounts:recalculate-balance` jako safety net.
 - **Lista transakcji:** filtry, sort i podsumowanie po dacie okresu (`booked_at`; UI kolumny: `COALESCE(booked_at, date)`); sumy wpływów/wydatków **bez** wewnętrznych transferów (`transfer_id` pusty).
-- **Kategorie i szacunki (wave 2):** każda transakcja ma `category_id`; szacunki roczne (kanoniczne) + opcjonalne nadpisania miesięczne; widok miesięczny (plan vs fakty P&L + sekcja celów) i roczny (plan vs fakty bez transferów) — §3.1a, FR-C1–C7, FR-G*, FR-UX1.
+- **Kategorie i szacunki (wave 2):** każda transakcja P&L (`income` / `expense` / `adjustment`) ma `category_id`; transfer wewnętrzny ma `category_id = null`; szacunki roczne (kanoniczne) + opcjonalne nadpisania miesięczne; widok miesięczny (plan vs fakty P&L + sekcja celów) i roczny (plan vs fakty bez transferów) — §3.1a, FR-C1–C7, FR-G*, FR-UX1.
 - **Cele oszczędnościowe (wave 2 UX):** osobna encja od kategorii P&L; śledzenie przez transfery na kontach `Savings` (flow A) + opcjonalne powiązanie wydatku — §3.1a, FR-G1–G5.
 - **Poza zakresem:** §3.2 — nie implementuj bez rozszerzenia tego dokumentu.
 
@@ -35,7 +35,7 @@
 - **Duplikat (importu):** ten sam `date + amount + normalized_description` na koncie — pomijany przy imporcie; ręczny duplikat dozwolony. Banki MVP nie eksportują unikalnych ID transakcji.
 - **Aktywny użytkownik (retention):** ≥1 akcja produktowa (import lub transakcja) w ostatnich 7 dniach — metryka analityczna poza MVP.
 - **Nowy użytkownik (aktywacja importu):** do 7 dni od `user_registered`; metryka „Activation import” (§3.3).
-- **Kategoria:** wpis w katalogu użytkownika (`income` \| `expense`) z kolejnością wyświetlania, ikoną (Lucide) i kolorem (paleta hex); przypisana do każdej transakcji.
+- **Kategoria:** wpis w katalogu użytkownika (`income` \| `expense`) z kolejnością wyświetlania, ikoną (Lucide) i kolorem (paleta hex); etykieta przepływów **zewnętrznych** P&L — wymagana na `income`, `expense`, `adjustment`; **brak** na transferze wewnętrznym (`category_id = null`).
 - **Szacunek roczny:** planowana kwota na rok kalendarzowy per kategoria (przychód lub wydatek); można przekroczyć — to nie jest twardy limit.
 - **Szacunek miesięczny:** opcjonalne nadpisanie planu na dany miesiąc; może różnić się od `szacunek_roczny ÷ 12`.
 - **Cel (goal):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L**; planowane kwoty (szacunki roczne/miesięczne) i wykonanie śledzone przez transfery na kontach `Savings` (flow A: odkładanie → wypłata na ROR → wydatek na ROR z opcjonalnym powiązaniem celu).
@@ -80,6 +80,7 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 3. Wymagany cel na transferze z udziałem konta `Savings` (FR-G3)
 4. Widok celów w budżecie miesięcznym zamiast agregatu transferów (FR-G5)
 5. Plany P&L tylko na ekranach budżetu — kategorie bez pól szacunków (FR-UX1)
+6. Kategoria P&L tylko na przepływach zewnętrznych — transfer bez `category_id`, bez kategorii „Oszczędności” (spec: `.docs/superpowers/specs/2026-06-04-transfer-category-decoupling-design.md`)
 
 **Should w rozszerzeniu wave 2 UX:** opcjonalny cel na wydatku/przychodzie (FR-G4).
 
@@ -191,7 +192,7 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 | `transfer_match_status` | `none`, `auto`, `manual`, `rejected` |
 | `transfer_candidate_for_id` | FK — kandydat pary (status `manual`) |
 | `import_id`, `raw_statement_description` | Metadane importu |
-| `category_id` | FK → Category (wymagane po wave 2) |
+| `category_id` | FK → Category; **wymagane** na `income` / `expense` / `adjustment`; **`null` na transferze** (`type = transfer` lub `transfer_id` ustawione) |
 | `goal_id` | FK → Goal (nullable); wymagane na obu nogach transferu, gdy uczestniczy konto `Savings`; opcjonalne na przychodzie/wydatku/korekcie |
 
 ### Category
@@ -204,7 +205,7 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 | `color` | Kolor hex z palety stałych swatchy |
 | `type` | `income`, `expense` |
 | `sort_order` | Kolejność listy; fallback importu = pierwsza kategoria danego typu |
-| `is_system` | Kategoria systemowa (np. „Oszczędności”) — nieusuwalna w v1 |
+| `is_system` | Kategoria systemowa (v1: brak w seedzie; pole zachowane na przyszłość) |
 
 ### CategoryAnnualEstimate
 
@@ -421,21 +422,23 @@ Lista z filtrem konta i dat (`booked_at`), sort, paginacja, suma wpływów i wyd
 | **Domena** | Transactions |
 
 **Zachowanie**
-Jedna akcja UI → 2 transakcje, wspólna data, przeciwne kwoty, wspólny `transfer_id`. Od wave 2: jedna wybrana kategoria przypisana do **obu** nóg (FR-C2). Od rozszerzenia wave 2 UX: gdy uczestniczy konto `Savings`, wymagany ten sam `goal_id` na obu nogach (FR-G3); transfer ROR↔ROR bez `goal_id`.
+Jedna akcja UI → 2 transakcje, wspólna data, przeciwne kwoty, wspólny `transfer_id`. **Bez** `category_id` na obu nogach (`null`). Od rozszerzenia wave 2 UX: gdy uczestniczy konto `Savings`, wymagany ten sam `goal_id` na obu nogach (FR-G3); transfer ROR↔ROR bez `goal_id`.
 
 **Kryteria akceptacji**
 1. Given dwa różne konta When transfer kwoty X w dacie D Then na źródle `-X`, na celu `+X`, salda obu kont zaktualizowane.
-2. Given wave 2 When transfer Then obie nogi mają ten sam `category_id`.
+2. Given transfer When zapis Then obie nogi mają `category_id = null`.
 3. Given transfer z kontem `Savings` When brak `goal_id` Then 422.
 4. Given transfer ROR↔ROR When `goal_id` ustawione Then 422.
-5. Given transfer z `Savings` When zapis Then obie nogi mają ten sam `goal_id`.
+5. Given transfer When `category_id` ustawione Then 422.
+6. Given transfer z `Savings` When zapis Then obie nogi mają ten sam `goal_id`.
+7. Given rozłączenie transferu When unlink Then typ przywrócony ze znaku kwoty i przypisana kategoria fallback (pierwsza pasującego typu wg `sort_order`).
 
 **Reguły**
 - To samo konto jako źródło i cel — zabronione.
 - Usunięte konto — blokada.
 - Formularz: kwota dodatnia; system zapisuje znaki na transakcjach.
-- Domyślna kategoria w formularzu transferu: „Oszczędności” (rekomendacja UX).
 - Pole celu: widoczne/wymagane, gdy źródło lub cel ma `type = Savings`; ukryte/wyłączone dla ROR↔ROR.
+- Formularz transferu: **bez** pickera kategorii.
 
 **Zdarzenia:** `transfer_created`, `transfer_failed_validation`, `goal_assigned_transfer`
 
@@ -601,7 +604,8 @@ Po commicie importu matcher łączy przeciwne kwoty między kontami użytkownika
 2. Given przeciwne kwoty bez tokenów transferu When commit Then brak auto-linku; `manual` + `transfer_candidate_for_id`; baner do potwierdzenia/odrzucenia.
 3. Given >1 kandydat When matcher Then brak auto-linku; wszyscy `manual`.
 4. Given „To nie transfer” When zapis Then `rejected`; brak ponownej propozycji po kolejnym imporcie.
-5. Given połączony transfer When „Rozłącz transfer” Then brak `transfer_id`, `type` ze znaku `amount`, `rejected`.
+5. Given połączony transfer When „Rozłącz transfer” Then brak `transfer_id`, `type` ze znaku `amount`, `rejected`, kategoria fallback na obu nogach (FR-C2).
+6. Given połączona para When link (auto lub manual) Then `category_id = null` na obu nogach.
 
 **Decyzja:** matcher **synchroniczny** po commicie importu (MVP).
 
@@ -625,16 +629,15 @@ Po commicie importu matcher łączy przeciwne kwoty między kontami użytkownika
 | **Domena** | Categories |
 
 **Zachowanie**
-Użytkownik zarządza katalogiem kategorii P&L (etykiety transakcji). Przy pierwszym użyciu (rejestracja lub pierwsze wejście) system tworzy **bogaty zestaw startowy** (wydatki, przychody, kategoria systemowa **Oszczędności**), każda z ikoną i kolorem. Użytkownik dodaje i edytuje kategorie na osobnych ekranach (nazwa, typ, ikona, kolor — kolor wymagany przy zapisie), ustawia kolejność (`sort_order`) na liście. Usunięcie kategorii z przypisanymi transakcjami — zablokowane (v1). Zmiana `type` kategorii — zablokowana, gdy istnieją transakcje. **Ekran kategorii nie zawiera pól szacunków** — plany P&L edytuje się wyłącznie na widokach budżetu (FR-UX1).
+Użytkownik zarządza katalogiem kategorii P&L (etykiety transakcji zewnętrznych). Przy pierwszym użyciu (rejestracja lub pierwsze wejście) system tworzy **bogaty zestaw startowy** (wydatki i przychody), każda z ikoną i kolorem. Użytkownik dodaje i edytuje kategorie na osobnych ekranach (nazwa, typ, ikona, kolor — kolor wymagany przy zapisie), ustawia kolejność (`sort_order`) na liście. Usunięcie kategorii z przypisanymi transakcjami — zablokowane (v1). Zmiana `type` kategorii — zablokowana, gdy istnieją transakcje. **Ekran kategorii nie zawiera pól szacunków** — plany P&L edytuje się wyłącznie na widokach budżetu (FR-UX1).
 
 **Kryteria akceptacji**
 1. Given nowy użytkownik When pierwszy dostęp do kategorii/budżetu Then istnieje zestaw startowy.
 2. Given kategoria z transakcjami When usunięcie Then błąd walidacji, kategoria pozostaje.
-3. Given kategoria systemowa „Oszczędności” When usunięcie Then blokada.
 
 **Reguły**
 - Izolacja per `user_id`.
-- Zestaw startowy: ~20 kategorii wydatków i 5 przychodów z ikonami/kolorami (np. Artykuły spożywcze, Transport, Wynagrodzenie) + **Oszczędności** (system).
+- Zestaw startowy: ~20 kategorii wydatków i 5 przychodów z ikonami/kolorami (np. Artykuły spożywcze, Transport, Wynagrodzenie); **bez** kategorii oszczędności — oszczędzanie śledzi się przez **cele** (FR-G*).
 - `sort_order` decyduje o „pierwszej możliwej” kategorii przy imporcie (FR-C7).
 
 **Zdarzenia:** `category_created`, `category_updated`
@@ -649,15 +652,17 @@ Użytkownik zarządza katalogiem kategorii P&L (etykiety transakcji). Przy pierw
 | **Domena** | Transactions |
 
 **Zachowanie**
-Ręczne dodanie/edycja, transfer i wiersz importu wymagają `category_id` należącego do użytkownika. Typ kategorii musi pasować do typu ekonomicznego transakcji (`income` / `expense` ze znaku kwoty / `TransactionType`). Transfer: **jedna** kategoria w formularzu → ten sam `category_id` na obu nogach. `adjustment`: kategoria wymagana.
+Ręczne dodanie/edycja przychodu/wydatku/korekty oraz wiersz importu (przed połączeniem jako transfer) wymagają `category_id` należącego do użytkownika. Typ kategorii musi pasować do typu ekonomicznego transakcji (`income` / `expense` ze znaku kwoty / `TransactionType`). **Transfer:** obie nogi mają `category_id = null` — brak kategorii P&L. `adjustment`: kategoria wymagana. Matcher importu (FR-I6): po połączeniu pary jako transfer — `category_id = null` na obu nogach.
 
 **Kryteria akceptacji**
-1. Given tworzenie transakcji When brak kategorii Then 422.
+1. Given tworzenie transakcji P&L When brak kategorii Then 422.
 2. Given wydatek When kategoria przychodowa Then 422.
-3. Given transfer When zapis Then obie nogi mają ten sam `category_id`.
+3. Given transfer When zapis Then obie nogi mają `category_id = null`.
+4. Given transfer When `category_id` ustawione Then 422.
+5. Given matcher połączył parę When link Then `category_id = null` na obu nogach.
 
 **Reguły**
-- Pre-release: migracja przypisuje kategorię wszystkim istniejącym transakcjom; po release brak trwałego stanu „bez kategorii”.
+- Pre-release: migracja przypisuje kategorię wszystkim istniejącym transakcjom P&L; transfery — `category_id = null`; po release brak trwałego stanu „bez kategorii” na P&L.
 - Transakcje na usuniętym koncie: read-only (bez zmiany kategorii).
 
 ---
@@ -741,7 +746,7 @@ Dla wybranego roku kalendarzowego: per kategoria szacunek roczny vs wykonanie (p
 
 **Kryteria akceptacji**
 1. Given transakcje w 2026 When widok roczny 2026 Then sumy per kategoria bez transferów wewnętrznych.
-2. Given plan oszczędności w kategorii systemowej When widok roczny Then kategoria Oszczędności pokazuje **fakty** P&L (transfery wykluczone); planowanie oszczędności — przez cele (FR-G2), nie przez agregat w budżecie miesięcznym.
+2. Given plan oszczędności When widok roczny Then planowanie oszczędności wyłącznie przez **cele** (FR-G2), nie przez kategorie P&L.
 
 **Zdarzenia:** `budget_view_yearly`
 
@@ -778,11 +783,12 @@ Dla wybranego roku kalendarzowego: per kategoria szacunek roczny vs wykonanie (p
 | **Domena** | Transactions |
 
 **Zachowanie**
-Lista transakcji wyświetla nazwę kategorii; opcjonalny filtr po `category_id`.
+Lista transakcji wyświetla nazwę kategorii (transakcje P&L); transfer wewnętrzny — etykieta transferu i opcjonalnie cel, **bez** kategorii; opcjonalny filtr po `category_id` (transfery wykluczone).
 
 **Kryteria akceptacji**
-1. Given lista When wiersz transakcji Then widoczna nazwa kategorii.
-2. Given filtr kategorii When zastosowanie Then tylko pasujące wiersze.
+1. Given lista When wiersz transakcji P&L Then widoczna nazwa kategorii.
+2. Given lista When wiersz transferu Then brak kategorii; opcjonalnie widoczny cel.
+3. Given filtr kategorii When zastosowanie Then tylko pasujące wiersze P&L (bez transferów).
 
 ---
 
@@ -842,7 +848,7 @@ Użytkownik ustawia opcjonalny **szacunek roczny** per cel i rok kalendarzowy or
 | **Domena** | Transfers |
 
 **Zachowanie**
-Transfer, w którym **co najmniej jedna noga** dotyczy konta `type = Savings`, wymaga `goal_id` należącego do użytkownika na **obu** nogach (ta sama wartość). Transfer ROR↔ROR (bez udziału `Savings`) **nie** może mieć `goal_id`. `category_id` pozostaje wymagane niezależnie (domyślnie kategoria systemowa „Oszczędności”); śledzenie oszczędności odbywa się przez `goal_id`, nie przez kategorię.
+Transfer, w którym **co najmniej jedna noga** dotyczy konta `type = Savings`, wymaga `goal_id` należącego do użytkownika na **obu** nogach (ta sama wartość). Transfer ROR↔ROR (bez udziału `Savings`) **nie** może mieć `goal_id`. Obie nogi transferu mają `category_id = null`; śledzenie oszczędności odbywa się wyłącznie przez `goal_id`.
 
 **Kryteria akceptacji**
 1. Given transfer ROR→Savings When brak `goal_id` Then 422.
@@ -896,7 +902,7 @@ Widok budżetu miesięcznego (FR-C5) zawiera sekcję **Cele** z metrykami per ce
 
 **Reguły**
 - Definicje metryk — jak w §5 (Goal) i FR-C5.
-- Kategoria systemowa „Oszczędności” nadal służy domyślnemu `category_id` transferu; **planowanie** oszczędności — przez cele, nie przez szacunek tej kategorii w sekcji budżetu.
+- Planowanie oszczędności — wyłącznie przez cele; kategorie P&L nie obejmują transferów wewnętrznych.
 
 **Zdarzenia:** `budget_view_monthly`
 
@@ -958,7 +964,7 @@ Po dodaniu: uzupełnij **Indeks identyfikatorów FR** i tabelę zdarzeń w §3.4
 
 **Język UI:** polski. Architektura pod przyszłe i18n (formatowanie dat/kwot), bez pełnego i18n w MVP.
 
-**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista, dodaj, edytuj) · Transakcje (lista, dodaj, edytuj, transfer z opcjonalnym/wymaganym celem FR-G3/G4, baner kandydatów FR-I6; **kategoria** wymagana w formularzach od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny z sekcją celów + edycja planów P&L; widok roczny z edycją szacunków rocznych P&L) · **Kategorie** (CRUD, kolejność — **bez** szacunków, FR-UX1) · **Cele** (CRUD celów, szacunki roczne, kolejność).
+**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista, dodaj, edytuj) · Transakcje (lista, dodaj, edytuj, **transfer bez kategorii** z opcjonalnym/wymaganym celem FR-G3/G4, baner kandydatów FR-I6; **kategoria** wymagana w formularzach P&L od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny z sekcją celów + edycja planów P&L; widok roczny z edycją szacunków rocznych P&L) · **Kategorie** (CRUD, kolejność — **bez** szacunków, FR-UX1) · **Cele** (CRUD celów, szacunki roczne, kolejność).
 
 **Nawigacja (sidebar):** Konta · Transakcje (Import jako akcja/modal, baner kandydatów z licznikiem) · **Budżet** (przełącznik miesięczny / roczny) · **Kategorie** (katalog P&L) · **Cele** (koperty oszczędnościowe). Ustawienia (`/settings/*`) — profil, hasło, wygląd; **kategorie nie przenoszą się do Ustawień**.
 
@@ -1018,7 +1024,7 @@ Auth · Konta + saldo + `adjustment` + rekalkulacja · Transakcje (`date`, `book
 
 Kategorie (FR-C1, FR-C2) · Szacunki roczne i miesięczne P&L (FR-C3, FR-C4) · Widoki budżetu miesięczny i roczny (FR-C5, FR-C6) · Pamięć kategorii przy imporcie (FR-C7) · Opcjonalnie filtr kategorii na liście (FR-C8).
 
-**Rozszerzenie wave 2 UX (cele + IA budżetu):** Cele (FR-G1, FR-G2) · Cel wymagany na transferze z `Savings` (FR-G3) · Sekcja celów w budżecie miesięcznym (FR-G5) · Plany P&L tylko na budżecie, kategorie bez szacunków (FR-UX1) · Opcjonalnie cel na wydatku (FR-G4).
+**Rozszerzenie wave 2 UX (cele + IA budżetu):** Cele (FR-G1, FR-G2) · Cel wymagany na transferze z `Savings` (FR-G3) · Sekcja celów w budżecie miesięcznym (FR-G5) · Plany P&L tylko na budżecie, kategorie bez szacunków (FR-UX1) · Opcjonalnie cel na wydatku (FR-G4) · Transfer bez kategorii P&L, usunięcie kategorii „Oszczędności” (spec 2026-06-04).
 
 ### Po wave 2 (kierunek, bez zobowiązania)
 

@@ -8,8 +8,8 @@ test('new user receives starter categories on ensure', function () {
 
     ensureUserCategories($user);
 
-    expect(Category::where('user_id', $user->id)->count())->toBe(26);
-    expect(Category::where('user_id', $user->id)->where('is_system', true)->where('name', 'Oszczędności')->exists())->toBeTrue();
+    expect(Category::where('user_id', $user->id)->count())->toBe(25);
+    expect(Category::where('user_id', $user->id)->where('name', 'Oszczędności')->exists())->toBeFalse();
 });
 
 test('ensure is idempotent', function () {

@@ -107,18 +107,13 @@ test('monthly budget goal row tracks save and release on savings account', funct
         'current_balance' => 0,
     ]);
 
-    $savingsCategory = Category::query()
-        ->where('user_id', $user->id)
-        ->where('name', 'Oszczędności')
-        ->firstOrFail();
-
     $saveTransferId = 'monthly-save-transfer-uuid';
 
     Transaction::query()->create([
         'user_id' => $user->id,
         'account_id' => $checking->id,
         'currency_id' => $plnId,
-        'category_id' => $savingsCategory->id,
+        'category_id' => null,
         'goal_id' => $goal->id,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
@@ -134,7 +129,7 @@ test('monthly budget goal row tracks save and release on savings account', funct
         'user_id' => $user->id,
         'account_id' => $savings->id,
         'currency_id' => $plnId,
-        'category_id' => $savingsCategory->id,
+        'category_id' => null,
         'goal_id' => $goal->id,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
@@ -152,7 +147,7 @@ test('monthly budget goal row tracks save and release on savings account', funct
         'user_id' => $user->id,
         'account_id' => $savings->id,
         'currency_id' => $plnId,
-        'category_id' => $savingsCategory->id,
+        'category_id' => null,
         'goal_id' => $goal->id,
         'date' => '2026-03-15',
         'booked_at' => '2026-03-15',
@@ -168,7 +163,7 @@ test('monthly budget goal row tracks save and release on savings account', funct
         'user_id' => $user->id,
         'account_id' => $checking->id,
         'currency_id' => $plnId,
-        'category_id' => $savingsCategory->id,
+        'category_id' => null,
         'goal_id' => $goal->id,
         'date' => '2026-03-15',
         'booked_at' => '2026-03-15',

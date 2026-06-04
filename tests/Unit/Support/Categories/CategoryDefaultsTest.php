@@ -11,14 +11,14 @@ test('starter rows include groceries with icon and color', function () {
         ->and($groceries['color'])->toBe('#ef4444');
 });
 
-test('starter rows include system savings category', function () {
+test('starter rows do not include system savings category', function () {
     $rows = CategoryDefaults::starterRows();
-    $savings = collect($rows)->first(fn ($r) => ($r['name'] ?? '') === 'Oszczędności' && ($r['is_system'] ?? false));
+    $savings = collect($rows)->first(fn ($r) => ($r['name'] ?? '') === 'Oszczędności');
 
-    expect($savings)->not->toBeNull()
-        ->and($savings)->toHaveKeys(['icon', 'color', 'type', 'sort_order']);
+    expect($savings)->toBeNull();
+    expect(collect($rows)->where('is_system', true))->toBeEmpty();
 });
 
-test('starter rows count is twenty six', function () {
-    expect(CategoryDefaults::starterRows())->toHaveCount(26);
+test('starter rows count is twenty five', function () {
+    expect(CategoryDefaults::starterRows())->toHaveCount(25);
 });

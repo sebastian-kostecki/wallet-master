@@ -3,7 +3,6 @@
 use App\Enums\AccountType;
 use App\Enums\Bank;
 use App\Models\Account;
-use App\Models\Category;
 use App\Models\Currency;
 use App\Models\Goal;
 use App\Models\Transaction;
@@ -19,12 +18,6 @@ test('transfer to savings account requires goal_id', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     ensureUserCategories($user);
-
-    $savingsCategoryId = (int) Category::query()
-        ->where('user_id', $user->id)
-        ->where('is_system', true)
-        ->where('name', 'Oszczędności')
-        ->value('id');
 
     $checking = Account::query()->create([
         'user_id' => $user->id,
@@ -51,7 +44,6 @@ test('transfer to savings account requires goal_id', function () {
         'to_account_id' => $savings->id,
         'date' => '01-03-2026',
         'amount' => '200',
-        'category_id' => $savingsCategoryId,
     ])->assertSessionHasErrors('goal_id');
 });
 
@@ -59,12 +51,6 @@ test('transfer from savings account requires goal_id', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     ensureUserCategories($user);
-
-    $savingsCategoryId = (int) Category::query()
-        ->where('user_id', $user->id)
-        ->where('is_system', true)
-        ->where('name', 'Oszczędności')
-        ->value('id');
 
     $checking = Account::query()->create([
         'user_id' => $user->id,
@@ -91,14 +77,12 @@ test('transfer from savings account requires goal_id', function () {
         'to_account_id' => $checking->id,
         'date' => '01-03-2026',
         'amount' => '150',
-        'category_id' => $savingsCategoryId,
     ])->assertSessionHasErrors('goal_id');
 });
 
 test('transfer between checking accounts prohibits goal_id', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
-    $categoryId = defaultCategoryId($user);
     $goal = Goal::factory()->create(['user_id' => $user->id]);
 
     $from = Account::query()->create([
@@ -126,21 +110,14 @@ test('transfer between checking accounts prohibits goal_id', function () {
         'to_account_id' => $to->id,
         'date' => '01-03-2026',
         'amount' => '50',
-        'category_id' => $categoryId,
         'goal_id' => $goal->id,
     ])->assertSessionHasErrors('goal_id');
 });
 
-test('transfer persists same goal_id on both legs', function () {
+test('transfer persists same goal_id on both legs with null category', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     ensureUserCategories($user);
-
-    $savingsCategoryId = (int) Category::query()
-        ->where('user_id', $user->id)
-        ->where('is_system', true)
-        ->where('name', 'Oszczędności')
-        ->value('id');
 
     $goal = Goal::factory()->create(['user_id' => $user->id, 'name' => 'Wakacje']);
 
@@ -169,7 +146,6 @@ test('transfer persists same goal_id on both legs', function () {
         'to_account_id' => $savings->id,
         'date' => '01-03-2026',
         'amount' => '200',
-        'category_id' => $savingsCategoryId,
         'goal_id' => $goal->id,
     ])->assertSessionHasNoErrors();
 
@@ -194,6 +170,8 @@ test('transfer persists same goal_id on both legs', function () {
     expect($deposit)->not->toBeNull();
     expect($withdraw->goal_id)->toBe($goal->id);
     expect($deposit->goal_id)->toBe($goal->id);
+    expect($withdraw->category_id)->toBeNull();
+    expect($deposit->category_id)->toBeNull();
 });
 
 test('transfer create page includes goals list', function () {
@@ -208,5 +186,7 @@ test('transfer create page includes goals list', function () {
         ->has('goals', 1)
         ->where('goals.0.id', $goal->id)
         ->where('goals.0.name', 'Wakacje')
+        ->missing('categories')
+        ->missing('default_category_id')
     );
 });

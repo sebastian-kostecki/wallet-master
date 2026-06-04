@@ -204,6 +204,7 @@ final class TransferMatcher
                 'type' => TransactionType::Transfer,
                 'transfer_match_status' => TransferMatchStatus::Auto,
                 'transfer_candidate_for_id' => null,
+                'category_id' => null,
             ]);
         }
 

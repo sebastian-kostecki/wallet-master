@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Transfers;
 
 use App\Events\TransferFailedValidation;
-use App\Http\Requests\Concerns\ValidatesCategoryId;
 use App\Http\Requests\Concerns\ValidatesGoalId;
 use App\Models\Account;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -13,7 +14,6 @@ use Illuminate\Validation\Rule;
 
 final class StoreTransferRequest extends FormRequest
 {
-    use ValidatesCategoryId;
     use ValidatesGoalId;
 
     public function authorize(): bool
@@ -74,7 +74,7 @@ final class StoreTransferRequest extends FormRequest
             'amount' => ['required', 'numeric', 'decimal:0,2', 'gt:0'],
             'description' => ['nullable', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
-            ...$this->categoryIdRules(),
+            'category_id' => ['prohibited'],
             ...$this->goalIdRulesForTransfer(),
         ];
     }
@@ -87,7 +87,6 @@ final class StoreTransferRequest extends FormRequest
      *   amount: numeric-string|float|int,
      *   description?: ?string,
      *   subject?: ?string,
-     *   category_id: int,
      *   goal_id?: int,
      * }
      */

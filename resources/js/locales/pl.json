@@ -216,6 +216,7 @@
                 "subject": "Subject",
                 "amount": "Kwota",
                 "category": "Kategoria",
+                "transfer": "Transfer wewnętrzny",
                 "actions": "Akcje"
             },
             "badges": {

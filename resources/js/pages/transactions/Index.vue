@@ -82,8 +82,10 @@ type Transaction = {
     subject: string | null;
     raw_statement_description: string | null;
     transfer_id: string | null;
-    category_id: number;
+    category_id: number | null;
     category: TransactionCategory | null;
+    goal_id: number | null;
+    goal: { id: number; name: string } | null;
     account: Account | null;
     currency: Currency | null;
 };
@@ -748,8 +750,16 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
+                                        <div v-if="tx.transfer_id" class="flex flex-col gap-0.5">
+                                            <span class="text-sm text-muted-foreground">
+                                                {{ t('transactions.index.table.transfer') }}
+                                            </span>
+                                            <span v-if="tx.goal" class="text-xs text-muted-foreground">
+                                                {{ tx.goal.name }}
+                                            </span>
+                                        </div>
                                         <CategoryBadge
-                                            v-if="tx.category"
+                                            v-else-if="tx.category"
                                             :name="tx.category.name"
                                             :icon="tx.category.icon"
                                             :color="tx.category.color"

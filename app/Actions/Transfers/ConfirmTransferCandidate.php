@@ -57,6 +57,7 @@ final class ConfirmTransferCandidate
                     'type' => TransactionType::Transfer,
                     'transfer_match_status' => TransferMatchStatus::Manual,
                     'transfer_candidate_for_id' => null,
+                    'category_id' => null,
                 ]);
             }
 

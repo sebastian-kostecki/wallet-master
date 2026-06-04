@@ -22,18 +22,6 @@ final class DefaultCategoryId
             return self::firstIdByType($user, $categoryType);
         }
 
-        if ($transactionType === TransactionType::Transfer) {
-            $savingsId = Category::query()
-                ->where('user_id', $user->id)
-                ->where('is_system', true)
-                ->where('name', 'Oszczędności')
-                ->value('id');
-
-            if ($savingsId !== null) {
-                return (int) $savingsId;
-            }
-        }
-
         return self::firstIdByType($user, CategoryType::Expense);
     }
 

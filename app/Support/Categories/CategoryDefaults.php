@@ -41,7 +41,6 @@ final class CategoryDefaults
             ['name' => 'Zwierzęta', 'type' => CategoryType::Expense, 'icon' => 'paw-print', 'color' => '#ff922b', 'sort_order' => 18, 'is_system' => false],
             ['name' => 'Pielęgnacja osobista', 'type' => CategoryType::Expense, 'icon' => 'scissors', 'color' => '#ff6b6b', 'sort_order' => 19, 'is_system' => false],
             ['name' => 'Inne wydatki', 'type' => CategoryType::Expense, 'icon' => 'minus-circle', 'color' => '#868e96', 'sort_order' => 20, 'is_system' => false],
-            ['name' => 'Oszczędności', 'type' => CategoryType::Expense, 'icon' => 'piggy-bank', 'color' => '#10b981', 'sort_order' => 25, 'is_system' => true],
         ];
     }
 }

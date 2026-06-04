@@ -35,11 +35,16 @@ final class UpdateTransactionRequest extends FormRequest
 
     public function rules(): array
     {
+        /** @var Transaction $transaction */
+        $transaction = $this->route('transaction');
+
         $accountExistsRule = Rule::exists('accounts', 'id')
             ->where(fn ($query) => $query
                 ->whereNull('deleted_at')
                 ->where('user_id', $this->user()->id)
             );
+
+        $isTransferLeg = $transaction->transfer_id !== null && $transaction->transfer_id !== '';
 
         return [
             'account_id' => [
@@ -52,14 +57,19 @@ final class UpdateTransactionRequest extends FormRequest
             'amount' => ['required', 'numeric', 'decimal:0,2', Rule::notIn([0])],
             'description' => ['required', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
-            ...$this->categoryIdRules(),
+            ...($isTransferLeg ? ['category_id' => ['prohibited']] : $this->categoryIdRules()),
             ...$this->optionalGoalIdRules(),
         ];
     }
 
     public function withValidator(Validator $validator): void
     {
-        $this->validateCategoryMatchesAmount($validator);
+        /** @var Transaction $transaction */
+        $transaction = $this->route('transaction');
+
+        if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
+            $this->validateCategoryMatchesAmount($validator);
+        }
     }
 
     /**
@@ -70,7 +80,7 @@ final class UpdateTransactionRequest extends FormRequest
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,
-     *   category_id: int,
+     *   category_id?: int,
      *   goal_id?: ?int,
      * }
      */

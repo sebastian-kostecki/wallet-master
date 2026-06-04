@@ -216,6 +216,7 @@
                 "subject": "Subject",
                 "amount": "Amount",
                 "category": "Category",
+                "transfer": "Internal transfer",
                 "actions": "Actions"
             },
             "badges": {

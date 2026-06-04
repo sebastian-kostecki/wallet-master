@@ -400,4 +400,5 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Nawigacja: „Cele” w sidebarze
 - [x] Migracja legacy: szacunek kategorii „Oszczędności” → cel „Oszczędności ogólne”
 - [x] Testy feature: Goals, TransferGoal, TransactionGoal, MonthlyBudget (cele)
+- [x] Transfer bez kategorii P&L; usunięcie kategorii „Oszczędności” ze starter setu (spec 2026-06-04)
 

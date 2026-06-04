@@ -31,7 +31,7 @@ final class UpdateTransaction
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,
-     *   category_id: int,
+     *   category_id?: int,
      *   goal_id?: ?int,
      * }  $validated
      *
@@ -83,7 +83,9 @@ final class UpdateTransaction
                 $transaction->subject = $validated['subject'] ?? null;
                 $transaction->normalized_description = $normalizedDescription;
                 $transaction->dedupe_hash = $dedupeHash;
-                $transaction->category_id = $validated['category_id'];
+                if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
+                    $transaction->category_id = $validated['category_id'];
+                }
                 $transaction->goal_id = $goalId;
                 $transaction->save();
 
@@ -123,7 +125,9 @@ final class UpdateTransaction
             $transaction->subject = $validated['subject'] ?? null;
             $transaction->normalized_description = $normalizedDescription;
             $transaction->dedupe_hash = $dedupeHash;
-            $transaction->category_id = $validated['category_id'];
+            if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
+                $transaction->category_id = $validated['category_id'];
+            }
             $transaction->goal_id = $goalId;
             $transaction->save();
 
