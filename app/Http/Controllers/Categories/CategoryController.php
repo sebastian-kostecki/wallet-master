@@ -6,12 +6,15 @@ namespace App\Http\Controllers\Categories;
 
 use App\Actions\Categories\DeleteCategory;
 use App\Actions\Categories\ListCategories;
+use App\Actions\Categories\ReorderCategories;
 use App\Actions\Categories\SaveAnnualEstimate;
 use App\Actions\Categories\SaveMonthlyEstimate;
 use App\Actions\Categories\StoreCategory;
 use App\Actions\Categories\UpdateCategory;
 use App\Data\Categories\CategoryFormOptions;
+use App\Enums\CategoryType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Categories\ReorderCategoriesRequest;
 use App\Http\Requests\Categories\SaveAnnualEstimateRequest;
 use App\Http\Requests\Categories\SaveMonthlyEstimateRequest;
 use App\Http\Requests\Categories\StoreCategoryRequest;
@@ -60,6 +63,24 @@ final class CategoryController extends Controller
             'category' => CategoryResource::make($category)->resolve(),
             'has_transactions' => $category->transactions()->exists(),
             ...$options->toArray(),
+        ]);
+    }
+
+    public function reorder(
+        ReorderCategoriesRequest $request,
+        ReorderCategories $reorderCategories,
+    ): RedirectResponse {
+        $validated = $request->validated();
+
+        $reorderCategories->handle(
+            $request->user(),
+            CategoryType::from($validated['type']),
+            array_map(intval(...), $validated['ids']),
+        );
+
+        return back()->with('toast', [
+            'type' => 'success',
+            'message_key' => 'categories.toast.updated',
         ]);
     }
 

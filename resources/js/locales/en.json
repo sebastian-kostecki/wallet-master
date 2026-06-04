@@ -524,8 +524,7 @@
             "annualEstimate": "Annual estimate",
             "annualEstimatePlaceholder": "e.g. 12000",
             "system": "system",
-            "moveUp": "Move up",
-            "moveDown": "Move down",
+            "dragHandle": "Drag to reorder",
             "delete": "Delete category",
             "deleteConfirm": "Delete category “{name}”?"
         },

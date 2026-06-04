@@ -2,20 +2,17 @@
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { filterCategoriesByType, type CategoryOption } from '@/lib/categories';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import type { SortableEvent } from 'sortablejs';
+import { computed, ref, watch } from 'vue';
+import { VueDraggable } from 'vue-draggable-plus';
 import { useI18n } from 'vue-i18n';
 
-type Category = {
-    id: number;
-    name: string;
-    type: string;
+type Category = CategoryOption & {
     type_label_key: string;
-    icon: string;
-    color: string;
-    sort_order: number;
     is_system: boolean;
 };
 
@@ -29,8 +26,15 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: t('categories.index.title'), href: route('categories.index') },
 ]);
 
-const expenseCategories = computed(() => props.categories.filter((c) => c.type === 'expense'));
-const incomeCategories = computed(() => props.categories.filter((c) => c.type === 'income'));
+const expenseList = ref<Category[]>([]);
+const incomeList = ref<Category[]>([]);
+
+function syncLists(): void {
+    expenseList.value = filterCategoriesByType(props.categories, 'expense') as Category[];
+    incomeList.value = filterCategoriesByType(props.categories, 'income') as Category[];
+}
+
+watch(() => props.categories, syncLists, { deep: true, immediate: true });
 
 function deleteCategory(cat: Category) {
     if (!window.confirm(t('categories.index.deleteConfirm', { name: cat.name }))) {
@@ -40,24 +44,20 @@ function deleteCategory(cat: Category) {
     router.delete(route('categories.destroy', cat.id), { preserveScroll: true });
 }
 
-function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Category[]) {
-    const index = siblings.findIndex((c) => c.id === cat.id);
-    const swapIndex = direction === 'up' ? index - 1 : index + 1;
-    const neighbor = siblings[swapIndex];
-
-    if (neighbor === undefined) {
+function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
+    if (event.oldIndex === undefined || event.newIndex === undefined || event.oldIndex === event.newIndex) {
         return;
     }
 
+    const list = type === 'expense' ? expenseList.value : incomeList.value;
+
     router.patch(
-        route('categories.update', cat.id),
-        { sort_order: neighbor.sort_order },
+        route('categories.reorder'),
         {
-            preserveScroll: true,
-            onSuccess: () => {
-                router.patch(route('categories.update', neighbor.id), { sort_order: cat.sort_order }, { preserveScroll: true });
-            },
+            type,
+            ids: list.map((c) => c.id),
         },
+        { preserveScroll: true },
     );
 }
 </script>
@@ -80,7 +80,7 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
             </div>
 
             <section
-                v-for="(sectionCategories, sectionKey) in { expense: expenseCategories, income: incomeCategories }"
+                v-for="sectionKey in ['expense', 'income'] as const"
                 :key="sectionKey"
                 class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
             >
@@ -88,41 +88,38 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
                     {{ t(`budget.sections.${sectionKey}`) }}
                 </h2>
 
-                <p v-if="sectionCategories.length === 0" class="px-4 py-6 text-sm text-muted-foreground">
+                <p
+                    v-if="(sectionKey === 'expense' ? expenseList : incomeList).length === 0"
+                    class="px-4 py-6 text-sm text-muted-foreground"
+                >
                     {{ t('categories.index.empty') }}
                 </p>
 
-                <ul v-else class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border">
+                <VueDraggable
+                    v-else-if="sectionKey === 'expense'"
+                    v-model="expenseList"
+                    tag="ul"
+                    class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
+                    handle=".drag-handle"
+                    filter=".no-drag"
+                    :animation="150"
+                    ghost-class="opacity-50"
+                    chosen-class="bg-muted/30"
+                    @end="onReorderEnd('expense', $event)"
+                >
                     <li
-                        v-for="(cat, index) in sectionCategories"
+                        v-for="cat in expenseList"
                         :key="cat.id"
                         class="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                     >
                         <div class="flex min-w-0 flex-1 items-center gap-2">
-                            <div class="flex shrink-0 flex-col gap-0.5">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    class="h-6 w-6"
-                                    type="button"
-                                    :disabled="index === 0"
-                                    :aria-label="t('categories.index.moveUp')"
-                                    @click="moveCategory(cat, 'up', sectionCategories)"
-                                >
-                                    <ArrowUp class="h-3 w-3" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    class="h-6 w-6"
-                                    type="button"
-                                    :disabled="index === sectionCategories.length - 1"
-                                    :aria-label="t('categories.index.moveDown')"
-                                    @click="moveCategory(cat, 'down', sectionCategories)"
-                                >
-                                    <ArrowDown class="h-3 w-3" />
-                                </Button>
-                            </div>
+                            <button
+                                type="button"
+                                class="drag-handle shrink-0 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
+                                :aria-label="t('categories.index.dragHandle')"
+                            >
+                                <GripVertical class="h-4 w-4" />
+                            </button>
 
                             <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
                                 <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
@@ -132,7 +129,7 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
                             </Link>
                         </div>
 
-                        <div class="flex shrink-0 items-center gap-1">
+                        <div class="no-drag flex shrink-0 items-center gap-1">
                             <Button variant="ghost" size="icon" as-child>
                                 <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
                                     <Pencil class="h-4 w-4 text-muted-foreground" />
@@ -143,6 +140,7 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
                                 variant="ghost"
                                 size="icon"
                                 type="button"
+                                class="no-drag"
                                 :aria-label="t('categories.index.delete')"
                                 @click="deleteCategory(cat)"
                             >
@@ -150,7 +148,62 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
                             </Button>
                         </div>
                     </li>
-                </ul>
+                </VueDraggable>
+
+                <VueDraggable
+                    v-else
+                    v-model="incomeList"
+                    tag="ul"
+                    class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
+                    handle=".drag-handle"
+                    filter=".no-drag"
+                    :animation="150"
+                    ghost-class="opacity-50"
+                    chosen-class="bg-muted/30"
+                    @end="onReorderEnd('income', $event)"
+                >
+                    <li
+                        v-for="cat in incomeList"
+                        :key="cat.id"
+                        class="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                    >
+                        <div class="flex min-w-0 flex-1 items-center gap-2">
+                            <button
+                                type="button"
+                                class="drag-handle shrink-0 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
+                                :aria-label="t('categories.index.dragHandle')"
+                            >
+                                <GripVertical class="h-4 w-4" />
+                            </button>
+
+                            <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
+                                <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
+                                <span v-if="cat.is_system" class="shrink-0 text-xs font-normal text-muted-foreground">
+                                    ({{ t('categories.index.system') }})
+                                </span>
+                            </Link>
+                        </div>
+
+                        <div class="no-drag flex shrink-0 items-center gap-1">
+                            <Button variant="ghost" size="icon" as-child>
+                                <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
+                                    <Pencil class="h-4 w-4 text-muted-foreground" />
+                                </Link>
+                            </Button>
+                            <Button
+                                v-if="!cat.is_system"
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                class="no-drag"
+                                :aria-label="t('categories.index.delete')"
+                                @click="deleteCategory(cat)"
+                            >
+                                <Trash2 class="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                        </div>
+                    </li>
+                </VueDraggable>
             </section>
         </div>
     </AppLayout>
