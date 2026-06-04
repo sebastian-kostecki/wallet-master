@@ -4,18 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Goals;
 
-use App\Models\Goal;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-final class SaveAnnualEstimateRequest extends FormRequest
+final class ReorderGoalsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        /** @var Goal $goal */
-        $goal = $this->route('goal');
-
-        return $this->user()?->can('update', $goal) ?? false;
+        return $this->user() !== null;
     }
 
     /**
@@ -24,8 +20,8 @@ final class SaveAnnualEstimateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'amount' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'distinct', 'exists:goals,id'],
         ];
     }
 }

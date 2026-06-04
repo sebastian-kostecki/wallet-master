@@ -4,7 +4,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 > **Uwaga.** Zadania poza podstawowym zakresem PRD są oznaczone tagiem `[plan]` przy nazwie sekcji lub punktu (sekcje 12–17).
 
-> **Ostatnia synchronizacja:** 2026-06-03 (branch `feature/budget-goals-ux` — cele + UX budżetu; 287 testów PASS). Poprzednio: `feat/categories` (wave 2 kategorie/budżet). Scalone: `improvement/telemetry` → `improvement/a11y-mvp` → `improvement/release-nfr-tests` → `develop`. Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Specyfikacje i plany Superpowers: `.docs/superpowers/`.
+> **Ostatnia synchronizacja:** 2026-06-04 (branch `feature/goals-target-model` — refaktor modelu celów: koperta z `target_amount` zamiast szacunków rocznych/miesięcznych). Poprzednio: `feature/budget-goals-ux` (cele + UX budżetu). Architektura Variant A — **zakończona** (reguła `.cursor/rules/wallet-architecture.mdc`). PRD kanoniczny: `.docs/prd.md`. Spec: `.docs/superpowers/specs/2026-06-04-goals-target-model-design.md`.
 >
 > **Audyt kodu (2026-06-03):** MVP Must (FR-A1, FR-K1/K2, FR-T1/T2/T3, FR-S1, FR-I1–I4) — wdrożone w kodzie; Should (FR-A2, FR-I5, FR-I6) — wdrożone z drobnymi lukami UI (patrz §4). Telemetria (§8/§13), A11y/UX (§9), NFR (§12), manual QA (§10.2) i pre-flight (§0) — zweryfikowane na `develop`. Testy: 250 passed. Otwarte (poza MVP release): PHPStan baseline (19 istniejących), edycja kwoty transferu bez unlink, test obciążeniowy importu. Wycofane z MVP: duplicate-check UI, `account_deletions`, `ImportMapping`, telemetria `import_mapping_*`.
 
@@ -390,15 +390,34 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 19) Cele + UX budżetu (FR-G1–G5, FR-UX1) **[plan budget-goals-ux]**
 
+> **Refaktor modelu celów (2026-06-04):** szacunki roczne/miesięczne per rok (`goal_*_estimates`) zastąpione kopertą bez roku: `target_amount`, `planning_mode`, ikona/kolor, saldo skumulowane, archiwizacja. Spec: `2026-06-04-goals-target-model-design.md`. PRD zaktualizowany (FR-G2, §5 Goal).
+
+**Wave 2 UX (shipped na `feature/budget-goals-ux`):**
+
 - [x] Migracje: `goals`, `goal_*_estimates`, `transactions.goal_id`
-- [x] CRUD celów (backend + `goals/Index.vue`)
-- [x] Szacunki celów roczne/miesięczne (API + UI na celach / budżecie miesięcznym)
+- [x] CRUD celów (backend + `goals/Index.vue` — stan sprzed refaktoru UI)
 - [x] Cel wymagany na transferze z/do konta `Savings`; opcjonalny na wydatku
 - [x] Budżet miesięczny: sekcja per-cel (`goal_rows`) zamiast agregatu `transfers_summary`
 - [x] Plany P&L tylko na budżecie — `categories/Index.vue` bez pól szacunków
 - [x] Budżet roczny: edycja szacunków rocznych P&L inline
 - [x] Nawigacja: „Cele” w sidebarze
-- [x] Migracja legacy: szacunek kategorii „Oszczędności” → cel „Oszczędności ogólne”
+- [x] Migracja legacy: szacunek kategorii „Oszczędności” → cel „Oszczędności ogólne`
 - [x] Testy feature: Goals, TransferGoal, TransactionGoal, MonthlyBudget (cele)
 - [x] Transfer bez kategorii P&L; usunięcie kategorii „Oszczędności” ze starter setu (spec 2026-06-04)
+- [x] ~~Szacunki celów roczne/miesięczne~~ — **wycofane** refaktorem target model
+
+**Target model (`feature/goals-target-model`):**
+
+- [x] Migracja: kolumny celu (`icon`, `color`, `target_amount`, `planning_mode`, …), migracja danych z rocznego szacunku bieżącego roku, drop `goal_*_estimates`
+- [x] `GoalPlanningMode`, `GoalBalance`, `GoalPlanningProjection`; usunięcie `GoalPlanAmount` i endpointów szacunków
+- [x] CRUD backend: walidacja wzajemnego wykluczenia planowania; `GoalResource` (metryki skumulowane + obliczone)
+- [x] `ListGoals` z filtrem `active` \| `archived` \| `all`; `ReorderGoals`
+- [x] Archiwizacja (`is_archived`) + telemetria `goal_archived` / `goal_unarchived`
+- [x] Budżet miesięczny (backend): kolumna Plan z pól celu (read-only w API)
+- [x] Trasy: `goals` resource (create/edit), `goals.reorder`; kontroler create/edit
+- [x] Testy: `GoalPlanningTest`, `GoalArchiveTest`, `GoalReorderTest`, unit `GoalBalance` / `GoalPlanningProjection`
+- [x] Frontend: `goals/Create.vue`, `goals/Edit.vue`, refaktor `Index.vue` (bez roku/szacunków, progress bar, reorder)
+- [x] Frontend budżetu miesięcznego: Plan read-only, opcjonalny progress hint, `GoalBadge`
+- [x] Locale: usunąć `annualEstimate`, dodać klucze planowania / statusów
+- [x] Test migracji danych: `GoalTargetModelMigrationTest`
 

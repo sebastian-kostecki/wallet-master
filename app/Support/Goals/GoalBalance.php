@@ -6,6 +6,7 @@ namespace App\Support\Goals;
 
 use App\Enums\AccountType;
 use App\Models\Goal;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Transactions\TransactionDedupe;
@@ -65,5 +66,27 @@ final class GoalBalance
         $percent = (int) bcmul($ratio, '100', 0);
 
         return min(100, max(0, $percent));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function monthlyNetMap(User $user, Goal $goal): array
+    {
+        $transactions = BudgetTransactionQuery::forUser($user)
+            ->where('goal_id', $goal->id)
+            ->whereNotNull('transfer_id')
+            ->whereHas('account', fn ($q) => $q->where('type', AccountType::Savings))
+            ->get(['booked_at', 'amount']);
+
+        $map = [];
+
+        foreach ($transactions as $transaction) {
+            /** @var Transaction $transaction */
+            $ym = $transaction->booked_at->format('Y-m');
+            $map[$ym] = bcadd($map[$ym] ?? '0.00', TransactionDedupe::amountToDecimalString((string) $transaction->amount), 2);
+        }
+
+        return $map;
     }
 }

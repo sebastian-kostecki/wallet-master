@@ -6,13 +6,12 @@ namespace App\Http\Controllers\Goals;
 
 use App\Actions\Goals\DeleteGoal;
 use App\Actions\Goals\ListGoals;
-use App\Actions\Goals\SaveAnnualEstimate;
-use App\Actions\Goals\SaveMonthlyEstimate;
+use App\Actions\Goals\ReorderGoals;
 use App\Actions\Goals\StoreGoal;
 use App\Actions\Goals\UpdateGoal;
+use App\Data\Goals\GoalFormOptions;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Goals\SaveAnnualEstimateRequest;
-use App\Http\Requests\Goals\SaveMonthlyEstimateRequest;
+use App\Http\Requests\Goals\ReorderGoalsRequest;
 use App\Http\Requests\Goals\StoreGoalRequest;
 use App\Http\Requests\Goals\UpdateGoalRequest;
 use App\Http\Resources\Goals\GoalResource;
@@ -31,16 +30,23 @@ final class GoalController extends Controller
 
     public function index(Request $request, ListGoals $listGoals): Response
     {
-        $year = (int) $request->query('year', (string) now()->year);
-        if ($year < 2000 || $year > 2100) {
-            $year = (int) now()->year;
+        $filter = $request->query('filter', 'active');
+        if (! in_array($filter, ['active', 'archived', 'all'], true)) {
+            $filter = 'active';
         }
 
-        $listGoals->handle($request->user(), $year);
+        $listGoals->handle($request->user(), $filter);
 
         return Inertia::render('goals/Index', [
-            'year' => $year,
+            'filter' => $filter,
             'goals' => GoalResource::collection($listGoals->getGoals())->resolve(),
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('goals/Create', [
+            ...(new GoalFormOptions)->toArray(),
         ]);
     }
 
@@ -48,9 +54,17 @@ final class GoalController extends Controller
     {
         $storeGoal->handle($request->user(), $request->validated());
 
-        return back()->with('toast', [
+        return to_route('goals.index')->with('toast', [
             'type' => 'success',
             'message_key' => 'goals.toast.created',
+        ]);
+    }
+
+    public function edit(Goal $goal): Response
+    {
+        return Inertia::render('goals/Edit', [
+            'goal' => (new GoalResource($goal))->resolve(request()),
+            ...(new GoalFormOptions)->toArray(),
         ]);
     }
 
@@ -59,9 +73,19 @@ final class GoalController extends Controller
         Goal $goal,
         UpdateGoal $updateGoal,
     ): RedirectResponse {
-        $updateGoal->handle($goal, $request->validated());
+        $validated = $request->validated();
+        $updateGoal->handle($goal, $validated);
 
-        return back()->with('toast', [
+        $onlyArchiveToggle = count($validated) === 1 && array_key_exists('is_archived', $validated);
+
+        if ($onlyArchiveToggle) {
+            return back()->with('toast', [
+                'type' => 'success',
+                'message_key' => 'goals.toast.updated',
+            ]);
+        }
+
+        return to_route('goals.index')->with('toast', [
             'type' => 'success',
             'message_key' => 'goals.toast.updated',
         ]);
@@ -77,31 +101,10 @@ final class GoalController extends Controller
         ]);
     }
 
-    public function saveAnnualEstimate(
-        SaveAnnualEstimateRequest $request,
-        Goal $goal,
-        SaveAnnualEstimate $saveAnnualEstimate,
-    ): RedirectResponse {
-        $this->authorize('update', $goal);
-        $saveAnnualEstimate->handle($goal, $request->validated());
+    public function reorder(ReorderGoalsRequest $request, ReorderGoals $reorderGoals): RedirectResponse
+    {
+        $reorderGoals->handle($request->user(), $request->validated('ids'));
 
-        return back()->with('toast', [
-            'type' => 'success',
-            'message_key' => 'goals.toast.estimate_saved',
-        ]);
-    }
-
-    public function saveMonthlyEstimate(
-        SaveMonthlyEstimateRequest $request,
-        Goal $goal,
-        SaveMonthlyEstimate $saveMonthlyEstimate,
-    ): RedirectResponse {
-        $this->authorize('update', $goal);
-        $saveMonthlyEstimate->handle($goal, $request->validated());
-
-        return back()->with('toast', [
-            'type' => 'success',
-            'message_key' => 'goals.toast.estimate_saved',
-        ]);
+        return back();
     }
 }

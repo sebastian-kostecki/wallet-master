@@ -4,19 +4,28 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\GoalPlanningMode;
 use Database\Factories\GoalFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 
 /**
  * @property int $id
  * @property int $user_id
  * @property string $name
+ * @property string $icon
+ * @property string $color
  * @property int $sort_order
+ * @property string|null $target_amount
+ * @property GoalPlanningMode|null $planning_mode
+ * @property string|null $monthly_contribution
+ * @property Carbon|null $target_date
+ * @property bool $is_archived
  */
 final class Goal extends Model
 {
@@ -29,7 +38,14 @@ final class Goal extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'icon',
+        'color',
         'sort_order',
+        'target_amount',
+        'planning_mode',
+        'monthly_contribution',
+        'target_date',
+        'is_archived',
         'created_at',
         'updated_at',
     ];
@@ -42,6 +58,11 @@ final class Goal extends Model
         return [
             'user_id' => 'integer',
             'sort_order' => 'integer',
+            'target_amount' => 'decimal:2',
+            'planning_mode' => GoalPlanningMode::class,
+            'monthly_contribution' => 'decimal:2',
+            'target_date' => 'date',
+            'is_archived' => 'boolean',
         ];
     }
 
@@ -51,22 +72,6 @@ final class Goal extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return HasMany<GoalAnnualEstimate, $this>
-     */
-    public function annualEstimates(): HasMany
-    {
-        return $this->hasMany(GoalAnnualEstimate::class);
-    }
-
-    /**
-     * @return HasMany<GoalMonthlyEstimate, $this>
-     */
-    public function monthlyEstimates(): HasMany
-    {
-        return $this->hasMany(GoalMonthlyEstimate::class);
     }
 
     /**
@@ -93,6 +98,15 @@ final class Goal extends Model
     public function scopeForUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_archived', false);
     }
 
     /**

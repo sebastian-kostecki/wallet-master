@@ -11,7 +11,7 @@ use App\Telemetry\Event;
 final class StoreGoal
 {
     /**
-     * @param  array{name: string}  $validated
+     * @param  array<string, mixed>  $validated
      */
     public function handle(User $user, array $validated): Goal
     {
@@ -22,7 +22,14 @@ final class StoreGoal
         $goal = Goal::query()->create([
             'user_id' => $user->id,
             'name' => $validated['name'],
+            'icon' => $validated['icon'],
+            'color' => $validated['color'],
             'sort_order' => $maxSort + 10,
+            'target_amount' => $validated['target_amount'] ?? null,
+            'planning_mode' => $validated['planning_mode'] ?? null,
+            'monthly_contribution' => $validated['monthly_contribution'] ?? null,
+            'target_date' => $validated['target_date'] ?? null,
+            'is_archived' => false,
         ]);
 
         Event::record('goal_created', ['goal_id' => $goal->id], $user->id);

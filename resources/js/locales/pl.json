@@ -552,6 +552,34 @@
         }
     },
     "goals": {
+        "create": {
+            "title": "Nowy cel"
+        },
+        "edit": {
+            "title": "Edytuj cel",
+            "recommendedMonthly": "Rekomendowana kwota miesięczna",
+            "projectedCompletionDate": "Przewidywana data realizacji"
+        },
+        "fields": {
+            "targetAmount": "Kwota celu",
+            "monthlyContribution": "Wpłata miesięczna",
+            "targetDate": "Data realizacji",
+            "planningMode": "Tryb planowania"
+        },
+        "planning": {
+            "monthly": "Wpłata miesięczna",
+            "by_date": "Data realizacji"
+        },
+        "status": {
+            "completed": "Zrealizowany",
+            "overdue": "Opóźniony",
+            "archived": "Zarchiwizowany"
+        },
+        "filters": {
+            "active": "Aktywne",
+            "archived": "Zarchiwizowane",
+            "all": "Wszystkie"
+        },
         "index": {
             "title": "Cele",
             "add": "Dodaj cel",
@@ -560,8 +588,6 @@
             "fields": {
                 "name": "Nazwa"
             },
-            "annualEstimate": "Szacunek roczny",
-            "annualEstimatePlaceholder": "np. 2400",
             "delete": "Usuń cel",
             "deleteConfirm": "Usunąć cel „{name}”?"
         },

@@ -12,13 +12,12 @@ use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
 use App\Models\Goal;
-use App\Models\GoalAnnualEstimate;
-use App\Models\GoalMonthlyEstimate;
 use App\Models\User;
 use App\Support\Budgets\BudgetPeriod;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Budgets\CategoryPlanAmount;
-use App\Support\Goals\GoalPlanAmount;
+use App\Support\Goals\GoalBalance;
+use App\Support\Goals\GoalPlanningProjection;
 use App\Support\Goals\GoalTransactionMetrics;
 use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Database\Eloquent\Collection;
@@ -140,6 +139,7 @@ final class ListMonthlyBudget
     {
         $goals = Goal::query()
             ->forUser($user->id)
+            ->active()
             ->ordered()
             ->get();
 
@@ -147,40 +147,26 @@ final class ListMonthlyBudget
             return [];
         }
 
-        $goalIds = $goals->pluck('id');
-
-        $annualByGoal = GoalAnnualEstimate::query()
-            ->whereIn('goal_id', $goalIds)
-            ->where('year', $this->year)
-            ->get()
-            ->keyBy('goal_id');
-
-        $monthlyByGoal = GoalMonthlyEstimate::query()
-            ->whereIn('goal_id', $goalIds)
-            ->where('year', $this->year)
-            ->where('month', $this->month)
-            ->get()
-            ->keyBy('goal_id');
-
         $rows = [];
 
         foreach ($goals as $goal) {
             $metrics = GoalTransactionMetrics::forMonth($user, $goal, $period);
+            $cumulative = GoalBalance::cumulative($user, $goal);
+            $targetAmount = $goal->target_amount !== null ? (string) $goal->target_amount : null;
 
             $rows[] = [
                 'goal_id' => $goal->id,
                 'name' => $goal->name,
-                'monthly_plan' => GoalPlanAmount::monthly(
-                    $goal,
-                    $this->year,
-                    $this->month,
-                    $annualByGoal->get($goal->id),
-                    $monthlyByGoal->get($goal->id),
-                ),
+                'icon' => $goal->icon,
+                'color' => $goal->color,
+                'monthly_plan' => GoalPlanningProjection::monthlyPlanForBudget($goal, $cumulative['balance']),
                 'saved' => $metrics['saved'],
                 'released' => $metrics['released'],
                 'balance' => $metrics['balance'],
                 'linked_expenses' => $metrics['linked_expenses'],
+                'balance_cumulative' => $cumulative['balance'],
+                'target_amount' => $targetAmount,
+                'progress_percent' => GoalBalance::progressPercent($goal, $cumulative['balance']),
             ];
         }
 

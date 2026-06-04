@@ -1,24 +1,38 @@
 <script setup lang="ts">
-import FormField from '@/components/forms/FormField.vue';
+import GoalBadge from '@/components/goals/GoalBadge.vue';
+import GoalProgressBar from '@/components/goals/GoalProgressBar.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Trash2 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import type { SortableEvent } from 'sortablejs';
+import { computed, ref, watch } from 'vue';
+import { VueDraggable } from 'vue-draggable-plus';
 import { useI18n } from 'vue-i18n';
 
 type Goal = {
     id: number;
     name: string;
+    icon: string;
+    color: string;
     sort_order: number;
-    annual_estimate_amount: string | null;
+    target_amount: string | null;
+    is_archived: boolean;
+    is_completed: boolean;
+    is_overdue: boolean;
+    progress_percent: number | null;
+    balance: string;
 };
+
+type GoalFilter = 'active' | 'archived' | 'all';
 
 const props = defineProps<{
     goals: Goal[];
-    year: number;
+    filter: GoalFilter;
 }>();
 
 const { t } = useI18n();
@@ -27,67 +41,50 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: t('goals.index.title'), href: route('goals.index') },
 ]);
 
-const createForm = useForm({
-    name: '',
-});
+const list = ref<Goal[]>([]);
 
-const editingId = ref<number | null>(null);
-const editingName = ref('');
+watch(
+    () => props.goals,
+    (goals) => {
+        list.value = [...goals];
+    },
+    { immediate: true },
+);
 
-function submitCreate() {
-    createForm.post(route('goals.store'), {
-        preserveScroll: true,
-        onSuccess: () => createForm.reset(),
-    });
-}
+const tabs = computed<{ key: GoalFilter; label: string }[]>(() => [
+    { key: 'active', label: t('goals.filters.active') },
+    { key: 'archived', label: t('goals.filters.archived') },
+    { key: 'all', label: t('goals.filters.all') },
+]);
 
-function startEdit(goal: Goal) {
-    editingId.value = goal.id;
-    editingName.value = goal.name;
-}
-
-function cancelEdit() {
-    editingId.value = null;
-    editingName.value = '';
-}
-
-function saveName(goal: Goal) {
-    const trimmed = editingName.value.trim();
-    if (trimmed === '' || trimmed === goal.name) {
-        cancelEdit();
+function onReorderEnd(event: SortableEvent): void {
+    if (event.oldIndex === undefined || event.newIndex === undefined || event.oldIndex === event.newIndex) {
         return;
     }
 
-    router.patch(route('goals.update', goal.id), { name: trimmed }, {
-        preserveScroll: true,
-        onSuccess: () => cancelEdit(),
-    });
+    router.patch(
+        route('goals.reorder'),
+        {
+            ids: list.value.map((goal) => goal.id),
+        },
+        { preserveScroll: true },
+    );
 }
 
-function saveAnnualEstimate(goal: Goal, rawValue: string) {
-    const trimmed = rawValue.trim();
-    const normalized = trimmed.replace(',', '.');
-    const current = goal.annual_estimate_amount ?? '';
-
-    if (normalized === current || (normalized === '' && current === '')) {
-        return;
-    }
-
-    const amount = trimmed === '' ? null : normalized;
-
-    router.patch(route('goals.estimates.annual', goal.id), { year: props.year, amount }, { preserveScroll: true });
+function toggleArchived(goal: Goal): void {
+    router.patch(
+        route('goals.update', goal.id),
+        { is_archived: !goal.is_archived },
+        { preserveScroll: true },
+    );
 }
 
-function deleteGoal(goal: Goal) {
+function deleteGoal(goal: Goal): void {
     if (!window.confirm(t('goals.index.deleteConfirm', { name: goal.name }))) {
         return;
     }
 
     router.delete(route('goals.destroy', goal.id), { preserveScroll: true });
-}
-
-function changeYear(delta: number) {
-    router.get(route('goals.index', { year: props.year + delta }), {}, { preserveScroll: true });
 }
 </script>
 
@@ -95,85 +92,124 @@ function changeYear(delta: number) {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('goals.index.title')" />
 
+        <template #headerActions>
+            <Button as-child>
+                <Link :href="route('goals.create')">
+                    <Plus class="h-4 w-4" aria-hidden="true" />
+                    {{ t('goals.index.add') }}
+                </Link>
+            </Button>
+        </template>
+
         <div class="flex flex-col gap-6 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="inline-flex rounded-lg bg-muted p-1">
+                    <Link
+                        v-for="tab in tabs"
+                        :key="tab.key"
+                        :href="route('goals.index', { filter: tab.key })"
+                        class="rounded-md px-3 py-1.5 text-sm transition-colors"
+                        :class="cn(props.filter === tab.key ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')"
+                    >
+                        {{ tab.label }}
+                    </Link>
+                </div>
+
                 <Button variant="outline" as-child>
                     <Link :href="route('budget.monthly')">{{ t('budget.nav') }}</Link>
                 </Button>
-                <div class="flex items-center gap-2">
-                    <Button variant="outline" @click="changeYear(-1)">←</Button>
-                    <span class="text-sm font-medium">{{ year }}</span>
-                    <Button variant="outline" @click="changeYear(1)">→</Button>
-                </div>
             </div>
-
-            <form
-                class="flex max-w-md flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
-                @submit.prevent="submitCreate"
-            >
-                <h2 class="text-lg font-semibold">{{ t('goals.index.add') }}</h2>
-                <FormField :label="t('goals.index.fields.name')" :error="createForm.errors.name">
-                    <Input v-model="createForm.name" />
-                </FormField>
-                <Button type="submit" :disabled="createForm.processing">{{ t('goals.index.add') }}</Button>
-            </form>
 
             <section class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                 <h2 class="border-b border-sidebar-border/70 px-4 py-3 text-lg font-semibold dark:border-sidebar-border">
                     {{ t('goals.index.listTitle') }}
                 </h2>
 
-                <p v-if="goals.length === 0" class="px-4 py-6 text-sm text-muted-foreground">
+                <p v-if="list.length === 0" class="px-4 py-6 text-sm text-muted-foreground">
                     {{ t('goals.index.empty') }}
                 </p>
 
-                <ul v-else class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border">
+                <VueDraggable
+                    v-else
+                    v-model="list"
+                    tag="ul"
+                    class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
+                    handle=".drag-handle"
+                    filter=".no-drag"
+                    :animation="150"
+                    ghost-class="opacity-50"
+                    chosen-class="bg-muted/30"
+                    @end="onReorderEnd"
+                >
                     <li
-                        v-for="goal in goals"
+                        v-for="goal in list"
                         :key="goal.id"
-                        class="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                        class="flex flex-col gap-3 px-4 py-3 text-sm lg:flex-row lg:items-center lg:justify-between"
                     >
-                        <div class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                            <div v-if="editingId === goal.id" class="flex min-w-0 flex-1 items-center gap-2">
-                                <Input v-model="editingName" class="h-8" @keyup.enter="saveName(goal)" @keyup.escape="cancelEdit" />
-                                <Button size="sm" type="button" @click="saveName(goal)">{{ t('actions.save') }}</Button>
-                                <Button size="sm" variant="ghost" type="button" @click="cancelEdit">{{ t('actions.cancel') }}</Button>
-                            </div>
+                        <div class="flex min-w-0 flex-1 items-start gap-2">
                             <button
-                                v-else
                                 type="button"
-                                class="truncate text-left font-medium hover:underline"
-                                @click="startEdit(goal)"
+                                class="drag-handle mt-1 shrink-0 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
+                                :aria-label="t('categories.index.dragHandle')"
                             >
-                                {{ goal.name }}
+                                <GripVertical class="h-4 w-4" />
                             </button>
 
-                            <div class="flex items-center gap-2 sm:w-48">
-                                <label class="sr-only" :for="`annual-${goal.id}`">{{ t('goals.index.annualEstimate') }}</label>
-                                <Input
-                                    :id="`annual-${goal.id}`"
-                                    :key="`${year}-${goal.id}-${goal.annual_estimate_amount ?? ''}`"
-                                    type="text"
-                                    inputmode="decimal"
-                                    class="h-8 tabular-nums"
-                                    :placeholder="t('goals.index.annualEstimatePlaceholder')"
-                                    :default-value="goal.annual_estimate_amount ?? ''"
-                                    @blur="(e) => saveAnnualEstimate(goal, (e.target as HTMLInputElement).value)"
-                                />
+                            <div class="min-w-0 flex-1 space-y-2">
+                                <GoalBadge :name="goal.name" :icon="goal.icon" :color="goal.color" />
+                                <GoalProgressBar :percent="goal.progress_percent" :balance="goal.balance" :target-amount="goal.target_amount" />
                             </div>
                         </div>
 
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            type="button"
-                            :aria-label="t('goals.index.delete')"
-                            @click="deleteGoal(goal)"
-                        >
-                            <Trash2 class="h-4 w-4 text-muted-foreground" />
-                        </Button>
+                        <div class="no-drag flex flex-wrap items-center gap-2 lg:justify-end">
+                            <span class="text-sm font-medium tabular-nums">{{ goal.balance }}</span>
+
+                            <span
+                                v-if="goal.is_completed"
+                                class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                            >
+                                {{ t('goals.status.completed') }}
+                            </span>
+                            <span
+                                v-if="goal.is_overdue"
+                                class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                            >
+                                {{ t('goals.status.overdue') }}
+                            </span>
+                            <span
+                                v-if="goal.is_archived"
+                                class="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                            >
+                                {{ t('goals.status.archived') }}
+                            </span>
+
+                            <Button variant="ghost" size="icon" as-child>
+                                <Link :href="route('goals.edit', goal.id)" :aria-label="t('actions.edit')">
+                                    <Pencil class="h-4 w-4 text-muted-foreground" />
+                                </Link>
+                            </Button>
+
+                            <Label class="inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs">
+                                <Checkbox
+                                    :checked="goal.is_archived"
+                                    :aria-label="t('goals.status.archived')"
+                                    @update:checked="() => toggleArchived(goal)"
+                                />
+                                {{ t('goals.status.archived') }}
+                            </Label>
+
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                :aria-label="t('goals.index.delete')"
+                                @click="deleteGoal(goal)"
+                            >
+                                <Trash2 class="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                        </div>
                     </li>
-                </ul>
+                </VueDraggable>
             </section>
         </div>
     </AppLayout>

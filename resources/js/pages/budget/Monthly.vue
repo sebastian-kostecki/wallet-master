@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import GoalBadge from '@/components/goals/GoalBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -23,11 +24,16 @@ type BudgetRow = {
 type GoalRow = {
     goal_id: number;
     name: string;
+    icon: string;
+    color: string;
     monthly_plan: string | null;
     saved: string;
     released: string;
     balance: string;
     linked_expenses: string;
+    balance_cumulative: string;
+    target_amount: string | null;
+    progress_percent: number | null;
 };
 
 const props = defineProps<{
@@ -89,23 +95,6 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
     }, { preserveScroll: true });
 }
 
-function saveGoalMonthlyEstimate(row: GoalRow, rawValue: string) {
-    const trimmed = rawValue.trim();
-    const normalized = trimmed.replace(',', '.');
-    const current = row.monthly_plan ?? '';
-
-    if (normalized === current || (normalized === '' && current === '')) {
-        return;
-    }
-
-    const amount = trimmed === '' ? null : normalized;
-
-    router.patch(route('goals.estimates.monthly', row.goal_id), {
-        year: props.year,
-        month: props.month,
-        amount,
-    }, { preserveScroll: true });
-}
 </script>
 
 <template>
@@ -190,21 +179,16 @@ function saveGoalMonthlyEstimate(row: GoalRow, rawValue: string) {
                         </thead>
                         <tbody>
                             <tr v-for="row in goal_rows" :key="row.goal_id" class="border-b border-sidebar-border/40">
-                                <td class="py-2 pr-4">{{ row.name }}</td>
                                 <td class="py-2 pr-4">
-                                    <label class="sr-only" :for="`goal-plan-${row.goal_id}`">
-                                        {{ t('budget.monthly.plan') }} — {{ row.name }}
-                                    </label>
-                                    <Input
-                                        :id="`goal-plan-${row.goal_id}`"
-                                        :key="`${year}-${month}-${row.goal_id}-${row.monthly_plan ?? ''}`"
-                                        type="text"
-                                        inputmode="decimal"
-                                        class="h-8 w-28 tabular-nums"
-                                        :default-value="row.monthly_plan ?? ''"
-                                        :placeholder="t('budget.monthly.planPlaceholder')"
-                                        @blur="(e) => saveGoalMonthlyEstimate(row, (e.target as HTMLInputElement).value)"
-                                    />
+                                    <GoalBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
+                                </td>
+                                <td class="py-2 pr-4">
+                                    <div class="space-y-1">
+                                        <span class="tabular-nums">{{ formatMoney(row.monthly_plan) }}</span>
+                                        <p v-if="row.target_amount !== null" class="text-xs text-muted-foreground">
+                                            {{ formatMoney(row.balance_cumulative) }} / {{ formatMoney(row.target_amount) }}
+                                        </p>
+                                    </div>
                                 </td>
                                 <td class="py-2 pr-4">{{ formatMoney(row.saved) }}</td>
                                 <td class="py-2 pr-4">{{ formatMoney(row.released) }}</td>

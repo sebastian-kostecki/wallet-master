@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Actions\Goals;
 
+use App\Enums\GoalPlanningMode;
 use App\Models\CategoryAnnualEstimate;
-use App\Models\CategoryMonthlyEstimate;
 use App\Models\Goal;
-use App\Models\GoalAnnualEstimate;
-use App\Models\GoalMonthlyEstimate;
+use App\Support\Categories\CategoryColors;
 use Illuminate\Support\Collection;
 
 final class MigrateLegacySavingsEstimate
@@ -33,47 +32,23 @@ final class MigrateLegacySavingsEstimate
                 continue;
             }
 
+            $latestAnnual = $userEstimates
+                ->filter(fn (CategoryAnnualEstimate $estimate): bool => $estimate->amount !== null)
+                ->sortByDesc('year')
+                ->first();
+
+            $annualAmount = $latestAnnual?->amount !== null ? (string) $latestAnnual->amount : null;
+
             $goal = Goal::query()->create([
                 'user_id' => $userId,
                 'name' => self::DEFAULT_GOAL_NAME,
+                'icon' => 'piggy-bank',
+                'color' => CategoryColors::values()[0],
                 'sort_order' => 10,
+                'target_amount' => $annualAmount,
+                'planning_mode' => $annualAmount !== null ? GoalPlanningMode::Monthly : null,
+                'monthly_contribution' => $annualAmount !== null ? bcdiv($annualAmount, '12', 2) : null,
             ]);
-
-            foreach ($userEstimates as $categoryEstimate) {
-                $this->copyEstimates($goal, $categoryEstimate);
-            }
         }
-    }
-
-    private function copyEstimates(Goal $goal, CategoryAnnualEstimate $categoryEstimate): void
-    {
-        $category = $categoryEstimate->category;
-
-        GoalAnnualEstimate::query()->updateOrCreate(
-            [
-                'goal_id' => $goal->id,
-                'year' => $categoryEstimate->year,
-            ],
-            [
-                'amount' => $categoryEstimate->amount,
-            ],
-        );
-
-        CategoryMonthlyEstimate::query()
-            ->where('category_id', $category->id)
-            ->where('year', $categoryEstimate->year)
-            ->orderBy('id')
-            ->each(function (CategoryMonthlyEstimate $monthly) use ($goal): void {
-                GoalMonthlyEstimate::query()->updateOrCreate(
-                    [
-                        'goal_id' => $goal->id,
-                        'year' => $monthly->year,
-                        'month' => $monthly->month,
-                    ],
-                    [
-                        'amount' => $monthly->amount,
-                    ],
-                );
-            });
     }
 }

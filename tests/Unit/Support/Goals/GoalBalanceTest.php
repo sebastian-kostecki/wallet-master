@@ -1,53 +1,110 @@
 <?php
 
 use App\Enums\AccountType;
+use App\Enums\Bank;
+use App\Enums\TransactionType;
 use App\Models\Account;
+use App\Models\Currency;
 use App\Models\Goal;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Goals\GoalBalance;
+use Database\Seeders\CurrencySeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Tests\TestCase;
+
+uses(TestCase::class, RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->seed(CurrencySeeder::class);
+});
 
 test('cumulative balance sums savings transfer legs across all months', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
-    $ror = Account::factory()->create(['user_id' => $user->id, 'type' => AccountType::Ror]);
-    $savings = Account::factory()->create(['user_id' => $user->id, 'type' => AccountType::Savings]);
+    $checking = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Checking',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 1000,
+        'current_balance' => 1000,
+    ]);
+    $savings = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Savings',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
     $goal = Goal::factory()->create(['user_id' => $user->id]);
     $transferId = (string) Str::uuid();
 
-    Transaction::factory()->create([
+    Transaction::query()->create([
         'user_id' => $user->id,
-        'account_id' => $ror->id,
+        'account_id' => $checking->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
         'goal_id' => $goal->id,
-        'transfer_id' => $transferId,
-        'amount' => '-300.00',
+        'date' => '2026-01-15',
         'booked_at' => '2026-01-15',
+        'amount' => '-300.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'To savings',
+        'normalized_description' => 'to savings',
+        'dedupe_hash' => md5('save-out-1', true),
+        'transfer_id' => $transferId,
     ]);
-    Transaction::factory()->create([
+    Transaction::query()->create([
         'user_id' => $user->id,
         'account_id' => $savings->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
         'goal_id' => $goal->id,
-        'transfer_id' => $transferId,
-        'amount' => '300.00',
+        'date' => '2026-01-15',
         'booked_at' => '2026-01-15',
+        'amount' => '300.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'To savings',
+        'normalized_description' => 'to savings',
+        'dedupe_hash' => md5('save-in-1', true),
+        'transfer_id' => $transferId,
     ]);
 
     $transferId2 = (string) Str::uuid();
-    Transaction::factory()->create([
+    Transaction::query()->create([
         'user_id' => $user->id,
         'account_id' => $savings->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
         'goal_id' => $goal->id,
-        'transfer_id' => $transferId2,
+        'date' => '2026-03-10',
+        'booked_at' => '2026-03-10',
         'amount' => '-100.00',
-        'booked_at' => '2026-03-10',
-    ]);
-    Transaction::factory()->create([
-        'user_id' => $user->id,
-        'account_id' => $ror->id,
-        'goal_id' => $goal->id,
+        'type' => TransactionType::Transfer,
+        'description' => 'From savings',
+        'normalized_description' => 'from savings',
+        'dedupe_hash' => md5('release-out', true),
         'transfer_id' => $transferId2,
-        'amount' => '100.00',
+    ]);
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $checking->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'goal_id' => $goal->id,
+        'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
+        'amount' => '100.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'From savings',
+        'normalized_description' => 'from savings',
+        'dedupe_hash' => md5('release-in', true),
+        'transfer_id' => $transferId2,
     ]);
 
     $result = GoalBalance::cumulative($user, $goal);

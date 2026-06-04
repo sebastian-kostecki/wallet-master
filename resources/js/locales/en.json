@@ -547,6 +547,34 @@
         }
     },
     "goals": {
+        "create": {
+            "title": "New goal"
+        },
+        "edit": {
+            "title": "Edit goal",
+            "recommendedMonthly": "Recommended monthly",
+            "projectedCompletionDate": "Projected completion date"
+        },
+        "fields": {
+            "targetAmount": "Target amount",
+            "monthlyContribution": "Monthly contribution",
+            "targetDate": "Target date",
+            "planningMode": "Planning mode"
+        },
+        "planning": {
+            "monthly": "Monthly contribution",
+            "by_date": "Target date"
+        },
+        "status": {
+            "completed": "Completed",
+            "overdue": "Overdue",
+            "archived": "Archived"
+        },
+        "filters": {
+            "active": "Active",
+            "archived": "Archived",
+            "all": "All"
+        },
         "index": {
             "title": "Goals",
             "add": "Add goal",
@@ -555,8 +583,6 @@
             "fields": {
                 "name": "Name"
             },
-            "annualEstimate": "Annual estimate",
-            "annualEstimatePlaceholder": "e.g. 2400",
             "delete": "Delete goal",
             "deleteConfirm": "Delete goal “{name}”?"
         },

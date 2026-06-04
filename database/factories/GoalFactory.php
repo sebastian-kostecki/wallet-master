@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\GoalPlanningMode;
 use App\Models\Goal;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,7 +24,34 @@ final class GoalFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => fake()->word(),
+            'icon' => 'target',
+            'color' => '#6366f1',
             'sort_order' => 10,
+            'target_amount' => null,
+            'planning_mode' => null,
+            'monthly_contribution' => null,
+            'target_date' => null,
+            'is_archived' => false,
         ];
+    }
+
+    public function withTargetMonthly(string $amount, string $monthly): static
+    {
+        return $this->state(fn (): array => [
+            'target_amount' => $amount,
+            'planning_mode' => GoalPlanningMode::Monthly,
+            'monthly_contribution' => $monthly,
+            'target_date' => null,
+        ]);
+    }
+
+    public function withTargetByDate(string $amount, string $date): static
+    {
+        return $this->state(fn (): array => [
+            'target_amount' => $amount,
+            'planning_mode' => GoalPlanningMode::ByDate,
+            'target_date' => $date,
+            'monthly_contribution' => null,
+        ]);
     }
 }

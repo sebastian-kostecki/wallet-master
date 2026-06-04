@@ -13,17 +13,15 @@ final class ListGoals
     /** @var Collection<int, Goal> */
     private Collection $goals;
 
-    public function handle(User $user, ?int $year = null): void
+    public function handle(User $user, ?string $filter = 'active'): void
     {
-        $query = Goal::query()
-            ->where('user_id', $user->id)
-            ->ordered();
+        $query = Goal::query()->forUser($user->id)->ordered();
 
-        if ($year !== null) {
-            $query->with([
-                'annualEstimates' => fn ($estimateQuery) => $estimateQuery->where('year', $year),
-            ]);
-        }
+        match ($filter) {
+            'archived' => $query->where('is_archived', true),
+            'active' => $query->where('is_archived', false),
+            default => null,
+        };
 
         $this->goals = $query->get();
     }

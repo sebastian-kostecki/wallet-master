@@ -6,10 +6,9 @@ use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
 use App\Models\Goal;
-use App\Models\GoalAnnualEstimate;
-use App\Models\GoalMonthlyEstimate;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
+use Illuminate\Support\Facades\Schema;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
@@ -45,19 +44,11 @@ test('user with Oszczędności estimate gets default goal with same annual amoun
     $goal = Goal::query()->where('user_id', $user->id)->first();
     expect($goal)->not->toBeNull();
     expect($goal->name)->toBe('Oszczędności ogólne');
-
-    expect(GoalAnnualEstimate::query()
-        ->where('goal_id', $goal->id)
-        ->where('year', 2026)
-        ->value('amount'))
-        ->toBe('5000.00');
-
-    expect(GoalMonthlyEstimate::query()
-        ->where('goal_id', $goal->id)
-        ->where('year', 2026)
-        ->where('month', 3)
-        ->value('amount'))
-        ->toBe('500.00');
+    expect((string) $goal->target_amount)->toBe('5000.00');
+    expect($goal->planning_mode?->value)->toBe('monthly');
+    expect((string) $goal->monthly_contribution)->toBe('416.66');
+    expect($goal->target_date)->toBeNull();
+    expect($goal->is_archived)->toBeFalse();
 });
 
 test('legacy savings migration skips users who already have goals', function () {
@@ -83,5 +74,6 @@ test('legacy savings migration skips users who already have goals', function () 
     app(MigrateLegacySavingsEstimate::class)->handle();
 
     expect(Goal::query()->where('user_id', $user->id)->count())->toBe(1);
-    expect(GoalAnnualEstimate::query()->count())->toBe(0);
+    expect(Schema::hasTable('goal_annual_estimates'))->toBeFalse();
+    expect(Schema::hasTable('goal_monthly_estimates'))->toBeFalse();
 });

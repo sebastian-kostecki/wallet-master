@@ -2,6 +2,7 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\GoalPlanningMode;
 use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
@@ -9,7 +10,6 @@ use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
 use App\Models\Currency;
 use App\Models\Goal;
-use App\Models\GoalMonthlyEstimate;
 use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
@@ -78,13 +78,12 @@ test('monthly budget goal row tracks save and release on savings account', funct
     $user = User::factory()->create();
     ensureUserCategories($user);
 
-    $goal = Goal::factory()->create(['user_id' => $user->id, 'name' => 'Wakacje']);
-
-    GoalMonthlyEstimate::query()->create([
-        'goal_id' => $goal->id,
-        'year' => 2026,
-        'month' => 3,
-        'amount' => 500,
+    $goal = Goal::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Wakacje',
+        'target_amount' => '6000.00',
+        'planning_mode' => GoalPlanningMode::Monthly,
+        'monthly_contribution' => '500.00',
     ]);
 
     $checking = Account::query()->create([
