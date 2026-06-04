@@ -31,6 +31,8 @@ final class TransactionEditResource extends JsonResource
             'import_id' => $this->import_id,
             'raw_statement_description' => $this->raw_statement_description,
             'transfer_id' => $this->transfer_id,
+            'category_id' => $this->category_id,
+            'goal_id' => $this->goal_id,
             'account' => $this->account !== null
                 ? $this->account->only(['id', 'name'])
                 : null,

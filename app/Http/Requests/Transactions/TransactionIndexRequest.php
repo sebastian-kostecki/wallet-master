@@ -11,7 +11,7 @@ final class TransactionIndexRequest extends FormRequest
 {
     use Indexable;
 
-    /** @var array{account_id: ?int, from: ?string, to: ?string}|null */
+    /** @var array{account_id: ?int, category_id: ?int, from: ?string, to: ?string}|null */
     private ?array $filters = null;
 
     public function authorize(): bool
@@ -43,11 +43,19 @@ final class TransactionIndexRequest extends FormRequest
                 ->where('user_id', $this->user()->id)
             );
 
+        $categoryExistsRule = Rule::exists('categories', 'id')
+            ->where(fn ($query) => $query->where('user_id', $this->user()->id));
+
         return [
             'account_id' => [
                 'nullable',
                 'integer',
                 $accountExistsRule,
+            ],
+            'category_id' => [
+                'nullable',
+                'integer',
+                $categoryExistsRule,
             ],
             'from' => ['nullable', 'date_format:d-m-Y', 'before_or_equal:to'],
             'to' => ['nullable', 'date_format:d-m-Y', 'after_or_equal:from'],
@@ -55,7 +63,7 @@ final class TransactionIndexRequest extends FormRequest
     }
 
     /**
-     * @return array{account_id: ?int, from: ?string, to: ?string}
+     * @return array{account_id: ?int, category_id: ?int, from: ?string, to: ?string}
      */
     public function getFilters(): array
     {
@@ -66,14 +74,21 @@ final class TransactionIndexRequest extends FormRequest
         $validated = $this->validated();
 
         $accountId = isset($validated['account_id']) ? (int) $validated['account_id'] : null;
+        $categoryId = isset($validated['category_id']) ? (int) $validated['category_id'] : null;
         $fromInput = isset($validated['from']) ? (string) $validated['from'] : null;
         $toInput = isset($validated['to']) ? (string) $validated['to'] : null;
 
         return $this->filters = [
             'account_id' => $accountId,
+            'category_id' => $categoryId,
             'from' => $fromInput,
             'to' => $toInput,
         ];
+    }
+
+    public function getCategoryId(): ?int
+    {
+        return $this->getFilters()['category_id'] ?? null;
     }
 
     public function getAccountId(): ?int

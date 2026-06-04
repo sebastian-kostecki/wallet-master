@@ -2,13 +2,18 @@
 
 namespace App\Http\Requests\Transactions;
 
+use App\Http\Requests\Concerns\ValidatesCategoryId;
+use App\Http\Requests\Concerns\ValidatesGoalId;
 use App\Models\Transaction;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 final class UpdateTransactionRequest extends FormRequest
 {
+    use ValidatesCategoryId;
+    use ValidatesGoalId;
+
     public function authorize(): bool
     {
         /** @var Transaction $transaction */
@@ -47,7 +52,14 @@ final class UpdateTransactionRequest extends FormRequest
             'amount' => ['required', 'numeric', 'decimal:0,2', Rule::notIn([0])],
             'description' => ['required', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
+            ...$this->categoryIdRules(),
+            ...$this->optionalGoalIdRules(),
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $this->validateCategoryMatchesAmount($validator);
     }
 
     /**
@@ -58,6 +70,8 @@ final class UpdateTransactionRequest extends FormRequest
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,
+     *   category_id: int,
+     *   goal_id?: ?int,
      * }
      */
     public function validated($key = null, $default = null): array

@@ -148,6 +148,7 @@ test('users cannot update another users transaction', function () {
             'date' => '20-04-2026',
             'amount' => -20,
             'description' => 'Stolen edit',
+            'category_id' => defaultCategoryId($otherUser),
         ])
         ->assertForbidden();
 });

@@ -25,6 +25,7 @@ test('user can create a transfer and it creates two linked transactions and upda
 
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
+    $categoryId = defaultCategoryId($user);
 
     $from = Account::query()->create([
         'user_id' => $user->id,
@@ -54,6 +55,7 @@ test('user can create a transfer and it creates two linked transactions and upda
             'date' => '24-04-2026',
             'amount' => 12.34,
             'description' => 'Move money',
+            'category_id' => $categoryId,
         ]);
 
     $response->assertSessionHasNoErrors();
@@ -91,6 +93,7 @@ test('user can create a transfer with optional subject on both legs', function (
 
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
+    $categoryId = defaultCategoryId($user);
 
     $from = Account::query()->create([
         'user_id' => $user->id,
@@ -121,6 +124,7 @@ test('user can create a transfer with optional subject on both legs', function (
             'amount' => 5,
             'subject' => 'Internal move',
             'description' => 'Move money',
+            'category_id' => $categoryId,
         ])
         ->assertSessionHasNoErrors();
 
@@ -169,6 +173,7 @@ test('amount must be greater than zero', function () {
 
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
+    $categoryId = defaultCategoryId($user);
 
     $from = Account::query()->create([
         'user_id' => $user->id,
@@ -262,6 +267,7 @@ test('cannot transfer between different currencies', function () {
 test('dedupe does not block creating the same transfer twice', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
+    $categoryId = defaultCategoryId($user);
 
     $from = Account::query()->create([
         'user_id' => $user->id,
@@ -289,6 +295,7 @@ test('dedupe does not block creating the same transfer twice', function () {
         'date' => '24-04-2026',
         'amount' => 10,
         'description' => 'Same transfer',
+        'category_id' => $categoryId,
     ];
 
     $this->actingAs($user)->post('/transfers', $payload)->assertSessionHasNoErrors();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Imports\Workflow;
 
+use App\Actions\Categories\ResolveCategoryForImportRow;
 use App\Enums\Bank;
 use App\Enums\ImportFailedRowReason;
 use App\Enums\ImportStatus;
@@ -32,6 +33,7 @@ final class CommitImport
     public function __construct(
         private ResolveImportSourceFile $resolveImportSourceFile,
         private EnrichImportRowDescription $enrichImportRowDescription,
+        private ResolveCategoryForImportRow $resolveCategoryForImportRow,
         private TransferMatcher $transferMatcher,
     ) {}
 
@@ -279,6 +281,13 @@ final class CommitImport
         $counters->inferredTypes[$transactionType->value] = ($counters->inferredTypes[$transactionType->value] ?? 0) + 1;
         $counters->importedAmountSum = bcadd($counters->importedAmountSum, $parsedRow->amount, 2);
 
+        $categoryId = $this->resolveCategoryForImportRow->handle(
+            user: $lockedImport->user,
+            bank: $adapter->bank(),
+            rawStatementDescription: $parsedRow->rawStatementDescription,
+            transactionType: $transactionType,
+        );
+
         return [
             'user_id' => $lockedImport->user_id,
             'account_id' => $account->id,
@@ -293,6 +302,7 @@ final class CommitImport
             'raw_statement_description' => $parsedRow->rawStatementDescription,
             'normalized_description' => $normalizedDescription,
             'dedupe_hash' => $dedupeHash,
+            'category_id' => $categoryId,
             'created_at' => $timestamp,
             'updated_at' => $timestamp,
         ];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Categories\EnsureUserCategories;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Telemetry\Event;
@@ -45,6 +46,8 @@ class RegisteredUserController extends Controller
         ]);
 
         Event::record('user_registered', ['user_id' => $user->id], $user->id);
+
+        app(EnsureUserCategories::class)->handle($user);
 
         event(new Registered($user));
 

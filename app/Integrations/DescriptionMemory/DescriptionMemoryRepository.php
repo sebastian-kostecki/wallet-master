@@ -14,6 +14,7 @@ interface DescriptionMemoryRepository
         string $rawStatementDescription,
         ?string $subject,
         string $description,
+        ?int $categoryId = null,
     ): void;
 
     public function suggest(

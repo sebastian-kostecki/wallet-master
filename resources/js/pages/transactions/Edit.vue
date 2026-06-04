@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { filterCategoriesByType, type CategoryOption } from '@/lib/categories';
 import { displayAmount, normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
@@ -30,17 +31,21 @@ type Transaction = {
     date: string; // YYYY-MM-DD from backend
     booked_at: string; // YYYY-MM-DD from backend
     amount: string;
-    type?: string;
+    type: string;
     description: string;
     subject: string | null;
     import_id: number | null;
     raw_statement_description: string | null;
     transfer_id: string | null;
+    category_id: number;
+    goal_id: number | null;
 };
 
 const props = defineProps<{
     transaction: Transaction;
     accounts: Account[];
+    categories: CategoryOption[];
+    goals: { id: number; name: string }[];
 }>();
 
 const { t } = useI18n();
@@ -73,8 +78,27 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 const accountOptions = computed<DropdownOption<number>[]>(() => props.accounts.map((a) => ({ value: a.id, label: a.name })));
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
 
+const transactionType = computed(() => (props.transaction.type === 'income' ? 'income' : 'expense') as 'income' | 'expense');
+
+const categoryOptions = computed<DropdownOption<number>[]>(() =>
+    filterCategoriesByType(props.categories, transactionType.value).map((c) => ({
+        value: c.id,
+        label: c.name,
+    })),
+);
+
+const goalOptions = computed<DropdownOption<number | null>[]>(() => [
+    { value: null, label: t('transactions.fields.goalNone') },
+    ...props.goals.map((g) => ({
+        value: g.id,
+        label: g.name,
+    })),
+]);
+
 const form = useForm<{
     account_id: number;
+    category_id: number;
+    goal_id: number | null;
     date: string;
     booked_at: string;
     amount: string;
@@ -82,6 +106,8 @@ const form = useForm<{
     subject: string;
 }>({
     account_id: props.transaction.account_id,
+    category_id: props.transaction.category_id,
+    goal_id: props.transaction.goal_id,
     date: isoToDdMmYyyy(props.transaction.date),
     booked_at: props.transaction.booked_at === props.transaction.date ? '' : isoToDdMmYyyy(props.transaction.booked_at),
     amount: displayAmount(props.transaction.amount),
@@ -221,6 +247,36 @@ function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, in
                                                 </span>
                                             </template>
                                         </DropdownSelect>
+                                    </template>
+                                </FormField>
+
+                                <FormField for-id="category_id" :label="t('transactions.fields.category')" :error="form.errors.category_id">
+                                    <template #default="{ errorId, hasError }">
+                                        <DropdownSelect
+                                            id="category_id"
+                                            :aria-invalid="hasError"
+                                            :aria-describedby="hasError ? errorId : undefined"
+                                            :model-value="form.category_id"
+                                            :options="categoryOptions"
+                                            :placeholder="t('transactions.fields.category')"
+                                            :disabled="form.processing || categoryOptions.length === 0"
+                                            @update:model-value="(value) => (form.category_id = value)"
+                                        />
+                                    </template>
+                                </FormField>
+
+                                <FormField for-id="goal_id" :label="t('transactions.fields.goal')" :error="form.errors.goal_id">
+                                    <template #default="{ errorId, hasError }">
+                                        <DropdownSelect
+                                            id="goal_id"
+                                            :aria-invalid="hasError"
+                                            :aria-describedby="hasError ? errorId : undefined"
+                                            :model-value="form.goal_id"
+                                            :options="goalOptions"
+                                            :placeholder="t('transactions.fields.goal')"
+                                            :disabled="form.processing || goalOptions.length <= 1"
+                                            @update:model-value="(value) => (form.goal_id = value)"
+                                        />
                                     </template>
                                 </FormField>
 

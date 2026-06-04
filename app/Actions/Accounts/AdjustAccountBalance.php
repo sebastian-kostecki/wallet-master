@@ -9,6 +9,7 @@ use App\Models\Account;
 use App\Models\AccountBalanceAdjustment;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\Categories\DefaultCategoryId;
 use App\Support\Transactions\TransactionDedupe;
 use App\Telemetry\Event;
 use Carbon\CarbonImmutable;
@@ -47,6 +48,7 @@ final class AdjustAccountBalance
                 'user_id' => $user->id,
                 'account_id' => $locked->id,
                 'currency_id' => $locked->currency_id,
+                'category_id' => DefaultCategoryId::for($user, TransactionType::Adjustment),
                 'date' => $today,
                 'booked_at' => $today,
                 'amount' => $delta,

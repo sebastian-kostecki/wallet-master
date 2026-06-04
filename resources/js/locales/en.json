@@ -157,6 +157,11 @@
         "hintDefault": "Extra settings — rarely needed."
     },
     "transactions": {
+        "fields": {
+            "category": "Category",
+            "goal": "Goal",
+            "goalNone": "None"
+        },
         "index": {
             "title": "Transactions",
             "addTransaction": "Add transaction",
@@ -168,6 +173,10 @@
                 "account": {
                     "label": "Account",
                     "all": "All accounts"
+                },
+                "category": {
+                    "label": "Category",
+                    "all": "All categories"
                 },
                 "from": "From",
                 "to": "To",
@@ -206,6 +215,7 @@
                 "description": "Description",
                 "subject": "Subject",
                 "amount": "Amount",
+                "category": "Category",
                 "actions": "Actions"
             },
             "badges": {
@@ -329,6 +339,8 @@
             "date": "Date",
             "subjectOptional": "Subject (optional)",
             "descriptionOptional": "Description (optional)",
+            "goal": "Savings goal",
+            "goalPlaceholder": "Select a goal",
             "hint": "We'll save an expense on the source account and an income on the destination account.",
             "sameAccountError": "Choose a different destination account than the source account.",
             "deletedNotice": "This account is deleted — transfers are blocked.",
@@ -479,6 +491,94 @@
                 "zero_amount": "Amount is zero",
                 "invalid_row": "Invalid row"
             }
+        }
+    },
+    "categories": {
+        "index": {
+            "title": "Categories",
+            "add": "Add category",
+            "empty": "No categories yet.",
+            "fields": {
+                "name": "Name",
+                "type": "Type"
+            },
+            "types": {
+                "expense": "Expense",
+                "income": "Income"
+            },
+            "annualEstimate": "Annual estimate",
+            "annualEstimatePlaceholder": "e.g. 12000",
+            "system": "system",
+            "moveUp": "Move up",
+            "moveDown": "Move down",
+            "delete": "Delete category",
+            "deleteConfirm": "Delete category “{name}”?"
+        },
+        "enums": {
+            "type": {
+                "expense": "Expense",
+                "income": "Income"
+            }
+        },
+        "toast": {
+            "created": "Category added.",
+            "updated": "Category updated.",
+            "deleted": "Category deleted.",
+            "estimate_saved": "Estimate saved."
+        }
+    },
+    "goals": {
+        "index": {
+            "title": "Goals",
+            "add": "Add goal",
+            "listTitle": "Your goals",
+            "empty": "No goals yet.",
+            "fields": {
+                "name": "Name"
+            },
+            "annualEstimate": "Annual estimate",
+            "annualEstimatePlaceholder": "e.g. 2400",
+            "delete": "Delete goal",
+            "deleteConfirm": "Delete goal “{name}”?"
+        },
+        "toast": {
+            "created": "Goal added.",
+            "updated": "Goal updated.",
+            "deleted": "Goal deleted.",
+            "estimate_saved": "Estimate saved."
+        }
+    },
+    "budget": {
+        "nav": "Budget",
+        "monthly": {
+            "title": "Budget — monthly",
+            "plan": "Estimate",
+            "actual": "Actual",
+            "difference": "Difference",
+            "goals_section": "Savings goals",
+            "saved": "Saved",
+            "released": "Released",
+            "balance": "Balance",
+            "linked_expenses": "Linked expenses",
+            "manage_goals": "Manage goals",
+            "allocation_hint": "Monthly estimates total: {monthly} / annual: {annual}",
+            "planPlaceholder": "Monthly override"
+        },
+        "yearly": {
+            "title": "Budget — yearly",
+            "plan": "Annual estimate",
+            "actual": "Actual",
+            "difference": "Difference",
+            "planPlaceholder": "e.g. 12000",
+            "manage_categories": "Manage categories"
+        },
+        "view": {
+            "monthly": "Monthly",
+            "yearly": "Yearly"
+        },
+        "sections": {
+            "expense": "Expenses",
+            "income": "Income"
         }
     },
     "a11y": {

@@ -14,6 +14,7 @@ final class NullDescriptionMemoryRepository implements DescriptionMemoryReposito
         string $rawStatementDescription,
         ?string $subject,
         string $description,
+        ?int $categoryId = null,
     ): void {
         // no-op (best-effort degradation)
     }

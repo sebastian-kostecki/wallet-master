@@ -32,6 +32,7 @@ test('user can manually create two transactions with identical fields', function
         'amount' => -10.50,
         'description' => 'Duplicate-friendly coffee',
         'subject' => 'Cafe',
+        'category_id' => defaultCategoryId($user),
     ];
 
     $first = $this->actingAs($user)->post('/transactions', $payload);

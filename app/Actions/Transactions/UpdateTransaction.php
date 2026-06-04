@@ -31,6 +31,8 @@ final class UpdateTransaction
      *   amount: numeric-string|float|int,
      *   description: string,
      *   subject?: ?string,
+     *   category_id: int,
+     *   goal_id?: ?int,
      * }  $validated
      *
      * @throws \Throwable
@@ -55,6 +57,10 @@ final class UpdateTransaction
             $normalizedDescription = TransactionDedupe::normalizeDescription($validated['description']);
             $dedupeHash = TransactionDedupe::dedupeHash($bookedAt, $newAmount, $normalizedDescription);
 
+            $goalId = array_key_exists('goal_id', $validated) && $validated['goal_id'] !== null
+                ? (int) $validated['goal_id']
+                : null;
+
             $oldAmount = TransactionDedupe::amountToDecimalString((string) $transaction->amount);
             $oldAccountId = (int) $transaction->account_id;
             $newAccountId = (int) $validated['account_id'];
@@ -77,6 +83,8 @@ final class UpdateTransaction
                 $transaction->subject = $validated['subject'] ?? null;
                 $transaction->normalized_description = $normalizedDescription;
                 $transaction->dedupe_hash = $dedupeHash;
+                $transaction->category_id = $validated['category_id'];
+                $transaction->goal_id = $goalId;
                 $transaction->save();
 
                 $account->current_balance = bcadd((string) $account->current_balance, $delta, 2);
@@ -115,6 +123,8 @@ final class UpdateTransaction
             $transaction->subject = $validated['subject'] ?? null;
             $transaction->normalized_description = $normalizedDescription;
             $transaction->dedupe_hash = $dedupeHash;
+            $transaction->category_id = $validated['category_id'];
+            $transaction->goal_id = $goalId;
             $transaction->save();
 
             $oldAccount->current_balance = bcsub((string) $oldAccount->current_balance, $oldAmount, 2);
@@ -204,6 +214,7 @@ final class UpdateTransaction
                 rawStatementDescription: $raw,
                 subject: $transaction->subject,
                 description: $description,
+                categoryId: (int) $transaction->category_id,
             );
         });
     }

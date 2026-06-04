@@ -2,6 +2,7 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\CategoryType;
 use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Currency;
@@ -20,6 +21,7 @@ test('guest is redirected to login', function () {
 test('user can create a transaction and it updates account balance', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
+    $categoryId = defaultCategoryId($user);
 
     $account = Account::query()->create([
         'user_id' => $user->id,
@@ -39,6 +41,7 @@ test('user can create a transaction and it updates account balance', function ()
             'amount' => -12.34,
             'description' => 'Coffee',
             'subject' => 'Cafe',
+            'category_id' => $categoryId,
         ]);
 
     $response->assertSessionHasNoErrors();
@@ -57,6 +60,7 @@ test('user can create a transaction and it updates account balance', function ()
 test('user can explicitly set booked_at when creating a transaction', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
+    $categoryId = defaultCategoryId($user);
 
     $account = Account::query()->create([
         'user_id' => $user->id,
@@ -76,6 +80,7 @@ test('user can explicitly set booked_at when creating a transaction', function (
             'booked_at' => '30-03-2026',
             'amount' => -12.34,
             'description' => 'Coffee',
+            'category_id' => $categoryId,
         ]);
 
     $response->assertSessionHasNoErrors();
@@ -108,6 +113,60 @@ test('amount cannot be zero', function () {
             'description' => 'Zero',
         ])
         ->assertSessionHasErrors('amount');
+});
+
+test('category_id is required when creating a transaction', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Account',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->post('/transactions', [
+            'account_id' => $account->id,
+            'date' => '24-04-2026',
+            'amount' => -10,
+            'description' => 'No category',
+        ])
+        ->assertSessionHasErrors('category_id');
+});
+
+test('expense transaction rejects income category', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $incomeCategoryId = defaultCategoryId($user, CategoryType::Income);
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Account',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->post('/transactions', [
+            'account_id' => $account->id,
+            'date' => '24-04-2026',
+            'amount' => -10,
+            'description' => 'Wrong category',
+            'category_id' => $incomeCategoryId,
+        ])
+        ->assertSessionHasErrors('category_id');
 });
 
 test('cannot create a transaction for a deleted account', function () {

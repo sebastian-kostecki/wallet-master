@@ -11,5 +11,6 @@ final readonly class SuggestedFields
         public ?string $description,
         public string $matchType,
         public int $score,
+        public ?int $categoryId = null,
     ) {}
 }

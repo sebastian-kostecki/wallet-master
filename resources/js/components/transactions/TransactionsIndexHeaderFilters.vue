@@ -15,8 +15,15 @@ type Account = {
     bank?: string;
 };
 
+type Category = {
+    id: number;
+    name: string;
+    type: string;
+};
+
 type Filters = {
     account_id: number | null;
+    category_id: number | null;
     from: string | null; // DD-MM-YYYY
     to: string | null; // DD-MM-YYYY
     sort: 'date' | 'amount' | string;
@@ -26,6 +33,7 @@ type Filters = {
 
 const props = defineProps<{
     accounts: Account[];
+    categories: Category[];
     filters: Filters;
     serverErrors: Record<string, string>;
     isLoading: boolean;
@@ -38,7 +46,13 @@ const accountOptions = computed<DropdownOption<number | null>[]>(() => [
     ...props.accounts.map((a) => ({ value: a.id, label: a.name })),
 ]);
 
+const categoryOptions = computed<DropdownOption<number | null>[]>(() => [
+    { value: null, label: t('transactions.index.filters.category.all') },
+    ...props.categories.map((c) => ({ value: c.id, label: c.name })),
+]);
+
 const localAccountId = ref<number | null>(props.filters.account_id ?? null);
+const localCategoryId = ref<number | null>(props.filters.category_id ?? null);
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
 
 const selectedAccount = computed(() => {
@@ -55,6 +69,7 @@ watch(
     () => props.filters,
     (next) => {
         localAccountId.value = next.account_id ?? null;
+        localCategoryId.value = next.category_id ?? null;
         localFrom.value = next.from ?? '';
         localTo.value = next.to ?? '';
     },
@@ -97,6 +112,7 @@ function buildQuery() {
 
     return {
         account_id: localAccountId.value ?? undefined,
+        category_id: localCategoryId.value ?? undefined,
         from: trimmedFrom || undefined,
         to: trimmedTo || undefined,
         sort: props.filters.sort ?? 'date',
@@ -134,6 +150,7 @@ function applyFiltersNow() {
 
     track('transactions_filtered', {
         account_id: query.account_id ?? null,
+        category_id: query.category_id ?? null,
         from: query.from ?? null,
         to: query.to ?? null,
     });
@@ -170,7 +187,7 @@ onBeforeUnmount(() => {
     }
 });
 
-watch([localAccountId, localFrom, localTo], () => {
+watch([localAccountId, localCategoryId, localFrom, localTo], () => {
     scheduleApply();
 });
 
@@ -249,6 +266,18 @@ const hasError = computed(() => errorMessage.value.trim() !== '');
                         </span>
                     </template>
                 </DropdownSelect>
+            </div>
+
+            <div class="min-w-56 sm:min-w-64">
+                <DropdownSelect
+                    id="category_id"
+                    :model-value="localCategoryId"
+                    :options="categoryOptions"
+                    :placeholder="t('transactions.index.filters.category.all')"
+                    :disabled="isLoading"
+                    :aria-label="t('transactions.index.filters.category.label')"
+                    @update:model-value="(value: number | null) => (localCategoryId = value)"
+                />
             </div>
 
             <div class="min-w-56 sm:min-w-64">

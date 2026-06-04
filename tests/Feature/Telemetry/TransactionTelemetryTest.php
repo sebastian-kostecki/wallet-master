@@ -26,12 +26,15 @@ test('creating transaction records transaction_created telemetry event', functio
         'current_balance' => 100,
     ]);
 
-    $logged = captureTelemetryLogs(function () use ($user, $account): void {
+    $categoryId = defaultCategoryId($user);
+
+    $logged = captureTelemetryLogs(function () use ($user, $account, $categoryId): void {
         $this->actingAs($user)->post('/transactions', [
             'account_id' => $account->id,
             'date' => '24-04-2026',
             'amount' => -12.34,
             'description' => 'Coffee',
+            'category_id' => $categoryId,
         ])->assertSessionHasNoErrors();
     });
 
@@ -80,6 +83,7 @@ test('updating transaction records transaction_updated telemetry event', functio
             'amount' => -20,
             'description' => 'New',
             'subject' => null,
+            'category_id' => $transaction->category_id,
         ])->assertSessionHasNoErrors();
     });
 
