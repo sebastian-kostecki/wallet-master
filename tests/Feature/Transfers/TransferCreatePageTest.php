@@ -55,3 +55,39 @@ test('page renders and includes active + deleted accounts', function () {
         ->where('accounts.1.bank_icon_url', $deleted->bank_icon_url)
     );
 });
+
+test('transfer create page exposes savings account type as lowercase enum value', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $checking = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Checking',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $savings = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Savings',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this->actingAs($user)->get('/transfers/create')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('transfers/Create', false)
+            ->has('accounts', 2)
+            ->where('accounts.0.type', 'checking')
+            ->where('accounts.1.type', 'savings')
+            ->where('accounts.0.id', $checking->id)
+            ->where('accounts.1.id', $savings->id)
+        );
+});

@@ -107,7 +107,7 @@ const involvesSavings = computed(() => {
     const from = form.from_account_id !== null ? (accountsById.value.get(form.from_account_id) ?? null) : null;
     const to = form.to_account_id !== null ? (accountsById.value.get(form.to_account_id) ?? null) : null;
 
-    return from?.type === 'Savings' || to?.type === 'Savings';
+    return from?.type === 'savings' || to?.type === 'savings';
 });
 
 watch(involvesSavings, (value) => {
