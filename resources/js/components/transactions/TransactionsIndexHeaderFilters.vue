@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import DateRangePickerInput from '@/components/forms/DateRangePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import InputError from '@/components/InputError.vue';
@@ -19,6 +20,8 @@ type Category = {
     id: number;
     name: string;
     type: string;
+    icon: string;
+    color: string;
 };
 
 type Filters = {
@@ -54,6 +57,7 @@ const categoryOptions = computed<DropdownOption<number | null>[]>(() => [
 const localAccountId = ref<number | null>(props.filters.account_id ?? null);
 const localCategoryId = ref<number | null>(props.filters.category_id ?? null);
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
+const categoriesById = computed(() => new Map(props.categories.map((c) => [c.id, c])));
 
 const selectedAccount = computed(() => {
     if (localAccountId.value === null) {
@@ -277,7 +281,26 @@ const hasError = computed(() => errorMessage.value.trim() !== '');
                     :disabled="isLoading"
                     :aria-label="t('transactions.index.filters.category.label')"
                     @update:model-value="(value: number | null) => (localCategoryId = value)"
-                />
+                >
+                    <template #trigger-leading>
+                        <CategoryBadge
+                            v-if="localCategoryId !== null && categoriesById.get(localCategoryId)"
+                            :icon="categoriesById.get(localCategoryId)!.icon"
+                            :color="categoriesById.get(localCategoryId)!.color"
+                            size="sm"
+                            :show-name="false"
+                        />
+                    </template>
+                    <template #option-leading="{ option }">
+                        <CategoryBadge
+                            v-if="option.value !== null && categoriesById.get(option.value)"
+                            :icon="categoriesById.get(option.value)!.icon"
+                            :color="categoriesById.get(option.value)!.color"
+                            size="sm"
+                            :show-name="false"
+                        />
+                    </template>
+                </DropdownSelect>
             </div>
 
             <div class="min-w-56 sm:min-w-64">

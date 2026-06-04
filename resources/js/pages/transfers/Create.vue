@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { filterCategoriesByType, firstCategoryId, type CategoryOption } from '@/lib/categories';
+import { categoriesByIdMap, filterCategoriesByType, firstCategoryId, type CategoryOption } from '@/lib/categories';
 import { normalizeAmount } from '@/lib/money';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
@@ -75,6 +76,7 @@ const defaultFromId = computed(() => selectableAccounts.value[0]?.id ?? null);
 const defaultToId = computed(() => selectableAccounts.value[1]?.id ?? null);
 
 const transferCategories = computed(() => filterCategoriesByType(props.categories, 'expense'));
+const categoriesById = computed(() => categoriesByIdMap(props.categories));
 
 const categoryOptions = computed<DropdownOption<number>[]>(() =>
     transferCategories.value.map((c) => ({
@@ -318,7 +320,26 @@ function submit() {
                                     :aria-invalid="hasError"
                                     :aria-describedby="hasError ? errorId : undefined"
                                     @update:model-value="(value) => (form.category_id = value)"
-                                />
+                                >
+                                    <template #trigger-leading>
+                                        <CategoryBadge
+                                            v-if="form.category_id !== null && categoriesById.get(form.category_id)"
+                                            :icon="categoriesById.get(form.category_id)!.icon"
+                                            :color="categoriesById.get(form.category_id)!.color"
+                                            size="sm"
+                                            :show-name="false"
+                                        />
+                                    </template>
+                                    <template #option-leading="{ option }">
+                                        <CategoryBadge
+                                            v-if="categoriesById.get(option.value)"
+                                            :icon="categoriesById.get(option.value)!.icon"
+                                            :color="categoriesById.get(option.value)!.color"
+                                            size="sm"
+                                            :show-name="false"
+                                        />
+                                    </template>
+                                </DropdownSelect>
                             </template>
                         </FormField>
 

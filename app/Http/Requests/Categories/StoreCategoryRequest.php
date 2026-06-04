@@ -6,6 +6,8 @@ namespace App\Http\Requests\Categories;
 
 use App\Enums\CategoryType;
 use App\Models\Category;
+use App\Support\Categories\CategoryColors;
+use App\Support\Categories\CategoryIcons;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -30,6 +32,8 @@ final class StoreCategoryRequest extends FormRequest
                 Rule::unique('categories', 'name')->where(fn ($q) => $q->where('user_id', $this->user()->id)),
             ],
             'type' => ['required', Rule::enum(CategoryType::class)],
+            'icon' => ['required', 'string', Rule::in(CategoryIcons::values())],
+            'color' => ['required', 'string', Rule::in(CategoryColors::values())],
         ];
     }
 }

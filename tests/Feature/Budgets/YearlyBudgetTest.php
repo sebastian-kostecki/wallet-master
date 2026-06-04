@@ -22,7 +22,7 @@ test('yearly budget excludes internal transfers from category actuals', function
 
     $food = Category::query()
         ->where('user_id', $user->id)
-        ->where('name', 'Jedzenie')
+        ->where('name', 'Artykuły spożywcze')
         ->firstOrFail();
 
     CategoryAnnualEstimate::query()->create([

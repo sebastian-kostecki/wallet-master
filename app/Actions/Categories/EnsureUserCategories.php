@@ -24,6 +24,8 @@ final class EnsureUserCategories
                 Category::query()->create([
                     'user_id' => $user->id,
                     'name' => $row['name'],
+                    'icon' => $row['icon'],
+                    'color' => $row['color'],
                     'type' => $row['type'],
                     'sort_order' => $row['sort_order'],
                     'is_system' => $row['is_system'],

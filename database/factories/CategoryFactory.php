@@ -24,6 +24,8 @@ final class CategoryFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => fake()->unique()->word(),
+            'icon' => 'tag',
+            'color' => '#868e96',
             'type' => CategoryType::Expense,
             'sort_order' => 10,
             'is_system' => false,

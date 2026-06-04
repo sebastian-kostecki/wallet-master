@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
-import FormField from '@/components/forms/FormField.vue';
+import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type Category = {
@@ -15,6 +13,8 @@ type Category = {
     name: string;
     type: string;
     type_label_key: string;
+    icon: string;
+    color: string;
     sort_order: number;
     is_system: boolean;
 };
@@ -29,51 +29,8 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: t('categories.index.title'), href: route('categories.index') },
 ]);
 
-const typeOptions = computed<DropdownOption<string>[]>(() => [
-    { value: 'expense', label: t('categories.enums.type.expense') },
-    { value: 'income', label: t('categories.enums.type.income') },
-]);
-
-const createForm = useForm({
-    name: '',
-    type: 'expense' as string,
-});
-
-const editingId = ref<number | null>(null);
-const editingName = ref('');
-
 const expenseCategories = computed(() => props.categories.filter((c) => c.type === 'expense'));
 const incomeCategories = computed(() => props.categories.filter((c) => c.type === 'income'));
-
-function submitCreate() {
-    createForm.post(route('categories.store'), {
-        preserveScroll: true,
-        onSuccess: () => createForm.reset(),
-    });
-}
-
-function startEdit(cat: Category) {
-    editingId.value = cat.id;
-    editingName.value = cat.name;
-}
-
-function cancelEdit() {
-    editingId.value = null;
-    editingName.value = '';
-}
-
-function saveName(cat: Category) {
-    const trimmed = editingName.value.trim();
-    if (trimmed === '' || trimmed === cat.name) {
-        cancelEdit();
-        return;
-    }
-
-    router.patch(route('categories.update', cat.id), { name: trimmed }, {
-        preserveScroll: true,
-        onSuccess: () => cancelEdit(),
-    });
-}
 
 function deleteCategory(cat: Category) {
     if (!window.confirm(t('categories.index.deleteConfirm', { name: cat.name }))) {
@@ -111,24 +68,16 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
 
         <div class="flex flex-col gap-6 p-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
+                <Button as-child>
+                    <Link :href="route('categories.create')">
+                        <Plus class="mr-2 h-4 w-4" />
+                        {{ t('categories.index.add') }}
+                    </Link>
+                </Button>
                 <Button variant="outline" as-child>
                     <Link :href="route('budget.monthly')">{{ t('budget.nav') }}</Link>
                 </Button>
             </div>
-
-            <form
-                class="flex max-w-md flex-col gap-4 rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
-                @submit.prevent="submitCreate"
-            >
-                <h2 class="text-lg font-semibold">{{ t('categories.index.add') }}</h2>
-                <FormField :label="t('categories.index.fields.name')" :error="createForm.errors.name">
-                    <Input v-model="createForm.name" />
-                </FormField>
-                <FormField :label="t('categories.index.fields.type')" :error="createForm.errors.type">
-                    <DropdownSelect v-model="createForm.type" :options="typeOptions" />
-                </FormField>
-                <Button type="submit" :disabled="createForm.processing">{{ t('categories.index.add') }}</Button>
-            </form>
 
             <section
                 v-for="(sectionCategories, sectionKey) in { expense: expenseCategories, income: incomeCategories }"
@@ -175,34 +124,31 @@ function moveCategory(cat: Category, direction: 'up' | 'down', siblings: Categor
                                 </Button>
                             </div>
 
-                            <div v-if="editingId === cat.id" class="flex min-w-0 flex-1 items-center gap-2">
-                                <Input v-model="editingName" class="h-8" @keyup.enter="saveName(cat)" @keyup.escape="cancelEdit" />
-                                <Button size="sm" type="button" @click="saveName(cat)">{{ t('actions.save') }}</Button>
-                                <Button size="sm" variant="ghost" type="button" @click="cancelEdit">{{ t('actions.cancel') }}</Button>
-                            </div>
-                            <button
-                                v-else
-                                type="button"
-                                class="truncate text-left font-medium hover:underline"
-                                @click="startEdit(cat)"
-                            >
-                                {{ cat.name }}
-                                <span v-if="cat.is_system" class="ml-1 text-xs font-normal text-muted-foreground">
+                            <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
+                                <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
+                                <span v-if="cat.is_system" class="shrink-0 text-xs font-normal text-muted-foreground">
                                     ({{ t('categories.index.system') }})
                                 </span>
-                            </button>
+                            </Link>
                         </div>
 
-                        <Button
-                            v-if="!cat.is_system"
-                            variant="ghost"
-                            size="icon"
-                            type="button"
-                            :aria-label="t('categories.index.delete')"
-                            @click="deleteCategory(cat)"
-                        >
-                            <Trash2 class="h-4 w-4 text-muted-foreground" />
-                        </Button>
+                        <div class="flex shrink-0 items-center gap-1">
+                            <Button variant="ghost" size="icon" as-child>
+                                <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
+                                    <Pencil class="h-4 w-4 text-muted-foreground" />
+                                </Link>
+                            </Button>
+                            <Button
+                                v-if="!cat.is_system"
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                :aria-label="t('categories.index.delete')"
+                                @click="deleteCategory(cat)"
+                            >
+                                <Trash2 class="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                        </div>
                     </li>
                 </ul>
             </section>

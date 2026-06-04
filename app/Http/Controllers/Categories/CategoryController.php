@@ -10,6 +10,7 @@ use App\Actions\Categories\SaveAnnualEstimate;
 use App\Actions\Categories\SaveMonthlyEstimate;
 use App\Actions\Categories\StoreCategory;
 use App\Actions\Categories\UpdateCategory;
+use App\Data\Categories\CategoryFormOptions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Categories\SaveAnnualEstimateRequest;
 use App\Http\Requests\Categories\SaveMonthlyEstimateRequest;
@@ -38,13 +39,27 @@ final class CategoryController extends Controller
         ]);
     }
 
+    public function create(CategoryFormOptions $options): Response
+    {
+        return Inertia::render('categories/Create', $options->toArray());
+    }
+
     public function store(StoreCategoryRequest $request, StoreCategory $storeCategory): RedirectResponse
     {
         $storeCategory->handle($request->user(), $request->validated());
 
-        return back()->with('toast', [
+        return to_route('categories.index')->with('toast', [
             'type' => 'success',
             'message_key' => 'categories.toast.created',
+        ]);
+    }
+
+    public function edit(Category $category, CategoryFormOptions $options): Response
+    {
+        return Inertia::render('categories/Edit', [
+            'category' => CategoryResource::make($category)->resolve(),
+            'has_transactions' => $category->transactions()->exists(),
+            ...$options->toArray(),
         ]);
     }
 
@@ -55,7 +70,14 @@ final class CategoryController extends Controller
     ): RedirectResponse {
         $updateCategory->handle($category, $request->validated());
 
-        return back()->with('toast', [
+        if ($request->has('sort_order') && ! $request->has('name') && ! $request->has('icon') && ! $request->has('color')) {
+            return back()->with('toast', [
+                'type' => 'success',
+                'message_key' => 'categories.toast.updated',
+            ]);
+        }
+
+        return to_route('categories.index')->with('toast', [
             'type' => 'success',
             'message_key' => 'categories.toast.updated',
         ]);

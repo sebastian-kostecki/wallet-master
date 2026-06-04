@@ -499,6 +499,21 @@
         }
     },
     "categories": {
+        "create": {
+            "title": "Nowa kategoria"
+        },
+        "edit": {
+            "title": "Edycja kategorii"
+        },
+        "fields": {
+            "color": "Kolor",
+            "icon": "Ikona",
+            "preview": "Podgląd",
+            "previewHint": "Wybierz kolor, aby zobaczyć podgląd"
+        },
+        "validation": {
+            "colorRequired": "Wybierz kolor kategorii."
+        },
         "index": {
             "title": "Kategorie",
             "add": "Dodaj kategorię",

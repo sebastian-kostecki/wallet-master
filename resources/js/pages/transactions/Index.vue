@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import ImportDialog from '@/components/import/ImportDialog.vue';
 import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
 import PaginationBar from '@/components/pagination/PaginationBar.vue';
@@ -57,6 +58,8 @@ type Category = {
     id: number;
     name: string;
     type: string;
+    icon: string;
+    color: string;
 };
 
 type TransactionCategory = {
@@ -64,6 +67,8 @@ type TransactionCategory = {
     name: string;
     type: string;
     type_label_key: string;
+    icon: string;
+    color: string;
 };
 
 type Transaction = {
@@ -777,7 +782,14 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <p class="truncate text-sm">{{ tx.category?.name ?? '—' }}</p>
+                                        <CategoryBadge
+                                            v-if="tx.category"
+                                            :name="tx.category.name"
+                                            :icon="tx.category.icon"
+                                            :color="tx.category.color"
+                                            size="md"
+                                        />
+                                        <span v-else class="text-sm text-muted-foreground">—</span>
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4 tabular-nums">
                                         <span
@@ -921,9 +933,14 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                                 {{ t('transactions.index.readOnly.badge') }}
                                             </span>
                                         </p>
-                                        <p v-if="tx.category" class="mt-1 text-xs text-muted-foreground">
-                                            {{ t('transactions.index.table.category') }}: {{ tx.category.name }}
-                                        </p>
+                                        <div v-if="tx.category" class="mt-1">
+                                            <CategoryBadge
+                                                :name="tx.category.name"
+                                                :icon="tx.category.icon"
+                                                :color="tx.category.color"
+                                                size="sm"
+                                            />
+                                        </div>
 
                                         <TooltipProvider v-if="!hasRawStatementDescription(tx) && tx.subject" :delay-duration="0">
                                             <Tooltip v-if="truncateText(tx.subject, 70).isTruncated">

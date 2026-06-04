@@ -22,10 +22,58 @@ test('user can create a category', function () {
     $response = $this->actingAs($user)->post('/categories', [
         'name' => 'Hobby',
         'type' => CategoryType::Expense->value,
+        'icon' => 'tag',
+        'color' => '#6366f1',
     ]);
 
     $response->assertSessionHasNoErrors();
     expect(Category::where('user_id', $user->id)->where('name', 'Hobby')->exists())->toBeTrue();
+});
+
+test('cannot create category with invalid color', function () {
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $this->actingAs($user)->post('/categories', [
+        'name' => 'Bad',
+        'type' => 'expense',
+        'icon' => 'tag',
+        'color' => '#000001',
+    ])->assertSessionHasErrors('color');
+});
+
+test('category resource includes icon and color on index', function () {
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $this->actingAs($user)->get('/categories')->assertOk()->assertInertia(fn ($page) => $page
+        ->has('categories', 26)
+        ->where('categories.0.icon', fn ($v) => is_string($v) && $v !== '')
+        ->where('categories.0.color', fn ($v) => is_string($v) && str_starts_with($v, '#'))
+    );
+});
+
+test('user can view category create page', function () {
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $this->actingAs($user)->get(route('categories.create'))->assertOk()->assertInertia(fn ($page) => $page
+        ->component('categories/Create')
+        ->has('icons')
+        ->has('colors')
+    );
+});
+
+test('user can view category edit page', function () {
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+    $category = Category::where('user_id', $user->id)->first();
+
+    $this->actingAs($user)->get(route('categories.edit', $category))->assertOk()->assertInertia(fn ($page) => $page
+        ->component('categories/Edit')
+        ->has('category')
+        ->where('category.id', $category->id)
+    );
 });
 
 test('cannot delete category with transactions', function () {
@@ -69,6 +117,8 @@ test('categories index only lists own categories', function () {
     $this->actingAs($userA)->post('/categories', [
         'name' => 'Only A',
         'type' => CategoryType::Expense->value,
+        'icon' => 'tag',
+        'color' => '#6366f1',
     ])->assertSessionHasNoErrors();
 
     $response = $this->actingAs($userB)->get('/categories');

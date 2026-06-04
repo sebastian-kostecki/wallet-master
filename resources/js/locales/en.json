@@ -494,6 +494,21 @@
         }
     },
     "categories": {
+        "create": {
+            "title": "New category"
+        },
+        "edit": {
+            "title": "Edit category"
+        },
+        "fields": {
+            "color": "Color",
+            "icon": "Icon",
+            "preview": "Preview",
+            "previewHint": "Pick a color to see the preview"
+        },
+        "validation": {
+            "colorRequired": "Select a category color."
+        },
         "index": {
             "title": "Categories",
             "add": "Add category",

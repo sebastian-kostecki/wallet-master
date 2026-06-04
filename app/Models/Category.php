@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $user_id
  * @property string $name
+ * @property string $icon
+ * @property string $color
  * @property CategoryType $type
  * @property int $sort_order
  * @property bool $is_system
@@ -31,6 +33,8 @@ final class Category extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'icon',
+        'color',
         'type',
         'sort_order',
         'is_system',
