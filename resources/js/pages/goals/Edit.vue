@@ -2,6 +2,7 @@
 import CategoryColorPicker from '@/components/categories/CategoryColorPicker.vue';
 import CategoryIconPicker from '@/components/categories/CategoryIconPicker.vue';
 import FormField from '@/components/forms/FormField.vue';
+import SegmentedControl, { type SegmentedControlOption } from '@/components/forms/SegmentedControl.vue';
 import GoalBadge from '@/components/goals/GoalBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -75,6 +76,11 @@ const hasTarget = computed(() => {
 
 const previewName = computed(() => form.name.trim() || props.goal.name);
 
+const planningModeOptions = computed<SegmentedControlOption<'monthly' | 'by_date'>[]>(() => [
+    { value: 'monthly', label: t('goals.planning.monthly') },
+    { value: 'by_date', label: t('goals.planning.by_date') },
+]);
+
 function submit(): void {
     if (!hasTarget.value) {
         form.target_amount = '';
@@ -143,29 +149,15 @@ function submit(): void {
                     </FormField>
 
                     <div v-if="hasTarget" class="grid gap-4 rounded-lg border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                        <fieldset class="grid gap-3">
-                            <legend class="text-sm font-medium">{{ t('goals.fields.planningMode') }}</legend>
-                            <Label for="planning-monthly" class="flex items-center gap-2 font-normal">
-                                <input
-                                    id="planning-monthly"
-                                    v-model="form.planning_mode"
-                                    type="radio"
-                                    value="monthly"
-                                    class="h-4 w-4 border-input text-primary focus:ring-ring"
-                                />
-                                {{ t('goals.planning.monthly') }}
-                            </Label>
-                            <Label for="planning-by-date" class="flex items-center gap-2 font-normal">
-                                <input
-                                    id="planning-by-date"
-                                    v-model="form.planning_mode"
-                                    type="radio"
-                                    value="by_date"
-                                    class="h-4 w-4 border-input text-primary focus:ring-ring"
-                                />
-                                {{ t('goals.planning.by_date') }}
-                            </Label>
-                        </fieldset>
+                        <FormField for-id="planning_mode" :label="t('goals.fields.planningMode')">
+                            <SegmentedControl
+                                id="planning_mode"
+                                :model-value="form.planning_mode"
+                                :options="planningModeOptions"
+                                :aria-label="t('goals.fields.planningMode')"
+                                @update:model-value="(value) => (form.planning_mode = value as 'monthly' | 'by_date')"
+                            />
+                        </FormField>
 
                         <FormField
                             v-if="form.planning_mode === 'monthly'"
