@@ -13,7 +13,10 @@ use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
 use App\Models\Goal;
 use App\Models\User;
+use App\Support\Budgets\BudgetCurrency;
 use App\Support\Budgets\BudgetPeriod;
+use App\Support\Budgets\BudgetProgress;
+use App\Support\Budgets\BudgetSummary;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Budgets\CategoryPlanAmount;
 use App\Support\Goals\GoalBalance;
@@ -42,6 +45,9 @@ final class ListMonthlyBudget
         'monthly_sum' => '0.00',
         'annual_sum' => '0.00',
     ];
+
+    /** @var array<string, mixed> */
+    private array $summary = [];
 
     public function handle(MonthlyBudgetRequest $request): void
     {
@@ -97,9 +103,6 @@ final class ListMonthlyBudget
                 ? TransactionDedupe::amountToDecimalString((string) $actual->expense)
                 : '0.00';
             $actualPrimary = $category->type === CategoryType::Income ? $actualIncome : $actualExpense;
-            $difference = $plan !== null
-                ? bcsub($actualPrimary, $plan, 2)
-                : null;
 
             if ($plan !== null) {
                 $monthlyPlansSum = bcadd($monthlyPlansSum, $plan, 2);
@@ -121,10 +124,11 @@ final class ListMonthlyBudget
                 'actual_income' => $actualIncome,
                 'actual_expense' => $actualExpense,
                 'actual' => $actualPrimary,
-                'difference' => $difference,
+                'progress_percent' => BudgetProgress::percent($plan, $actualPrimary),
             ];
         }
 
+        $this->summary = BudgetSummary::fromRows($this->rows, planKey: 'monthly_plan');
         $this->goalRows = $this->buildGoalRows($user, $period);
         $this->allocationHint = [
             'monthly_sum' => $monthlyPlansSum,
@@ -211,5 +215,21 @@ final class ListMonthlyBudget
     public function getAllocationHint(): array
     {
         return $this->allocationHint;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getSummary(): array
+    {
+        return $this->summary;
+    }
+
+    /**
+     * @return array{code: string, symbol: string, precision: int}
+     */
+    public function getCurrency(): array
+    {
+        return BudgetCurrency::pln();
     }
 }

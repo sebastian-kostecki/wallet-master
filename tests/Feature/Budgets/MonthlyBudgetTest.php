@@ -186,3 +186,44 @@ test('monthly budget goal row tracks save and release on savings account', funct
         ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['currency']['code'] === 'PLN')
     );
 });
+
+test('monthly budget exposes summary currency and progress without difference', function () {
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $incomeCategory = Category::query()
+        ->where('user_id', $user->id)
+        ->where('type', 'income')
+        ->ordered()
+        ->firstOrFail();
+
+    $expenseCategory = Category::query()
+        ->where('user_id', $user->id)
+        ->where('type', 'expense')
+        ->ordered()
+        ->firstOrFail();
+
+    CategoryAnnualEstimate::query()->create([
+        'category_id' => $incomeCategory->id,
+        'year' => 2026,
+        'amount' => 6000,
+    ]);
+
+    CategoryAnnualEstimate::query()->create([
+        'category_id' => $expenseCategory->id,
+        'year' => 2026,
+        'amount' => 3600,
+    ]);
+
+    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->has('summary')
+        ->where('summary.plan.income', '500.00')
+        ->where('summary.plan.expense', '300.00')
+        ->where('currency.code', 'PLN')
+        ->where('rows', fn ($rows) => ! array_key_exists('difference', collect($rows)->firstWhere('category_id', $expenseCategory->id)))
+        ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $expenseCategory->id)['progress_percent'] === 0)
+    );
+});

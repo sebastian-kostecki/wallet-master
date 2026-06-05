@@ -30,6 +30,8 @@ final class BudgetController extends Controller
             'rows' => $listMonthlyBudget->getRows(),
             'goal_rows' => $listMonthlyBudget->getGoalRows(),
             'allocation_hint' => $listMonthlyBudget->getAllocationHint(),
+            'summary' => $listMonthlyBudget->getSummary(),
+            'currency' => $listMonthlyBudget->getCurrency(),
         ]);
     }
 
@@ -44,6 +46,8 @@ final class BudgetController extends Controller
         return Inertia::render('budget/Yearly', [
             'year' => $listYearlyBudget->getYear(),
             'rows' => $listYearlyBudget->getRows(),
+            'summary' => $listYearlyBudget->getSummary(),
+            'currency' => $listYearlyBudget->getCurrency(),
         ]);
     }
 }
