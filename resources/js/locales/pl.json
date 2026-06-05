@@ -152,6 +152,12 @@
             "submit": "Zresetuj hasło"
         }
     },
+    "brand": {
+        "name": "Ogarniam Portfel",
+        "promise": "Odzyskaj kontrolę nad domowym budżetem",
+        "shortPromise": "Budżet pod kontrolą",
+        "description": "Konta, transakcje, importy, budżet i cele w jednym uporządkowanym miejscu."
+    },
     "advancedSection": {
         "toggle": "Opcje zaawansowane",
         "hintDefault": "Dodatkowe ustawienia — zwykle nie są potrzebne."

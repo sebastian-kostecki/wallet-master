@@ -152,6 +152,12 @@
             "submit": "Reset password"
         }
     },
+    "brand": {
+        "name": "Ogarniam Portfel",
+        "promise": "Take back control of your household budget",
+        "shortPromise": "Budget under control",
+        "description": "Accounts, transactions, imports, budgets, and goals in one organized place."
+    },
     "advancedSection": {
         "toggle": "Advanced options",
         "hintDefault": "Extra settings — rarely needed."
