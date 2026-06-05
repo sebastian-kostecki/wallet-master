@@ -610,7 +610,7 @@
                 "expense": "Wydatek",
                 "income": "Przychód"
             },
-            "annualEstimate": "Szacunek roczny",
+            "annualEstimate": "Plan roczny",
             "annualEstimatePlaceholder": "np. 12000",
             "system": "systemowa",
             "dragHandle": "Przeciągnij, aby zmienić kolejność",
@@ -631,7 +631,7 @@
             "created": "Kategoria została dodana.",
             "updated": "Kategoria została zaktualizowana.",
             "deleted": "Kategoria została usunięta.",
-            "estimate_saved": "Szacunek został zapisany."
+            "estimate_saved": "Plan został zapisany."
         }
     },
     "goals": {
@@ -701,7 +701,7 @@
         "nav": "Budżet",
         "monthly": {
             "title": "Budżet — miesięczny",
-            "plan": "Szacunek",
+            "plan": "Plan",
             "actual": "Wykonanie",
             "difference": "Różnica",
             "goals_section": "Cele oszczędnościowe",
@@ -715,7 +715,7 @@
         },
         "yearly": {
             "title": "Budżet — roczny",
-            "plan": "Szacunek roczny",
+            "plan": "Plan roczny",
             "actual": "Wykonanie",
             "difference": "Różnica",
             "planPlaceholder": "np. 12000",
@@ -742,7 +742,7 @@
             "forecast": "Prognoza"
         },
         "estimate": {
-            "edit": "Edytuj szacunek — {name}",
+            "edit": "Edytuj plan — {name}",
             "save": "Zapisz",
             "cancel": "Anuluj"
         }

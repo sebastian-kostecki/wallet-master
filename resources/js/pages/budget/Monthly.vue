@@ -49,7 +49,6 @@ const props = defineProps<{
     month: number;
     rows: BudgetRow[];
     goal_rows: GoalRow[];
-    allocation_hint: { monthly_sum: string; annual_sum: string };
     summary: BudgetSummary;
     currency: CurrencyDisplay;
 }>();
@@ -115,7 +114,7 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('budget.monthly.title')" />
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="budget-page flex flex-col gap-6 p-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex gap-2">
                     <Button variant="outline" as-child>
@@ -133,10 +132,6 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
             </div>
 
             <BudgetSummaryCard :summary="summary" :currency="currency" variant="monthly" />
-
-            <p class="text-sm text-muted-foreground">
-                {{ t('budget.monthly.allocation_hint', { monthly: formatGoalMoney(allocation_hint.monthly_sum, currency), annual: formatGoalMoney(allocation_hint.annual_sum, currency) }) }}
-            </p>
 
             <BudgetCategorySection
                 :title="t('budget.sections.income')"
@@ -168,7 +163,10 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
                 <h2 class="mb-3 text-lg font-semibold">{{ t('budget.monthly.goals_section') }}</h2>
                 <p v-if="goal_rows.length === 0" class="text-sm text-muted-foreground">{{ t('goals.index.empty') }}</p>
                 <div v-else class="overflow-x-auto">
-                    <table class="w-full text-sm">
+                    <table class="budget-table text-sm">
+                        <colgroup>
+                            <col class="budget-col-label" />
+                        </colgroup>
                         <thead>
                             <tr class="border-b text-left text-muted-foreground">
                                 <th class="py-2 pr-4">{{ t('goals.index.fields.name') }}</th>
@@ -213,3 +211,13 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.budget-page {
+    --budget-col-label: 11rem;
+    --budget-col-plan: 9rem;
+    --budget-col-amount: 8.5rem;
+    --budget-col-forecast: 8.5rem;
+    --budget-col-progress: 4.5rem;
+}
+</style>

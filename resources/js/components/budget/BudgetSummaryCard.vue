@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BudgetProgressCell from '@/components/budget/BudgetProgressCell.vue';
+import BudgetTableColgroup from '@/components/budget/BudgetTableColgroup.vue';
 import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { useI18n } from 'vue-i18n';
 
@@ -31,40 +32,38 @@ const { t } = useI18n();
 <template>
     <section class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="budget-table text-sm">
+                <BudgetTableColgroup layout="summary" :period="variant" />
                 <thead>
                     <tr class="border-b text-left text-muted-foreground">
                         <th class="py-2 pr-4" />
                         <th class="py-2 pr-4">{{ t('budget.summary.plan') }}</th>
                         <th class="py-2 pr-4">{{ t('budget.summary.execution') }}</th>
-                        <th v-if="variant === 'yearly'" class="py-2">{{ t('budget.summary.forecast') }}</th>
+                        <th v-if="variant === 'yearly'" class="py-2 pr-4">{{ t('budget.summary.forecast') }}</th>
+                        <th class="py-2">{{ t('budget.columns.progress') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr class="border-b border-sidebar-border/40">
                         <th class="py-2 pr-4 text-left font-medium text-foreground">{{ t('budget.summary.income') }}</th>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.plan.income, currency) }}</td>
-                        <td class="py-2 pr-4">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="tabular-nums">{{ formatMoney(summary.execution.income, currency) }}</span>
-                                <BudgetProgressCell :percent="summary.progress.income_percent" category-type="income" />
-                            </div>
-                        </td>
-                        <td v-if="variant === 'yearly' && summary.forecast" class="py-2 tabular-nums">
+                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.execution.income, currency) }}</td>
+                        <td v-if="variant === 'yearly' && summary.forecast" class="py-2 pr-4 tabular-nums">
                             {{ formatMoney(summary.forecast.income, currency) }}
+                        </td>
+                        <td class="py-2">
+                            <BudgetProgressCell :percent="summary.progress.income_percent" category-type="income" />
                         </td>
                     </tr>
                     <tr class="border-b border-sidebar-border/40">
                         <th class="py-2 pr-4 text-left font-medium text-foreground">{{ t('budget.summary.expense') }}</th>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.plan.expense, currency) }}</td>
-                        <td class="py-2 pr-4">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="tabular-nums">{{ formatMoney(summary.execution.expense, currency) }}</span>
-                                <BudgetProgressCell :percent="summary.progress.expense_percent" category-type="expense" />
-                            </div>
-                        </td>
-                        <td v-if="variant === 'yearly' && summary.forecast" class="py-2 tabular-nums">
+                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.execution.expense, currency) }}</td>
+                        <td v-if="variant === 'yearly' && summary.forecast" class="py-2 pr-4 tabular-nums">
                             {{ formatMoney(summary.forecast.expense, currency) }}
+                        </td>
+                        <td class="py-2">
+                            <BudgetProgressCell :percent="summary.progress.expense_percent" category-type="expense" />
                         </td>
                     </tr>
                     <tr class="border-b border-sidebar-border/40">
@@ -74,6 +73,7 @@ const { t } = useI18n();
                         <td v-if="variant === 'yearly' && summary.forecast" class="py-2 tabular-nums">
                             {{ formatMoney(summary.forecast.balance, currency) }}
                         </td>
+                        <td class="py-2" />
                     </tr>
                 </tbody>
             </table>

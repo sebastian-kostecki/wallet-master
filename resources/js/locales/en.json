@@ -605,7 +605,7 @@
                 "expense": "Expense",
                 "income": "Income"
             },
-            "annualEstimate": "Annual estimate",
+            "annualEstimate": "Annual plan",
             "annualEstimatePlaceholder": "e.g. 12000",
             "system": "system",
             "dragHandle": "Drag to reorder",
@@ -626,7 +626,7 @@
             "created": "Category added.",
             "updated": "Category updated.",
             "deleted": "Category deleted.",
-            "estimate_saved": "Estimate saved."
+            "estimate_saved": "Plan saved."
         }
     },
     "goals": {
@@ -696,7 +696,7 @@
         "nav": "Budget",
         "monthly": {
             "title": "Budget — monthly",
-            "plan": "Estimate",
+            "plan": "Plan",
             "actual": "Actual",
             "difference": "Difference",
             "goals_section": "Savings goals",
@@ -710,7 +710,7 @@
         },
         "yearly": {
             "title": "Budget — yearly",
-            "plan": "Annual estimate",
+            "plan": "Annual plan",
             "actual": "Actual",
             "difference": "Difference",
             "planPlaceholder": "e.g. 12000",
@@ -737,7 +737,7 @@
             "forecast": "Forecast"
         },
         "estimate": {
-            "edit": "Edit estimate — {name}",
+            "edit": "Edit plan — {name}",
             "save": "Save",
             "cancel": "Cancel"
         }

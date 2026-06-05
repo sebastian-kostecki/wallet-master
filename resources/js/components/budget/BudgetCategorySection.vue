@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import BudgetProgressCell from '@/components/budget/BudgetProgressCell.vue';
+import BudgetTableColgroup from '@/components/budget/BudgetTableColgroup.vue';
 import EditableEstimateCell from '@/components/budget/EditableEstimateCell.vue';
 import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { useI18n } from 'vue-i18n';
@@ -45,7 +46,8 @@ function planForRow(row: BudgetRow): string | null {
     <section class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
         <h2 class="mb-3 text-lg font-semibold">{{ title }}</h2>
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="budget-table text-sm">
+                <BudgetTableColgroup layout="category" :period="variant" />
                 <thead>
                     <tr class="border-b text-left text-muted-foreground">
                         <th class="py-2 pr-4">{{ t('categories.index.fields.name') }}</th>

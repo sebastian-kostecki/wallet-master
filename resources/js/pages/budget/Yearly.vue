@@ -81,7 +81,7 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('budget.yearly.title')" />
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="budget-page flex flex-col gap-6 p-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex gap-2">
                     <Button variant="ghost" as-child>
@@ -132,3 +132,13 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.budget-page {
+    --budget-col-label: 11rem;
+    --budget-col-plan: 9rem;
+    --budget-col-amount: 8.5rem;
+    --budget-col-forecast: 8.5rem;
+    --budget-col-progress: 4.5rem;
+}
+</style>
