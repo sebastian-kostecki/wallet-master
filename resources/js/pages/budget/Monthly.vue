@@ -196,15 +196,6 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
                     </table>
                 </div>
             </section>
-
-            <div class="flex flex-wrap gap-2">
-                <Button variant="secondary" as-child>
-                    <Link :href="route('categories.index')">{{ t('categories.index.title') }}</Link>
-                </Button>
-                <Button variant="secondary" as-child>
-                    <Link :href="route('goals.index')">{{ t('budget.monthly.manage_goals') }}</Link>
-                </Button>
-            </div>
         </div>
     </AppLayout>
 </template>

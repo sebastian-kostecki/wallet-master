@@ -45,6 +45,16 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
 
+const monthlyViewMonth = computed(() => {
+    const now = new Date();
+
+    if (props.year === now.getFullYear()) {
+        return now.getMonth() + 1;
+    }
+
+    return 1;
+});
+
 function startEdit(categoryId: number) {
     editingCategoryId.value = categoryId;
 }
@@ -85,7 +95,7 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex gap-2">
                     <Button variant="ghost" as-child>
-                        <Link :href="route('budget.monthly', { year, month: 1 })">{{ t('budget.view.monthly') }}</Link>
+                        <Link :href="route('budget.monthly', { year, month: monthlyViewMonth })">{{ t('budget.view.monthly') }}</Link>
                     </Button>
                     <Button variant="outline" as-child>
                         <Link :href="route('budget.yearly', { year })">{{ t('budget.view.yearly') }}</Link>
@@ -126,9 +136,6 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
                 @save="saveAnnualEstimate"
             />
 
-            <Button variant="secondary" as-child>
-                <Link :href="route('categories.index')">{{ t('budget.yearly.manage_categories') }}</Link>
-            </Button>
         </div>
     </AppLayout>
 </template>
