@@ -205,6 +205,36 @@
             }
         }
     },
+    "dashboard": {
+        "headTitle": "Dashboard",
+        "title": "Dzień dobry w Ogarniam Portfel",
+        "description": "Zacznij od kont, importu historii albo ręcznego dodania transakcji. Ten ekran będzie rosnąć razem z Twoimi danymi.",
+        "quickActions": {
+            "accounts": {
+                "title": "Dodaj konto",
+                "description": "Ustaw konto i saldo początkowe.",
+                "cta": "Przejdź do kont"
+            },
+            "transactions": {
+                "title": "Dodaj transakcję",
+                "description": "Zapisz przychód, wydatek lub transfer.",
+                "cta": "Przejdź do transakcji"
+            },
+            "goals": {
+                "title": "Zaplanuj cel",
+                "description": "Nadaj kierunek odkładanym środkom.",
+                "cta": "Przejdź do celów"
+            }
+        },
+        "preview": {
+            "title": "Podgląd porządku w finansach",
+            "items": {
+                "imports": "Importy porządkują historię",
+                "budget": "Budżet pokazuje plan i wykonanie",
+                "goals": "Cele pokazują postęp oszczędzania"
+            }
+        }
+    },
     "advancedSection": {
         "toggle": "Opcje zaawansowane",
         "hintDefault": "Dodatkowe ustawienia — zwykle nie są potrzebne."
