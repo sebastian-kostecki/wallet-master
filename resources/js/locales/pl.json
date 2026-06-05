@@ -182,6 +182,29 @@
         "shortPromise": "Budżet pod kontrolą",
         "description": "Konta, transakcje, importy, budżet i cele w jednym uporządkowanym miejscu."
     },
+    "welcome": {
+        "headTitle": "Ogarniam Portfel",
+        "eyebrow": "Budżet domowy bez chaosu",
+        "title": "Odzyskaj kontrolę nad domowym budżetem",
+        "description": "Zbieraj konta, transakcje, importy, budżet i cele w jednym miejscu. Szybciej zobaczysz, dokąd płyną pieniądze i co możesz poprawić.",
+        "primaryCta": "Utwórz konto",
+        "secondaryCta": "Zaloguj się",
+        "dashboardCta": "Przejdź do dashboardu",
+        "features": {
+            "accounts": {
+                "title": "Konta i saldo",
+                "description": "Porządkuj konta i miej bieżący obraz pieniędzy."
+            },
+            "imports": {
+                "title": "Import historii",
+                "description": "Wczytuj wyciągi i szybciej porządkuj transakcje."
+            },
+            "goals": {
+                "title": "Budżet i cele",
+                "description": "Planuj wydatki, kategorie i odkładanie na cele."
+            }
+        }
+    },
     "advancedSection": {
         "toggle": "Opcje zaawansowane",
         "hintDefault": "Dodatkowe ustawienia — zwykle nie są potrzebne."

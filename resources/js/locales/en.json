@@ -182,6 +182,29 @@
         "shortPromise": "Budget under control",
         "description": "Accounts, transactions, imports, budgets, and goals in one organized place."
     },
+    "welcome": {
+        "headTitle": "Ogarniam Portfel",
+        "eyebrow": "Household budget without chaos",
+        "title": "Take back control of your household budget",
+        "description": "Bring accounts, transactions, imports, budgets, and goals into one place. See where money flows and what you can improve faster.",
+        "primaryCta": "Create account",
+        "secondaryCta": "Log in",
+        "dashboardCta": "Go to dashboard",
+        "features": {
+            "accounts": {
+                "title": "Accounts and balance",
+                "description": "Organize accounts and keep a current money overview."
+            },
+            "imports": {
+                "title": "History imports",
+                "description": "Upload statements and organize transactions faster."
+            },
+            "goals": {
+                "title": "Budget and goals",
+                "description": "Plan spending, categories, and savings goals."
+            }
+        }
+    },
     "advancedSection": {
         "toggle": "Advanced options",
         "hintDefault": "Extra settings — rarely needed."
