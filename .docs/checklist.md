@@ -428,3 +428,12 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Frontend: formatowanie kwot z symbolem waluty (lista, create/edit, progress bar, budżet miesięczny — sekcja celów)
 - [x] Testy: `GoalCurrencyTest`, `GoalCurrencyMigrationTest`, unit `GoalBalance` (różne waluty)
 
+**Redesign widoków budżetu (`improvement/budget-ux-redesign`):**
+
+- [x] Backend: `BudgetProgress`, `BudgetForecast`, `BudgetSummary`, `BudgetCurrency`
+- [x] Miesięczny: `summary`, `currency`, `progress_percent`; usunięte `difference`
+- [x] Roczny: `forecast`, rozszerzone `summary` (wiersz prognozy)
+- [x] Frontend: karta podsumowania, przychody → wydatki → cele, edycja szacunku (Zapisz/Anuluj)
+- [x] Komponenty: `components/budget/*` (progress, summary, editable estimate)
+- [x] Testy: feature Monthly/Yearly + unit Support/Budgets (16 testów)
+
