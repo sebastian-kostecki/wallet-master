@@ -48,11 +48,15 @@ const mainNavItems = computed<NavItem[]>(() => [
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
+    <Sidebar collapsible="icon" variant="inset" class="border-sidebar-border/80">
+        <SidebarHeader class="border-b border-sidebar-border/70">
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
+                    <SidebarMenuButton
+                        size="lg"
+                        as-child
+                        class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    >
                         <Link :href="route('dashboard')">
                             <AppLogo />
                         </Link>

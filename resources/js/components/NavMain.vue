@@ -24,7 +24,11 @@ const { t } = useI18n();
         <SidebarGroupLabel>{{ t('nav.platform') }}</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
-                <SidebarMenuButton as-child :is-active="item.href === page.href">
+                <SidebarMenuButton
+                    as-child
+                    :is-active="item.href === page.href"
+                    class="transition-colors data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground"
+                >
                     <Link :href="item.href" :aria-current="item.href === page.href ? 'page' : undefined">
                         <component :is="item.icon" />
                         <span>{{ item.title }}</span>
