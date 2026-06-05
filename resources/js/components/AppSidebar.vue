@@ -7,38 +7,40 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { ArrowLeftRight, LayoutGrid, PieChart, Tags, Target, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import AppLogo from './AppLogo.vue';
 
+const { t } = useI18n();
 const { transactionsIndexHref } = useTransactionsIndexSearch();
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: t('nav.dashboard'),
         href: '/dashboard',
         icon: LayoutGrid,
     },
     {
-        title: 'Konta',
+        title: t('accounts.index.title'),
         href: '/accounts',
         icon: Wallet,
     },
     {
-        title: 'Transakcje',
+        title: t('transactions.index.title'),
         href: transactionsIndexHref.value,
         icon: ArrowLeftRight,
     },
     {
-        title: 'Budżet',
+        title: t('budget.nav'),
         href: route('budget.monthly'),
         icon: PieChart,
     },
     {
-        title: 'Kategorie',
+        title: t('categories.index.title'),
         href: route('categories.index'),
         icon: Tags,
     },
     {
-        title: 'Cele',
+        title: t('goals.index.title'),
         href: route('goals.index'),
         icon: Target,
     },

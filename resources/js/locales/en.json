@@ -642,6 +642,80 @@
             "income": "Income"
         }
     },
+    "nav": {
+        "platform": "Platform",
+        "dashboard": "Dashboard",
+        "settings": "Settings",
+        "logout": "Log out"
+    },
+    "settings": {
+        "title": "Settings",
+        "description": "Manage your profile and account settings",
+        "nav": {
+            "profile": "Profile",
+            "password": "Password",
+            "appearance": "Appearance"
+        },
+        "profile": {
+            "title": "Profile settings",
+            "heading": "Profile information",
+            "description": "Update your name and email address",
+            "fields": {
+                "name": "Name",
+                "email": "Email address"
+            },
+            "placeholders": {
+                "name": "Full name",
+                "email": "Email address"
+            },
+            "verification": {
+                "unverified": "Your email address is unverified.",
+                "resend": "Click here to re-send the verification email.",
+                "sent": "A new verification link has been sent to your email address."
+            },
+            "save": "Save",
+            "saved": "Saved."
+        },
+        "password": {
+            "title": "Password settings",
+            "heading": "Update password",
+            "description": "Ensure your account is using a long, random password to stay secure",
+            "fields": {
+                "current": "Current password",
+                "new": "New password",
+                "confirm": "Confirm password"
+            },
+            "placeholders": {
+                "current": "Current password",
+                "new": "New password",
+                "confirm": "Confirm password"
+            },
+            "save": "Save password",
+            "saved": "Saved"
+        },
+        "appearance": {
+            "title": "Appearance settings",
+            "heading": "Appearance settings",
+            "description": "Update your account's appearance settings",
+            "tabs": {
+                "light": "Light",
+                "dark": "Dark",
+                "system": "System"
+            }
+        },
+        "deleteAccount": {
+            "heading": "Delete account",
+            "description": "Delete your account and all of its resources",
+            "warningTitle": "Warning",
+            "warningDescription": "Please proceed with caution, this cannot be undone.",
+            "action": "Delete account",
+            "dialogTitle": "Are you sure you want to delete your account?",
+            "dialogDescription": "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.",
+            "passwordPlaceholder": "Password",
+            "cancel": "Cancel",
+            "confirm": "Delete account"
+        }
+    },
     "a11y": {
         "skip_to_content": "Skip to main content"
     },

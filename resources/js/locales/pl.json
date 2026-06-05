@@ -647,6 +647,80 @@
             "income": "Przychody"
         }
     },
+    "nav": {
+        "platform": "Platforma",
+        "dashboard": "Panel",
+        "settings": "Ustawienia",
+        "logout": "Wyloguj się"
+    },
+    "settings": {
+        "title": "Ustawienia",
+        "description": "Zarządzaj profilem i ustawieniami konta",
+        "nav": {
+            "profile": "Profil",
+            "password": "Hasło",
+            "appearance": "Wygląd"
+        },
+        "profile": {
+            "title": "Ustawienia profilu",
+            "heading": "Informacje o profilu",
+            "description": "Zaktualizuj imię i adres e-mail",
+            "fields": {
+                "name": "Imię i nazwisko",
+                "email": "Adres e-mail"
+            },
+            "placeholders": {
+                "name": "Imię i nazwisko",
+                "email": "Adres e-mail"
+            },
+            "verification": {
+                "unverified": "Twój adres e-mail nie został zweryfikowany.",
+                "resend": "Kliknij tutaj, aby ponownie wysłać e-mail weryfikacyjny.",
+                "sent": "Nowy link weryfikacyjny został wysłany na Twój adres e-mail."
+            },
+            "save": "Zapisz",
+            "saved": "Zapisano."
+        },
+        "password": {
+            "title": "Ustawienia hasła",
+            "heading": "Zmień hasło",
+            "description": "Używaj długiego, losowego hasła, aby zabezpieczyć konto",
+            "fields": {
+                "current": "Obecne hasło",
+                "new": "Nowe hasło",
+                "confirm": "Potwierdź hasło"
+            },
+            "placeholders": {
+                "current": "Obecne hasło",
+                "new": "Nowe hasło",
+                "confirm": "Potwierdź hasło"
+            },
+            "save": "Zapisz hasło",
+            "saved": "Zapisano"
+        },
+        "appearance": {
+            "title": "Ustawienia wyglądu",
+            "heading": "Ustawienia wyglądu",
+            "description": "Zaktualizuj ustawienia wyglądu konta",
+            "tabs": {
+                "light": "Jasny",
+                "dark": "Ciemny",
+                "system": "Systemowy"
+            }
+        },
+        "deleteAccount": {
+            "heading": "Usuń konto",
+            "description": "Usuń konto wraz ze wszystkimi powiązanymi danymi",
+            "warningTitle": "Uwaga",
+            "warningDescription": "Postępuj ostrożnie — tej operacji nie można cofnąć.",
+            "action": "Usuń konto",
+            "dialogTitle": "Czy na pewno chcesz usunąć konto?",
+            "dialogDescription": "Po usunięciu konta wszystkie powiązane dane zostaną trwale usunięte. Wpisz hasło, aby potwierdzić trwałe usunięcie konta.",
+            "passwordPlaceholder": "Hasło",
+            "cancel": "Anuluj",
+            "confirm": "Usuń konto"
+        }
+    },
     "a11y": {
         "skip_to_content": "Przejdź do treści"
     },
