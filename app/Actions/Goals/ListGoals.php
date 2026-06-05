@@ -23,7 +23,7 @@ final class ListGoals
             default => null,
         };
 
-        $this->goals = $query->get();
+        $this->goals = $query->with('currency')->get();
     }
 
     /**

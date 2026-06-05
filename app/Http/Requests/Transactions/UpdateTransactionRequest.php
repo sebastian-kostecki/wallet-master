@@ -69,6 +69,7 @@ final class UpdateTransactionRequest extends FormRequest
 
         if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
             $this->validateCategoryMatchesAmount($validator);
+            $this->validateOptionalGoalCurrency($validator);
         }
     }
 

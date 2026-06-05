@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatMoney } from '@/lib/formatMoney';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -27,6 +28,11 @@ type Goal = {
     name: string;
     icon: string;
     color: string;
+    currency: {
+        code: string;
+        symbol: string;
+        precision: number;
+    };
     target_amount: string | null;
     planning_mode: 'monthly' | 'by_date' | null;
     monthly_contribution: string | null;
@@ -97,8 +103,35 @@ function submit(): void {
                         <Input id="name" v-model="form.name" required autofocus />
                     </FormField>
 
+                    <FormField for-id="currency" :label="t('goals.fields.currency.label')">
+                        <Input
+                            id="currency"
+                            :model-value="`${goal.currency.code} (${goal.currency.symbol})`"
+                            type="text"
+                            disabled
+                            readonly
+                        />
+                    </FormField>
+
                     <FormField for-id="target_amount" :label="t('goals.fields.targetAmount')" :error="form.errors.target_amount">
-                        <Input id="target_amount" v-model="form.target_amount" type="text" inputmode="decimal" />
+                        <template #default="{ errorId, hasError }">
+                            <div class="relative">
+                                <Input
+                                    id="target_amount"
+                                    v-model="form.target_amount"
+                                    type="text"
+                                    inputmode="decimal"
+                                    class="pr-10"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                />
+                                <span
+                                    class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+                                >
+                                    {{ goal.currency.symbol }}
+                                </span>
+                            </div>
+                        </template>
                     </FormField>
 
                     <FormField :label="t('categories.fields.color')" :error="form.errors.color">
@@ -140,7 +173,24 @@ function submit(): void {
                             :label="t('goals.fields.monthlyContribution')"
                             :error="form.errors.monthly_contribution"
                         >
-                            <Input id="monthly_contribution" v-model="form.monthly_contribution" type="text" inputmode="decimal" />
+                            <template #default="{ errorId, hasError }">
+                                <div class="relative">
+                                    <Input
+                                        id="monthly_contribution"
+                                        v-model="form.monthly_contribution"
+                                        type="text"
+                                        inputmode="decimal"
+                                        class="pr-10"
+                                        :aria-invalid="hasError ? true : undefined"
+                                        :aria-describedby="hasError ? errorId : undefined"
+                                    />
+                                    <span
+                                        class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+                                    >
+                                        {{ goal.currency.symbol }}
+                                    </span>
+                                </div>
+                            </template>
                         </FormField>
 
                         <FormField
@@ -156,7 +206,7 @@ function submit(): void {
                     <div class="grid gap-2 rounded-lg border border-sidebar-border/70 p-4 text-sm dark:border-sidebar-border">
                         <p class="text-muted-foreground">
                             {{ t('goals.edit.recommendedMonthly') }}:
-                            <span class="font-medium text-foreground">{{ goal.recommended_monthly ?? '—' }}</span>
+                            <span class="font-medium text-foreground">{{ formatMoney(goal.recommended_monthly, goal.currency) }}</span>
                         </p>
                         <p class="text-muted-foreground">
                             {{ t('goals.edit.projectedCompletionDate') }}:

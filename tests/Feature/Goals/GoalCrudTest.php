@@ -16,11 +16,13 @@ beforeEach(function () {
 
 test('user can create list update and delete goal without transactions', function () {
     $user = User::factory()->create();
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
 
     $this->actingAs($user)->post(route('goals.store'), [
         'name' => 'Wakacje',
         'icon' => 'target',
         'color' => '#6366f1',
+        'currency_id' => $plnId,
     ])->assertRedirect();
     $goal = Goal::where('user_id', $user->id)->where('name', 'Wakacje')->first();
     expect($goal)->not->toBeNull();
@@ -35,11 +37,13 @@ test('user can create list update and delete goal without transactions', functio
 test('goals index only lists own goals', function () {
     $userA = User::factory()->create();
     $userB = User::factory()->create();
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
 
     $this->actingAs($userA)->post(route('goals.store'), [
         'name' => 'Only A',
         'icon' => 'target',
         'color' => '#6366f1',
+        'currency_id' => $plnId,
     ])->assertSessionHasNoErrors();
 
     $response = $this->actingAs($userB)->get(route('goals.index'));

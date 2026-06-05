@@ -25,6 +25,7 @@ final class StoreGoal
             'icon' => $validated['icon'],
             'color' => $validated['color'],
             'sort_order' => $maxSort + 10,
+            'currency_id' => (int) $validated['currency_id'],
             'target_amount' => $validated['target_amount'] ?? null,
             'planning_mode' => $validated['planning_mode'] ?? null,
             'monthly_contribution' => $validated['monthly_contribution'] ?? null,

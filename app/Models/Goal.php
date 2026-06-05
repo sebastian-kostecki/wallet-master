@@ -21,11 +21,13 @@ use Illuminate\Support\Facades\Schema;
  * @property string $icon
  * @property string $color
  * @property int $sort_order
+ * @property int $currency_id
  * @property string|null $target_amount
  * @property GoalPlanningMode|null $planning_mode
  * @property string|null $monthly_contribution
  * @property Carbon|null $target_date
  * @property bool $is_archived
+ * @property Currency $currency
  */
 final class Goal extends Model
 {
@@ -41,6 +43,7 @@ final class Goal extends Model
         'icon',
         'color',
         'sort_order',
+        'currency_id',
         'target_amount',
         'planning_mode',
         'monthly_contribution',
@@ -58,6 +61,7 @@ final class Goal extends Model
         return [
             'user_id' => 'integer',
             'sort_order' => 'integer',
+            'currency_id' => 'integer',
             'target_amount' => 'decimal:2',
             'planning_mode' => GoalPlanningMode::class,
             'monthly_contribution' => 'decimal:2',
@@ -72,6 +76,14 @@ final class Goal extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<Currency, $this>
+     */
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     /**

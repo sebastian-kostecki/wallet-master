@@ -115,3 +115,72 @@ test('cumulative balance sums savings transfer legs across all months', function
         'balance' => '200.00',
     ]);
 });
+
+test('cumulative balance ignores savings legs in a different currency than the goal', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+
+    Currency::query()->create([
+        'code' => 'EUR',
+        'name' => 'Euro',
+        'symbol' => '€',
+        'precision' => 2,
+    ]);
+    $eurId = (int) Currency::query()->where('code', 'EUR')->value('id');
+
+    $user = User::factory()->create();
+    $goal = Goal::factory()->create(['user_id' => $user->id, 'currency_id' => $plnId]);
+    $savingsPln = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Savings PLN',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+    $savingsEur = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $eurId,
+        'name' => 'Savings EUR',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $savingsPln->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'goal_id' => $goal->id,
+        'date' => '2026-01-15',
+        'booked_at' => '2026-01-15',
+        'amount' => '100.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Save PLN',
+        'normalized_description' => 'save pln',
+        'dedupe_hash' => md5('save-pln', true),
+        'transfer_id' => (string) Str::uuid(),
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $savingsEur->id,
+        'currency_id' => $eurId,
+        'category_id' => null,
+        'goal_id' => $goal->id,
+        'date' => '2026-02-15',
+        'booked_at' => '2026-02-15',
+        'amount' => '999.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Save EUR',
+        'normalized_description' => 'save eur',
+        'dedupe_hash' => md5('save-eur', true),
+        'transfer_id' => (string) Str::uuid(),
+    ]);
+
+    $result = GoalBalance::cumulative($user, $goal);
+
+    expect($result['balance'])->toBe('100.00');
+});

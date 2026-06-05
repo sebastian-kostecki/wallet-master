@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\GoalPlanningMode;
+use App\Models\Currency;
 use App\Models\Goal;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -27,6 +28,8 @@ final class GoalFactory extends Factory
             'icon' => 'target',
             'color' => '#6366f1',
             'sort_order' => 10,
+            'currency_id' => fn () => (int) Currency::query()->where('code', 'PLN')->value('id')
+                ?: throw new \RuntimeException('Seed CurrencySeeder before GoalFactory.'),
             'target_amount' => null,
             'planning_mode' => null,
             'monthly_contribution' => null,

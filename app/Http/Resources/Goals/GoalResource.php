@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Goals;
 
+use App\Http\Resources\Accounts\CurrencyResource;
 use App\Models\Goal;
 use App\Support\Goals\GoalBalance;
 use App\Support\Goals\GoalPlanningProjection;
@@ -35,6 +36,11 @@ final class GoalResource extends JsonResource
             'icon' => $this->icon,
             'color' => $this->color,
             'sort_order' => $this->sort_order,
+            'currency_id' => $this->currency_id,
+            'currency' => $this->whenLoaded(
+                'currency',
+                fn () => CurrencyResource::make($this->currency)->resolve($request),
+            ),
             'target_amount' => $this->target_amount !== null ? (string) $this->target_amount : null,
             'planning_mode' => $this->planning_mode?->value,
             'monthly_contribution' => $this->monthly_contribution !== null ? (string) $this->monthly_contribution : null,

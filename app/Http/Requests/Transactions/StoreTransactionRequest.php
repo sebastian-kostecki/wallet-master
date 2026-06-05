@@ -50,6 +50,7 @@ final class StoreTransactionRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $this->validateCategoryMatchesAmount($validator);
+        $this->validateOptionalGoalCurrency($validator);
     }
 
     /**

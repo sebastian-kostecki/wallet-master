@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { computed } from 'vue';
 
 const props = defineProps<{
     percent: number | null;
     balance: string;
     targetAmount: string | null;
+    currency: CurrencyDisplay;
 }>();
 
 const normalizedPercent = computed(() => {
@@ -29,7 +31,7 @@ const normalizedPercent = computed(() => {
             />
         </div>
         <p class="text-xs text-muted-foreground">
-            {{ balance }} / {{ targetAmount }}
+            {{ formatMoney(balance, currency) }} / {{ formatMoney(targetAmount, currency) }}
         </p>
     </div>
 </template>

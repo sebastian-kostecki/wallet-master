@@ -174,6 +174,49 @@ test('transfer persists same goal_id on both legs with null category', function 
     expect($deposit->category_id)->toBeNull();
 });
 
+test('transfer rejects goal when goal currency does not match savings account currency', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    Currency::query()->create([
+        'code' => 'EUR',
+        'name' => 'Euro',
+        'symbol' => '€',
+        'precision' => 2,
+    ]);
+    $eurId = (int) Currency::query()->where('code', 'EUR')->value('id');
+
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+    $goal = Goal::factory()->create(['user_id' => $user->id, 'currency_id' => $eurId]);
+
+    $checking = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Checking',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 1000,
+        'current_balance' => 1000,
+    ]);
+
+    $savings = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Savings',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this->actingAs($user)->post(route('transfers.store'), [
+        'from_account_id' => $checking->id,
+        'to_account_id' => $savings->id,
+        'date' => '01-03-2026',
+        'amount' => '200',
+        'goal_id' => $goal->id,
+    ])->assertSessionHasErrors('goal_id');
+});
+
 test('transfer create page includes goals list', function () {
     $user = User::factory()->create();
     $goal = Goal::factory()->create(['user_id' => $user->id, 'name' => 'Wakacje']);

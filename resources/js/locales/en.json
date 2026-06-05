@@ -559,7 +559,11 @@
             "targetAmount": "Target amount",
             "monthlyContribution": "Monthly contribution",
             "targetDate": "Target date",
-            "planningMode": "Planning mode"
+            "planningMode": "Planning mode",
+            "currency": {
+                "label": "Currency",
+                "placeholder": "Select currency"
+            }
         },
         "planning": {
             "monthly": "Monthly contribution",
@@ -575,6 +579,16 @@
             "archived": "Archived",
             "all": "All"
         },
+        "archive": {
+            "title": "Archive goal?",
+            "description": "The goal will be hidden from the active list and monthly budget. You can restore it later from the archived filter.",
+            "confirm": "Archive goal"
+        },
+        "unarchive": {
+            "title": "Restore goal?",
+            "description": "The goal will return to the active list and monthly budget.",
+            "confirm": "Restore goal"
+        },
         "index": {
             "title": "Goals",
             "add": "Add goal",
@@ -583,6 +597,8 @@
             "fields": {
                 "name": "Name"
             },
+            "archive": "Archive goal",
+            "unarchive": "Restore goal",
             "delete": "Delete goal",
             "deleteConfirm": "Delete goal “{name}”?"
         },

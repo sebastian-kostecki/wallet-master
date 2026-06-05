@@ -45,6 +45,7 @@ final class StoreGoalRequest extends FormRequest
             ],
             'icon' => ['required', 'string', Rule::in(CategoryIcons::values())],
             'color' => ['required', 'string', Rule::in(CategoryColors::values())],
+            'currency_id' => ['required', 'integer', Rule::exists('currencies', 'id')],
             'target_amount' => ['nullable', 'numeric', 'min:0'],
             'planning_mode' => ['nullable', Rule::enum(GoalPlanningMode::class), 'required_with:target_amount'],
             'monthly_contribution' => ['nullable', 'numeric', 'min:0', 'required_if:planning_mode,monthly', 'prohibited_if:planning_mode,by_date'],
