@@ -62,6 +62,8 @@ final class GoalController extends Controller
 
     public function edit(Goal $goal): Response
     {
+        $goal->load('currency');
+
         return Inertia::render('goals/Edit', [
             'goal' => (new GoalResource($goal))->resolve(request()),
             ...(new GoalFormOptions)->toArray(),

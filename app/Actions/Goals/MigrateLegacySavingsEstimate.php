@@ -6,6 +6,7 @@ namespace App\Actions\Goals;
 
 use App\Enums\GoalPlanningMode;
 use App\Models\CategoryAnnualEstimate;
+use App\Models\Currency;
 use App\Models\Goal;
 use App\Support\Categories\CategoryColors;
 use Illuminate\Support\Collection;
@@ -38,13 +39,15 @@ final class MigrateLegacySavingsEstimate
                 ->first();
 
             $annualAmount = $latestAnnual?->amount !== null ? (string) $latestAnnual->amount : null;
+            $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
 
-            $goal = Goal::query()->create([
+            Goal::query()->create([
                 'user_id' => $userId,
                 'name' => self::DEFAULT_GOAL_NAME,
                 'icon' => 'piggy-bank',
                 'color' => CategoryColors::values()[0],
                 'sort_order' => 10,
+                'currency_id' => $plnId,
                 'target_amount' => $annualAmount,
                 'planning_mode' => $annualAmount !== null ? GoalPlanningMode::Monthly : null,
                 'monthly_contribution' => $annualAmount !== null ? bcdiv($annualAmount, '12', 2) : null,

@@ -141,6 +141,7 @@ final class ListMonthlyBudget
             ->forUser($user->id)
             ->active()
             ->ordered()
+            ->with('currency')
             ->get();
 
         if ($goals->isEmpty()) {
@@ -167,6 +168,11 @@ final class ListMonthlyBudget
                 'balance_cumulative' => $cumulative['balance'],
                 'target_amount' => $targetAmount,
                 'progress_percent' => GoalBalance::progressPercent($goal, $cumulative['balance']),
+                'currency' => [
+                    'code' => $goal->currency->code,
+                    'symbol' => $goal->currency->symbol,
+                    'precision' => $goal->currency->precision,
+                ],
             ];
         }
 

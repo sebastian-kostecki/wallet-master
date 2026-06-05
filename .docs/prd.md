@@ -14,7 +14,7 @@
 - **Saldo:** `current_balance` aktualizowane przy zmianach transakcji; komenda `accounts:recalculate-balance` jako safety net.
 - **Lista transakcji:** filtry, sort i podsumowanie po dacie okresu (`booked_at`; UI kolumny: `COALESCE(booked_at, date)`); sumy wpływów/wydatków **bez** wewnętrznych transferów (`transfer_id` pusty).
 - **Kategorie i szacunki (wave 2):** każda transakcja P&L (`income` / `expense` / `adjustment`) ma `category_id`; transfer wewnętrzny ma `category_id = null`; szacunki roczne (kanoniczne) + opcjonalne nadpisania miesięczne; widok miesięczny (plan vs fakty P&L + sekcja celów) i roczny (plan vs fakty bez transferów) — §3.1a, FR-C1–C7, FR-G*, FR-UX1.
-- **Cele oszczędnościowe (wave 2 UX):** koperta oszczędnościowa (opcjonalna kwota docelowa, tryb planowania); śledzenie przez transfery na kontach `Savings` (flow A) + opcjonalne powiązanie wydatku — §3.1a, FR-G1–G5.
+- **Cele oszczędnościowe (wave 2 UX):** koperta oszczędnościowa z **walutą** (`currency_id`, MVP: tylko PLN w UI); opcjonalna kwota docelowa, tryb planowania; śledzenie przez transfery na kontach `Savings` w tej samej walucie (flow A) + opcjonalne powiązanie wydatku — §3.1a, FR-G1–G5.
 - **Poza zakresem:** §3.2 — nie implementuj bez rozszerzenia tego dokumentu.
 
 ---
@@ -38,7 +38,7 @@
 - **Kategoria:** wpis w katalogu użytkownika (`income` \| `expense`) z kolejnością wyświetlania, ikoną (Lucide) i kolorem (paleta hex); etykieta przepływów **zewnętrznych** P&L — wymagana na `income`, `expense`, `adjustment`; **brak** na transferze wewnętrznym (`category_id = null`).
 - **Szacunek roczny:** planowana kwota na rok kalendarzowy per kategoria (przychód lub wydatek); można przekroczyć — to nie jest twardy limit.
 - **Szacunek miesięczny:** opcjonalne nadpisanie planu na dany miesiąc; może różnić się od `szacunek_roczny ÷ 12`.
-- **Cel (goal):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L** i **bez roku kalendarzowego** (jak katalog kategorii, nie jak wiersz budżetu P&L). Opcjonalna **kwota docelowa** (`target_amount`); przy kwocie — wzajemnie wykluczające się planowanie: **składka miesięczna** (deklaracja użytkownika) **lub** **data docelowa** (termin; system liczy rekomendowaną składkę). Wykonanie: skumulowane saldo z transferów na kontach `Savings` (flow A: odkładanie → wypłata na ROR → wydatek na ROR z opcjonalnym powiązaniem celu). Ręczna archiwizacja ukrywa cel z domyślnych list i sekcji budżetu.
+- **Cel (goal):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L** i **bez roku kalendarzowego** (jak katalog kategorii, nie jak wiersz budżetu P&L). Każdy cel ma **walutę** (`currency_id`) — kwoty docelowe, saldo i planowanie są w tej walucie (MVP: tylko PLN w UI; pole w DB jak przy koncie). Opcjonalna **kwota docelowa** (`target_amount`); przy kwocie — wzajemnie wykluczające się planowanie: **składka miesięczna** (deklaracja użytkownika) **lub** **data docelowa** (termin; system liczy rekomendowaną składkę). Wykonanie: skumulowane saldo z transferów na kontach `Savings` **w walucie celu** (flow A: odkładanie → wypłata na ROR → wydatek na ROR z opcjonalnym powiązaniem celu). Ręczna archiwizacja ukrywa cel z domyślnych list i sekcji budżetu.
 - **Widok budżetu miesięczny:** plan vs wykonanie per kategoria P&L w miesiącu + sekcja **Cele** (plan / odłożono / wypłacono / saldo per cel).
 - **Widok budżetu roczny:** szacunek roczny vs wykonanie per kategoria P&L w roku; bez agregacji transferów wewnętrznych; edycja planów P&L na tym ekranie (FR-UX1).
 
@@ -88,7 +88,7 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 
 - AI do sugerowania kategorii (automatyczna klasyfikacja ML)
 - Mapowanie kategorii z kolumny wyciągu bankowego (np. mBank `Kategoria`) — kategoria z pamięci lub fallback (FR-C7)
-- Wielowalutowość i przeliczenia (MVP: PLN w UI; pole waluty w danych)
+- Wielowalutowość w UI i przeliczenia walut (MVP: tylko PLN w selektorach; `currency_id` na koncie, transakcji i **celu** — bez konwersji i bez wielu walut w UI)
 - Współdzielenie danych między użytkownikami
 - Import inny niż CSV/XLSX (PDF, MT940, OCR)
 - Załączniki, eksport danych
@@ -166,7 +166,7 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 
 ## 5. Model domeny
 
-**Relacje:** User 1—N Accounts, Transactions, Imports, Categories, Goals · Account 1—N Transactions · Category 1—N Transactions · Goal 1—N Transactions (opcjonalnie) · Transfer = 2 Transactions, ten sam `transfer_id` · Category 1—N CategoryAnnualEstimate, CategoryMonthlyEstimate.
+**Relacje:** User 1—N Accounts, Transactions, Imports, Categories, Goals · Account 1—N Transactions · Category 1—N Transactions · Goal 1—N Transactions (opcjonalnie) · Goal N—1 Currency · Transfer = 2 Transactions, ten sam `transfer_id` · Category 1—N CategoryAnnualEstimate, CategoryMonthlyEstimate.
 
 ### Account
 
@@ -230,7 +230,8 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 | `icon` | Ikona Lucide (kebab-case), ta sama whitelist co kategorie |
 | `color` | Kolor hex z palety stałych swatchy |
 | `sort_order` | Kolejność listy |
-| `target_amount` | Kwota docelowa (nullable = koperta bez limitu) |
+| `currency_id` | Waluta celu (MVP: tylko PLN w UI; **niezmienialna** po utworzeniu — jak na koncie) |
+| `target_amount` | Kwota docelowa w walucie celu (nullable = koperta bez limitu) |
 | `planning_mode` | `monthly` \| `by_date` (nullable gdy brak `target_amount`) |
 | `monthly_contribution` | Deklaracja użytkownika; zapisywana tylko przy `planning_mode = monthly` |
 | `target_date` | Termin; zapisywany tylko przy `planning_mode = by_date` |
@@ -719,7 +720,8 @@ Dla wybranego miesiąca i roku kalendarzowego: tabela kategorii P&L (sekcje przy
 
 **Reguły**
 - `adjustment` w wykonaniu kategorii — wg znaku kwoty (zgodnie z FR-T2).
-- Metryki celów **używają** nóg transferu (`transfer_id` ustawione) na kontach `Savings`.
+- Metryki celów **używają** nóg transferu (`transfer_id` ustawione) na kontach `Savings` **w walucie celu**.
+- Kwoty w sekcji celów wyświetlane z symbolem waluty celu (np. `1 500,00 zł`).
 - Kolumna **Plan** celów — tylko do odczytu; źródło: pola celu (FR-G2), nie szacunki per rok.
 - Cele zarchiwizowane domyślnie wykluczone z sekcji.
 - Miękka wskazówka: suma planów P&L vs roczne (bez celów) — jak FR-C4.
@@ -796,10 +798,10 @@ Lista transakcji wyświetla nazwę kategorii (transakcje P&L); transfer wewnętr
 | **Domena** | Goals |
 
 **Zachowanie**
-Użytkownik zarządza kopertami oszczędnościowymi jak katalogiem kategorii: lista z ikoną i kolorem, drag reorder (`sort_order`), osobne ekrany tworzenia/edycji (`/goals/create`, `/goals/{id}/edit`). Pola: nazwa, ikona, kolor; opcjonalna kwota docelowa; przy kwocie — tryb planowania (`monthly` \| `by_date`) z jednym edytowalnym parametrem (składka **lub** data docelowa). Filtry listy: aktywne (domyślnie) / zarchiwizowane / wszystkie. Ręczna archiwizacja (`is_archived`). Usunięcie celu z powiązanymi transakcjami — zablokowane (v1). Cel **osobny od kategorii P&L** — bez `type` income/expense.
+Użytkownik zarządza kopertami oszczędnościowymi jak katalogiem kategorii: lista z ikoną i kolorem, drag reorder (`sort_order`), osobne ekrany tworzenia/edycji (`/goals/create`, `/goals/{id}/edit`). Pola: nazwa, ikona, kolor, **waluta** (`currency_id`; MVP: tylko PLN w UI, domyślnie PLN); opcjonalna kwota docelowa; przy kwocie — tryb planowania (`monthly` \| `by_date`) z jednym edytowalnym parametrem (składka **lub** data docelowa). Filtry listy: aktywne (domyślnie) / zarchiwizowane / wszystkie. Ręczna archiwizacja (`is_archived`). Usunięcie celu z powiązanymi transakcjami — zablokowane (v1). Cel **osobny od kategorii P&L** — bez `type` income/expense. Kwoty na liście i w formularzach wyświetlane **z symbolem waluty celu**.
 
 **Kryteria akceptacji**
-1. Given zalogowany When dodanie celu z nazwą, ikoną i kolorem Then cel na liście `/goals`.
+1. Given zalogowany When dodanie celu z nazwą, ikoną, kolorem i walutą PLN Then cel na liście `/goals` z kwotami sformatowanymi z „zł”.
 2. Given cel z transakcjami z `goal_id` When usunięcie Then błąd walidacji, cel pozostaje.
 3. Given dwa cele When zmiana `sort_order` (reorder) Then kolejność na liście i w budżecie miesięcznym zgodna z `sort_order`.
 4. Given cel When archiwizacja Then ukryty z domyślnej listy i sekcji celów w budżecie miesięcznym.
@@ -808,6 +810,8 @@ Użytkownik zarządza kopertami oszczędnościowymi jak katalogiem kategorii: li
 - Izolacja per `user_id`.
 - Empty state z CTA przy braku celów.
 - **Bez** selektora roku i szacunków rocznych/miesięcznych per rok na `/goals`.
+- `currency_id` ustawiane przy tworzeniu; **nie** edytowalne na update (jak konto).
+- Spec implementacji: `.docs/superpowers/specs/2026-06-05-goals-currency-design.md`.
 
 **Zdarzenia:** `goal_created`, `goal_updated`, `goal_deleted`, `goal_archived`, `goal_unarchived`
 
@@ -833,7 +837,7 @@ Opcjonalna **kwota docelowa** (`target_amount`); `null` = koperta bez limitu (ty
 
 **Reguły**
 - Kwoty ≥ 0; skala decimal jak w reszcie aplikacji.
-- Saldo skumulowane: suma nóg transferu na kontach `Savings` (`saved_total − released_total`), bez filtra roku.
+- Saldo skumulowane: suma nóg transferu na kontach `Savings` **w walucie celu** (`account.currency_id = goal.currency_id`; `saved_total − released_total`), bez filtra roku.
 - Formuły projekcji — spec `2026-06-04-goals-target-model-design.md` (§ Metrics).
 
 **Zdarzenia:** (brak osobnych zdarzeń zapisu planu — pola w `goal_created` / `goal_updated`)
@@ -848,13 +852,15 @@ Opcjonalna **kwota docelowa** (`target_amount`); `null` = koperta bez limitu (ty
 | **Domena** | Transfers |
 
 **Zachowanie**
-Transfer, w którym **co najmniej jedna noga** dotyczy konta `type = Savings`, wymaga `goal_id` należącego do użytkownika na **obu** nogach (ta sama wartość). Transfer ROR↔ROR (bez udziału `Savings`) **nie** może mieć `goal_id`. Obie nogi transferu mają `category_id = null`; śledzenie oszczędności odbywa się wyłącznie przez `goal_id`.
+Transfer, w którym **co najmniej jedna noga** dotyczy konta `type = Savings`, wymaga `goal_id` należącego do użytkownika na **obu** nogach (ta sama wartość). Waluta celu musi być **zgodna** z walutą konta `Savings` (i co za tym idzie obu kont transferu). Transfer ROR↔ROR (bez udziału `Savings`) **nie** może mieć `goal_id`. Obie nogi transferu mają `category_id = null`; śledzenie oszczędności odbywa się wyłącznie przez `goal_id`.
 
 **Kryteria akceptacji**
 1. Given transfer ROR→Savings When brak `goal_id` Then 422.
 2. Given transfer Savings→ROR When zapis Then obie nogi mają ten sam `goal_id`.
-3. Given transfer ROR→ROR When `goal_id` ustawione Then 422.
+3. Given transfer ROR↔ROR When `goal_id` ustawione Then 422.
 4. Given `goal_id` innego użytkownika When zapis Then 422.
+5. Given cel w PLN i transfer na konto Savings w PLN When `goal_id` ustawione Then 201.
+6. Given cel w walucie X ≠ waluta konta Savings When zapis transferu Then 422.
 
 **Reguły**
 - Formularz: pole celu widoczne/wymagane tylko gdy źródło lub cel ma `type = Savings`.
@@ -872,12 +878,13 @@ Transfer, w którym **co najmniej jedna noga** dotyczy konta `type = Savings`, w
 | **Domena** | Transactions |
 
 **Zachowanie**
-Przy tworzeniu/edycji przychodu, wydatku (i opcjonalnie korekty) użytkownik może opcjonalnie wybrać cel z listy swoich celów — np. wydatek na ROR po wypłacie z oszczędności powiązany z kopertą „Wakacje”. Kategoria P&L pozostaje wymagana osobno (np. cel „Wakacje”, kategoria „Rozrywka”).
+Przy tworzeniu/edycji przychodu, wydatku (i opcjonalnie korekty) użytkownik może opcjonalnie wybrać cel z listy swoich celów — np. wydatek na ROR po wypłacie z oszczędności powiązany z kopertą „Wakacje”. Kategoria P&L pozostaje wymagana osobno (np. cel „Wakacje”, kategoria „Rozrywka”). Gdy `goal_id` ustawione — waluta transakcji musi być zgodna z walutą celu.
 
 **Kryteria akceptacji**
 1. Given wydatek na ROR When zapis bez celu Then sukces (`goal_id` null).
 2. Given wydatek When wybór celu użytkownika Then `goal_id` zapisane; widoczne w metryce powiązanych wydatków (FR-C5).
 3. Given cel innego użytkownika When zapis Then 422.
+4. Given cel w PLN When wydatek w innej walucie niż cel Then 422.
 
 **Reguły**
 - `goal_id` opcjonalne; brak wymogu na transferach bez `Savings` (FR-G3).
@@ -1024,7 +1031,7 @@ Auth · Konta + saldo + `adjustment` + rekalkulacja · Transakcje (`date`, `book
 
 Kategorie (FR-C1, FR-C2) · Szacunki roczne i miesięczne P&L (FR-C3, FR-C4) · Widoki budżetu miesięczny i roczny (FR-C5, FR-C6) · Pamięć kategorii przy imporcie (FR-C7) · Opcjonalnie filtr kategorii na liście (FR-C8).
 
-**Rozszerzenie wave 2 UX (cele + IA budżetu):** Cele (FR-G1, FR-G2 — model koperty z kwotą docelową, spec `2026-06-04-goals-target-model-design.md`) · Cel wymagany na transferze z `Savings` (FR-G3) · Sekcja celów w budżecie miesięcznym (FR-G5) · Plany P&L tylko na budżecie, kategorie bez szacunków (FR-UX1) · Opcjonalnie cel na wydatku (FR-G4) · Transfer bez kategorii P&L, usunięcie kategorii „Oszczędności” (spec 2026-06-04).
+**Rozszerzenie wave 2 UX (cele + IA budżetu):** Cele (FR-G1, FR-G2 — model koperty z kwotą docelową, spec `2026-06-04-goals-target-model-design.md`; waluta celu, spec `2026-06-05-goals-currency-design.md`) · Cel wymagany na transferze z `Savings` (FR-G3) · Sekcja celów w budżecie miesięcznym (FR-G5) · Plany P&L tylko na budżecie, kategorie bez szacunków (FR-UX1) · Opcjonalnie cel na wydatku (FR-G4) · Transfer bez kategorii P&L, usunięcie kategorii „Oszczędności” (spec 2026-06-04).
 
 ### Po wave 2 (kierunek, bez zobowiązania)
 

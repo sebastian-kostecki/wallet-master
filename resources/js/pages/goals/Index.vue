@@ -5,6 +5,7 @@ import GoalProgressBar from '@/components/goals/GoalProgressBar.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
+import { formatMoney } from '@/lib/formatMoney';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Archive, ArchiveRestore, GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
@@ -19,6 +20,11 @@ type Goal = {
     icon: string;
     color: string;
     sort_order: number;
+    currency: {
+        code: string;
+        symbol: string;
+        precision: number;
+    };
     target_amount: string | null;
     is_archived: boolean;
     is_completed: boolean;
@@ -152,12 +158,17 @@ function deleteGoal(goal: Goal): void {
 
                             <div class="min-w-0 flex-1 space-y-2">
                                 <GoalBadge :name="goal.name" :icon="goal.icon" :color="goal.color" />
-                                <GoalProgressBar :percent="goal.progress_percent" :balance="goal.balance" :target-amount="goal.target_amount" />
+                                <GoalProgressBar
+                                    :percent="goal.progress_percent"
+                                    :balance="goal.balance"
+                                    :target-amount="goal.target_amount"
+                                    :currency="goal.currency"
+                                />
                             </div>
                         </div>
 
                         <div class="no-drag flex flex-wrap items-center gap-2 lg:justify-end">
-                            <span class="text-sm font-medium tabular-nums">{{ goal.balance }}</span>
+                            <span class="text-sm font-medium tabular-nums">{{ formatMoney(goal.balance, goal.currency) }}</span>
 
                             <span
                                 v-if="goal.is_completed"

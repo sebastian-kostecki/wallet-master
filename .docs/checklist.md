@@ -421,3 +421,10 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Locale: usunąć `annualEstimate`, dodać klucze planowania / statusów
 - [x] Test migracji danych: `GoalTargetModelMigrationTest`
 
+**Waluta celu (`improvement/goals`):**
+
+- [x] Migracja: `goals.currency_id` (backfill PLN); spec `2026-06-05-goals-currency-design.md`
+- [x] Backend: walidacja przy tworzeniu, `GoalResource` + `currency`, filtr salda po walucie, zgodność z kontem na transferze/transakcji
+- [x] Frontend: formatowanie kwot z symbolem waluty (lista, create/edit, progress bar, budżet miesięczny — sekcja celów)
+- [x] Testy: `GoalCurrencyTest`, `GoalCurrencyMigrationTest`, unit `GoalBalance` (różne waluty)
+

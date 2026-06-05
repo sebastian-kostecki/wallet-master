@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CategoryColorPicker from '@/components/categories/CategoryColorPicker.vue';
 import CategoryIconPicker from '@/components/categories/CategoryIconPicker.vue';
+import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
 import GoalBadge from '@/components/goals/GoalBadge.vue';
 import { Button } from '@/components/ui/button';
@@ -21,12 +22,23 @@ type ColorOption = {
     value: string;
 };
 
+type Currency = {
+    id: number;
+    code: string;
+    name: string;
+    symbol: string;
+    precision: number;
+};
+
 const props = defineProps<{
     icons: IconOption[];
     colors: ColorOption[];
+    currencies: Currency[];
 }>();
 
 const { t } = useI18n();
+
+const initialCurrencyId = computed(() => props.currencies[0]?.id ?? null);
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: t('goals.index.title'), href: route('goals.index') },
@@ -39,6 +51,7 @@ const form = useForm({
     name: '',
     icon: 'flag',
     color: null as string | null,
+    currency_id: initialCurrencyId.value as number | null,
     target_amount: '',
     planning_mode: 'monthly' as 'monthly' | 'by_date',
     monthly_contribution: '',
@@ -46,6 +59,15 @@ const form = useForm({
 });
 
 const previewName = computed(() => form.name.trim() || t('categories.fields.preview'));
+
+const selectedCurrency = computed(() => props.currencies.find((currency) => currency.id === form.currency_id) ?? null);
+
+const currencyOptions = computed<DropdownOption<number>[]>(() =>
+    props.currencies.map((currency) => ({
+        value: currency.id,
+        label: `${currency.code} — ${currency.name}`,
+    })),
+);
 
 const hasTarget = computed(() => {
     const normalized = form.target_amount.trim().replace(',', '.');
@@ -98,8 +120,36 @@ function submit(): void {
                         <Input id="name" v-model="form.name" required autofocus />
                     </FormField>
 
+                    <FormField for-id="currency_id" :label="t('goals.fields.currency.label')" :error="form.errors.currency_id">
+                        <DropdownSelect
+                            id="currency_id"
+                            :model-value="form.currency_id"
+                            :options="currencyOptions"
+                            :placeholder="t('goals.fields.currency.placeholder')"
+                            @update:model-value="(value) => (form.currency_id = value)"
+                        />
+                    </FormField>
+
                     <FormField for-id="target_amount" :label="t('goals.fields.targetAmount')" :error="form.errors.target_amount">
-                        <Input id="target_amount" v-model="form.target_amount" type="text" inputmode="decimal" />
+                        <template #default="{ errorId, hasError }">
+                            <div class="relative">
+                                <Input
+                                    id="target_amount"
+                                    v-model="form.target_amount"
+                                    type="text"
+                                    inputmode="decimal"
+                                    class="pr-10"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                />
+                                <span
+                                    v-if="selectedCurrency?.symbol"
+                                    class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+                                >
+                                    {{ selectedCurrency.symbol }}
+                                </span>
+                            </div>
+                        </template>
                     </FormField>
 
                     <FormField :label="t('categories.fields.color')" :error="form.errors.color ?? colorError ?? undefined">
@@ -141,7 +191,25 @@ function submit(): void {
                             :label="t('goals.fields.monthlyContribution')"
                             :error="form.errors.monthly_contribution"
                         >
-                            <Input id="monthly_contribution" v-model="form.monthly_contribution" type="text" inputmode="decimal" />
+                            <template #default="{ errorId, hasError }">
+                                <div class="relative">
+                                    <Input
+                                        id="monthly_contribution"
+                                        v-model="form.monthly_contribution"
+                                        type="text"
+                                        inputmode="decimal"
+                                        class="pr-10"
+                                        :aria-invalid="hasError ? true : undefined"
+                                        :aria-describedby="hasError ? errorId : undefined"
+                                    />
+                                    <span
+                                        v-if="selectedCurrency?.symbol"
+                                        class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+                                    >
+                                        {{ selectedCurrency.symbol }}
+                                    </span>
+                                </div>
+                            </template>
                         </FormField>
 
                         <FormField

@@ -24,7 +24,9 @@ final class GoalTransactionMetrics
             ->where('goal_id', $goal->id)
             ->whereNotNull('transfer_id')
             ->where('amount', '>', 0)
-            ->whereHas('account', fn ($q) => $q->where('type', AccountType::Savings))
+            ->whereHas('account', fn ($q) => $q
+                ->where('type', AccountType::Savings)
+                ->where('currency_id', $goal->currency_id))
             ->sum('amount');
 
         $saved = TransactionDedupe::amountToDecimalString((string) $savedSum);
@@ -35,7 +37,9 @@ final class GoalTransactionMetrics
             ->where('goal_id', $goal->id)
             ->whereNotNull('transfer_id')
             ->where('amount', '<', 0)
-            ->whereHas('account', fn ($q) => $q->where('type', AccountType::Savings))
+            ->whereHas('account', fn ($q) => $q
+                ->where('type', AccountType::Savings)
+                ->where('currency_id', $goal->currency_id))
             ->selectRaw('COALESCE(SUM(ABS(amount)), 0) as total')
             ->value('total');
 

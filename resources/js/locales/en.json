@@ -559,7 +559,11 @@
             "targetAmount": "Target amount",
             "monthlyContribution": "Monthly contribution",
             "targetDate": "Target date",
-            "planningMode": "Planning mode"
+            "planningMode": "Planning mode",
+            "currency": {
+                "label": "Currency",
+                "placeholder": "Select currency"
+            }
         },
         "planning": {
             "monthly": "Monthly contribution",

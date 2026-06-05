@@ -564,7 +564,11 @@
             "targetAmount": "Kwota celu",
             "monthlyContribution": "Wpłata miesięczna",
             "targetDate": "Data realizacji",
-            "planningMode": "Tryb planowania"
+            "planningMode": "Tryb planowania",
+            "currency": {
+                "label": "Waluta",
+                "placeholder": "Wybierz walutę"
+            }
         },
         "planning": {
             "monthly": "Wpłata miesięczna",
