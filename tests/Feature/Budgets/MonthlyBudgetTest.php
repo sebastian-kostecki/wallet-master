@@ -182,7 +182,6 @@ test('monthly budget goal row tracks save and release on savings account', funct
         ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['saved'] === '200.00')
         ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['released'] === '150.00')
         ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['balance'] === '50.00')
-        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['linked_expenses'] === '0.00')
         ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['currency']['code'] === 'PLN')
     );
 });

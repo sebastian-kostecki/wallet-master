@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BudgetProgressCell from '@/components/budget/BudgetProgressCell.vue';
+import BudgetSummaryRowLabel from '@/components/budget/BudgetSummaryRowLabel.vue';
 import BudgetTableColgroup from '@/components/budget/BudgetTableColgroup.vue';
 import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { useI18n } from 'vue-i18n';
@@ -45,7 +46,9 @@ const { t } = useI18n();
                 </thead>
                 <tbody>
                     <tr class="border-b border-sidebar-border/40">
-                        <th class="py-2 pr-4 text-left font-medium text-foreground">{{ t('budget.summary.income') }}</th>
+                        <th class="py-2 pr-4 text-left text-foreground">
+                            <BudgetSummaryRowLabel :label="t('budget.summary.income')" variant="income" />
+                        </th>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.plan.income, currency) }}</td>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.execution.income, currency) }}</td>
                         <td v-if="variant === 'yearly' && summary.forecast" class="py-2 pr-4 tabular-nums">
@@ -56,7 +59,9 @@ const { t } = useI18n();
                         </td>
                     </tr>
                     <tr class="border-b border-sidebar-border/40">
-                        <th class="py-2 pr-4 text-left font-medium text-foreground">{{ t('budget.summary.expense') }}</th>
+                        <th class="py-2 pr-4 text-left text-foreground">
+                            <BudgetSummaryRowLabel :label="t('budget.summary.expense')" variant="expense" />
+                        </th>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.plan.expense, currency) }}</td>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.execution.expense, currency) }}</td>
                         <td v-if="variant === 'yearly' && summary.forecast" class="py-2 pr-4 tabular-nums">
@@ -67,7 +72,9 @@ const { t } = useI18n();
                         </td>
                     </tr>
                     <tr class="border-b border-sidebar-border/40">
-                        <th class="py-2 pr-4 text-left font-medium text-foreground">{{ t('budget.summary.balance') }}</th>
+                        <th class="py-2 pr-4 text-left text-foreground">
+                            <BudgetSummaryRowLabel :label="t('budget.summary.balance')" variant="balance" />
+                        </th>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.plan.balance, currency) }}</td>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.execution.balance, currency) }}</td>
                         <td v-if="variant === 'yearly' && summary.forecast" class="py-2 tabular-nums">

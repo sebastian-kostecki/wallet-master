@@ -708,7 +708,6 @@
             "saved": "Odłożono",
             "released": "Wypłacono",
             "balance": "Saldo",
-            "linked_expenses": "Powiązane wydatki",
             "manage_goals": "Zarządzaj celami",
             "allocation_hint": "Suma szacunków miesięcznych: {monthly} / roczny: {annual}",
             "planPlaceholder": "Nadpisanie miesięczne"

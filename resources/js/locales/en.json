@@ -703,7 +703,6 @@
             "saved": "Saved",
             "released": "Released",
             "balance": "Balance",
-            "linked_expenses": "Linked expenses",
             "manage_goals": "Manage goals",
             "allocation_hint": "Monthly estimates total: {monthly} / annual: {annual}",
             "planPlaceholder": "Monthly override"

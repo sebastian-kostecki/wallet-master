@@ -31,7 +31,6 @@ type GoalRow = {
     saved: string;
     released: string;
     balance: string;
-    linked_expenses: string;
     balance_cumulative: string;
     target_amount: string | null;
     progress_percent: number | null;
@@ -173,8 +172,7 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
                                 <th class="py-2 pr-4">{{ t('budget.monthly.plan') }}</th>
                                 <th class="py-2 pr-4">{{ t('budget.monthly.saved') }}</th>
                                 <th class="py-2 pr-4">{{ t('budget.monthly.released') }}</th>
-                                <th class="py-2 pr-4">{{ t('budget.monthly.balance') }}</th>
-                                <th class="py-2">{{ t('budget.monthly.linked_expenses') }}</th>
+                                <th class="py-2">{{ t('budget.monthly.balance') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -192,8 +190,7 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
                                 </td>
                                 <td class="py-2 pr-4">{{ formatGoalMoney(row.saved, row.currency) }}</td>
                                 <td class="py-2 pr-4">{{ formatGoalMoney(row.released, row.currency) }}</td>
-                                <td class="py-2 pr-4">{{ formatGoalMoney(row.balance, row.currency) }}</td>
-                                <td class="py-2">{{ formatGoalMoney(row.linked_expenses, row.currency) }}</td>
+                                <td class="py-2">{{ formatGoalMoney(row.balance, row.currency) }}</td>
                             </tr>
                         </tbody>
                     </table>

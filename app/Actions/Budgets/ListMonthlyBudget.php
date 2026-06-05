@@ -168,7 +168,6 @@ final class ListMonthlyBudget
                 'saved' => $metrics['saved'],
                 'released' => $metrics['released'],
                 'balance' => $metrics['balance'],
-                'linked_expenses' => $metrics['linked_expenses'],
                 'balance_cumulative' => $cumulative['balance'],
                 'target_amount' => $targetAmount,
                 'progress_percent' => GoalBalance::progressPercent($goal, $cumulative['balance']),
