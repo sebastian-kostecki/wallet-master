@@ -1,14 +1,13 @@
 <script setup lang="ts">
+import GoalArchiveDialog from '@/components/goals/modals/GoalArchiveDialog.vue';
 import GoalBadge from '@/components/goals/GoalBadge.vue';
 import GoalProgressBar from '@/components/goals/GoalProgressBar.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { Archive, ArchiveRestore, GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import type { SortableEvent } from 'sortablejs';
 import { computed, ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
@@ -42,6 +41,11 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 ]);
 
 const list = ref<Goal[]>([]);
+const archiveDialogOpen = ref(false);
+const archivingGoalId = ref<number | null>(null);
+const archiveProcessing = ref(false);
+
+const archivingGoal = computed(() => list.value.find((goal) => goal.id === archivingGoalId.value) ?? null);
 
 watch(
     () => props.goals,
@@ -71,12 +75,9 @@ function onReorderEnd(event: SortableEvent): void {
     );
 }
 
-function toggleArchived(goal: Goal): void {
-    router.patch(
-        route('goals.update', goal.id),
-        { is_archived: !goal.is_archived },
-        { preserveScroll: true },
-    );
+function openArchiveDialog(goal: Goal): void {
+    archivingGoalId.value = goal.id;
+    archiveDialogOpen.value = true;
 }
 
 function deleteGoal(goal: Goal): void {
@@ -102,22 +103,16 @@ function deleteGoal(goal: Goal): void {
         </template>
 
         <div class="flex flex-col gap-6 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="inline-flex rounded-lg bg-muted p-1">
-                    <Link
-                        v-for="tab in tabs"
-                        :key="tab.key"
-                        :href="route('goals.index', { filter: tab.key })"
-                        class="rounded-md px-3 py-1.5 text-sm transition-colors"
-                        :class="cn(props.filter === tab.key ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')"
-                    >
-                        {{ tab.label }}
-                    </Link>
-                </div>
-
-                <Button variant="outline" as-child>
-                    <Link :href="route('budget.monthly')">{{ t('budget.nav') }}</Link>
-                </Button>
+            <div class="inline-flex rounded-lg bg-muted p-1">
+                <Link
+                    v-for="tab in tabs"
+                    :key="tab.key"
+                    :href="route('goals.index', { filter: tab.key })"
+                    class="rounded-md px-3 py-1.5 text-sm transition-colors"
+                    :class="cn(props.filter === tab.key ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')"
+                >
+                    {{ tab.label }}
+                </Link>
             </div>
 
             <section class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
@@ -189,14 +184,18 @@ function deleteGoal(goal: Goal): void {
                                 </Link>
                             </Button>
 
-                            <Label class="inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs">
-                                <Checkbox
-                                    :checked="goal.is_archived"
-                                    :aria-label="t('goals.status.archived')"
-                                    @update:checked="() => toggleArchived(goal)"
-                                />
-                                {{ t('goals.status.archived') }}
-                            </Label>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                class="no-drag"
+                                :disabled="archiveProcessing"
+                                :aria-label="goal.is_archived ? t('goals.index.unarchive') : t('goals.index.archive')"
+                                @click="openArchiveDialog(goal)"
+                            >
+                                <ArchiveRestore v-if="goal.is_archived" class="h-4 w-4 text-muted-foreground" />
+                                <Archive v-else class="h-4 w-4 text-muted-foreground" />
+                            </Button>
 
                             <Button
                                 variant="ghost"
@@ -212,5 +211,17 @@ function deleteGoal(goal: Goal): void {
                 </VueDraggable>
             </section>
         </div>
+
+        <GoalArchiveDialog
+            v-model:open="archiveDialogOpen"
+            :goal-id="archivingGoalId"
+            :goal-name="archivingGoal?.name ?? null"
+            :icon="archivingGoal?.icon ?? null"
+            :color="archivingGoal?.color ?? null"
+            :is-archived="archivingGoal?.is_archived ?? false"
+            :disabled="archiveProcessing"
+            @processing="(value) => (archiveProcessing = value)"
+            @success="archivingGoalId = null"
+        />
     </AppLayout>
 </template>

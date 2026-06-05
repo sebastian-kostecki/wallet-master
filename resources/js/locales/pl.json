@@ -580,6 +580,16 @@
             "archived": "Zarchiwizowane",
             "all": "Wszystkie"
         },
+        "archive": {
+            "title": "Zarchiwizować cel?",
+            "description": "Cel zniknie z aktywnej listy i budżetu miesięcznego. Możesz go później przywrócić z filtra zarchiwizowanych.",
+            "confirm": "Zarchiwizuj cel"
+        },
+        "unarchive": {
+            "title": "Przywrócić cel?",
+            "description": "Cel wróci do aktywnej listy i budżetu miesięcznego.",
+            "confirm": "Przywróć cel"
+        },
         "index": {
             "title": "Cele",
             "add": "Dodaj cel",
@@ -588,6 +598,8 @@
             "fields": {
                 "name": "Nazwa"
             },
+            "archive": "Zarchiwizuj cel",
+            "unarchive": "Przywróć cel",
             "delete": "Usuń cel",
             "deleteConfirm": "Usunąć cel „{name}”?"
         },
