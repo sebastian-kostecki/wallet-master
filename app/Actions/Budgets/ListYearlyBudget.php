@@ -10,7 +10,12 @@ use App\Enums\CategoryType;
 use App\Http\Requests\Budgets\YearlyBudgetRequest;
 use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
+use App\Models\CategoryMonthlyEstimate;
+use App\Support\Budgets\BudgetCurrency;
+use App\Support\Budgets\BudgetForecast;
 use App\Support\Budgets\BudgetPeriod;
+use App\Support\Budgets\BudgetProgress;
+use App\Support\Budgets\BudgetSummary;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Budgets\CategoryPlanAmount;
 use App\Support\Transactions\TransactionDedupe;
@@ -26,6 +31,9 @@ final class ListYearlyBudget
     /** @var Collection<int, Category> */
     private Collection $categories;
 
+    /** @var array<string, mixed> */
+    private array $summary = [];
+
     public function handle(YearlyBudgetRequest $request): void
     {
         $user = $request->user();
@@ -38,12 +46,20 @@ final class ListYearlyBudget
         $this->categories = $listCategories->getCategories();
 
         $period = BudgetPeriod::forYear($this->year);
+        $referenceMonth = BudgetForecast::referenceMonth($this->year);
 
         $annualByCategory = CategoryAnnualEstimate::query()
             ->whereIn('category_id', $this->categories->pluck('id'))
             ->where('year', $this->year)
             ->get()
             ->keyBy('category_id');
+
+        $monthlyByCategoryAndMonth = CategoryMonthlyEstimate::query()
+            ->whereIn('category_id', $this->categories->pluck('id'))
+            ->where('year', $this->year)
+            ->get()
+            ->groupBy('category_id')
+            ->map(fn (Collection $items) => $items->keyBy('month'));
 
         $actualsQuery = BudgetTransactionQuery::forUser($user);
         BudgetTransactionQuery::inPeriod($actualsQuery, $period);
@@ -69,9 +85,16 @@ final class ListYearlyBudget
                 ? TransactionDedupe::amountToDecimalString((string) $actual->expense)
                 : '0.00';
             $actualPrimary = $category->type === CategoryType::Income ? $actualIncome : $actualExpense;
-            $difference = $plan !== null
-                ? bcsub($actualPrimary, $plan, 2)
-                : null;
+
+            $monthlyEstimates = $monthlyByCategoryAndMonth->get($category->id, new Collection);
+            $elapsedPlansSum = BudgetForecast::elapsedPlansSum(
+                $category,
+                $this->year,
+                $referenceMonth,
+                $annual,
+                $monthlyEstimates,
+            );
+            $forecast = BudgetForecast::forecast($actualPrimary, $plan, $elapsedPlansSum);
 
             $this->rows[] = [
                 'category_id' => $category->id,
@@ -84,9 +107,12 @@ final class ListYearlyBudget
                 'actual_income' => $actualIncome,
                 'actual_expense' => $actualExpense,
                 'actual' => $actualPrimary,
-                'difference' => $difference,
+                'forecast' => $forecast,
+                'progress_percent' => BudgetProgress::percent($plan, $actualPrimary),
             ];
         }
+
+        $this->summary = BudgetSummary::fromRows($this->rows, planKey: 'annual_plan', forecastKey: 'forecast');
     }
 
     public function getYear(): int
@@ -100,5 +126,21 @@ final class ListYearlyBudget
     public function getRows(): array
     {
         return $this->rows;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getSummary(): array
+    {
+        return $this->summary;
+    }
+
+    /**
+     * @return array{code: string, symbol: string, precision: int}
+     */
+    public function getCurrency(): array
+    {
+        return BudgetCurrency::pln();
     }
 }
