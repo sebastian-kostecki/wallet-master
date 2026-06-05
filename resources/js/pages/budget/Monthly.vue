@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import BudgetCategorySection from '@/components/budget/BudgetCategorySection.vue';
+import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
 import GoalBadge from '@/components/goals/GoalBadge.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatMoney as formatGoalMoney } from '@/lib/formatMoney';
+import { formatMoney as formatGoalMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type BudgetRow = {
@@ -19,7 +19,7 @@ type BudgetRow = {
     type_label_key: string;
     monthly_plan: string | null;
     actual: string;
-    difference: string | null;
+    progress_percent: number | null;
 };
 
 type GoalRow = {
@@ -35,11 +35,13 @@ type GoalRow = {
     balance_cumulative: string;
     target_amount: string | null;
     progress_percent: number | null;
-    currency: {
-        code: string;
-        symbol: string;
-        precision: number;
-    };
+    currency: CurrencyDisplay;
+};
+
+type BudgetSummary = {
+    plan: { income: string; expense: string; balance: string };
+    execution: { income: string; expense: string; balance: string };
+    progress: { income_percent: number | null; expense_percent: number | null };
 };
 
 const props = defineProps<{
@@ -48,9 +50,12 @@ const props = defineProps<{
     rows: BudgetRow[];
     goal_rows: GoalRow[];
     allocation_hint: { monthly_sum: string; annual_sum: string };
+    summary: BudgetSummary;
+    currency: CurrencyDisplay;
 }>();
 
 const { t } = useI18n();
+const editingCategoryId = ref<number | null>(null);
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: t('budget.monthly.title'), href: route('budget.monthly') },
@@ -58,16 +63,6 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
-
-const money = new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-function formatAmount(value: string | null) {
-    if (value === null || value === '') {
-        return '—';
-    }
-    const n = Number(value);
-    return Number.isNaN(n) ? value : money.format(n);
-}
 
 function changePeriod(delta: number) {
     let m = props.month + delta;
@@ -83,12 +78,21 @@ function changePeriod(delta: number) {
     router.get(route('budget.monthly', { year: y, month: m }));
 }
 
+function startEdit(categoryId: number) {
+    editingCategoryId.value = categoryId;
+}
+
+function cancelEdit() {
+    editingCategoryId.value = null;
+}
+
 function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
     const trimmed = rawValue.trim();
     const normalized = trimmed.replace(',', '.');
     const current = row.monthly_plan ?? '';
 
     if (normalized === current || (normalized === '' && current === '')) {
+        editingCategoryId.value = null;
         return;
     }
 
@@ -98,9 +102,13 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
         year: props.year,
         month: props.month,
         amount,
-    }, { preserveScroll: true });
+    }, {
+        preserveScroll: true,
+        onFinish: () => {
+            editingCategoryId.value = null;
+        },
+    });
 }
-
 </script>
 
 <template>
@@ -124,49 +132,37 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
                 </div>
             </div>
 
+            <BudgetSummaryCard :summary="summary" :currency="currency" variant="monthly" />
+
             <p class="text-sm text-muted-foreground">
-                {{ t('budget.monthly.allocation_hint', { monthly: formatAmount(allocation_hint.monthly_sum), annual: formatAmount(allocation_hint.annual_sum) }) }}
+                {{ t('budget.monthly.allocation_hint', { monthly: formatGoalMoney(allocation_hint.monthly_sum, currency), annual: formatGoalMoney(allocation_hint.annual_sum, currency) }) }}
             </p>
 
-            <section v-for="(sectionRows, key) in { expense: expenseRows, income: incomeRows }" :key="key" class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                <h2 class="mb-3 text-lg font-semibold">{{ t(`budget.sections.${key}`) }}</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b text-left text-muted-foreground">
-                                <th class="py-2 pr-4">{{ t('categories.index.fields.name') }}</th>
-                                <th class="py-2 pr-4">{{ t('budget.monthly.plan') }}</th>
-                                <th class="py-2 pr-4">{{ t('budget.monthly.actual') }}</th>
-                                <th class="py-2">{{ t('budget.monthly.difference') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="row in sectionRows" :key="row.category_id" class="border-b border-sidebar-border/40">
-                                <td class="py-2 pr-4">
-                                    <CategoryBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
-                                </td>
-                                <td class="py-2 pr-4">
-                                    <label class="sr-only" :for="`monthly-plan-${row.category_id}`">
-                                        {{ t('budget.monthly.plan') }} — {{ row.name }}
-                                    </label>
-                                    <Input
-                                        :id="`monthly-plan-${row.category_id}`"
-                                        :key="`${year}-${month}-${row.category_id}-${row.monthly_plan ?? ''}`"
-                                        type="text"
-                                        inputmode="decimal"
-                                        class="h-8 w-28 tabular-nums"
-                                        :default-value="row.monthly_plan ?? ''"
-                                        :placeholder="t('budget.monthly.planPlaceholder')"
-                                        @blur="(e) => saveMonthlyEstimate(row, (e.target as HTMLInputElement).value)"
-                                    />
-                                </td>
-                                <td class="py-2 pr-4">{{ formatAmount(row.actual) }}</td>
-                                <td class="py-2">{{ formatAmount(row.difference) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <BudgetCategorySection
+                :title="t('budget.sections.income')"
+                category-type="income"
+                :rows="incomeRows"
+                :currency="currency"
+                variant="monthly"
+                :editing-category-id="editingCategoryId"
+                :plan-placeholder="t('budget.monthly.planPlaceholder')"
+                @start-edit="startEdit"
+                @cancel="cancelEdit"
+                @save="saveMonthlyEstimate"
+            />
+
+            <BudgetCategorySection
+                :title="t('budget.sections.expense')"
+                category-type="expense"
+                :rows="expenseRows"
+                :currency="currency"
+                variant="monthly"
+                :editing-category-id="editingCategoryId"
+                :plan-placeholder="t('budget.monthly.planPlaceholder')"
+                @start-edit="startEdit"
+                @cancel="cancelEdit"
+                @save="saveMonthlyEstimate"
+            />
 
             <section class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                 <h2 class="mb-3 text-lg font-semibold">{{ t('budget.monthly.goals_section') }}</h2>
