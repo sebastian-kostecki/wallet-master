@@ -723,6 +723,23 @@
         "sections": {
             "expense": "Expenses",
             "income": "Income"
+        },
+        "summary": {
+            "plan": "Plan",
+            "execution": "Actual",
+            "forecast": "Forecast",
+            "income": "Income",
+            "expense": "Expenses",
+            "balance": "Balance"
+        },
+        "columns": {
+            "progress": "Progress %",
+            "forecast": "Forecast"
+        },
+        "estimate": {
+            "edit": "Edit estimate — {name}",
+            "save": "Save",
+            "cancel": "Cancel"
         }
     },
     "nav": {

@@ -728,6 +728,23 @@
         "sections": {
             "expense": "Wydatki",
             "income": "Przychody"
+        },
+        "summary": {
+            "plan": "Plan",
+            "execution": "Wykonanie",
+            "forecast": "Prognoza",
+            "income": "Przychody",
+            "expense": "Wydatki",
+            "balance": "Saldo"
+        },
+        "columns": {
+            "progress": "Wykonanie %",
+            "forecast": "Prognoza"
+        },
+        "estimate": {
+            "edit": "Edytuj szacunek — {name}",
+            "save": "Zapisz",
+            "cancel": "Anuluj"
         }
     },
     "nav": {
