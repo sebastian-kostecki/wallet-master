@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import BudgetCategorySection from '@/components/budget/BudgetCategorySection.vue';
+import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { type CurrencyDisplay } from '@/lib/formatMoney';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type BudgetRow = {
@@ -16,15 +17,26 @@ type BudgetRow = {
     type: string;
     annual_plan: string | null;
     actual: string;
-    difference: string | null;
+    forecast: string;
+    progress_percent: number | null;
+};
+
+type BudgetSummary = {
+    plan: { income: string; expense: string; balance: string };
+    execution: { income: string; expense: string; balance: string };
+    forecast: { income: string; expense: string; balance: string };
+    progress: { income_percent: number | null; expense_percent: number | null };
 };
 
 const props = defineProps<{
     year: number;
     rows: BudgetRow[];
+    summary: BudgetSummary;
+    currency: CurrencyDisplay;
 }>();
 
 const { t } = useI18n();
+const editingCategoryId = ref<number | null>(null);
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     { title: t('budget.yearly.title'), href: route('budget.yearly') },
@@ -33,14 +45,12 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
 
-const money = new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function startEdit(categoryId: number) {
+    editingCategoryId.value = categoryId;
+}
 
-function formatMoney(value: string | null) {
-    if (value === null || value === '') {
-        return '—';
-    }
-    const n = Number(value);
-    return Number.isNaN(n) ? value : money.format(n);
+function cancelEdit() {
+    editingCategoryId.value = null;
 }
 
 function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
@@ -49,6 +59,7 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
     const current = row.annual_plan ?? '';
 
     if (normalized === current || (normalized === '' && current === '')) {
+        editingCategoryId.value = null;
         return;
     }
 
@@ -57,7 +68,12 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
     router.patch(route('categories.estimates.annual', row.category_id), {
         year: props.year,
         amount,
-    }, { preserveScroll: true });
+    }, {
+        preserveScroll: true,
+        onFinish: () => {
+            editingCategoryId.value = null;
+        },
+    });
 }
 </script>
 
@@ -82,45 +98,33 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
                 </div>
             </div>
 
-            <section v-for="(sectionRows, key) in { expense: expenseRows, income: incomeRows }" :key="key" class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                <h2 class="mb-3 text-lg font-semibold">{{ t(`budget.sections.${key}`) }}</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b text-left text-muted-foreground">
-                                <th class="py-2 pr-4">{{ t('categories.index.fields.name') }}</th>
-                                <th class="py-2 pr-4">{{ t('budget.yearly.plan') }}</th>
-                                <th class="py-2 pr-4">{{ t('budget.yearly.actual') }}</th>
-                                <th class="py-2">{{ t('budget.yearly.difference') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="row in sectionRows" :key="row.category_id" class="border-b border-sidebar-border/40">
-                                <td class="py-2 pr-4">
-                                    <CategoryBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
-                                </td>
-                                <td class="py-2 pr-4">
-                                    <label class="sr-only" :for="`annual-plan-${row.category_id}`">
-                                        {{ t('budget.yearly.plan') }} — {{ row.name }}
-                                    </label>
-                                    <Input
-                                        :id="`annual-plan-${row.category_id}`"
-                                        :key="`${year}-${row.category_id}-${row.annual_plan ?? ''}`"
-                                        type="text"
-                                        inputmode="decimal"
-                                        class="h-8 w-28 tabular-nums"
-                                        :default-value="row.annual_plan ?? ''"
-                                        :placeholder="t('budget.yearly.planPlaceholder')"
-                                        @blur="(e) => saveAnnualEstimate(row, (e.target as HTMLInputElement).value)"
-                                    />
-                                </td>
-                                <td class="py-2 pr-4">{{ formatMoney(row.actual) }}</td>
-                                <td class="py-2">{{ formatMoney(row.difference) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <BudgetSummaryCard :summary="summary" :currency="currency" variant="yearly" />
+
+            <BudgetCategorySection
+                :title="t('budget.sections.income')"
+                category-type="income"
+                :rows="incomeRows"
+                :currency="currency"
+                variant="yearly"
+                :editing-category-id="editingCategoryId"
+                :plan-placeholder="t('budget.yearly.planPlaceholder')"
+                @start-edit="startEdit"
+                @cancel="cancelEdit"
+                @save="saveAnnualEstimate"
+            />
+
+            <BudgetCategorySection
+                :title="t('budget.sections.expense')"
+                category-type="expense"
+                :rows="expenseRows"
+                :currency="currency"
+                variant="yearly"
+                :editing-category-id="editingCategoryId"
+                :plan-placeholder="t('budget.yearly.planPlaceholder')"
+                @start-edit="startEdit"
+                @cancel="cancelEdit"
+                @save="saveAnnualEstimate"
+            />
 
             <Button variant="secondary" as-child>
                 <Link :href="route('categories.index')">{{ t('budget.yearly.manage_categories') }}</Link>
