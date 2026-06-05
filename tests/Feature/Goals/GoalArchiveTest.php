@@ -52,3 +52,31 @@ test('archived goal is hidden from default index and monthly budget', function (
             ->where('goal_rows', fn ($rows) => collect($rows)->pluck('name')->doesntContain('Active goal'))
         );
 });
+
+test('archive toggle only updates is_archived without clearing planning fields', function () {
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $goal = Goal::factory()->create([
+        'user_id' => $user->id,
+        'name' => 'Vacation fund',
+        'target_amount' => '5000.00',
+        'planning_mode' => GoalPlanningMode::Monthly,
+        'monthly_contribution' => '250.00',
+        'is_archived' => false,
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('goals.index', ['filter' => 'active']))
+        ->patch(route('goals.update', $goal), [
+            'is_archived' => true,
+        ])
+        ->assertRedirect(route('goals.index', ['filter' => 'active']));
+
+    $goal->refresh();
+
+    expect($goal->is_archived)->toBeTrue()
+        ->and($goal->target_amount)->toBe('5000.00')
+        ->and($goal->planning_mode)->toBe(GoalPlanningMode::Monthly)
+        ->and($goal->monthly_contribution)->toBe('250.00');
+});

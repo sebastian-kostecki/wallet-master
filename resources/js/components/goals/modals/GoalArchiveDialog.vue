@@ -33,7 +33,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const form = useForm({});
+const form = useForm({ is_archived: false });
 
 const dialogKey = computed(() => (props.isArchived ? 'unarchive' : 'archive'));
 
@@ -50,17 +50,14 @@ function submit(): void {
         return;
     }
 
-    form.patch(
-        route('goals.update', props.goalId),
-        { is_archived: !props.isArchived },
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                emit('update:open', false);
-                emit('success');
-            },
+    form.is_archived = !props.isArchived;
+    form.patch(route('goals.update', props.goalId), {
+        preserveScroll: true,
+        onSuccess: () => {
+            emit('update:open', false);
+            emit('success');
         },
-    );
+    });
 }
 </script>
 

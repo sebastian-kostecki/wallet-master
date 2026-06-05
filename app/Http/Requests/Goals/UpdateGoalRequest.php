@@ -24,6 +24,10 @@ final class UpdateGoalRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (! $this->has('target_amount')) {
+            return;
+        }
+
         if ($this->input('target_amount') === '' || $this->input('target_amount') === null) {
             $this->merge([
                 'target_amount' => null,
