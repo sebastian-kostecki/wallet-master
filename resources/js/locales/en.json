@@ -150,6 +150,30 @@
             "description": "Please enter your new password below",
             "headTitle": "Reset password",
             "submit": "Reset password"
+        },
+        "brand": {
+            "eyebrow": "Ogarniam Portfel",
+            "promise": "Take back control of your household budget",
+            "description": "Import history, organize transactions, and track goals without spreadsheets.",
+            "benefits": {
+                "imports": "Bank history imports",
+                "budget": "Budget and categories in one place",
+                "goals": "Savings goals close at hand"
+            }
+        },
+        "confirmPassword": {
+            "title": "Confirm your password",
+            "description": "This is a secure area of the application. Please confirm your password before continuing.",
+            "headTitle": "Confirm password",
+            "submit": "Confirm password"
+        },
+        "verifyEmail": {
+            "title": "Verify email",
+            "description": "Please verify your email address by clicking the link we just emailed to you.",
+            "headTitle": "Email verification",
+            "sent": "A new verification link has been sent to the email address you provided during registration.",
+            "submit": "Resend verification email",
+            "logout": "Log out"
         }
     },
     "brand": {

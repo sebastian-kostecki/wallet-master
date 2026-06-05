@@ -150,6 +150,30 @@
             "description": "Wpisz nowe hasło poniżej",
             "headTitle": "Reset hasła",
             "submit": "Zresetuj hasło"
+        },
+        "brand": {
+            "eyebrow": "Ogarniam Portfel",
+            "promise": "Odzyskaj kontrolę nad domowym budżetem",
+            "description": "Importuj historię, porządkuj transakcje i śledź cele bez arkuszy kalkulacyjnych.",
+            "benefits": {
+                "imports": "Import historii z banku",
+                "budget": "Budżet i kategorie w jednym miejscu",
+                "goals": "Cele oszczędnościowe pod ręką"
+            }
+        },
+        "confirmPassword": {
+            "title": "Potwierdź hasło",
+            "description": "To bezpieczna część aplikacji. Potwierdź hasło, aby kontynuować.",
+            "headTitle": "Potwierdzenie hasła",
+            "submit": "Potwierdź hasło"
+        },
+        "verifyEmail": {
+            "title": "Zweryfikuj e-mail",
+            "description": "Kliknij link, który wysłaliśmy na Twój adres e-mail.",
+            "headTitle": "Weryfikacja e-mail",
+            "sent": "Nowy link weryfikacyjny został wysłany na adres e-mail podany podczas rejestracji.",
+            "submit": "Wyślij link ponownie",
+            "logout": "Wyloguj się"
         }
     },
     "brand": {
