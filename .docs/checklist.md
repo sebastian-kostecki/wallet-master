@@ -426,6 +426,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 - [x] Backend: `BudgetProgress`, `BudgetForecast`, `BudgetSummary`, `BudgetCurrency`
 - [x] Miesięczny: `summary`, `currency`, `progress_percent`; usunięte `difference`
+- [x] Miesięczny: `summary` uwzględnia kieszenie (plan → wydatki; odłożono → wydatki; wypłacono → przychody)
 - [x] Roczny: `forecast`, rozszerzone `summary` (wiersz prognozy)
 - [x] Frontend: karta podsumowania, przychody → wydatki → cele, edycja szacunku (Zapisz/Anuluj)
 - [x] Komponenty: `components/budget/*` (progress, summary, editable estimate)
