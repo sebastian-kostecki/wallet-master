@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Goal;
+use App\Models\Pocket;
 use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,15 +19,15 @@ class TransactionFactory extends Factory
     public function definition(): array
     {
         return [
-            'goal_id' => null,
+            'pocket_id' => null,
         ];
     }
 
-    public function forGoal(Goal $goal): static
+    public function forPocket(Pocket $pocket): static
     {
         return $this->state(fn (): array => [
-            'goal_id' => $goal->id,
-            'user_id' => $goal->user_id,
+            'pocket_id' => $pocket->id,
+            'user_id' => $pocket->user_id,
         ]);
     }
 }

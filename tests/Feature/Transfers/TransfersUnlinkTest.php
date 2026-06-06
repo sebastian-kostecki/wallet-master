@@ -87,6 +87,6 @@ test('user can unlink a linked transfer and restore income expense types', funct
     expect($deposit->transfer_match_status)->toBe(TransferMatchStatus::Rejected);
     expect($withdrawal->category_id)->not->toBeNull();
     expect($deposit->category_id)->not->toBeNull();
-    expect($withdrawal->goal_id)->toBeNull();
-    expect($deposit->goal_id)->toBeNull();
+    expect($withdrawal->pocket_id)->toBeNull();
+    expect($deposit->pocket_id)->toBeNull();
 });

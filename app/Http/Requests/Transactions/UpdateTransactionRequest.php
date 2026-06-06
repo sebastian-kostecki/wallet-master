@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Transactions;
 
 use App\Http\Requests\Concerns\ValidatesCategoryId;
-use App\Http\Requests\Concerns\ValidatesGoalId;
+use App\Http\Requests\Concerns\ValidatesPocketId;
 use App\Models\Transaction;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,7 +12,7 @@ use Illuminate\Validation\Validator;
 final class UpdateTransactionRequest extends FormRequest
 {
     use ValidatesCategoryId;
-    use ValidatesGoalId;
+    use ValidatesPocketId;
 
     public function authorize(): bool
     {
@@ -58,7 +58,7 @@ final class UpdateTransactionRequest extends FormRequest
             'description' => ['required', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
             ...($isTransferLeg ? ['category_id' => ['prohibited']] : $this->categoryIdRules()),
-            ...$this->optionalGoalIdRules(),
+            ...$this->optionalPocketIdRules(),
         ];
     }
 
@@ -69,7 +69,7 @@ final class UpdateTransactionRequest extends FormRequest
 
         if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
             $this->validateCategoryMatchesAmount($validator);
-            $this->validateOptionalGoalCurrency($validator);
+            $this->validateOptionalPocketCurrency($validator);
         }
     }
 
@@ -82,7 +82,7 @@ final class UpdateTransactionRequest extends FormRequest
      *   description: string,
      *   subject?: ?string,
      *   category_id?: int,
-     *   goal_id?: ?int,
+     *   pocket_id?: ?int,
      * }
      */
     public function validated($key = null, $default = null): array

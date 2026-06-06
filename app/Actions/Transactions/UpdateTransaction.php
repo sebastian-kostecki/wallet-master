@@ -32,7 +32,7 @@ final class UpdateTransaction
      *   description: string,
      *   subject?: ?string,
      *   category_id?: int,
-     *   goal_id?: ?int,
+     *   pocket_id?: ?int,
      * }  $validated
      *
      * @throws \Throwable
@@ -57,8 +57,8 @@ final class UpdateTransaction
             $normalizedDescription = TransactionDedupe::normalizeDescription($validated['description']);
             $dedupeHash = TransactionDedupe::dedupeHash($bookedAt, $newAmount, $normalizedDescription);
 
-            $goalId = array_key_exists('goal_id', $validated) && $validated['goal_id'] !== null
-                ? (int) $validated['goal_id']
+            $pocketId = array_key_exists('pocket_id', $validated) && $validated['pocket_id'] !== null
+                ? (int) $validated['pocket_id']
                 : null;
 
             $oldAmount = TransactionDedupe::amountToDecimalString((string) $transaction->amount);
@@ -86,7 +86,7 @@ final class UpdateTransaction
                 if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
                     $transaction->category_id = $validated['category_id'];
                 }
-                $transaction->goal_id = $goalId;
+                $transaction->pocket_id = $pocketId;
                 $transaction->save();
 
                 $account->current_balance = bcadd((string) $account->current_balance, $delta, 2);
@@ -128,7 +128,7 @@ final class UpdateTransaction
             if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
                 $transaction->category_id = $validated['category_id'];
             }
-            $transaction->goal_id = $goalId;
+            $transaction->pocket_id = $pocketId;
             $transaction->save();
 
             $oldAccount->current_balance = bcsub((string) $oldAccount->current_balance, $oldAmount, 2);

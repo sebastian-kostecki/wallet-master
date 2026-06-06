@@ -137,7 +137,7 @@ final class ListTransactions
     private function baseQuery(User $user): Builder
     {
         return Transaction::query()
-            ->with(['account.currency', 'currency', 'category', 'goal'])
+            ->with(['account.currency', 'currency', 'category', 'pocket'])
             ->whereBelongsTo($user);
     }
 

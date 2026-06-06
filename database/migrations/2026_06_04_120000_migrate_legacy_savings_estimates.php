@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Actions\Goals\MigrateLegacySavingsEstimate;
+use App\Actions\Pockets\MigrateLegacySavingsEstimate;
 use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration

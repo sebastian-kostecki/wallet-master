@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Transfers;
 
-use App\Actions\Goals\ListGoals;
+use App\Actions\Pockets\ListPockets;
 use App\Actions\Transfers\CreateTransfer;
 use App\Actions\Transfers\UnlinkTransfer;
 use App\Events\TransferCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transfers\StoreTransferRequest;
 use App\Http\Resources\Accounts\AccountResource;
-use App\Http\Resources\Goals\GoalResource;
+use App\Http\Resources\Pockets\PocketResource;
 use App\Models\Account;
 use App\Support\Transactions\TransactionsIndexQuery;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +19,7 @@ use Inertia\Response;
 
 final class TransferController extends Controller
 {
-    public function create(Request $request, ListGoals $listGoals): Response
+    public function create(Request $request, ListPockets $listPockets): Response
     {
         $accounts = AccountResource::collection(
             Account::query()
@@ -29,12 +29,12 @@ final class TransferController extends Controller
                 ->get(['id', 'name', 'currency_id', 'bank', 'type', 'deleted_at'])
         )->resolve();
 
-        $listGoals->handle($request->user());
-        $goals = $listGoals->getGoals();
+        $listPockets->handle($request->user());
+        $pockets = $listPockets->getPockets();
 
         return Inertia::render('transfers/Create', [
             'accounts' => $accounts,
-            'goals' => GoalResource::collection($goals)->resolve(),
+            'pockets' => PocketResource::collection($pockets)->resolve(),
         ]);
     }
 

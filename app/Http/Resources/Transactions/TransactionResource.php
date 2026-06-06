@@ -47,11 +47,11 @@ final class TransactionResource extends JsonResource
                     ? CategoryResource::make($this->category)->resolve($request)
                     : null,
             ),
-            'goal_id' => $this->goal_id,
-            'goal' => $this->whenLoaded(
-                'goal',
-                fn () => $this->goal !== null
-                    ? ['id' => $this->goal->id, 'name' => $this->goal->name]
+            'pocket_id' => $this->pocket_id,
+            'pocket' => $this->whenLoaded(
+                'pocket',
+                fn () => $this->pocket !== null
+                    ? ['id' => $this->pocket->id, 'name' => $this->pocket->name]
                     : null,
             ),
             'account' => $this->whenLoaded(

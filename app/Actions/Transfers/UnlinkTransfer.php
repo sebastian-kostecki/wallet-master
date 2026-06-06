@@ -39,7 +39,7 @@ final class UnlinkTransfer
                     'transfer_match_status' => TransferMatchStatus::Rejected,
                     'transfer_candidate_for_id' => null,
                     'category_id' => $fallbackCategoryId,
-                    'goal_id' => null,
+                    'pocket_id' => null,
                 ]);
             }
 

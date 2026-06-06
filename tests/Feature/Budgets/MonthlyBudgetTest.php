@@ -2,14 +2,14 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
-use App\Enums\GoalPlanningMode;
+use App\Enums\PocketPlanningMode;
 use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
 use App\Models\Currency;
-use App\Models\Goal;
+use App\Models\Pocket;
 use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
@@ -73,16 +73,16 @@ test('monthly budget uses monthly override when set', function () {
     );
 });
 
-test('monthly budget goal row tracks save and release on savings account', function () {
+test('monthly budget pocket row tracks save and release on savings account', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     ensureUserCategories($user);
 
-    $goal = Goal::factory()->create([
+    $pocket = Pocket::factory()->create([
         'user_id' => $user->id,
         'name' => 'Wakacje',
         'target_amount' => '6000.00',
-        'planning_mode' => GoalPlanningMode::Monthly,
+        'planning_mode' => PocketPlanningMode::Monthly,
         'monthly_contribution' => '500.00',
     ]);
 
@@ -113,7 +113,7 @@ test('monthly budget goal row tracks save and release on savings account', funct
         'account_id' => $checking->id,
         'currency_id' => $plnId,
         'category_id' => null,
-        'goal_id' => $goal->id,
+        'pocket_id' => $pocket->id,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '-200.00',
@@ -129,7 +129,7 @@ test('monthly budget goal row tracks save and release on savings account', funct
         'account_id' => $savings->id,
         'currency_id' => $plnId,
         'category_id' => null,
-        'goal_id' => $goal->id,
+        'pocket_id' => $pocket->id,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '200.00',
@@ -147,7 +147,7 @@ test('monthly budget goal row tracks save and release on savings account', funct
         'account_id' => $savings->id,
         'currency_id' => $plnId,
         'category_id' => null,
-        'goal_id' => $goal->id,
+        'pocket_id' => $pocket->id,
         'date' => '2026-03-15',
         'booked_at' => '2026-03-15',
         'amount' => '-150.00',
@@ -163,7 +163,7 @@ test('monthly budget goal row tracks save and release on savings account', funct
         'account_id' => $checking->id,
         'currency_id' => $plnId,
         'category_id' => null,
-        'goal_id' => $goal->id,
+        'pocket_id' => $pocket->id,
         'date' => '2026-03-15',
         'booked_at' => '2026-03-15',
         'amount' => '150.00',
@@ -178,11 +178,11 @@ test('monthly budget goal row tracks save and release on savings account', funct
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
-        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['monthly_plan'] === '500.00')
-        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['saved'] === '200.00')
-        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['released'] === '150.00')
-        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['balance'] === '50.00')
-        ->where('goal_rows', fn ($rows) => collect($rows)->firstWhere('goal_id', $goal->id)['currency']['code'] === 'PLN')
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['monthly_plan'] === '500.00')
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['saved'] === '200.00')
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['released'] === '150.00')
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['balance'] === '50.00')
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['currency']['code'] === 'PLN')
     );
 });
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Transfers;
 
 use App\Events\TransferFailedValidation;
-use App\Http\Requests\Concerns\ValidatesGoalId;
+use App\Http\Requests\Concerns\ValidatesPocketId;
 use App\Models\Account;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 
 final class StoreTransferRequest extends FormRequest
 {
-    use ValidatesGoalId;
+    use ValidatesPocketId;
 
     public function authorize(): bool
     {
@@ -75,7 +75,7 @@ final class StoreTransferRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
             'category_id' => ['prohibited'],
-            ...$this->goalIdRulesForTransfer(),
+            ...$this->pocketIdRulesForTransfer(),
         ];
     }
 
@@ -87,7 +87,7 @@ final class StoreTransferRequest extends FormRequest
      *   amount: numeric-string|float|int,
      *   description?: ?string,
      *   subject?: ?string,
-     *   goal_id?: int,
+     *   pocket_id?: int,
      * }
      */
     public function validated($key = null, $default = null): array

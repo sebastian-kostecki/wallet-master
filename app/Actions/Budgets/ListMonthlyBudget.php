@@ -11,7 +11,7 @@ use App\Http\Requests\Budgets\MonthlyBudgetRequest;
 use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
-use App\Models\Goal;
+use App\Models\Pocket;
 use App\Models\User;
 use App\Support\Budgets\BudgetCurrency;
 use App\Support\Budgets\BudgetPeriod;
@@ -19,9 +19,9 @@ use App\Support\Budgets\BudgetProgress;
 use App\Support\Budgets\BudgetSummary;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Budgets\CategoryPlanAmount;
-use App\Support\Goals\GoalBalance;
-use App\Support\Goals\GoalPlanningProjection;
-use App\Support\Goals\GoalTransactionMetrics;
+use App\Support\Pockets\PocketBalance;
+use App\Support\Pockets\PocketPlanningProjection;
+use App\Support\Pockets\PocketTransactionMetrics;
 use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -35,7 +35,7 @@ final class ListMonthlyBudget
     private array $rows = [];
 
     /** @var list<array<string, mixed>> */
-    private array $goalRows = [];
+    private array $pocketRows = [];
 
     /** @var Collection<int, Category> */
     private Collection $categories;
@@ -129,7 +129,7 @@ final class ListMonthlyBudget
         }
 
         $this->summary = BudgetSummary::fromRows($this->rows, planKey: 'monthly_plan');
-        $this->goalRows = $this->buildGoalRows($user, $period);
+        $this->pocketRows = $this->buildPocketRows($user, $period);
         $this->allocationHint = [
             'monthly_sum' => $monthlyPlansSum,
             'annual_sum' => $annualPlansSum,
@@ -139,42 +139,42 @@ final class ListMonthlyBudget
     /**
      * @return list<array<string, mixed>>
      */
-    private function buildGoalRows(User $user, BudgetPeriod $period): array
+    private function buildPocketRows(User $user, BudgetPeriod $period): array
     {
-        $goals = Goal::query()
+        $pockets = Pocket::query()
             ->forUser($user->id)
             ->active()
             ->ordered()
             ->with('currency')
             ->get();
 
-        if ($goals->isEmpty()) {
+        if ($pockets->isEmpty()) {
             return [];
         }
 
         $rows = [];
 
-        foreach ($goals as $goal) {
-            $metrics = GoalTransactionMetrics::forMonth($user, $goal, $period);
-            $cumulative = GoalBalance::cumulative($user, $goal);
-            $targetAmount = $goal->target_amount !== null ? (string) $goal->target_amount : null;
+        foreach ($pockets as $pocket) {
+            $metrics = PocketTransactionMetrics::forMonth($user, $pocket, $period);
+            $cumulative = PocketBalance::cumulative($user, $pocket);
+            $targetAmount = $pocket->target_amount !== null ? (string) $pocket->target_amount : null;
 
             $rows[] = [
-                'goal_id' => $goal->id,
-                'name' => $goal->name,
-                'icon' => $goal->icon,
-                'color' => $goal->color,
-                'monthly_plan' => GoalPlanningProjection::monthlyPlanForBudget($goal, $cumulative['balance']),
+                'pocket_id' => $pocket->id,
+                'name' => $pocket->name,
+                'icon' => $pocket->icon,
+                'color' => $pocket->color,
+                'monthly_plan' => PocketPlanningProjection::monthlyPlanForBudget($pocket, $cumulative['balance']),
                 'saved' => $metrics['saved'],
                 'released' => $metrics['released'],
                 'balance' => $metrics['balance'],
                 'balance_cumulative' => $cumulative['balance'],
                 'target_amount' => $targetAmount,
-                'progress_percent' => GoalBalance::progressPercent($goal, $cumulative['balance']),
+                'progress_percent' => PocketBalance::progressPercent($pocket, $cumulative['balance']),
                 'currency' => [
-                    'code' => $goal->currency->code,
-                    'symbol' => $goal->currency->symbol,
-                    'precision' => $goal->currency->precision,
+                    'code' => $pocket->currency->code,
+                    'symbol' => $pocket->currency->symbol,
+                    'precision' => $pocket->currency->precision,
                 ],
             ];
         }
@@ -203,9 +203,9 @@ final class ListMonthlyBudget
     /**
      * @return list<array<string, mixed>>
      */
-    public function getGoalRows(): array
+    public function getPocketRows(): array
     {
-        return $this->goalRows;
+        return $this->pocketRows;
     }
 
     /**

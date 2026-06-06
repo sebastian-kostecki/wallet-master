@@ -23,7 +23,7 @@ final class CreateTransfer
      *   amount: numeric-string|float|int,
      *   description?: ?string,
      *   subject?: ?string,
-     *   goal_id?: int,
+     *   pocket_id?: int,
      * } $validated
      * @return array{
      *   withdrawal: Transaction,
@@ -89,7 +89,7 @@ final class CreateTransfer
             $withdrawDedupeHash = md5($transferId.'|withdrawal', true);
             $depositDedupeHash = md5($transferId.'|deposit', true);
 
-            $goalId = isset($validated['goal_id']) ? (int) $validated['goal_id'] : null;
+            $pocketId = isset($validated['pocket_id']) ? (int) $validated['pocket_id'] : null;
 
             $withdrawal = Transaction::query()->create([
                 'user_id' => $user->id,
@@ -105,7 +105,7 @@ final class CreateTransfer
                 'dedupe_hash' => $withdrawDedupeHash,
                 'transfer_id' => $transferId,
                 'category_id' => null,
-                'goal_id' => $goalId,
+                'pocket_id' => $pocketId,
             ]);
 
             $deposit = Transaction::query()->create([
@@ -122,7 +122,7 @@ final class CreateTransfer
                 'dedupe_hash' => $depositDedupeHash,
                 'transfer_id' => $transferId,
                 'category_id' => null,
-                'goal_id' => $goalId,
+                'pocket_id' => $pocketId,
             ]);
 
             $from->current_balance = bcadd((string) $from->current_balance, $withdrawAmount, 2);
