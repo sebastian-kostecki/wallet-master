@@ -128,8 +128,14 @@ final class ListMonthlyBudget
             ];
         }
 
-        $this->summary = BudgetSummary::fromRows($this->rows, planKey: 'monthly_plan');
         $this->pocketRows = $this->buildPocketRows($user, $period);
+
+        $summary = BudgetSummary::fromRows($this->rows, planKey: 'monthly_plan');
+        $this->summary = BudgetSummary::withPockets(
+            $summary,
+            $this->pocketRows,
+            BudgetCurrency::pln()['code'],
+        );
         $this->allocationHint = [
             'monthly_sum' => $monthlyPlansSum,
             'annual_sum' => $annualPlansSum,
