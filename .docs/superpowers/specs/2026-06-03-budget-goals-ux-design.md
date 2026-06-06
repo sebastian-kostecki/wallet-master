@@ -1,5 +1,7 @@
 # Budget UX refactor + savings goals (cele) — design spec
 
+> **Superseded (naming):** user-facing and code naming → `.docs/superpowers/specs/2026-06-06-goals-to-pockets-rename-design.md`. Business logic below remains valid with Goal→Pocket, goal→pocket substitutions.
+
 **Status:** Approved in brainstorming (2026-06-03)  
 **Builds on:** `.docs/superpowers/specs/2026-06-03-categories-budget-estimates-design.md` (wave 2, shipped on `feat/categories`)  
 **Next step:** Implementation plan (`.docs/superpowers/plans/`)  

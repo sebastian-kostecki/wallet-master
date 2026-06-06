@@ -1,5 +1,7 @@
 # Goals target model refactor — design spec
 
+> **Superseded (naming):** user-facing and code naming → `.docs/superpowers/specs/2026-06-06-goals-to-pockets-rename-design.md`. Business logic below remains valid with Goal→Pocket, goal→pocket substitutions.
+
 **Status:** Approved in brainstorming (2026-06-04)  
 **Supersedes (partial):** goal estimate model in `.docs/superpowers/specs/2026-06-03-budget-goals-ux-design.md` (FR-G2, GoalAnnualEstimate / GoalMonthlyEstimate, year selector on `/goals`)  
 **Builds on:** goals + budget UX (shipped), transfer category decoupling (shipped or in progress)  

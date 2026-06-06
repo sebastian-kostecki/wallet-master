@@ -1,5 +1,7 @@
 # Goals currency — design spec
 
+> **Superseded (naming):** user-facing and code naming → `.docs/superpowers/specs/2026-06-06-goals-to-pockets-rename-design.md`. Business logic below remains valid with Goal→Pocket, goal→pocket substitutions.
+
 **Status:** Approved in brainstorming (2026-06-05)  
 **Builds on:** goals target model (`.docs/superpowers/specs/2026-06-04-goals-target-model-design.md`)  
 **Canonical requirements target:** `.docs/prd.md`  
