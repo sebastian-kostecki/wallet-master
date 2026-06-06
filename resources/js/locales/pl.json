@@ -707,6 +707,7 @@
             "pockets_section": "Kieszenie oszczędnościowe",
             "saved": "Odłożono",
             "released": "Wypłacono",
+            "movement": "Ruch w miesiącu",
             "balance": "Saldo",
             "manage_pockets": "Zarządzaj kieszeniami",
             "allocation_hint": "Suma szacunków miesięcznych: {monthly} / roczny: {annual}",

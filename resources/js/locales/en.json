@@ -702,6 +702,7 @@
             "pockets_section": "Savings envelopes",
             "saved": "Saved",
             "released": "Released",
+            "movement": "Monthly movement",
             "balance": "Balance",
             "manage_pockets": "Manage envelopes",
             "allocation_hint": "Monthly estimates total: {monthly} / annual: {annual}",
