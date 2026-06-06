@@ -20,6 +20,7 @@ export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     transactionsIndexSearch?: string;
+    canRegister?: boolean;
     auth: Auth;
     ziggy: {
         location: string;

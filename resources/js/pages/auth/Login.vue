@@ -100,7 +100,7 @@ const submit = () => {
                 </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
+            <div v-if="$page.props.canRegister" class="text-center text-sm text-muted-foreground">
                 {{ t('auth.login.noAccount') }}
                 <TextLink :href="route('register')">{{ t('auth.login.signUp') }}</TextLink>
             </div>

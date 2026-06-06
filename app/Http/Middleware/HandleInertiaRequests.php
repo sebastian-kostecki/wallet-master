@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'canRegister' => config('auth.registration.enabled'),
             'toast' => fn () => $request->session()->get('toast'),
             'transactionsIndexSearch' => fn () => TransactionsIndexQuery::toQueryString(),
         ]);

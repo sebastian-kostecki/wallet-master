@@ -37,10 +37,10 @@ const features = [
                                 <Link :href="route('dashboard')">{{ t('welcome.dashboardCta') }}</Link>
                             </Button>
                             <template v-else>
-                                <Button variant="ghost" as-child>
+                                <Button :variant="$page.props.canRegister ? 'ghost' : 'default'" as-child>
                                     <Link :href="route('login')">{{ t('welcome.secondaryCta') }}</Link>
                                 </Button>
-                                <Button as-child>
+                                <Button v-if="$page.props.canRegister" as-child>
                                     <Link :href="route('register')">{{ t('welcome.primaryCta') }}</Link>
                                 </Button>
                             </template>
@@ -56,10 +56,10 @@ const features = [
                     </div>
 
                     <div v-if="!$page.props.auth.user" class="flex flex-col gap-3 sm:flex-row">
-                        <Button size="lg" as-child>
+                        <Button v-if="$page.props.canRegister" size="lg" as-child>
                             <Link :href="route('register')">{{ t('welcome.primaryCta') }}</Link>
                         </Button>
-                        <Button size="lg" variant="outline" as-child>
+                        <Button size="lg" :variant="$page.props.canRegister ? 'outline' : 'default'" as-child>
                             <Link :href="route('login')">{{ t('welcome.secondaryCta') }}</Link>
                         </Button>
                     </div>
