@@ -84,7 +84,7 @@ test('cannot delete pocket with linked transactions', function () {
         'type' => TransactionType::Expense,
         'description' => 'Coffee',
         'normalized_description' => 'coffee',
-        'dedupe_hash' => md5('goal-linked', true),
+        'dedupe_hash' => md5('pocket-linked', true),
     ]);
 
     $this->actingAs($user)->delete(route('pockets.destroy', $pocket))->assertForbidden();

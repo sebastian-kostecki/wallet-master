@@ -3,7 +3,7 @@ import CategoryColorPicker from '@/components/categories/CategoryColorPicker.vue
 import CategoryIconPicker from '@/components/categories/CategoryIconPicker.vue';
 import FormField from '@/components/forms/FormField.vue';
 import SegmentedControl, { type SegmentedControlOption } from '@/components/forms/SegmentedControl.vue';
-import GoalBadge from '@/components/goals/GoalBadge.vue';
+import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,7 @@ type ColorOption = {
     value: string;
 };
 
-type Goal = {
+type Pocket = {
     id: number;
     name: string;
     icon: string;
@@ -44,7 +44,7 @@ type Goal = {
 };
 
 const props = defineProps<{
-    goal: Goal;
+    pocket: Pocket;
     icons: IconOption[];
     colors: ColorOption[];
 }>();
@@ -52,19 +52,19 @@ const props = defineProps<{
 const { t } = useI18n();
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: t('goals.index.title'), href: route('goals.index') },
-    { title: t('goals.edit.title'), href: route('goals.edit', props.goal.id) },
+    { title: t('pockets.index.title'), href: route('pockets.index') },
+    { title: t('pockets.edit.title'), href: route('pockets.edit', props.pocket.id) },
 ]);
 
 const form = useForm({
-    name: props.goal.name,
-    icon: props.goal.icon,
-    color: props.goal.color,
-    target_amount: props.goal.target_amount ?? '',
-    planning_mode: (props.goal.planning_mode ?? 'monthly') as 'monthly' | 'by_date',
-    monthly_contribution: props.goal.monthly_contribution ?? '',
-    target_date: props.goal.target_date ?? '',
-    is_archived: props.goal.is_archived,
+    name: props.pocket.name,
+    icon: props.pocket.icon,
+    color: props.pocket.color,
+    target_amount: props.pocket.target_amount ?? '',
+    planning_mode: (props.pocket.planning_mode ?? 'monthly') as 'monthly' | 'by_date',
+    monthly_contribution: props.pocket.monthly_contribution ?? '',
+    target_date: props.pocket.target_date ?? '',
+    is_archived: props.pocket.is_archived,
 });
 
 const hasTarget = computed(() => {
@@ -74,11 +74,11 @@ const hasTarget = computed(() => {
     return Number.isFinite(parsed) && parsed > 0;
 });
 
-const previewName = computed(() => form.name.trim() || props.goal.name);
+const previewName = computed(() => form.name.trim() || props.pocket.name);
 
 const planningModeOptions = computed<SegmentedControlOption<'monthly' | 'by_date'>[]>(() => [
-    { value: 'monthly', label: t('goals.planning.monthly') },
-    { value: 'by_date', label: t('goals.planning.by_date') },
+    { value: 'monthly', label: t('pockets.planning.monthly') },
+    { value: 'by_date', label: t('pockets.planning.by_date') },
 ]);
 
 function submit(): void {
@@ -92,34 +92,34 @@ function submit(): void {
         form.monthly_contribution = '';
     }
 
-    form.patch(route('goals.update', props.goal.id));
+    form.patch(route('pockets.update', props.pocket.id));
 }
 </script>
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('goals.edit.title')" />
+        <Head :title="t('pockets.edit.title')" />
 
         <div class="flex flex-col gap-6 p-4">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form class="grid gap-6" @submit.prevent="submit">
-                    <GoalBadge :name="previewName" :icon="form.icon" :color="form.color" size="md" />
+                    <PocketBadge :name="previewName" :icon="form.icon" :color="form.color" size="md" />
 
-                    <FormField for-id="name" :label="t('goals.index.fields.name')" :error="form.errors.name">
+                    <FormField for-id="name" :label="t('pockets.index.fields.name')" :error="form.errors.name">
                         <Input id="name" v-model="form.name" required autofocus />
                     </FormField>
 
-                    <FormField for-id="currency" :label="t('goals.fields.currency.label')">
+                    <FormField for-id="currency" :label="t('pockets.fields.currency.label')">
                         <Input
                             id="currency"
-                            :model-value="`${goal.currency.code} (${goal.currency.symbol})`"
+                            :model-value="`${pocket.currency.code} (${pocket.currency.symbol})`"
                             type="text"
                             disabled
                             readonly
                         />
                     </FormField>
 
-                    <FormField for-id="target_amount" :label="t('goals.fields.targetAmount')" :error="form.errors.target_amount">
+                    <FormField for-id="target_amount" :label="t('pockets.fields.targetAmount')" :error="form.errors.target_amount">
                         <template #default="{ errorId, hasError }">
                             <div class="relative">
                                 <Input
@@ -134,7 +134,7 @@ function submit(): void {
                                 <span
                                     class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
                                 >
-                                    {{ goal.currency.symbol }}
+                                    {{ pocket.currency.symbol }}
                                 </span>
                             </div>
                         </template>
@@ -149,12 +149,12 @@ function submit(): void {
                     </FormField>
 
                     <div v-if="hasTarget" class="grid gap-4 rounded-lg border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                        <FormField for-id="planning_mode" :label="t('goals.fields.planningMode')">
+                        <FormField for-id="planning_mode" :label="t('pockets.fields.planningMode')">
                             <SegmentedControl
                                 id="planning_mode"
                                 :model-value="form.planning_mode"
                                 :options="planningModeOptions"
-                                :aria-label="t('goals.fields.planningMode')"
+                                :aria-label="t('pockets.fields.planningMode')"
                                 @update:model-value="(value) => (form.planning_mode = value as 'monthly' | 'by_date')"
                             />
                         </FormField>
@@ -162,7 +162,7 @@ function submit(): void {
                         <FormField
                             v-if="form.planning_mode === 'monthly'"
                             for-id="monthly_contribution"
-                            :label="t('goals.fields.monthlyContribution')"
+                            :label="t('pockets.fields.monthlyContribution')"
                             :error="form.errors.monthly_contribution"
                         >
                             <template #default="{ errorId, hasError }">
@@ -179,7 +179,7 @@ function submit(): void {
                                     <span
                                         class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
                                     >
-                                        {{ goal.currency.symbol }}
+                                        {{ pocket.currency.symbol }}
                                     </span>
                                 </div>
                             </template>
@@ -188,7 +188,7 @@ function submit(): void {
                         <FormField
                             v-else
                             for-id="target_date"
-                            :label="t('goals.fields.targetDate')"
+                            :label="t('pockets.fields.targetDate')"
                             :error="form.errors.target_date"
                         >
                             <Input id="target_date" v-model="form.target_date" type="date" />
@@ -197,12 +197,12 @@ function submit(): void {
 
                     <div class="grid gap-2 rounded-lg border border-sidebar-border/70 p-4 text-sm dark:border-sidebar-border">
                         <p class="text-muted-foreground">
-                            {{ t('goals.edit.recommendedMonthly') }}:
-                            <span class="font-medium text-foreground">{{ formatMoney(goal.recommended_monthly, goal.currency) }}</span>
+                            {{ t('pockets.edit.recommendedMonthly') }}:
+                            <span class="font-medium text-foreground">{{ formatMoney(pocket.recommended_monthly, pocket.currency) }}</span>
                         </p>
                         <p class="text-muted-foreground">
-                            {{ t('goals.edit.projectedCompletionDate') }}:
-                            <span class="font-medium text-foreground">{{ goal.projected_completion_date ?? '—' }}</span>
+                            {{ t('pockets.edit.projectedCompletionDate') }}:
+                            <span class="font-medium text-foreground">{{ pocket.projected_completion_date ?? '—' }}</span>
                         </p>
                     </div>
 
@@ -214,14 +214,14 @@ function submit(): void {
                             @update:checked="(value) => (form.is_archived = value === true)"
                         />
                         <div class="grid gap-1 leading-tight">
-                            <Label for="is_archived" class="cursor-pointer">{{ t('goals.status.archived') }}</Label>
+                            <Label for="is_archived" class="cursor-pointer">{{ t('pockets.status.archived') }}</Label>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap gap-3">
                         <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
                         <Button variant="outline" as-child>
-                            <Link :href="route('goals.index')">{{ t('actions.cancel') }}</Link>
+                            <Link :href="route('pockets.index')">{{ t('actions.cancel') }}</Link>
                         </Button>
                     </div>
                 </form>

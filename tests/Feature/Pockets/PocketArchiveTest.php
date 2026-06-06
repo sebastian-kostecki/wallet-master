@@ -9,10 +9,10 @@ test('archived pocket is hidden from default index and monthly budget', function
     $user = User::factory()->create();
     ensureUserCategories($user);
 
-    $active = Pocket::factory()->create(['user_id' => $user->id, 'name' => 'Active goal']);
+    $active = Pocket::factory()->create(['user_id' => $user->id, 'name' => 'Active pocket']);
     $archived = Pocket::factory()->create([
         'user_id' => $user->id,
-        'name' => 'Archived goal',
+        'name' => 'Archived pocket',
         'target_amount' => '1000.00',
         'planning_mode' => PocketPlanningMode::Monthly,
         'monthly_contribution' => '100.00',
@@ -22,8 +22,8 @@ test('archived pocket is hidden from default index and monthly budget', function
     $this->actingAs($user)->get(route('pockets.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('pockets', fn ($pockets) => collect($pockets)->pluck('name')->contains('Active goal'))
-            ->where('pockets', fn ($pockets) => collect($pockets)->pluck('name')->doesntContain('Archived goal'))
+            ->where('pockets', fn ($pockets) => collect($pockets)->pluck('name')->contains('Active pocket'))
+            ->where('pockets', fn ($pockets) => collect($pockets)->pluck('name')->doesntContain('Archived pocket'))
         );
 
     $this->actingAs($user)->patch(route('pockets.update', $archived), [
@@ -33,13 +33,13 @@ test('archived pocket is hidden from default index and monthly budget', function
     $this->actingAs($user)->get(route('pockets.index', ['filter' => 'all']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('pockets', fn ($pockets) => collect($pockets)->pluck('name')->contains('Archived goal'))
+            ->where('pockets', fn ($pockets) => collect($pockets)->pluck('name')->contains('Archived pocket'))
         );
 
     $this->actingAs($user)->get('/budget/monthly?year=2026&month=3')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('pocket_rows', fn ($rows) => collect($rows)->pluck('name')->contains('Archived goal'))
+            ->where('pocket_rows', fn ($rows) => collect($rows)->pluck('name')->contains('Archived pocket'))
         );
 
     $this->actingAs($user)->patch(route('pockets.update', $active), [
@@ -49,7 +49,7 @@ test('archived pocket is hidden from default index and monthly budget', function
     $this->actingAs($user)->get('/budget/monthly?year=2026&month=3')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('pocket_rows', fn ($rows) => collect($rows)->pluck('name')->doesntContain('Active goal'))
+            ->where('pocket_rows', fn ($rows) => collect($rows)->pluck('name')->doesntContain('Active pocket'))
         );
 });
 

@@ -14,7 +14,7 @@ const { t } = useI18n();
 const benefits = [
     { key: 'imports', icon: CircleDollarSign },
     { key: 'budget', icon: BarChart3 },
-    { key: 'goals', icon: Target },
+    { key: 'pockets', icon: Target },
 ];
 </script>
 

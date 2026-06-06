@@ -37,7 +37,7 @@ final class PocketController extends Controller
 
         $listPockets->handle($request->user(), $filter);
 
-        return Inertia::render('goals/Index', [
+        return Inertia::render('pockets/Index', [
             'filter' => $filter,
             'pockets' => PocketResource::collection($listPockets->getPockets())->resolve(),
         ]);
@@ -45,7 +45,7 @@ final class PocketController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('goals/Create', [
+        return Inertia::render('pockets/Create', [
             ...(new PocketFormOptions)->toArray(),
         ]);
     }
@@ -64,7 +64,7 @@ final class PocketController extends Controller
     {
         $pocket->load('currency');
 
-        return Inertia::render('goals/Edit', [
+        return Inertia::render('pockets/Edit', [
             'pocket' => (new PocketResource($pocket))->resolve(request()),
             ...(new PocketFormOptions)->toArray(),
         ]);

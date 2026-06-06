@@ -23,14 +23,14 @@ type Account = {
     bank_icon_url: string | null;
 };
 
-type GoalOption = {
+type PocketOption = {
     id: number;
     name: string;
 };
 
 const props = defineProps<{
     accounts: Account[];
-    goals: GoalOption[];
+    pockets: PocketOption[];
 }>();
 
 const { t } = useI18n();
@@ -71,17 +71,17 @@ function todayDdMmYyyy(): string {
 const defaultFromId = computed(() => selectableAccounts.value[0]?.id ?? null);
 const defaultToId = computed(() => selectableAccounts.value[1]?.id ?? null);
 
-const goalOptions = computed<DropdownOption<number>[]>(() =>
-    props.goals.map((g) => ({
-        value: g.id,
-        label: g.name,
+const pocketOptions = computed<DropdownOption<number>[]>(() =>
+    props.pockets.map((p) => ({
+        value: p.id,
+        label: p.name,
     })),
 );
 
 const form = useForm<{
     from_account_id: number | null;
     to_account_id: number | null;
-    goal_id: number | null;
+    pocket_id: number | null;
     date: string;
     amount: string;
     subject: string;
@@ -89,7 +89,7 @@ const form = useForm<{
 }>({
     from_account_id: defaultFromId.value,
     to_account_id: defaultToId.value,
-    goal_id: null,
+    pocket_id: null,
     date: todayDdMmYyyy(),
     amount: '0,00',
     subject: '',
@@ -112,7 +112,7 @@ const involvesSavings = computed(() => {
 
 watch(involvesSavings, (value) => {
     if (!value) {
-        form.goal_id = null;
+        form.pocket_id = null;
     }
 });
 
@@ -295,20 +295,20 @@ function submit() {
 
                         <FormField
                             v-if="involvesSavings"
-                            for-id="goal_id"
-                            :label="t('transfers.form.goal')"
-                            :error="form.errors.goal_id"
+                            for-id="pocket_id"
+                            :label="t('transfers.form.pocket')"
+                            :error="form.errors.pocket_id"
                         >
                             <template #default="{ errorId, hasError }">
                                 <DropdownSelect
-                                    id="goal_id"
-                                    :model-value="form.goal_id"
-                                    :options="goalOptions"
-                                    :placeholder="t('transfers.form.goalPlaceholder')"
+                                    id="pocket_id"
+                                    :model-value="form.pocket_id"
+                                    :options="pocketOptions"
+                                    :placeholder="t('transfers.form.pocketPlaceholder')"
                                     :disabled="form.processing"
                                     :aria-invalid="hasError"
                                     :aria-describedby="hasError ? errorId : undefined"
-                                    @update:model-value="(value) => (form.goal_id = value)"
+                                    @update:model-value="(value) => (form.pocket_id = value)"
                                 />
                             </template>
                         </FormField>

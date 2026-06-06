@@ -10,7 +10,7 @@ const { t } = useI18n();
 const features = [
     { key: 'accounts', icon: CircleDollarSign },
     { key: 'imports', icon: ArrowRight },
-    { key: 'goals', icon: Target },
+    { key: 'pockets', icon: Target },
 ];
 </script>
 

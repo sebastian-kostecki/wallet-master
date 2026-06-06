@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import BudgetCategorySection from '@/components/budget/BudgetCategorySection.vue';
 import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
-import GoalBadge from '@/components/goals/GoalBadge.vue';
+import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatMoney as formatGoalMoney, type CurrencyDisplay } from '@/lib/formatMoney';
+import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -22,8 +22,8 @@ type BudgetRow = {
     progress_percent: number | null;
 };
 
-type GoalRow = {
-    goal_id: number;
+type PocketRow = {
+    pocket_id: number;
     name: string;
     icon: string;
     color: string;
@@ -47,7 +47,7 @@ const props = defineProps<{
     year: number;
     month: number;
     rows: BudgetRow[];
-    goal_rows: GoalRow[];
+    pocket_rows: PocketRow[];
     summary: BudgetSummary;
     currency: CurrencyDisplay;
 }>();
@@ -159,8 +159,8 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
             />
 
             <section class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                <h2 class="mb-3 text-lg font-semibold">{{ t('budget.monthly.goals_section') }}</h2>
-                <p v-if="goal_rows.length === 0" class="text-sm text-muted-foreground">{{ t('goals.index.empty') }}</p>
+                <h2 class="mb-3 text-lg font-semibold">{{ t('budget.monthly.pockets_section') }}</h2>
+                <p v-if="pocket_rows.length === 0" class="text-sm text-muted-foreground">{{ t('pockets.index.empty') }}</p>
                 <div v-else class="overflow-x-auto">
                     <table class="budget-table text-sm">
                         <colgroup>
@@ -168,7 +168,7 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
                         </colgroup>
                         <thead>
                             <tr class="border-b text-left text-muted-foreground">
-                                <th class="py-2 pr-4">{{ t('goals.index.fields.name') }}</th>
+                                <th class="py-2 pr-4">{{ t('pockets.index.fields.name') }}</th>
                                 <th class="py-2 pr-4">{{ t('budget.monthly.plan') }}</th>
                                 <th class="py-2 pr-4">{{ t('budget.monthly.saved') }}</th>
                                 <th class="py-2 pr-4">{{ t('budget.monthly.released') }}</th>
@@ -176,21 +176,21 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="row in goal_rows" :key="row.goal_id" class="border-b border-sidebar-border/40">
+                            <tr v-for="row in pocket_rows" :key="row.pocket_id" class="border-b border-sidebar-border/40">
                                 <td class="py-2 pr-4">
-                                    <GoalBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
+                                    <PocketBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                                 </td>
                                 <td class="py-2 pr-4">
                                     <div class="space-y-1">
-                                        <span class="tabular-nums">{{ formatGoalMoney(row.monthly_plan, row.currency) }}</span>
+                                        <span class="tabular-nums">{{ formatMoney(row.monthly_plan, row.currency) }}</span>
                                         <p v-if="row.target_amount !== null" class="text-xs text-muted-foreground">
-                                            {{ formatGoalMoney(row.balance_cumulative, row.currency) }} / {{ formatGoalMoney(row.target_amount, row.currency) }}
+                                            {{ formatMoney(row.balance_cumulative, row.currency) }} / {{ formatMoney(row.target_amount, row.currency) }}
                                         </p>
                                     </div>
                                 </td>
-                                <td class="py-2 pr-4">{{ formatGoalMoney(row.saved, row.currency) }}</td>
-                                <td class="py-2 pr-4">{{ formatGoalMoney(row.released, row.currency) }}</td>
-                                <td class="py-2">{{ formatGoalMoney(row.balance, row.currency) }}</td>
+                                <td class="py-2 pr-4">{{ formatMoney(row.saved, row.currency) }}</td>
+                                <td class="py-2 pr-4">{{ formatMoney(row.released, row.currency) }}</td>
+                                <td class="py-2">{{ formatMoney(row.balance, row.currency) }}</td>
                             </tr>
                         </tbody>
                     </table>

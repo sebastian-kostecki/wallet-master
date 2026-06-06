@@ -116,7 +116,7 @@ test('cumulative balance sums savings transfer legs across all months', function
     ]);
 });
 
-test('cumulative balance ignores savings legs in a different currency than the goal', function () {
+test('cumulative balance ignores savings legs in a different currency than the pocket', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
 
     Currency::query()->create([

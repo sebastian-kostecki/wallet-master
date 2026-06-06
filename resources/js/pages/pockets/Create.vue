@@ -4,7 +4,7 @@ import CategoryIconPicker from '@/components/categories/CategoryIconPicker.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
 import SegmentedControl, { type SegmentedControlOption } from '@/components/forms/SegmentedControl.vue';
-import GoalBadge from '@/components/goals/GoalBadge.vue';
+import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -41,8 +41,8 @@ const { t } = useI18n();
 const initialCurrencyId = computed(() => props.currencies[0]?.id ?? null);
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: t('goals.index.title'), href: route('goals.index') },
-    { title: t('goals.create.title'), href: route('goals.create') },
+    { title: t('pockets.index.title'), href: route('pockets.index') },
+    { title: t('pockets.create.title'), href: route('pockets.create') },
 ]);
 
 const colorError = ref<string | null>(null);
@@ -77,8 +77,8 @@ const hasTarget = computed(() => {
 });
 
 const planningModeOptions = computed<SegmentedControlOption<'monthly' | 'by_date'>[]>(() => [
-    { value: 'monthly', label: t('goals.planning.monthly') },
-    { value: 'by_date', label: t('goals.planning.by_date') },
+    { value: 'monthly', label: t('pockets.planning.monthly') },
+    { value: 'by_date', label: t('pockets.planning.by_date') },
 ]);
 
 function submit(): void {
@@ -99,19 +99,19 @@ function submit(): void {
         form.monthly_contribution = '';
     }
 
-    form.post(route('goals.store'));
+    form.post(route('pockets.store'));
 }
 </script>
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('goals.create.title')" />
+        <Head :title="t('pockets.create.title')" />
 
         <div class="flex flex-col gap-6 p-4">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form class="grid gap-6" @submit.prevent="submit">
                     <div class="flex items-center gap-4 rounded-lg border border-sidebar-border/50 p-4 dark:border-sidebar-border">
-                        <GoalBadge
+                        <PocketBadge
                             v-if="form.color"
                             :name="previewName"
                             :icon="form.icon"
@@ -121,21 +121,21 @@ function submit(): void {
                         <p v-else class="text-sm text-muted-foreground">{{ t('categories.fields.previewHint') }}</p>
                     </div>
 
-                    <FormField for-id="name" :label="t('goals.index.fields.name')" :error="form.errors.name">
+                    <FormField for-id="name" :label="t('pockets.index.fields.name')" :error="form.errors.name">
                         <Input id="name" v-model="form.name" required autofocus />
                     </FormField>
 
-                    <FormField for-id="currency_id" :label="t('goals.fields.currency.label')" :error="form.errors.currency_id">
+                    <FormField for-id="currency_id" :label="t('pockets.fields.currency.label')" :error="form.errors.currency_id">
                         <DropdownSelect
                             id="currency_id"
                             :model-value="form.currency_id"
                             :options="currencyOptions"
-                            :placeholder="t('goals.fields.currency.placeholder')"
+                            :placeholder="t('pockets.fields.currency.placeholder')"
                             @update:model-value="(value) => (form.currency_id = value)"
                         />
                     </FormField>
 
-                    <FormField for-id="target_amount" :label="t('goals.fields.targetAmount')" :error="form.errors.target_amount">
+                    <FormField for-id="target_amount" :label="t('pockets.fields.targetAmount')" :error="form.errors.target_amount">
                         <template #default="{ errorId, hasError }">
                             <div class="relative">
                                 <Input
@@ -166,12 +166,12 @@ function submit(): void {
                     </FormField>
 
                     <div v-if="hasTarget" class="grid gap-4 rounded-lg border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                        <FormField for-id="planning_mode" :label="t('goals.fields.planningMode')">
+                        <FormField for-id="planning_mode" :label="t('pockets.fields.planningMode')">
                             <SegmentedControl
                                 id="planning_mode"
                                 :model-value="form.planning_mode"
                                 :options="planningModeOptions"
-                                :aria-label="t('goals.fields.planningMode')"
+                                :aria-label="t('pockets.fields.planningMode')"
                                 @update:model-value="(value) => (form.planning_mode = value as 'monthly' | 'by_date')"
                             />
                         </FormField>
@@ -179,7 +179,7 @@ function submit(): void {
                         <FormField
                             v-if="form.planning_mode === 'monthly'"
                             for-id="monthly_contribution"
-                            :label="t('goals.fields.monthlyContribution')"
+                            :label="t('pockets.fields.monthlyContribution')"
                             :error="form.errors.monthly_contribution"
                         >
                             <template #default="{ errorId, hasError }">
@@ -206,7 +206,7 @@ function submit(): void {
                         <FormField
                             v-else
                             for-id="target_date"
-                            :label="t('goals.fields.targetDate')"
+                            :label="t('pockets.fields.targetDate')"
                             :error="form.errors.target_date"
                         >
                             <Input id="target_date" v-model="form.target_date" type="date" />
@@ -216,7 +216,7 @@ function submit(): void {
                     <div class="flex flex-wrap gap-3">
                         <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
                         <Button variant="outline" as-child>
-                            <Link :href="route('goals.index')">{{ t('actions.cancel') }}</Link>
+                            <Link :href="route('pockets.index')">{{ t('actions.cancel') }}</Link>
                         </Button>
                     </div>
                 </form>

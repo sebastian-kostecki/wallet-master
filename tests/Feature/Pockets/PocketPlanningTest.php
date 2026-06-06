@@ -22,7 +22,7 @@ test('pocket with target requires planning mode and monthly contribution', funct
     ])->assertSessionHasErrors('monthly_contribution');
 });
 
-test('goal rejects both monthly contribution and target date', function () {
+test('pocket rejects both monthly contribution and target date', function () {
     $user = User::factory()->create();
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
 

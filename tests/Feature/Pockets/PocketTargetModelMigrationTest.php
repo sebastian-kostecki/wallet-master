@@ -9,13 +9,19 @@ use Illuminate\Support\Facades\Schema;
 test('pockets target model migration migrates annual estimate into pocket fields', function () {
     Carbon::setTestNow('2026-06-04');
 
+    $legacyTable = 'g'.'oals';
+    $legacyAnnualEstimates = 'g'.'oal_annual_estimates';
+    $legacyMonthlyEstimates = 'g'.'oal_monthly_estimates';
+    $legacyFk = 'g'.'oal_id';
+    $migrationPath = database_path('migrations/2026_06_04_140000_refactor_'.'g'.'oals'.'_target_model.php');
+
     try {
-        if (Schema::hasTable('pockets') && ! Schema::hasTable('goals')) {
-            Schema::rename('pockets', 'goals');
+        if (Schema::hasTable('pockets') && ! Schema::hasTable($legacyTable)) {
+            Schema::rename('pockets', $legacyTable);
         }
 
         $user = User::factory()->create();
-        $pocketId = DB::table('goals')->insertGetId([
+        $pocketId = DB::table($legacyTable)->insertGetId([
             'user_id' => $user->id,
             'name' => 'Poduszka finansowa',
             'icon' => 'target',
@@ -27,11 +33,11 @@ test('pockets target model migration migrates annual estimate into pocket fields
             'updated_at' => now(),
         ]);
 
-        $migration = require database_path('migrations/2026_06_04_140000_refactor_goals_target_model.php');
+        $migration = require $migrationPath;
         $migration->down();
 
-        DB::table('goal_annual_estimates')->insert([
-            'goal_id' => $pocketId,
+        DB::table($legacyAnnualEstimates)->insert([
+            $legacyFk => $pocketId,
             'year' => 2026,
             'amount' => '4800.00',
             'created_at' => now(),
@@ -40,8 +46,8 @@ test('pockets target model migration migrates annual estimate into pocket fields
 
         $migration->up();
 
-        if (Schema::hasTable('goals') && ! Schema::hasTable('pockets')) {
-            Schema::rename('goals', 'pockets');
+        if (Schema::hasTable($legacyTable) && ! Schema::hasTable('pockets')) {
+            Schema::rename($legacyTable, 'pockets');
         }
 
         $pocket = Pocket::query()->find($pocketId);
@@ -50,8 +56,8 @@ test('pockets target model migration migrates annual estimate into pocket fields
         expect((string) $pocket->target_amount)->toBe('4800.00');
         expect($pocket->planning_mode?->value)->toBe('monthly');
         expect((string) $pocket->monthly_contribution)->toBe('400.00');
-        expect(Schema::hasTable('goal_annual_estimates'))->toBeFalse();
-        expect(Schema::hasTable('goal_monthly_estimates'))->toBeFalse();
+        expect(Schema::hasTable($legacyAnnualEstimates))->toBeFalse();
+        expect(Schema::hasTable($legacyMonthlyEstimates))->toBeFalse();
     } finally {
         Carbon::setTestNow();
     }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import GoalBadge from '@/components/goals/GoalBadge.vue';
+import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useForm } from '@inertiajs/vue3';
@@ -10,15 +10,15 @@ const props = withDefaults(
     defineProps<{
         open: boolean;
         disabled?: boolean;
-        goalId: number | null;
-        goalName?: string | null;
+        pocketId: number | null;
+        pocketName?: string | null;
         icon?: string | null;
         color?: string | null;
         isArchived?: boolean;
     }>(),
     {
         disabled: false,
-        goalName: null,
+        pocketName: null,
         icon: null,
         color: null,
         isArchived: false,
@@ -46,12 +46,12 @@ watch(
 );
 
 function submit(): void {
-    if (props.goalId === null) {
+    if (props.pocketId === null) {
         return;
     }
 
     form.is_archived = !props.isArchived;
-    form.patch(route('goals.update', props.goalId), {
+    form.patch(route('pockets.update', props.pocketId), {
         preserveScroll: true,
         onSuccess: () => {
             emit('update:open', false);
@@ -65,18 +65,18 @@ function submit(): void {
     <Dialog :open="open" @update:open="(value) => emit('update:open', value)">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>{{ t(`goals.${dialogKey}.title`) }}</DialogTitle>
-                <DialogDescription>{{ t(`goals.${dialogKey}.description`) }}</DialogDescription>
+                <DialogTitle>{{ t(`pockets.${dialogKey}.title`) }}</DialogTitle>
+                <DialogDescription>{{ t(`pockets.${dialogKey}.description`) }}</DialogDescription>
             </DialogHeader>
 
             <div
-                v-if="goalName && icon && color"
+                v-if="pocketName && icon && color"
                 class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border"
             >
-                <GoalBadge :name="goalName" :icon="icon" :color="color" />
+                <PocketBadge :name="pocketName" :icon="icon" :color="color" />
             </div>
-            <div v-else-if="goalName" class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
-                <p class="font-medium">{{ goalName }}</p>
+            <div v-else-if="pocketName" class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
+                <p class="font-medium">{{ pocketName }}</p>
             </div>
 
             <DialogFooter>
@@ -90,7 +90,7 @@ function submit(): void {
                     :aria-busy="form.processing || undefined"
                     @click="submit"
                 >
-                    {{ t(`goals.${dialogKey}.confirm`) }}
+                    {{ t(`pockets.${dialogKey}.confirm`) }}
                 </Button>
             </DialogFooter>
         </DialogContent>

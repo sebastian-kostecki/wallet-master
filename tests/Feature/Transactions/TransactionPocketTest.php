@@ -99,7 +99,7 @@ test('user can update transaction pocket_id', function () {
         'type' => TransactionType::Expense,
         'description' => 'Coffee',
         'normalized_description' => 'coffee',
-        'dedupe_hash' => md5('update-goal', true),
+        'dedupe_hash' => md5('update-pocket', true),
     ]);
 
     $this->actingAs($user)->patch(route('transactions.update', $transaction), [
@@ -156,7 +156,7 @@ test('transaction edit page includes pockets list', function () {
         'type' => TransactionType::Expense,
         'description' => 'Coffee',
         'normalized_description' => 'coffee',
-        'dedupe_hash' => md5('edit-goals', true),
+        'dedupe_hash' => md5('edit-pockets', true),
     ]);
 
     $response = $this->actingAs($user)->get(route('transactions.edit', $transaction));

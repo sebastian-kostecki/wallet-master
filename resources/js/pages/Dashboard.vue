@@ -18,10 +18,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 const quickActions = [
     { key: 'accounts', href: route('accounts.index'), icon: Wallet },
     { key: 'transactions', href: route('transactions.index'), icon: ArrowLeftRight },
-    { key: 'goals', href: route('goals.index'), icon: Target },
+    { key: 'pockets', href: route('pockets.index'), icon: Target },
 ];
 
-const previewItems = ['imports', 'budget', 'goals'];
+const previewItems = ['imports', 'budget', 'pockets'];
 </script>
 
 <template>

@@ -154,11 +154,11 @@
         "brand": {
             "eyebrow": "Ogarniam Portfel",
             "promise": "Odzyskaj kontrolę nad domowym budżetem",
-            "description": "Importuj historię, porządkuj transakcje i śledź cele bez arkuszy kalkulacyjnych.",
+            "description": "Importuj historię, porządkuj transakcje i śledź kieszenie bez arkuszy kalkulacyjnych.",
             "benefits": {
                 "imports": "Import historii z banku",
                 "budget": "Budżet i kategorie w jednym miejscu",
-                "goals": "Cele oszczędnościowe pod ręką"
+                "pockets": "Kieszenie oszczędnościowe pod ręką"
             }
         },
         "confirmPassword": {
@@ -180,13 +180,13 @@
         "name": "Ogarniam Portfel",
         "promise": "Odzyskaj kontrolę nad domowym budżetem",
         "shortPromise": "Budżet pod kontrolą",
-        "description": "Konta, transakcje, importy, budżet i cele w jednym uporządkowanym miejscu."
+        "description": "Konta, transakcje, importy, budżet i kieszenie w jednym uporządkowanym miejscu."
     },
     "welcome": {
         "headTitle": "Ogarniam Portfel",
         "eyebrow": "Budżet domowy bez chaosu",
         "title": "Odzyskaj kontrolę nad domowym budżetem",
-        "description": "Zbieraj konta, transakcje, importy, budżet i cele w jednym miejscu. Szybciej zobaczysz, dokąd płyną pieniądze i co możesz poprawić.",
+        "description": "Zbieraj konta, transakcje, importy, budżet i kieszenie w jednym miejscu. Szybciej zobaczysz, dokąd płyną pieniądze i co możesz poprawić.",
         "primaryCta": "Utwórz konto",
         "secondaryCta": "Zaloguj się",
         "dashboardCta": "Przejdź do dashboardu",
@@ -199,9 +199,9 @@
                 "title": "Import historii",
                 "description": "Wczytuj wyciągi i szybciej porządkuj transakcje."
             },
-            "goals": {
-                "title": "Budżet i cele",
-                "description": "Planuj wydatki, kategorie i odkładanie na cele."
+            "pockets": {
+                "title": "Budżet i kieszenie",
+                "description": "Planuj wydatki, kategorie i odkładanie w kieszeniach."
             }
         }
     },
@@ -220,10 +220,10 @@
                 "description": "Zapisz przychód, wydatek lub transfer.",
                 "cta": "Przejdź do transakcji"
             },
-            "goals": {
-                "title": "Zaplanuj cel",
+            "pockets": {
+                "title": "Zaplanuj kieszeń",
                 "description": "Nadaj kierunek odkładanym środkom.",
-                "cta": "Przejdź do celów"
+                "cta": "Przejdź do kieszeni"
             }
         },
         "preview": {
@@ -231,7 +231,7 @@
             "items": {
                 "imports": "Importy porządkują historię",
                 "budget": "Budżet pokazuje plan i wykonanie",
-                "goals": "Cele pokazują postęp oszczędzania"
+                "pockets": "Kieszenie pokazują postęp oszczędzania"
             }
         }
     },
@@ -242,8 +242,8 @@
     "transactions": {
         "fields": {
             "category": "Kategoria",
-            "goal": "Cel",
-            "goalNone": "Brak"
+            "pocket": "Kieszeń",
+            "pocketNone": "Brak"
         },
         "index": {
             "title": "Transakcje",
@@ -425,8 +425,8 @@
             "date": "Data",
             "subjectOptional": "Nadawca/Odbiorca (opcjonalnie)",
             "descriptionOptional": "Opis (opcjonalnie)",
-            "goal": "Cel oszczędnościowy",
-            "goalPlaceholder": "Wybierz cel",
+            "pocket": "Kieszeń oszczędnościowa",
+            "pocketPlaceholder": "Wybierz kieszeń",
             "hint": "Zapiszemy wydatek na koncie źródłowym i przychód na koncie docelowym.",
             "sameAccountError": "Wybierz inne konto docelowe niż źródłowe.",
             "deletedNotice": "To konto jest usunięte — transfer jest zablokowany.",
@@ -634,17 +634,17 @@
             "estimate_saved": "Plan został zapisany."
         }
     },
-    "goals": {
+    "pockets": {
         "create": {
-            "title": "Nowy cel"
+            "title": "Nowa kieszeń"
         },
         "edit": {
-            "title": "Edytuj cel",
+            "title": "Edytuj kieszeń",
             "recommendedMonthly": "Rekomendowana kwota miesięczna",
             "projectedCompletionDate": "Przewidywana data realizacji"
         },
         "fields": {
-            "targetAmount": "Kwota celu",
+            "targetAmount": "Kwota docelowa",
             "monthlyContribution": "Wpłata miesięczna",
             "targetDate": "Data realizacji",
             "planningMode": "Tryb planowania",
@@ -658,9 +658,9 @@
             "by_date": "Data realizacji"
         },
         "status": {
-            "completed": "Zrealizowany",
-            "overdue": "Opóźniony",
-            "archived": "Zarchiwizowany"
+            "completed": "Zrealizowana",
+            "overdue": "Opóźniona",
+            "archived": "Zarchiwizowana"
         },
         "filters": {
             "active": "Aktywne",
@@ -668,32 +668,32 @@
             "all": "Wszystkie"
         },
         "archive": {
-            "title": "Zarchiwizować cel?",
-            "description": "Cel zniknie z aktywnej listy i budżetu miesięcznego. Możesz go później przywrócić z filtra zarchiwizowanych.",
-            "confirm": "Zarchiwizuj cel"
+            "title": "Zarchiwizować kieszeń?",
+            "description": "Kieszeń zniknie z aktywnej listy i budżetu miesięcznego. Możesz ją później przywrócić z filtra zarchiwizowanych.",
+            "confirm": "Zarchiwizuj kieszeń"
         },
         "unarchive": {
-            "title": "Przywrócić cel?",
-            "description": "Cel wróci do aktywnej listy i budżetu miesięcznego.",
-            "confirm": "Przywróć cel"
+            "title": "Przywrócić kieszeń?",
+            "description": "Kieszeń wróci do aktywnej listy i budżetu miesięcznego.",
+            "confirm": "Przywróć kieszeń"
         },
         "index": {
-            "title": "Cele",
-            "add": "Dodaj cel",
-            "listTitle": "Twoje cele",
-            "empty": "Brak celów.",
+            "title": "Kieszenie",
+            "add": "Dodaj kieszeń",
+            "listTitle": "Twoje kieszenie",
+            "empty": "Brak kieszeni.",
             "fields": {
                 "name": "Nazwa"
             },
-            "archive": "Zarchiwizuj cel",
-            "unarchive": "Przywróć cel",
-            "delete": "Usuń cel",
-            "deleteConfirm": "Usunąć cel „{name}”?"
+            "archive": "Zarchiwizuj kieszeń",
+            "unarchive": "Przywróć kieszeń",
+            "delete": "Usuń kieszeń",
+            "deleteConfirm": "Usunąć kieszeń „{name}”?"
         },
         "toast": {
-            "created": "Cel został dodany.",
-            "updated": "Cel został zaktualizowany.",
-            "deleted": "Cel został usunięty.",
+            "created": "Kieszeń została dodana.",
+            "updated": "Kieszeń została zaktualizowana.",
+            "deleted": "Kieszeń została usunięta.",
             "estimate_saved": "Szacunek został zapisany."
         }
     },
@@ -704,11 +704,11 @@
             "plan": "Plan",
             "actual": "Wykonanie",
             "difference": "Różnica",
-            "goals_section": "Cele oszczędnościowe",
+            "pockets_section": "Kieszenie oszczędnościowe",
             "saved": "Odłożono",
             "released": "Wypłacono",
             "balance": "Saldo",
-            "manage_goals": "Zarządzaj celami",
+            "manage_pockets": "Zarządzaj kieszeniami",
             "allocation_hint": "Suma szacunków miesięcznych: {monthly} / roczny: {annual}",
             "planPlaceholder": "Nadpisanie miesięczne"
         },
@@ -749,6 +749,7 @@
     "nav": {
         "platform": "Platforma",
         "dashboard": "Panel",
+        "pockets": "Kieszenie",
         "settings": "Ustawienia",
         "logout": "Wyloguj się"
     },

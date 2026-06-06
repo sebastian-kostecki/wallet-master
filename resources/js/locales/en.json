@@ -154,11 +154,11 @@
         "brand": {
             "eyebrow": "Ogarniam Portfel",
             "promise": "Take back control of your household budget",
-            "description": "Import history, organize transactions, and track goals without spreadsheets.",
+            "description": "Import history, organize transactions, and track envelopes without spreadsheets.",
             "benefits": {
                 "imports": "Bank history imports",
                 "budget": "Budget and categories in one place",
-                "goals": "Savings goals close at hand"
+                "pockets": "Savings envelopes close at hand"
             }
         },
         "confirmPassword": {
@@ -180,13 +180,13 @@
         "name": "Ogarniam Portfel",
         "promise": "Take back control of your household budget",
         "shortPromise": "Budget under control",
-        "description": "Accounts, transactions, imports, budgets, and goals in one organized place."
+        "description": "Accounts, transactions, imports, budgets, and envelopes in one organized place."
     },
     "welcome": {
         "headTitle": "Ogarniam Portfel",
         "eyebrow": "Household budget without chaos",
         "title": "Take back control of your household budget",
-        "description": "Bring accounts, transactions, imports, budgets, and goals into one place. See where money flows and what you can improve faster.",
+        "description": "Bring accounts, transactions, imports, budgets, and envelopes into one place. See where money flows and what you can improve faster.",
         "primaryCta": "Create account",
         "secondaryCta": "Log in",
         "dashboardCta": "Go to dashboard",
@@ -199,9 +199,9 @@
                 "title": "History imports",
                 "description": "Upload statements and organize transactions faster."
             },
-            "goals": {
-                "title": "Budget and goals",
-                "description": "Plan spending, categories, and savings goals."
+            "pockets": {
+                "title": "Budget and envelopes",
+                "description": "Plan spending, categories, and savings envelopes."
             }
         }
     },
@@ -220,10 +220,10 @@
                 "description": "Record income, expense, or transfer.",
                 "cta": "Go to transactions"
             },
-            "goals": {
-                "title": "Plan a goal",
+            "pockets": {
+                "title": "Plan an envelope",
                 "description": "Give your savings a clear direction.",
-                "cta": "Go to goals"
+                "cta": "Go to envelopes"
             }
         },
         "preview": {
@@ -231,7 +231,7 @@
             "items": {
                 "imports": "Imports organize history",
                 "budget": "Budget shows plan and actuals",
-                "goals": "Goals show savings progress"
+                "pockets": "Envelopes show savings progress"
             }
         }
     },
@@ -242,8 +242,8 @@
     "transactions": {
         "fields": {
             "category": "Category",
-            "goal": "Goal",
-            "goalNone": "None"
+            "pocket": "Envelope",
+            "pocketNone": "None"
         },
         "index": {
             "title": "Transactions",
@@ -423,8 +423,8 @@
             "date": "Date",
             "subjectOptional": "Subject (optional)",
             "descriptionOptional": "Description (optional)",
-            "goal": "Savings goal",
-            "goalPlaceholder": "Select a goal",
+            "pocket": "Savings envelope",
+            "pocketPlaceholder": "Select an envelope",
             "hint": "We'll save an expense on the source account and an income on the destination account.",
             "sameAccountError": "Choose a different destination account than the source account.",
             "deletedNotice": "This account is deleted — transfers are blocked.",
@@ -629,12 +629,12 @@
             "estimate_saved": "Plan saved."
         }
     },
-    "goals": {
+    "pockets": {
         "create": {
-            "title": "New goal"
+            "title": "New envelope"
         },
         "edit": {
-            "title": "Edit goal",
+            "title": "Edit envelope",
             "recommendedMonthly": "Recommended monthly",
             "projectedCompletionDate": "Projected completion date"
         },
@@ -663,32 +663,32 @@
             "all": "All"
         },
         "archive": {
-            "title": "Archive goal?",
-            "description": "The goal will be hidden from the active list and monthly budget. You can restore it later from the archived filter.",
-            "confirm": "Archive goal"
+            "title": "Archive envelope?",
+            "description": "The envelope will be hidden from the active list and monthly budget. You can restore it later from the archived filter.",
+            "confirm": "Archive envelope"
         },
         "unarchive": {
-            "title": "Restore goal?",
-            "description": "The goal will return to the active list and monthly budget.",
-            "confirm": "Restore goal"
+            "title": "Restore envelope?",
+            "description": "The envelope will return to the active list and monthly budget.",
+            "confirm": "Restore envelope"
         },
         "index": {
-            "title": "Goals",
-            "add": "Add goal",
-            "listTitle": "Your goals",
-            "empty": "No goals yet.",
+            "title": "Envelopes",
+            "add": "Add envelope",
+            "listTitle": "Your envelopes",
+            "empty": "No envelopes yet.",
             "fields": {
                 "name": "Name"
             },
-            "archive": "Archive goal",
-            "unarchive": "Restore goal",
-            "delete": "Delete goal",
-            "deleteConfirm": "Delete goal “{name}”?"
+            "archive": "Archive envelope",
+            "unarchive": "Restore envelope",
+            "delete": "Delete envelope",
+            "deleteConfirm": "Delete envelope “{name}”?"
         },
         "toast": {
-            "created": "Goal added.",
-            "updated": "Goal updated.",
-            "deleted": "Goal deleted.",
+            "created": "Envelope added.",
+            "updated": "Envelope updated.",
+            "deleted": "Envelope deleted.",
             "estimate_saved": "Estimate saved."
         }
     },
@@ -699,11 +699,11 @@
             "plan": "Plan",
             "actual": "Actual",
             "difference": "Difference",
-            "goals_section": "Savings goals",
+            "pockets_section": "Savings envelopes",
             "saved": "Saved",
             "released": "Released",
             "balance": "Balance",
-            "manage_goals": "Manage goals",
+            "manage_pockets": "Manage envelopes",
             "allocation_hint": "Monthly estimates total: {monthly} / annual: {annual}",
             "planPlaceholder": "Monthly override"
         },
@@ -744,6 +744,7 @@
     "nav": {
         "platform": "Platform",
         "dashboard": "Dashboard",
+        "pockets": "Envelopes",
         "settings": "Settings",
         "logout": "Log out"
     },

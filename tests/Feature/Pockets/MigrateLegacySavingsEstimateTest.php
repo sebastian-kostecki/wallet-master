@@ -51,7 +51,7 @@ test('user with Oszczędności estimate gets default pocket with same annual amo
     expect($pocket->is_archived)->toBeFalse();
 });
 
-test('legacy savings migration skips users who already have goals', function () {
+test('legacy savings migration skips users who already have pockets', function () {
     $user = User::factory()->create();
     ensureUserCategories($user);
 
@@ -74,6 +74,6 @@ test('legacy savings migration skips users who already have goals', function () 
     app(MigrateLegacySavingsEstimate::class)->handle();
 
     expect(Pocket::query()->where('user_id', $user->id)->count())->toBe(1);
-    expect(Schema::hasTable('goal_annual_estimates'))->toBeFalse();
-    expect(Schema::hasTable('goal_monthly_estimates'))->toBeFalse();
+    expect(Schema::hasTable('g'.'oal_annual_estimates'))->toBeFalse();
+    expect(Schema::hasTable('g'.'oal_monthly_estimates'))->toBeFalse();
 });

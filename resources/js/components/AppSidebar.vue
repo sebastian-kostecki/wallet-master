@@ -40,8 +40,8 @@ const mainNavItems = computed<NavItem[]>(() => [
         icon: Tags,
     },
     {
-        title: t('goals.index.title'),
-        href: route('goals.index'),
+        title: t('nav.pockets'),
+        href: route('pockets.index'),
         icon: Target,
     },
 ]);
