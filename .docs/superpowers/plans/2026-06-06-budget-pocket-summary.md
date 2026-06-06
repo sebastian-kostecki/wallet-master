@@ -116,7 +116,7 @@ test('withPockets recalculates expense_percent only and preserves income_percent
     ], 'PLN');
 
     expect($merged['progress']['income_percent'])->toBe(50)
-        ->and($merged['progress']['expense_percent'])->toBe(67);
+        ->and($merged['progress']['expense_percent'])->toBe(100);
 });
 ```
 
