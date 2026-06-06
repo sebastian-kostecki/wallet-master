@@ -432,3 +432,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Komponenty: `components/budget/*` (progress, summary, editable estimate)
 - [x] Testy: feature Monthly/Yearly + unit Support/Budgets (16 testów)
 
+**Wyrównanie sekcji kieszeni (`improvement/budget-pocket-section-alignment`):**
+
+- [x] Sekcja kieszeni: wspólny grid z P&L (Plan \| Ruch \| Postęp); `BudgetPocketSection`, `BudgetPocketMovementCell`
+- [x] Postęp miesięczny kieszeni: odłożono vs plan (nie postęp do celu kumulacyjnego)
+- [x] Link „Zarządzaj kieszeniami”; sekcja ukryta przy braku kieszeni
+
