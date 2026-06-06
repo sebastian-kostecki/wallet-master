@@ -181,8 +181,120 @@ test('monthly budget pocket row tracks save and release on savings account', fun
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['monthly_plan'] === '500.00')
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['saved'] === '200.00')
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['released'] === '150.00')
-        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['balance'] === '50.00')
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['progress_percent'] === 40)
+        ->where('pocket_rows', fn ($rows) => ! array_key_exists('balance', collect($rows)->firstWhere('pocket_id', $pocket->id)))
+        ->where('pocket_rows', fn ($rows) => ! array_key_exists('balance_cumulative', collect($rows)->firstWhere('pocket_id', $pocket->id)))
+        ->where('pocket_rows', fn ($rows) => ! array_key_exists('target_amount', collect($rows)->firstWhere('pocket_id', $pocket->id)))
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['currency']['code'] === 'PLN')
+    );
+});
+
+test('monthly budget pocket progress uses saved vs plan not cumulative target', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $pocket = Pocket::factory()->create([
+        'user_id' => $user->id,
+        'target_amount' => '5000.00',
+        'planning_mode' => PocketPlanningMode::Monthly,
+        'monthly_contribution' => '500.00',
+    ]);
+
+    $checking = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'ROR',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $savings = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Oszczędności',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $febSaveTransferId = 'feb-save-transfer-uuid';
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $checking->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-02-10',
+        'booked_at' => '2026-02-10',
+        'amount' => '-3000.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Feb save',
+        'normalized_description' => 'feb save',
+        'dedupe_hash' => md5('feb-xfer-out', true),
+        'transfer_id' => $febSaveTransferId,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $savings->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-02-10',
+        'booked_at' => '2026-02-10',
+        'amount' => '3000.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Feb save',
+        'normalized_description' => 'feb save',
+        'dedupe_hash' => md5('feb-xfer-in', true),
+        'transfer_id' => $febSaveTransferId,
+    ]);
+
+    $marSaveTransferId = 'mar-save-transfer-uuid';
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $checking->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-03-10',
+        'booked_at' => '2026-03-10',
+        'amount' => '-250.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Mar save',
+        'normalized_description' => 'mar save',
+        'dedupe_hash' => md5('mar-xfer-out', true),
+        'transfer_id' => $marSaveTransferId,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $savings->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-03-10',
+        'booked_at' => '2026-03-10',
+        'amount' => '250.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Mar save',
+        'normalized_description' => 'mar save',
+        'dedupe_hash' => md5('mar-xfer-in', true),
+        'transfer_id' => $marSaveTransferId,
+    ]);
+
+    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['saved'] === '250.00')
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['progress_percent'] === 50)
     );
 });
 

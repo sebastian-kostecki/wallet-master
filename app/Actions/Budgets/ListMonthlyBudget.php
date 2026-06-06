@@ -163,20 +163,17 @@ final class ListMonthlyBudget
         foreach ($pockets as $pocket) {
             $metrics = PocketTransactionMetrics::forMonth($user, $pocket, $period);
             $cumulative = PocketBalance::cumulative($user, $pocket);
-            $targetAmount = $pocket->target_amount !== null ? (string) $pocket->target_amount : null;
+            $monthlyPlan = PocketPlanningProjection::monthlyPlanForBudget($pocket, $cumulative['balance']);
 
             $rows[] = [
                 'pocket_id' => $pocket->id,
                 'name' => $pocket->name,
                 'icon' => $pocket->icon,
                 'color' => $pocket->color,
-                'monthly_plan' => PocketPlanningProjection::monthlyPlanForBudget($pocket, $cumulative['balance']),
+                'monthly_plan' => $monthlyPlan,
                 'saved' => $metrics['saved'],
                 'released' => $metrics['released'],
-                'balance' => $metrics['balance'],
-                'balance_cumulative' => $cumulative['balance'],
-                'target_amount' => $targetAmount,
-                'progress_percent' => PocketBalance::progressPercent($pocket, $cumulative['balance']),
+                'progress_percent' => BudgetProgress::percent($monthlyPlan, $metrics['saved']),
                 'currency' => [
                     'code' => $pocket->currency->code,
                     'symbol' => $pocket->currency->symbol,
