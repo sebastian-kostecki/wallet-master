@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import BudgetCategorySection from '@/components/budget/BudgetCategorySection.vue';
+import BudgetPocketSection from '@/components/budget/BudgetPocketSection.vue';
 import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
-import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
+import { type CurrencyDisplay } from '@/lib/formatMoney';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -30,9 +30,6 @@ type PocketRow = {
     monthly_plan: string | null;
     saved: string;
     released: string;
-    balance: string;
-    balance_cumulative: string;
-    target_amount: string | null;
     progress_percent: number | null;
     currency: CurrencyDisplay;
 };
@@ -158,44 +155,7 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
                 @save="saveMonthlyEstimate"
             />
 
-            <section class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                <h2 class="mb-3 text-lg font-semibold">{{ t('budget.monthly.pockets_section') }}</h2>
-                <p v-if="pocket_rows.length === 0" class="text-sm text-muted-foreground">{{ t('pockets.index.empty') }}</p>
-                <div v-else class="overflow-x-auto">
-                    <table class="budget-table text-sm">
-                        <colgroup>
-                            <col class="budget-col-label" />
-                        </colgroup>
-                        <thead>
-                            <tr class="border-b text-left text-muted-foreground">
-                                <th class="py-2 pr-4">{{ t('pockets.index.fields.name') }}</th>
-                                <th class="py-2 pr-4">{{ t('budget.monthly.plan') }}</th>
-                                <th class="py-2 pr-4">{{ t('budget.monthly.saved') }}</th>
-                                <th class="py-2 pr-4">{{ t('budget.monthly.released') }}</th>
-                                <th class="py-2">{{ t('budget.monthly.balance') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="row in pocket_rows" :key="row.pocket_id" class="border-b border-sidebar-border/40">
-                                <td class="py-2 pr-4">
-                                    <PocketBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
-                                </td>
-                                <td class="py-2 pr-4">
-                                    <div class="space-y-1">
-                                        <span class="tabular-nums">{{ formatMoney(row.monthly_plan, row.currency) }}</span>
-                                        <p v-if="row.target_amount !== null" class="text-xs text-muted-foreground">
-                                            {{ formatMoney(row.balance_cumulative, row.currency) }} / {{ formatMoney(row.target_amount, row.currency) }}
-                                        </p>
-                                    </div>
-                                </td>
-                                <td class="py-2 pr-4">{{ formatMoney(row.saved, row.currency) }}</td>
-                                <td class="py-2 pr-4">{{ formatMoney(row.released, row.currency) }}</td>
-                                <td class="py-2">{{ formatMoney(row.balance, row.currency) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <BudgetPocketSection :rows="pocket_rows" />
         </div>
     </AppLayout>
 </template>
