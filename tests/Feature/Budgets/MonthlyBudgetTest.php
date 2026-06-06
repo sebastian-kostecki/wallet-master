@@ -186,6 +186,160 @@ test('monthly budget pocket row tracks save and release on savings account', fun
     );
 });
 
+test('monthly budget summary includes pocket saved as expense and released as income', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $expenseCategory = Category::query()
+        ->where('user_id', $user->id)
+        ->where('type', 'expense')
+        ->ordered()
+        ->firstOrFail();
+
+    CategoryAnnualEstimate::query()->create([
+        'category_id' => $expenseCategory->id,
+        'year' => 2026,
+        'amount' => 3600,
+    ]);
+
+    $pocket = Pocket::factory()->create([
+        'user_id' => $user->id,
+        'target_amount' => '6000.00',
+        'planning_mode' => PocketPlanningMode::Monthly,
+        'monthly_contribution' => '500.00',
+    ]);
+
+    $checking = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'ROR',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $savings = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Oszczędności',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $saveTransferId = 'summary-save-transfer-uuid';
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $checking->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-03-10',
+        'booked_at' => '2026-03-10',
+        'amount' => '-200.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'To savings',
+        'normalized_description' => 'to savings',
+        'dedupe_hash' => md5('summary-xfer-out', true),
+        'transfer_id' => $saveTransferId,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $savings->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-03-10',
+        'booked_at' => '2026-03-10',
+        'amount' => '200.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'To savings',
+        'normalized_description' => 'to savings',
+        'dedupe_hash' => md5('summary-xfer-in', true),
+        'transfer_id' => $saveTransferId,
+    ]);
+
+    $releaseTransferId = 'summary-release-transfer-uuid';
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $savings->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-03-15',
+        'booked_at' => '2026-03-15',
+        'amount' => '-150.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'From savings',
+        'normalized_description' => 'from savings',
+        'dedupe_hash' => md5('summary-xfer-out-release', true),
+        'transfer_id' => $releaseTransferId,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $checking->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-03-15',
+        'booked_at' => '2026-03-15',
+        'amount' => '150.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'From savings',
+        'normalized_description' => 'from savings',
+        'dedupe_hash' => md5('summary-xfer-in-release', true),
+        'transfer_id' => $releaseTransferId,
+    ]);
+
+    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('summary.plan.expense', '800.00')
+        ->where('summary.execution.expense', '200.00')
+        ->where('summary.execution.income', '150.00')
+        ->where('summary.execution.balance', '-50.00')
+    );
+});
+
+test('monthly budget summary plan expense includes pocket monthly plan', function () {
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    Pocket::factory()->create([
+        'user_id' => $user->id,
+        'target_amount' => '6000.00',
+        'planning_mode' => PocketPlanningMode::Monthly,
+        'monthly_contribution' => '500.00',
+    ]);
+
+    $expenseCategory = Category::query()
+        ->where('user_id', $user->id)
+        ->where('type', 'expense')
+        ->ordered()
+        ->firstOrFail();
+
+    CategoryAnnualEstimate::query()->create([
+        'category_id' => $expenseCategory->id,
+        'year' => 2026,
+        'amount' => 3600,
+    ]);
+
+    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('summary.plan.expense', '800.00')
+    );
+});
+
 test('monthly budget exposes summary currency and progress without difference', function () {
     $user = User::factory()->create();
     ensureUserCategories($user);
