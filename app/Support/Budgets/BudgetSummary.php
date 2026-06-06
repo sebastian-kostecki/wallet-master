@@ -81,4 +81,54 @@ final class BudgetSummary
 
         return $summary;
     }
+
+    /**
+     * @param  array{
+     *     plan: array{income: string, expense: string, balance: string},
+     *     execution: array{income: string, expense: string, balance: string},
+     *     progress: array{income_percent: int|null, expense_percent: int|null},
+     *     forecast?: array{income: string, expense: string, balance: string}
+     * }  $summary
+     * @param  list<array{
+     *     monthly_plan: ?string,
+     *     saved: string,
+     *     released: string,
+     *     currency: array{code: string}
+     * }>  $pocketRows
+     * @return array{
+     *     plan: array{income: string, expense: string, balance: string},
+     *     execution: array{income: string, expense: string, balance: string},
+     *     progress: array{income_percent: int|null, expense_percent: int|null},
+     *     forecast?: array{income: string, expense: string, balance: string}
+     * }
+     */
+    public static function withPockets(array $summary, array $pocketRows, string $summaryCurrencyCode): array
+    {
+        $planExpense = $summary['plan']['expense'];
+        $executionIncome = $summary['execution']['income'];
+        $executionExpense = $summary['execution']['expense'];
+
+        foreach ($pocketRows as $row) {
+            if (($row['currency']['code'] ?? '') !== $summaryCurrencyCode) {
+                continue;
+            }
+
+            $monthlyPlan = $row['monthly_plan'] ?? null;
+            if ($monthlyPlan !== null) {
+                $planExpense = bcadd($planExpense, (string) $monthlyPlan, 2);
+            }
+
+            $executionExpense = bcadd($executionExpense, (string) ($row['saved'] ?? '0.00'), 2);
+            $executionIncome = bcadd($executionIncome, (string) ($row['released'] ?? '0.00'), 2);
+        }
+
+        $summary['plan']['expense'] = $planExpense;
+        $summary['plan']['balance'] = bcsub($summary['plan']['income'], $planExpense, 2);
+        $summary['execution']['income'] = $executionIncome;
+        $summary['execution']['expense'] = $executionExpense;
+        $summary['execution']['balance'] = bcsub($executionIncome, $executionExpense, 2);
+        $summary['progress']['expense_percent'] = BudgetProgress::percent($planExpense, $executionExpense);
+
+        return $summary;
+    }
 }
