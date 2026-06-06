@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-    layout: 'summary' | 'category';
+    layout: 'summary' | 'category' | 'pocket';
     period: 'monthly' | 'yearly';
 }>();
 </script>
@@ -20,6 +20,12 @@ defineProps<{
         <col class="budget-col-progress" />
     </colgroup>
     <colgroup v-else-if="layout === 'category' && period === 'monthly'">
+        <col class="budget-col-label" />
+        <col class="budget-col-plan" />
+        <col class="budget-col-amount" />
+        <col class="budget-col-progress" />
+    </colgroup>
+    <colgroup v-else-if="layout === 'pocket' && period === 'monthly'">
         <col class="budget-col-label" />
         <col class="budget-col-plan" />
         <col class="budget-col-amount" />
