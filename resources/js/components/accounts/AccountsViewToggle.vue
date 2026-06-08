@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '@/components/ui/button';
 import { LayoutGrid, List } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
@@ -16,32 +17,30 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <div class="inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800" :aria-label="t('accounts.index.view.toggleAria')">
-        <button
+    <div
+        role="group"
+        class="inline-flex gap-1 rounded-lg border border-input bg-muted/30 p-1"
+        :aria-label="t('accounts.index.view.toggleAria')"
+    >
+        <Button
             type="button"
+            :variant="modelValue === 'grid' ? 'secondary' : 'ghost'"
+            class="h-9 px-3.5"
+            :aria-pressed="modelValue === 'grid'"
             @click="$emit('update:modelValue', 'grid')"
-            :class="[
-                'flex items-center rounded-md px-3.5 py-1.5 transition-colors',
-                modelValue === 'grid'
-                    ? 'bg-white shadow-sm dark:bg-neutral-700 dark:text-neutral-100'
-                    : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
-            ]"
         >
-            <LayoutGrid class="-ml-1 h-4 w-4" aria-hidden="true" />
-            <span class="ml-1.5 text-sm">{{ t('accounts.index.view.grid') }}</span>
-        </button>
-        <button
+            <LayoutGrid aria-hidden="true" />
+            {{ t('accounts.index.view.grid') }}
+        </Button>
+        <Button
             type="button"
+            :variant="modelValue === 'list' ? 'secondary' : 'ghost'"
+            class="h-9 px-3.5"
+            :aria-pressed="modelValue === 'list'"
             @click="$emit('update:modelValue', 'list')"
-            :class="[
-                'flex items-center rounded-md px-3.5 py-1.5 transition-colors',
-                modelValue === 'list'
-                    ? 'bg-white shadow-sm dark:bg-neutral-700 dark:text-neutral-100'
-                    : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
-            ]"
         >
-            <List class="-ml-1 h-4 w-4" aria-hidden="true" />
-            <span class="ml-1.5 text-sm">{{ t('accounts.index.view.list') }}</span>
-        </button>
+            <List aria-hidden="true" />
+            {{ t('accounts.index.view.list') }}
+        </Button>
     </div>
 </template>
