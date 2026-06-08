@@ -37,6 +37,7 @@ final class PocketResource extends JsonResource
             'color' => $this->color,
             'sort_order' => $this->sort_order,
             'currency_id' => $this->currency_id,
+            'initial_balance' => (string) $this->initial_balance,
             'currency' => $this->whenLoaded(
                 'currency',
                 fn () => CurrencyResource::make($this->currency)->resolve($request),
