@@ -56,8 +56,6 @@ final class Transaction extends Model
         'updated_at',
     ];
 
-    protected $guarded = [];
-
     /**
      * @return array<string, string>
      */

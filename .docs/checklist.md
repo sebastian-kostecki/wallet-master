@@ -312,6 +312,23 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] `RateLimiter::for('imports', ...)` w `AppServiceProvider::boot` — 10/min per `user_id` (fallback per IP).
 - [x] `RateLimiter::for('api', ...)` — 60/min per zalogowanego użytkownika (`throttle:api` na `POST /telemetry/event`).
 - [x] Middleware `throttle:imports` na trasach upload/commit w `routes/imports.php`.
+- [x] `throttle:6,1` na `POST /login`, `POST /forgot-password`, `POST /reset-password` (PRD §8).
+
+#### 12.1a Nagłówki i proxy (kod aplikacji)
+- [x] Middleware `SecurityHeaders` (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP, Permissions-Policy).
+- [x] `TrustProxies` w `bootstrap/app.php` (reverse proxy w kontenerze).
+
+#### 12.1b Horizon
+- [x] `viewHorizon` — allowlista z `HORIZON_ALLOWED_EMAILS` w `config/horizon.php`.
+
+#### 12.1c Backup (`spatie/laravel-backup`)
+- [x] Paczka zainstalowana; config `config/backup.php` (DB + `storage/app/private`, dysk `backups`).
+- [x] Scheduler: `backup:run`, `backup:clean`, `backup:monitor` w `routes/console.php`.
+- [x] Env: `BACKUP_DISK`, `BACKUP_MAIL_TO` w `.env.example`.
+
+#### 12.1d Logi produkcyjne
+- [x] Usunięto `description_raw` z `Log::debug` w `CommitImport` (telemetria z `reason_code` wystarcza).
+- [x] Komentarze prod w `.env.example` (`APP_DEBUG`, `LOG_LEVEL`, `SESSION_*`).
 
 #### 12.2 Konto Cash bez 500
 - [x] `PrepareImportUpload` → `PrepareImportUploadResult` z kodem `bank_unsupported`.
@@ -320,7 +337,16 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 #### 12.3 Mass assignment
 - [x] Modele domenowe — `$fillable` na `Transaction`, `Account`, `Import`, `ImportFailedRow`, `AccountBalanceAdjustment`; `User` / `Currency` bez zmian.
+- [x] Usunięto `$guarded = []` z `Transaction`; `Currency` — jawne `$fillable`.
 - [x] `Model::shouldBeStrict()` w `AppServiceProvider::boot()` (poza prod).
+
+#### 12.4 Testy bezpieczeństwa (pre-prod)
+- [x] Throttle login / forgot-password (`AuthRateLimitTest`).
+- [x] Throttle import commit (`CommitRateLimitTest`).
+- [x] Nagłówki HTTP (`SecurityHeadersTest`).
+- [x] Izolacja wave 2: categories, pockets, budget, transfer unlink (`Wave2IsolationTest`).
+- [x] Mass assignment (`MassAssignmentTest`).
+- [x] Backup smoke (`BackupCommandTest`).
 
 ---
 

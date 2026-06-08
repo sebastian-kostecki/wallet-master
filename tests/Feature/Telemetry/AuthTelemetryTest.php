@@ -5,6 +5,8 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Notification;
 
 test('registration records user_registered telemetry event', function () {
+    config(['auth.registration.enabled' => true]);
+
     $logged = captureTelemetryLogs(function (): void {
         $this->post('/register', [
             'name' => 'Test User',

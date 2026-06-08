@@ -23,7 +23,6 @@ use App\Telemetry\Event;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use RuntimeException;
 
 final class CommitImport
@@ -343,13 +342,6 @@ final class CommitImport
             'row_number' => $counters->rowIndex,
             'reason_code' => $reasonCode->value,
         ], $lockedImport->user_id);
-
-        Log::debug('Import row validation failed.', [
-            'import_id' => $lockedImport->id,
-            'row_number' => $counters->rowIndex,
-            'reason_code' => $reasonCode->value,
-            'description_raw' => Str::limit($rawFields['description_raw'], 80, ''),
-        ]);
     }
 
     /**

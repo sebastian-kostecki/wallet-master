@@ -251,4 +251,18 @@ return [
         'composer.json',
         '.env',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Horizon Access Allowlist
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated emails allowed to view Horizon in non-local environments.
+    |
+    */
+
+    'allowed_emails' => array_values(array_filter(array_map(
+        trim(...),
+        explode(',', (string) env('HORIZON_ALLOWED_EMAILS', '')),
+    ))),
 ];

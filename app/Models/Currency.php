@@ -14,7 +14,12 @@ final class Currency extends Model
     /** @use HasFactory<CurrencyFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'code',
+        'name',
+        'symbol',
+        'precision',
+    ];
 
     /**
      * @return array<string, string>
