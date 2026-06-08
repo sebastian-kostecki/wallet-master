@@ -184,3 +184,60 @@ test('cumulative balance ignores savings legs in a different currency than the p
 
     expect($result['balance'])->toBe('100.00');
 });
+
+test('cumulative balance includes initial_balance without transfers', function () {
+    $user = User::factory()->create();
+    $pocket = Pocket::factory()->create([
+        'user_id' => $user->id,
+        'initial_balance' => '500.00',
+    ]);
+
+    $result = PocketBalance::cumulative($user, $pocket);
+
+    expect($result)->toBe([
+        'saved_total' => '0.00',
+        'released_total' => '0.00',
+        'balance' => '500.00',
+    ]);
+});
+
+test('cumulative balance adds initial_balance to transfer net', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $pocket = Pocket::factory()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'initial_balance' => '500.00',
+    ]);
+    $savings = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Savings',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $savings->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'date' => '2026-01-15',
+        'booked_at' => '2026-01-15',
+        'amount' => '200.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Save',
+        'normalized_description' => 'save',
+        'dedupe_hash' => md5('save-with-initial', true),
+        'transfer_id' => (string) Str::uuid(),
+    ]);
+
+    $result = PocketBalance::cumulative($user, $pocket);
+
+    expect($result['saved_total'])->toBe('200.00');
+    expect($result['released_total'])->toBe('0.00');
+    expect($result['balance'])->toBe('700.00');
+});

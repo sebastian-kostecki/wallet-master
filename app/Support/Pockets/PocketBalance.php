@@ -42,7 +42,8 @@ final class PocketBalance
             ->value('total');
 
         $releasedTotal = TransactionDedupe::amountToDecimalString((string) $releasedSum);
-        $balance = bcsub($savedTotal, $releasedTotal, 2);
+        $transferNet = bcsub($savedTotal, $releasedTotal, 2);
+        $balance = bcadd((string) $pocket->initial_balance, $transferNet, 2);
 
         return [
             'saved_total' => $savedTotal,
