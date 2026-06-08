@@ -5,11 +5,11 @@ use App\Http\Controllers\Transfers\TransferController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
-    Route::get('transfers/create', [TransferController::class, 'create'])->name('transfers.create');
-    Route::post('transfers', [TransferController::class, 'store'])->name('transfers.store');
-    Route::post('transfers/candidates/{transaction}/confirm', [TransferCandidateController::class, 'confirm'])
+    Route::get(route_path('transfers.create'), [TransferController::class, 'create'])->name('transfers.create');
+    Route::post(route_path('transfers'), [TransferController::class, 'store'])->name('transfers.store');
+    Route::post(route_path('transfers.candidates.confirm'), [TransferCandidateController::class, 'confirm'])
         ->name('transfers.candidates.confirm');
-    Route::post('transfers/candidates/{transaction}/reject', [TransferCandidateController::class, 'reject'])
+    Route::post(route_path('transfers.candidates.reject'), [TransferCandidateController::class, 'reject'])
         ->name('transfers.candidates.reject');
-    Route::post('transfers/{transferId}/unlink', [TransferController::class, 'unlink'])->name('transfers.unlink');
+    Route::post(route_path('transfers.unlink'), [TransferController::class, 'unlink'])->name('transfers.unlink');
 });

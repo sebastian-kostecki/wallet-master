@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -62,6 +63,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Route::resourceVerbs([
+            'create' => 'utworz',
+            'edit' => 'edytuj',
+        ]);
+
         if (! $this->app->isProduction()) {
             Model::shouldBeStrict();
         }
