@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { type BreadcrumbItem } from '@/types';
+import { route } from 'ziggy-js';
 
 interface Props {
     className?: string;
@@ -24,7 +25,7 @@ const { t } = useI18n();
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     {
         title: t('settings.password.title'),
-        href: '/settings/password',
+        href: route('password.edit'),
     },
 ]);
 

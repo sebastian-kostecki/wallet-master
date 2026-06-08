@@ -8,6 +8,7 @@ import { Link } from '@inertiajs/vue3';
 import { ArrowLeftRight, LayoutGrid, PieChart, Tags, Target, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 import AppLogo from './AppLogo.vue';
 
 const { t } = useI18n();
@@ -16,12 +17,12 @@ const { transactionsIndexHref } = useTransactionsIndexSearch();
 const mainNavItems = computed<NavItem[]>(() => [
     {
         title: t('nav.dashboard'),
-        href: '/dashboard',
+        href: route('dashboard'),
         icon: LayoutGrid,
     },
     {
         title: t('accounts.index.title'),
-        href: '/accounts',
+        href: route('accounts.index'),
         icon: Wallet,
     },
     {

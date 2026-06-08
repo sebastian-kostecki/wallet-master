@@ -10,6 +10,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 type Currency = {
     id: number;
@@ -39,11 +40,11 @@ const initialCurrencyId = computed(() => props.currencies[0]?.id ?? null);
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('accounts.index.title'),
-        href: '/accounts',
+        href: route('accounts.index'),
     },
     {
         title: t('accounts.create.title'),
-        href: '/accounts/create',
+        href: route('accounts.create'),
     },
 ]);
 

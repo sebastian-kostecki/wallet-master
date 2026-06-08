@@ -13,6 +13,7 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { type BreadcrumbItem, type SharedData, type User } from '@/types';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 interface Props {
     mustVerifyEmail: boolean;
@@ -27,7 +28,7 @@ const { t } = useI18n();
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('settings.profile.title'),
-        href: '/settings/profile',
+        href: route('profile.edit'),
     },
 ]);
 

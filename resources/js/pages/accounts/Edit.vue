@@ -12,6 +12,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 type Option = {
     value: string;
@@ -76,11 +77,11 @@ const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('accounts.index.title'),
-        href: '/accounts',
+        href: route('accounts.index'),
     },
     {
         title: t('accounts.edit.title'),
-        href: `/accounts/${props.account.id}/edit`,
+        href: route('accounts.edit', props.account.id),
     },
 ]);
 

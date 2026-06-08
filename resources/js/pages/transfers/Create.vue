@@ -12,6 +12,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 type Account = {
     id: number;
@@ -43,7 +44,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     },
     {
         title: t('transfers.create.title'),
-        href: '/transfers/create',
+        href: route('transfers.create'),
     },
 ]);
 

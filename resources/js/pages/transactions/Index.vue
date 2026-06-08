@@ -34,6 +34,7 @@ import {
 } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 type Account = {
     id: number;
@@ -162,7 +163,7 @@ const { t, locale } = useI18n();
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('transactions.index.title'),
-        href: '/transactions',
+        href: route('transactions.index'),
     },
 ]);
 

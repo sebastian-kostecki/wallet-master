@@ -13,6 +13,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { PiggyBank, Wallet } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 type Currency = {
     id: number;
@@ -41,7 +42,7 @@ const { t } = useI18n();
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: t('accounts.index.title'),
-        href: '/accounts',
+        href: route('accounts.index'),
     },
 ]);
 

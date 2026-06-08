@@ -9,13 +9,14 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 const { t } = useI18n();
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
     {
         title: t('settings.appearance.title'),
-        href: '/settings/appearance',
+        href: route('appearance'),
     },
 ]);
 </script>

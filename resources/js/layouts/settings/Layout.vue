@@ -6,21 +6,22 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 const { t } = useI18n();
 
 const sidebarNavItems = computed<NavItem[]>(() => [
     {
         title: t('settings.nav.profile'),
-        href: '/settings/profile',
+        href: route('profile.edit'),
     },
     {
         title: t('settings.nav.password'),
-        href: '/settings/password',
+        href: route('password.edit'),
     },
     {
         title: t('settings.nav.appearance'),
-        href: '/settings/appearance',
+        href: route('appearance'),
     },
 ]);
 

@@ -5,13 +5,14 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeftRight, BarChart3, Target, Wallet } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 const { t } = useI18n();
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: route('dashboard'),
     },
 ];
 

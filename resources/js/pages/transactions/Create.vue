@@ -16,6 +16,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
 
 type Account = {
     id: number;
@@ -45,7 +46,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     },
     {
         title: t('transactions.create.title'),
-        href: '/transactions/create',
+        href: route('transactions.create'),
     },
 ]);
 
