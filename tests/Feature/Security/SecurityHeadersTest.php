@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 test('web responses include security headers', function () {
-    $response = $this->get('/login');
+    $response = $this->get(route('login', absolute: false));
 
     $response->assertOk();
     $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');

@@ -149,7 +149,7 @@ test('update transaction remembers category in description memory', function () 
         'raw_statement_description' => 'RAW FUEL 123',
     ]);
 
-    $this->actingAs($user)->put("/transactions/{$transaction->id}", [
+    $this->actingAs($user)->put(route('transactions.update', $transaction, absolute: false), [
         'account_id' => $account->id,
         'date' => '10-03-2026',
         'amount' => -10,

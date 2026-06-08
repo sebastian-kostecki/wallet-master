@@ -25,7 +25,7 @@ test('user can update account name and opening balance and current balance chang
 
     $response = $this
         ->actingAs($user)
-        ->patch("/accounts/{$account->id}", [
+        ->patch(route('accounts.update', $account, absolute: false), [
             'name' => 'New name',
             'bank' => 'mbank',
             'type' => 'savings',

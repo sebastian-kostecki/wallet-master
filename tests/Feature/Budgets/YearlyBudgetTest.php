@@ -72,7 +72,7 @@ test('yearly budget excludes internal transfers from category actuals', function
         'transfer_id' => 'test-transfer-uuid',
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/yearly?year=2026');
+    $response = $this->actingAs($user)->get(route('budget.yearly', ['year' => 2026], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
@@ -131,7 +131,7 @@ test('yearly budget exposes forecast and summary for current year', function () 
         'dedupe_hash' => md5('food-forecast', true),
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/yearly?year=2026');
+    $response = $this->actingAs($user)->get(route('budget.yearly', ['year' => 2026], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page

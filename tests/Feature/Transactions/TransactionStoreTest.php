@@ -15,7 +15,7 @@ beforeEach(function () {
 });
 
 test('guest is redirected to login', function () {
-    $this->post('/transactions', [])->assertRedirect('/login');
+    $this->post(route('transactions.store', absolute: false), [])->assertRedirect(route('login', absolute: false));
 });
 
 test('user can create a transaction and it updates account balance', function () {
@@ -35,7 +35,7 @@ test('user can create a transaction and it updates account balance', function ()
 
     $response = $this
         ->actingAs($user)
-        ->post('/transactions', [
+        ->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '24-04-2026',
             'amount' => -12.34,
@@ -74,7 +74,7 @@ test('user can explicitly set booked_at when creating a transaction', function (
 
     $response = $this
         ->actingAs($user)
-        ->post('/transactions', [
+        ->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '24-04-2026',
             'booked_at' => '30-03-2026',
@@ -106,7 +106,7 @@ test('amount cannot be zero', function () {
 
     $this
         ->actingAs($user)
-        ->post('/transactions', [
+        ->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '24-04-2026',
             'amount' => 0,
@@ -131,7 +131,7 @@ test('category_id is required when creating a transaction', function () {
 
     $this
         ->actingAs($user)
-        ->post('/transactions', [
+        ->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '24-04-2026',
             'amount' => -10,
@@ -159,7 +159,7 @@ test('expense transaction rejects income category', function () {
 
     $this
         ->actingAs($user)
-        ->post('/transactions', [
+        ->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '24-04-2026',
             'amount' => -10,
@@ -186,7 +186,7 @@ test('cannot create a transaction for a deleted account', function () {
 
     $this
         ->actingAs($user)
-        ->post('/transactions', [
+        ->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '24-04-2026',
             'amount' => 10,

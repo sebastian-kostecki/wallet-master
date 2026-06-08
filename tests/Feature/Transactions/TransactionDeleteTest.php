@@ -42,8 +42,8 @@ test('deleting a transaction reverses its effect on balance', function () {
 
     $this
         ->actingAs($user)
-        ->delete("/transactions/{$transaction->id}")
-        ->assertRedirect('/transactions');
+        ->delete(route('transactions.destroy', $transaction, absolute: false))
+        ->assertRedirect(route('transactions.index', absolute: false));
 
     $account->refresh();
     expect($account->current_balance)->toBe('100.00');
@@ -81,7 +81,7 @@ test('cannot delete a transaction on a deleted account', function () {
 
     $this
         ->actingAs($user)
-        ->delete("/transactions/{$transaction->id}")
+        ->delete(route('transactions.destroy', $transaction, absolute: false))
         ->assertForbidden();
 });
 
@@ -143,8 +143,8 @@ test('deleting one side of a transfer deletes both and reverts both balances', f
 
     $this
         ->actingAs($user)
-        ->delete("/transactions/{$withdrawal->id}")
-        ->assertRedirect('/transactions');
+        ->delete(route('transactions.destroy', $withdrawal, absolute: false))
+        ->assertRedirect(route('transactions.index', absolute: false));
 
     expect(Transaction::query()->whereKey($withdrawal->id)->exists())->toBeFalse();
     expect(Transaction::query()->whereKey($deposit->id)->exists())->toBeFalse();

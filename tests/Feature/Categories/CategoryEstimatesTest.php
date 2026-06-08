@@ -14,7 +14,7 @@ test('user can save annual estimate for category', function () {
         ->where('name', 'Artykuły spożywcze')
         ->firstOrFail();
 
-    $response = $this->actingAs($user)->patch("/categories/{$food->id}/estimates/annual", [
+    $response = $this->actingAs($user)->patch(route('categories.estimates.annual', $food, absolute: false), [
         'year' => 2026,
         'amount' => 12000,
     ]);
@@ -39,7 +39,7 @@ test('user can save monthly estimate override', function () {
         ->where('name', 'Artykuły spożywcze')
         ->firstOrFail();
 
-    $response = $this->actingAs($user)->patch("/categories/{$food->id}/estimates/monthly", [
+    $response = $this->actingAs($user)->patch(route('categories.estimates.monthly', $food, absolute: false), [
         'year' => 2026,
         'month' => 3,
         'amount' => 1500,
@@ -67,7 +67,7 @@ test('estimate amount must be zero or positive', function () {
         ->firstOrFail();
 
     $this->actingAs($user)
-        ->patch("/categories/{$food->id}/estimates/annual", [
+        ->patch(route('categories.estimates.annual', $food, absolute: false), [
             'year' => 2026,
             'amount' => -1,
         ])

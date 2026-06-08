@@ -31,7 +31,7 @@ test('users cannot create a transaction on another users account', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->post('/transactions', [
+        ->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '20-04-2026',
             'amount' => -10,
@@ -70,7 +70,7 @@ test('users do not see another users transactions on index', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->get('/transactions')
+        ->get(route('transactions.index', absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/Index', false)
@@ -109,7 +109,7 @@ test('users cannot view another users transaction edit page', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->get("/transactions/{$transaction->id}/edit")
+        ->get(route('transactions.edit', $transaction, absolute: false))
         ->assertForbidden();
 });
 
@@ -143,7 +143,7 @@ test('users cannot update another users transaction', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->put("/transactions/{$transaction->id}", [
+        ->put(route('transactions.update', $transaction, absolute: false), [
             'account_id' => $account->id,
             'date' => '20-04-2026',
             'amount' => -20,
@@ -183,6 +183,6 @@ test('users cannot delete another users transaction', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->delete("/transactions/{$transaction->id}")
+        ->delete(route('transactions.destroy', $transaction, absolute: false))
         ->assertForbidden();
 });

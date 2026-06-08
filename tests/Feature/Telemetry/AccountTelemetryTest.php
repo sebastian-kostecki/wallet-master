@@ -18,7 +18,7 @@ test('creating account records account_created telemetry event', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
 
     $logged = captureTelemetryLogs(function () use ($user, $plnId): void {
-        $this->actingAs($user)->post('/accounts', [
+        $this->actingAs($user)->post(route('accounts.store', absolute: false), [
             'name' => 'Konto testowe',
             'bank' => 'cash',
             'type' => 'checking',
@@ -50,7 +50,7 @@ test('updating account records account_updated telemetry event', function () {
     ]);
 
     $logged = captureTelemetryLogs(function () use ($user, $account): void {
-        $this->actingAs($user)->patch("/accounts/{$account->id}", [
+        $this->actingAs($user)->patch(route('accounts.update', $account, absolute: false), [
             'name' => 'New name',
             'bank' => 'mbank',
             'type' => 'savings',
@@ -104,7 +104,7 @@ test('deleting account records account_deleted and account_deleted_with_transact
     ]);
 
     $logged = captureTelemetryLogs(function () use ($user, $account): void {
-        $this->actingAs($user)->delete("/accounts/{$account->id}")->assertRedirect('/accounts');
+        $this->actingAs($user)->delete(route('accounts.destroy', $account, absolute: false))->assertRedirect(route('accounts.index', absolute: false));
     });
 
     assertTelemetryEvent($logged, 'account_deleted', function (array $context) use ($user, $account) {
@@ -130,7 +130,7 @@ test('adjusting account balance records account_balance_adjusted telemetry event
     ]);
 
     $logged = captureTelemetryLogs(function () use ($user, $account): void {
-        $this->actingAs($user)->patch("/accounts/{$account->id}/balance", [
+        $this->actingAs($user)->patch(route('accounts.balance.update', $account, absolute: false), [
             'new_balance' => 999.99,
         ])->assertSessionHasNoErrors();
     });

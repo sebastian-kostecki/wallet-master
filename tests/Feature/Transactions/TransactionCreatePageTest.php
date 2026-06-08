@@ -28,7 +28,7 @@ test('create page renders inertia component with accounts', function () {
 
     $response = $this
         ->actingAs($user)
-        ->get('/transactions/create');
+        ->get(route('transactions.create', absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page

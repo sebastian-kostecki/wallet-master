@@ -81,7 +81,7 @@ test('user can confirm a pending transfer candidate pair', function () {
     [$withdrawal, $deposit] = createManualTransferPair($user, $from, $to);
 
     $this->actingAs($user)
-        ->from('/transactions')
+        ->from(route('transactions.index', absolute: false))
         ->post(route('transfers.candidates.confirm', $withdrawal))
         ->assertRedirect();
 

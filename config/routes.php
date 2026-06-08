@@ -38,7 +38,7 @@ return [
             'auth.register' => 'rejestracja',
             'auth.password.request' => 'reset-hasla',
             'auth.password.reset' => 'reset-hasla/{token}',
-            'auth.password.store' => 'reset-hasla',
+            'auth.password.store' => 'reset-hasla/zapis',
             'auth.verification.notice' => 'weryfikacja-email',
             'auth.verification.verify' => 'weryfikacja-email/{id}/{hash}',
             'auth.verification.send' => 'email/weryfikacja',

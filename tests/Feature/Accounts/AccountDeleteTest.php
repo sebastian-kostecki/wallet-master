@@ -25,9 +25,9 @@ test('user can soft delete account', function () {
 
     $response = $this
         ->actingAs($user)
-        ->delete("/accounts/{$account->id}");
+        ->delete(route('accounts.destroy', $account, absolute: false));
 
-    $response->assertRedirect('/accounts');
+    $response->assertRedirect(route('accounts.index', absolute: false));
 
     $this->assertSoftDeleted('accounts', ['id' => $account->id]);
 });

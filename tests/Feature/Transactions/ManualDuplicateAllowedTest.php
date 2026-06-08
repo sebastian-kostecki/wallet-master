@@ -35,10 +35,10 @@ test('user can manually create two transactions with identical fields', function
         'category_id' => defaultCategoryId($user),
     ];
 
-    $first = $this->actingAs($user)->post('/transactions', $payload);
+    $first = $this->actingAs($user)->post(route('transactions.store', absolute: false), $payload);
     $first->assertSessionHasNoErrors();
 
-    $second = $this->actingAs($user)->post('/transactions', $payload);
+    $second = $this->actingAs($user)->post(route('transactions.store', absolute: false), $payload);
     $second->assertSessionHasNoErrors();
 
     expect(Transaction::query()->where('account_id', $account->id)->count())->toBe(2);

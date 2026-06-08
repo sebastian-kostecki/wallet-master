@@ -13,7 +13,7 @@ beforeEach(function () {
 });
 
 test('guest is redirected to login', function () {
-    $this->get('/transfers/create')->assertRedirect('/login');
+    $this->get(route('transfers.create', absolute: false))->assertRedirect(route('login', absolute: false));
 });
 
 test('page renders and includes active + deleted accounts', function () {
@@ -41,7 +41,7 @@ test('page renders and includes active + deleted accounts', function () {
     ]);
     $deleted->delete();
 
-    $response = $this->actingAs($user)->get('/transfers/create');
+    $response = $this->actingAs($user)->get(route('transfers.create', absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -80,7 +80,7 @@ test('transfer create page exposes savings account type as lowercase enum value'
         'current_balance' => 0,
     ]);
 
-    $this->actingAs($user)->get('/transfers/create')
+    $this->actingAs($user)->get(route('transfers.create', absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transfers/Create', false)

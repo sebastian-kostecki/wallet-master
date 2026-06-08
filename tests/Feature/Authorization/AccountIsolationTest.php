@@ -29,7 +29,7 @@ test('users cannot edit another users account', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->get("/accounts/{$account->id}/edit")
+        ->get(route('accounts.edit', $account, absolute: false))
         ->assertForbidden();
 });
 
@@ -49,7 +49,7 @@ test('users cannot update another users account', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->put("/accounts/{$account->id}", [
+        ->put(route('accounts.update', $account, absolute: false), [
             'name' => 'Stolen name',
             'bank' => Bank::Cash->value,
             'type' => AccountType::Checking->value,
@@ -74,7 +74,7 @@ test('users cannot delete another users account', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->delete("/accounts/{$account->id}")
+        ->delete(route('accounts.destroy', $account, absolute: false))
         ->assertForbidden();
 });
 
@@ -94,7 +94,7 @@ test('users cannot adjust balance on another users account', function () {
     ]);
 
     $this->actingAs($otherUser)
-        ->patch("/accounts/{$account->id}/balance", [
+        ->patch(route('accounts.balance.update', $account, absolute: false), [
             'new_balance' => 500,
         ])
         ->assertForbidden();

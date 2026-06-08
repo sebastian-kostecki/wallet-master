@@ -34,7 +34,7 @@ test('monthly budget uses annual divided by twelve when no monthly override', fu
         'amount' => 12000,
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
@@ -65,7 +65,7 @@ test('monthly budget uses monthly override when set', function () {
         'amount' => 1500,
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
@@ -174,7 +174,7 @@ test('monthly budget pocket row tracks save and release on savings account', fun
         'transfer_id' => $releaseTransferId,
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
@@ -289,7 +289,7 @@ test('monthly budget pocket progress uses saved vs plan not cumulative target', 
         'transfer_id' => $marSaveTransferId,
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
@@ -410,7 +410,7 @@ test('monthly budget summary includes pocket saved as expense and released as in
         'transfer_id' => $releaseTransferId,
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
@@ -444,7 +444,7 @@ test('monthly budget summary plan expense includes pocket monthly plan', functio
         'amount' => 3600,
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
@@ -480,7 +480,7 @@ test('monthly budget exposes summary currency and progress without difference', 
         'amount' => 3600,
     ]);
 
-    $response = $this->actingAs($user)->get('/budget/monthly?year=2026&month=3');
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page

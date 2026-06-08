@@ -57,7 +57,7 @@ test('transactions are filtered by booked_at when set, otherwise by date', funct
 
     $responseMarch = $this
         ->actingAs($user)
-        ->get('/transactions?account_id='.$account->id.'&from=01-03-2026&to=31-03-2026');
+        ->get(route('transactions.index', ['account_id' => $account->id, 'from' => '01-03-2026', 'to' => '31-03-2026'], absolute: false));
 
     $responseMarch->assertOk();
     $responseMarch->assertInertia(fn (Assert $page) => $page
@@ -68,7 +68,7 @@ test('transactions are filtered by booked_at when set, otherwise by date', funct
 
     $responseApril = $this
         ->actingAs($user)
-        ->get('/transactions?account_id='.$account->id.'&from=01-04-2026&to=30-04-2026');
+        ->get(route('transactions.index', ['account_id' => $account->id, 'from' => '01-04-2026', 'to' => '30-04-2026'], absolute: false));
 
     $responseApril->assertOk();
     $responseApril->assertInertia(fn (Assert $page) => $page
@@ -108,7 +108,7 @@ test('transactions fall back to date when booked_at is null', function () {
 
     $this
         ->actingAs($user)
-        ->get('/transactions?account_id='.$account->id.'&from=01-03-2026&to=31-03-2026')
+        ->get(route('transactions.index', ['account_id' => $account->id, 'from' => '01-03-2026', 'to' => '31-03-2026'], absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/Index', false)

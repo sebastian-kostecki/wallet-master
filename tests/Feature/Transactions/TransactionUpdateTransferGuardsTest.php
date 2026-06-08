@@ -83,7 +83,7 @@ test('cannot change amount on a linked transfer leg', function () {
     [$withdrawal, , $from] = createLinkedTransferPair($user, $plnId, $transferId);
 
     $this->actingAs($user)
-        ->put("/transactions/{$withdrawal->id}", [
+        ->put(route('transactions.update', $withdrawal, absolute: false), [
             'account_id' => $from->id,
             'date' => '01-04-2026',
             'amount' => -99,
@@ -105,7 +105,7 @@ test('cannot change account on a linked transfer leg', function () {
     [$withdrawal, , $from, $to] = createLinkedTransferPair($user, $plnId, $transferId);
 
     $this->actingAs($user)
-        ->put("/transactions/{$withdrawal->id}", [
+        ->put(route('transactions.update', $withdrawal, absolute: false), [
             'account_id' => $to->id,
             'date' => '01-04-2026',
             'amount' => -50,
@@ -125,7 +125,7 @@ test('can update description on a linked transfer leg', function () {
     [$withdrawal, , $from] = createLinkedTransferPair($user, $plnId, $transferId);
 
     $this->actingAs($user)
-        ->put("/transactions/{$withdrawal->id}", [
+        ->put(route('transactions.update', $withdrawal, absolute: false), [
             'account_id' => $from->id,
             'date' => '01-04-2026',
             'amount' => -50,

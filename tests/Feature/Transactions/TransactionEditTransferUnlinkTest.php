@@ -48,7 +48,7 @@ test('edit page exposes transfer_id for linked leg', function () {
     ]);
 
     $this->actingAs($user)
-        ->get("/transactions/{$withdrawal->id}/edit")
+        ->get(route('transactions.edit', $withdrawal, absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/Edit', false)

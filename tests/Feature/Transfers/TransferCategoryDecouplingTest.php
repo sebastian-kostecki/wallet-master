@@ -35,7 +35,7 @@ test('transfer create persists null category_id on both legs', function () {
         'current_balance' => 0,
     ]);
 
-    $this->actingAs($user)->post('/transfers', [
+    $this->actingAs($user)->post(route('transfers.store', absolute: false), [
         'from_account_id' => $from->id,
         'to_account_id' => $to->id,
         'date' => '04-06-2026',
@@ -74,7 +74,7 @@ test('transfer create rejects category_id in payload', function () {
         'current_balance' => 0,
     ]);
 
-    $this->actingAs($user)->post('/transfers', [
+    $this->actingAs($user)->post(route('transfers.store', absolute: false), [
         'from_account_id' => $from->id,
         'to_account_id' => $to->id,
         'date' => '04-06-2026',

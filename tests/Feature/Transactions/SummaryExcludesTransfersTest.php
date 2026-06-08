@@ -87,7 +87,7 @@ test('transaction summary excludes internal transfers from income and expense to
     ]);
 
     $this->actingAs($user)
-        ->get('/transactions?from=10-04-2026&to=11-04-2026')
+        ->get(route('transactions.index', ['from' => '10-04-2026', 'to' => '11-04-2026'], absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/Index', false)

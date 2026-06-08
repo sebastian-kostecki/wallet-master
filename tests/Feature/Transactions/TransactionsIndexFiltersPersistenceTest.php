@@ -64,7 +64,7 @@ test('store redirects to index with remembered filters', function () {
     ]))->assertOk();
 
     $this->actingAs($user)
-        ->post('/transactions', [
+        ->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '10-04-2026',
             'amount' => -10,
@@ -111,7 +111,7 @@ test('destroy redirects to index with remembered filters', function () {
     ]))->assertOk();
 
     $this->actingAs($user)
-        ->delete("/transactions/{$transaction->id}")
+        ->delete(route('transactions.destroy', $transaction, absolute: false))
         ->assertRedirect(route('transactions.index', [
             'from' => '01-04-2026',
             'to' => '30-04-2026',

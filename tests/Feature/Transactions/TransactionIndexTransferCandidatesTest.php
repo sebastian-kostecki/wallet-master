@@ -73,7 +73,7 @@ test('transactions index includes pending transfer candidates', function () {
     $withdrawal->update(['transfer_candidate_for_id' => $deposit->id]);
 
     $this->actingAs($user)
-        ->get('/transactions')
+        ->get(route('transactions.index', absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/Index', false)
@@ -83,7 +83,7 @@ test('transactions index includes pending transfer candidates', function () {
         );
 
     $this->actingAs($user)
-        ->get('/transactions?account_id='.$accountB->id)
+        ->get(route('transactions.index', ['account_id' => $accountB->id], absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->has('pending_transfer_candidates', 1)
@@ -94,7 +94,7 @@ test('transactions index includes pending transfer candidates', function () {
         ->assertRedirect();
 
     $this->actingAs($user)
-        ->get('/transactions')
+        ->get(route('transactions.index', absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->has('pending_transfer_candidates', 0)

@@ -25,11 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'registration.enabled' => EnsureRegistrationEnabled::class,
         ]);
 
-        //        $middleware->web(prepend: [
-        //            SecurityHeaders::class,
-        //        ]);
-
         $middleware->web(prepend: [
+            SecurityHeaders::class,
             SetApplicationLocale::class,
         ]);
 

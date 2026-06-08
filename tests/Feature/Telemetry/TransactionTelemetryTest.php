@@ -29,7 +29,7 @@ test('creating transaction records transaction_created telemetry event', functio
     $categoryId = defaultCategoryId($user);
 
     $logged = captureTelemetryLogs(function () use ($user, $account, $categoryId): void {
-        $this->actingAs($user)->post('/transactions', [
+        $this->actingAs($user)->post(route('transactions.store', absolute: false), [
             'account_id' => $account->id,
             'date' => '24-04-2026',
             'amount' => -12.34,
@@ -77,7 +77,7 @@ test('updating transaction records transaction_updated telemetry event', functio
     ]);
 
     $logged = captureTelemetryLogs(function () use ($user, $transaction, $account): void {
-        $this->actingAs($user)->put("/transactions/{$transaction->id}", [
+        $this->actingAs($user)->put(route('transactions.update', $transaction, absolute: false), [
             'account_id' => $account->id,
             'date' => '20-04-2026',
             'amount' => -20,
@@ -123,7 +123,7 @@ test('deleting transaction records transaction_deleted telemetry event', functio
     ]);
 
     $logged = captureTelemetryLogs(function () use ($user, $transaction): void {
-        $this->actingAs($user)->delete("/transactions/{$transaction->id}")->assertRedirect('/transactions');
+        $this->actingAs($user)->delete(route('transactions.destroy', $transaction, absolute: false))->assertRedirect(route('transactions.index', absolute: false));
     });
 
     assertTelemetryEvent($logged, 'transaction_deleted', function (array $context) use ($user, $transaction, $account) {

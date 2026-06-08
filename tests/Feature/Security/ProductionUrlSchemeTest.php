@@ -9,5 +9,5 @@ test('app service provider forces https url scheme in production', function () {
 
     (new AppServiceProvider($this->app))->boot();
 
-    expect(parse_url(url('/login'), PHP_URL_SCHEME))->toBe('https');
+    expect(parse_url(url(route('login', absolute: false)), PHP_URL_SCHEME))->toBe('https');
 });

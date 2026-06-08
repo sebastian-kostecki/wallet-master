@@ -36,7 +36,7 @@ test('archived pocket is hidden from default index and monthly budget', function
             ->where('pockets', fn ($pockets) => collect($pockets)->pluck('name')->contains('Archived pocket'))
         );
 
-    $this->actingAs($user)->get('/budget/monthly?year=2026&month=3')
+    $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('pocket_rows', fn ($rows) => collect($rows)->pluck('name')->contains('Archived pocket'))
@@ -46,7 +46,7 @@ test('archived pocket is hidden from default index and monthly budget', function
         'is_archived' => true,
     ])->assertRedirect();
 
-    $this->actingAs($user)->get('/budget/monthly?year=2026&month=3')
+    $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('pocket_rows', fn ($rows) => collect($rows)->pluck('name')->doesntContain('Active pocket'))

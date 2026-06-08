@@ -18,7 +18,7 @@ beforeEach(function () {
 });
 
 test('guests are redirected to login', function () {
-    $this->get('/transactions')->assertRedirect('/login');
+    $this->get(route('transactions.index', absolute: false))->assertRedirect(route('login', absolute: false));
 });
 
 test('users can filter by account and date range, sort, and see summary', function () {
@@ -92,7 +92,7 @@ test('users can filter by account and date range, sort, and see summary', functi
 
     $response = $this
         ->actingAs($user)
-        ->get('/transactions?account_id='.$accountA->id.'&from=10-04-2026&to=11-04-2026&sort=amount&direction=asc');
+        ->get(route('transactions.index', ['account_id' => $accountA->id, 'from' => '10-04-2026', 'to' => '11-04-2026', 'sort' => 'amount', 'direction' => 'asc'], absolute: false));
 
     $response->assertOk();
 
@@ -151,7 +151,7 @@ test('date_relative is dzisiaj when booked_at is today', function () {
 
     $response = $this
         ->actingAs($user)
-        ->get('/transactions?account_id='.$account->id.'&from=12-04-2026&to=12-04-2026');
+        ->get(route('transactions.index', ['account_id' => $account->id, 'from' => '12-04-2026', 'to' => '12-04-2026'], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -168,7 +168,7 @@ test('date range is validated', function () {
 
     $this
         ->actingAs($user)
-        ->get('/transactions?from=20-04-2026&to=10-04-2026')
+        ->get(route('transactions.index', ['from' => '20-04-2026', 'to' => '10-04-2026'], absolute: false))
         ->assertSessionHasErrors('from');
 });
 
@@ -216,7 +216,7 @@ test('returns all transactions when date range is missing', function () {
         'dedupe_hash' => md5('2026-04-10|50.00|april income', true),
     ]);
 
-    $response = $this->actingAs($user)->get('/transactions');
+    $response = $this->actingAs($user)->get(route('transactions.index', absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -264,7 +264,7 @@ test('users can change per-page size', function () {
         ]);
     }
 
-    $response = $this->actingAs($user)->get('/transactions?per_page=25');
+    $response = $this->actingAs($user)->get(route('transactions.index', ['per_page' => 25], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -281,14 +281,14 @@ test('per-page size is validated', function () {
 
     $this
         ->actingAs($user)
-        ->get('/transactions?per_page=9999')
+        ->get(route('transactions.index', ['per_page' => 9999], absolute: false))
         ->assertSessionHasErrors('per_page');
 });
 
 test('index renders when user has no transactions', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->get('/transactions');
+    $response = $this->actingAs($user)->get(route('transactions.index', absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -332,7 +332,7 @@ test('index renders when filters match no transactions', function () {
 
     $response = $this
         ->actingAs($user)
-        ->get('/transactions?from=01-05-2026&to=31-05-2026');
+        ->get(route('transactions.index', ['from' => '01-05-2026', 'to' => '31-05-2026'], absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -400,7 +400,7 @@ test('transactions index includes unresolved import failed rows and respects acc
     ]);
 
     $this->actingAs($user)
-        ->get('/transactions')
+        ->get(route('transactions.index', absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/Index', false)
@@ -409,7 +409,7 @@ test('transactions index includes unresolved import failed rows and respects acc
         );
 
     $this->actingAs($user)
-        ->get('/transactions?account_id='.$accountA->id)
+        ->get(route('transactions.index', ['account_id' => $accountA->id], absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->has('unresolved_import_failed_rows', 1)
@@ -417,7 +417,7 @@ test('transactions index includes unresolved import failed rows and respects acc
         );
 
     $this->actingAs($user)
-        ->get('/transactions?account_id='.$accountB->id)
+        ->get(route('transactions.index', ['account_id' => $accountB->id], absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->has('unresolved_import_failed_rows', 0)
@@ -468,7 +468,7 @@ test('transactions index includes raw_statement_description when present', funct
     ]);
 
     $this->actingAs($user)
-        ->get('/transactions')
+        ->get(route('transactions.index', absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/Index', false)

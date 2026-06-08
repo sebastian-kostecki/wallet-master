@@ -45,7 +45,7 @@ test('updating a transaction updates balance by delta', function () {
 
     $this
         ->actingAs($user)
-        ->put("/transactions/{$transaction->id}", [
+        ->put(route('transactions.update', $transaction, absolute: false), [
             'account_id' => $account->id,
             'date' => '20-04-2026',
             'amount' => -20,
@@ -91,7 +91,7 @@ test('cannot update a transaction on a deleted account', function () {
 
     $this
         ->actingAs($user)
-        ->put("/transactions/{$transaction->id}", [
+        ->put(route('transactions.update', $transaction, absolute: false), [
             'account_id' => $account->id,
             'date' => '20-04-2026',
             'amount' => 20,
@@ -148,7 +148,7 @@ test('updates an imported transaction and remembers user corrections (best-effor
 
     $this
         ->actingAs($user)
-        ->put("/transactions/{$transaction->id}", [
+        ->put(route('transactions.update', $transaction, absolute: false), [
             'account_id' => $account->id,
             'date' => '20-04-2026',
             'amount' => -10,

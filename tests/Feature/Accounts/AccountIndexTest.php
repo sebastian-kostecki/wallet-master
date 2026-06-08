@@ -11,7 +11,7 @@ beforeEach(function () {
 });
 
 test('guests are redirected to login', function () {
-    $this->get('/accounts')->assertRedirect('/login');
+    $this->get(route('accounts.index', absolute: false))->assertRedirect(route('login', absolute: false));
 });
 
 test('users see only their own accounts', function () {
@@ -50,7 +50,7 @@ test('users see only their own accounts', function () {
         'current_balance' => 200,
     ]);
 
-    $response = $this->actingAs($userA)->get('/accounts');
+    $response = $this->actingAs($userA)->get(route('accounts.index', absolute: false));
     $response->assertOk();
 
     $response->assertSee('Cash Account');
@@ -97,7 +97,7 @@ test('soft deleted accounts are not listed', function () {
     ]);
     $deletedAccount->delete();
 
-    $response = $this->actingAs($user)->get('/accounts');
+    $response = $this->actingAs($user)->get(route('accounts.index', absolute: false));
 
     $response->assertOk();
     $response->assertSee($activeAccount->name);

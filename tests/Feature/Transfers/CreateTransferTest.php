@@ -17,7 +17,7 @@ beforeEach(function () {
 });
 
 test('guest is redirected to login', function () {
-    $this->post('/transfers', [])->assertRedirect('/login');
+    $this->post(route('transfers.store', absolute: false), [])->assertRedirect(route('login', absolute: false));
 });
 
 test('user can create a transfer and it creates two linked transactions and updates balances', function () {
@@ -48,7 +48,7 @@ test('user can create a transfer and it creates two linked transactions and upda
 
     $response = $this
         ->actingAs($user)
-        ->post('/transfers', [
+        ->post(route('transfers.store', absolute: false), [
             'from_account_id' => $from->id,
             'to_account_id' => $to->id,
             'date' => '24-04-2026',
@@ -116,7 +116,7 @@ test('user can create a transfer with optional subject on both legs', function (
 
     $this
         ->actingAs($user)
-        ->post('/transfers', [
+        ->post(route('transfers.store', absolute: false), [
             'from_account_id' => $from->id,
             'to_account_id' => $to->id,
             'date' => '24-04-2026',
@@ -153,7 +153,7 @@ test('cannot create a transfer to the same account', function () {
 
     $this
         ->actingAs($user)
-        ->post('/transfers', [
+        ->post(route('transfers.store', absolute: false), [
             'from_account_id' => $account->id,
             'to_account_id' => $account->id,
             'date' => '24-04-2026',
@@ -194,7 +194,7 @@ test('amount must be greater than zero', function () {
 
     $this
         ->actingAs($user)
-        ->post('/transfers', [
+        ->post(route('transfers.store', absolute: false), [
             'from_account_id' => $from->id,
             'to_account_id' => $to->id,
             'date' => '24-04-2026',
@@ -248,7 +248,7 @@ test('cannot transfer between different currencies', function () {
 
     $this
         ->actingAs($user)
-        ->post('/transfers', [
+        ->post(route('transfers.store', absolute: false), [
             'from_account_id' => $from->id,
             'to_account_id' => $to->id,
             'date' => '24-04-2026',
@@ -293,8 +293,8 @@ test('dedupe does not block creating the same transfer twice', function () {
         'description' => 'Same transfer',
     ];
 
-    $this->actingAs($user)->post('/transfers', $payload)->assertSessionHasNoErrors();
-    $this->actingAs($user)->post('/transfers', $payload)->assertSessionHasNoErrors();
+    $this->actingAs($user)->post(route('transfers.store', absolute: false), $payload)->assertSessionHasNoErrors();
+    $this->actingAs($user)->post(route('transfers.store', absolute: false), $payload)->assertSessionHasNoErrors();
 
     expect(Transaction::query()->where('user_id', $user->id)->whereNotNull('transfer_id')->count())->toBe(4);
     expect(Transaction::query()->where('user_id', $user->id)->whereNotNull('transfer_id')->distinct('transfer_id')->count('transfer_id'))->toBe(2);

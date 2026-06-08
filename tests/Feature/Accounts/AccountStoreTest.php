@@ -26,7 +26,7 @@ test('user can create an account and current balance equals opening balance', fu
 
     $response = $this
         ->actingAs($user)
-        ->post('/accounts', [
+        ->post(route('accounts.store', absolute: false), [
             'name' => 'Konto testowe',
             'bank' => 'cash',
             'type' => 'checking',
@@ -52,7 +52,7 @@ test('account name is required', function () {
 
     $response = $this
         ->actingAs($user)
-        ->post('/accounts', [
+        ->post(route('accounts.store', absolute: false), [
             'name' => '',
             'bank' => 'cash',
             'type' => 'checking',
@@ -69,7 +69,7 @@ test('account bank is required', function () {
 
     $response = $this
         ->actingAs($user)
-        ->post('/accounts', [
+        ->post(route('accounts.store', absolute: false), [
             'name' => 'Konto testowe',
             'bank' => '',
             'type' => 'checking',
@@ -86,7 +86,7 @@ test('account type is required', function () {
 
     $response = $this
         ->actingAs($user)
-        ->post('/accounts', [
+        ->post(route('accounts.store', absolute: false), [
             'name' => 'Konto testowe',
             'bank' => 'cash',
             'type' => '',

@@ -34,7 +34,7 @@ test('user can set current balance and adjustment is audited', function () {
 
     $response = $this
         ->actingAs($user)
-        ->patch("/accounts/{$account->id}/balance", [
+        ->patch(route('accounts.balance.update', $account, absolute: false), [
             'new_balance' => 999.99,
         ]);
 
@@ -75,7 +75,7 @@ test('setting balance to same value skips adjustment transaction and audit row',
 
     $this
         ->actingAs($user)
-        ->patch("/accounts/{$account->id}/balance", [
+        ->patch(route('accounts.balance.update', $account, absolute: false), [
             'new_balance' => 130,
         ])
         ->assertSessionHasNoErrors();
@@ -100,7 +100,7 @@ test('balance adjustment appears on transactions index props', function () {
         'current_balance' => 100,
     ]);
 
-    $this->actingAs($user)->patch("/accounts/{$account->id}/balance", [
+    $this->actingAs($user)->patch(route('accounts.balance.update', $account, absolute: false), [
         'new_balance' => 150,
     ])->assertSessionHasNoErrors();
 
@@ -133,7 +133,7 @@ test('user cannot adjust balance for someone elses account', function () {
 
     $this
         ->actingAs($attacker)
-        ->patch("/accounts/{$account->id}/balance", [
+        ->patch(route('accounts.balance.update', $account, absolute: false), [
             'new_balance' => 10,
         ])
         ->assertForbidden();

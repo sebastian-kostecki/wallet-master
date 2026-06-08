@@ -8,7 +8,7 @@ test('registration records user_registered telemetry event', function () {
     config(['auth.registration.enabled' => true]);
 
     $logged = captureTelemetryLogs(function (): void {
-        $this->post('/register', [
+        $this->post(route('register', absolute: false), [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
@@ -23,7 +23,7 @@ test('login success records user_logged_in telemetry event', function () {
     $user = User::factory()->create();
 
     $logged = captureTelemetryLogs(function () use ($user): void {
-        $this->post('/login', [
+        $this->post(route('login', absolute: false), [
             'email' => $user->email,
             'password' => 'password',
         ]);
@@ -38,7 +38,7 @@ test('login failure records user_login_failed telemetry event without email', fu
     $user = User::factory()->create();
 
     $logged = captureTelemetryLogs(function () use ($user): void {
-        $this->post('/login', [
+        $this->post(route('login', absolute: false), [
             'email' => $user->email,
             'password' => 'wrong-password',
         ]);
@@ -53,7 +53,7 @@ test('password reset request records password_reset_requested telemetry event', 
     $user = User::factory()->create();
 
     $logged = captureTelemetryLogs(function () use ($user): void {
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->post(route('password.email', absolute: false), ['email' => $user->email]);
     });
 
     assertTelemetryEvent($logged, 'password_reset_requested');
@@ -64,11 +64,11 @@ test('password reset complete records password_reset_completed telemetry event',
 
     $user = User::factory()->create();
 
-    $this->post('/forgot-password', ['email' => $user->email]);
+    $this->post(route('password.email', absolute: false), ['email' => $user->email]);
 
     Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
         $logged = captureTelemetryLogs(function () use ($notification, $user): void {
-            $this->post('/reset-password', [
+            $this->post(route('password.store', absolute: false), [
                 'token' => $notification->token,
                 'email' => $user->email,
                 'password' => 'password',

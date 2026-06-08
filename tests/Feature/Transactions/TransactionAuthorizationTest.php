@@ -13,7 +13,7 @@ beforeEach(function () {
 });
 
 test('guests are redirected to login on create page', function () {
-    $this->get('/transactions/create')->assertRedirect('/login');
+    $this->get(route('transactions.create', absolute: false))->assertRedirect(route('login', absolute: false));
 });
 
 test('guests are redirected to login on edit page', function () {
@@ -44,7 +44,7 @@ test('guests are redirected to login on edit page', function () {
         'dedupe_hash' => md5('2026-04-20|-10.00|coffee', true),
     ]);
 
-    $this->get("/transactions/{$transaction->id}/edit")->assertRedirect('/login');
+    $this->get(route('transactions.edit', $transaction, absolute: false))->assertRedirect(route('login', absolute: false));
 });
 
 test('users cannot view another users transaction edit page', function () {
@@ -78,7 +78,7 @@ test('users cannot view another users transaction edit page', function () {
 
     $this
         ->actingAs($otherUser)
-        ->get("/transactions/{$transaction->id}/edit")
+        ->get(route('transactions.edit', $transaction, absolute: false))
         ->assertForbidden();
 });
 
@@ -113,7 +113,7 @@ test('users cannot update another users transaction', function () {
 
     $this
         ->actingAs($otherUser)
-        ->put("/transactions/{$transaction->id}", [
+        ->put(route('transactions.update', $transaction, absolute: false), [
             'account_id' => $account->id,
             'date' => '20-04-2026',
             'amount' => -20,
@@ -154,7 +154,7 @@ test('users cannot delete another users transaction', function () {
 
     $this
         ->actingAs($otherUser)
-        ->delete("/transactions/{$transaction->id}")
+        ->delete(route('transactions.destroy', $transaction, absolute: false))
         ->assertForbidden();
 });
 
@@ -190,6 +190,6 @@ test('users cannot view edit page for a transaction on a deleted account', funct
 
     $this
         ->actingAs($user)
-        ->get("/transactions/{$transaction->id}/edit")
+        ->get(route('transactions.edit', $transaction, absolute: false))
         ->assertForbidden();
 });

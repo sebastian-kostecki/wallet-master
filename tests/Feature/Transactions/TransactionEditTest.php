@@ -43,7 +43,7 @@ test('edit page includes account bank_icon_url', function () {
 
     $response = $this
         ->actingAs($user)
-        ->get("/transactions/{$transaction->id}/edit");
+        ->get(route('transactions.edit', $transaction, absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page

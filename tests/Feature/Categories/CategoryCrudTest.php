@@ -19,7 +19,7 @@ test('user can create a category', function () {
     $user = User::factory()->create();
     ensureUserCategories($user);
 
-    $response = $this->actingAs($user)->post('/categories', [
+    $response = $this->actingAs($user)->post(route('categories.store', absolute: false), [
         'name' => 'Hobby',
         'type' => CategoryType::Expense->value,
         'icon' => 'tag',
@@ -34,7 +34,7 @@ test('cannot create category with invalid color', function () {
     $user = User::factory()->create();
     ensureUserCategories($user);
 
-    $this->actingAs($user)->post('/categories', [
+    $this->actingAs($user)->post(route('categories.store', absolute: false), [
         'name' => 'Bad',
         'type' => 'expense',
         'icon' => 'tag',
@@ -46,7 +46,7 @@ test('category resource includes icon and color on index', function () {
     $user = User::factory()->create();
     ensureUserCategories($user);
 
-    $this->actingAs($user)->get('/categories')->assertOk()->assertInertia(fn ($page) => $page
+    $this->actingAs($user)->get(route('categories.index', absolute: false))->assertOk()->assertInertia(fn ($page) => $page
         ->has('categories', 25)
         ->where('categories.0.icon', fn ($v) => is_string($v) && $v !== '')
         ->where('categories.0.color', fn ($v) => is_string($v) && str_starts_with($v, '#'))
@@ -105,7 +105,7 @@ test('cannot delete category with transactions', function () {
         'dedupe_hash' => md5('coffee-del', true),
     ]);
 
-    $this->actingAs($user)->delete("/categories/{$categoryId}")->assertForbidden();
+    $this->actingAs($user)->delete(route('categories.destroy', $categoryId, absolute: false))->assertForbidden();
 });
 
 test('categories index only lists own categories', function () {
@@ -114,14 +114,14 @@ test('categories index only lists own categories', function () {
     ensureUserCategories($userA);
     ensureUserCategories($userB);
 
-    $this->actingAs($userA)->post('/categories', [
+    $this->actingAs($userA)->post(route('categories.store', absolute: false), [
         'name' => 'Only A',
         'type' => CategoryType::Expense->value,
         'icon' => 'tag',
         'color' => '#6366f1',
     ])->assertSessionHasNoErrors();
 
-    $response = $this->actingAs($userB)->get('/categories');
+    $response = $this->actingAs($userB)->get(route('categories.index', absolute: false));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
