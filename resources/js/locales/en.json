@@ -646,6 +646,10 @@
             "currency": {
                 "label": "Currency",
                 "placeholder": "Select currency"
+            },
+            "initialBalance": {
+                "label": "Initial amount",
+                "hint": "Amount already saved toward this goal. Does not create a transfer or change account balances."
             }
         },
         "planning": {

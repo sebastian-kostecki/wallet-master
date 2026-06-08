@@ -52,6 +52,7 @@ const form = useForm({
     icon: 'flag',
     color: null as string | null,
     currency_id: initialCurrencyId.value as number | null,
+    initial_balance: '',
     target_amount: '',
     planning_mode: 'monthly' as 'monthly' | 'by_date',
     monthly_contribution: '',
@@ -133,6 +134,33 @@ function submit(): void {
                             :placeholder="t('pockets.fields.currency.placeholder')"
                             @update:model-value="(value) => (form.currency_id = value)"
                         />
+                    </FormField>
+
+                    <FormField
+                        for-id="initial_balance"
+                        :label="t('pockets.fields.initialBalance.label')"
+                        :hint="t('pockets.fields.initialBalance.hint')"
+                        :error="form.errors.initial_balance"
+                    >
+                        <template #default="{ errorId, hasError, hintId }">
+                            <div class="relative">
+                                <Input
+                                    id="initial_balance"
+                                    v-model="form.initial_balance"
+                                    type="text"
+                                    inputmode="decimal"
+                                    class="pr-10"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="[hasError ? errorId : null, hintId].filter(Boolean).join(' ') || undefined"
+                                />
+                                <span
+                                    v-if="selectedCurrency?.symbol"
+                                    class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+                                >
+                                    {{ selectedCurrency.symbol }}
+                                </span>
+                            </div>
+                        </template>
                     </FormField>
 
                     <FormField for-id="target_amount" :label="t('pockets.fields.targetAmount')" :error="form.errors.target_amount">

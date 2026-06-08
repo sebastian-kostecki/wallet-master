@@ -651,6 +651,10 @@
             "currency": {
                 "label": "Waluta",
                 "placeholder": "Wybierz walutę"
+            },
+            "initialBalance": {
+                "label": "Wstępna kwota",
+                "hint": "Kwota już odłożona na ten cel. Nie tworzy transferu ani nie zmienia salda kont."
             }
         },
         "planning": {

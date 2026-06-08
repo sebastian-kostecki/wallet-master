@@ -34,6 +34,7 @@ type Pocket = {
         symbol: string;
         precision: number;
     };
+    initial_balance: string;
     target_amount: string | null;
     planning_mode: 'monthly' | 'by_date' | null;
     monthly_contribution: string | null;
@@ -118,6 +119,17 @@ function submit(): void {
                             readonly
                         />
                     </FormField>
+
+                    <div
+                        v-if="Number(pocket.initial_balance.replace(',', '.')) > 0"
+                        class="grid gap-1 rounded-lg border border-sidebar-border/70 p-4 text-sm dark:border-sidebar-border"
+                    >
+                        <p class="text-muted-foreground">
+                            {{ t('pockets.fields.initialBalance.label') }}:
+                            <span class="font-medium text-foreground">{{ formatMoney(pocket.initial_balance, pocket.currency) }}</span>
+                        </p>
+                        <p class="text-xs text-muted-foreground">{{ t('pockets.fields.initialBalance.hint') }}</p>
+                    </div>
 
                     <FormField for-id="target_amount" :label="t('pockets.fields.targetAmount')" :error="form.errors.target_amount">
                         <template #default="{ errorId, hasError }">
