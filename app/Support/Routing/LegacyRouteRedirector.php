@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace App\Support\Routing;
 
-use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
+use Illuminate\Routing\UrlGenerator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route as RouteFacade;
+use Illuminate\Support\Str;
 
 final class LegacyRouteRedirector
 {
@@ -34,9 +39,39 @@ final class LegacyRouteRedirector
             $target = self::resolveTarget($legacyPath);
 
             if ($target !== null && $target !== $legacyPath) {
-                Route::redirect($legacyPath, $target, 301);
+                self::registerRedirect($legacyPath, $target);
             }
         }
+    }
+
+    private static function registerRedirect(string $legacyPath, string $destination): void
+    {
+        RouteFacade::get($legacyPath, function (Request $request, UrlGenerator $url) use ($destination) {
+            $parameters = new Collection($request->route()->parameters());
+
+            $route = (new Route('GET', $destination, [
+                'as' => 'legacy_route_redirect_destination',
+            ]))->bind($request);
+
+            $parameters = $parameters->only(
+                $route->getCompiled()->getPathVariables()
+            )->all();
+
+            $redirectUrl = $url->toRoute($route, $parameters, false);
+
+            if (! str_starts_with($destination, '/') && str_starts_with($redirectUrl, '/')) {
+                $redirectUrl = Str::after($redirectUrl, '/');
+            }
+
+            $requestUri = $request->getRequestUri();
+            $queryPosition = strpos($requestUri, '?');
+
+            if ($queryPosition !== false) {
+                $redirectUrl .= substr($requestUri, $queryPosition);
+            }
+
+            return redirect($redirectUrl, 301);
+        });
     }
 
     private static function resolveTarget(string $legacyPath): ?string
