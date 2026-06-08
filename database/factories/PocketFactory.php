@@ -30,6 +30,7 @@ final class PocketFactory extends Factory
             'sort_order' => 10,
             'currency_id' => fn () => (int) Currency::query()->where('code', 'PLN')->value('id')
                 ?: throw new \RuntimeException('Seed CurrencySeeder before PocketFactory.'),
+            'initial_balance' => '0.00',
             'target_amount' => null,
             'planning_mode' => null,
             'monthly_contribution' => null,

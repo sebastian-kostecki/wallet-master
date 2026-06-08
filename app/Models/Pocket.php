@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Schema;
  * @property string $color
  * @property int $sort_order
  * @property int $currency_id
+ * @property string $initial_balance
  * @property string|null $target_amount
  * @property PocketPlanningMode|null $planning_mode
  * @property string|null $monthly_contribution
@@ -44,6 +45,7 @@ final class Pocket extends Model
         'color',
         'sort_order',
         'currency_id',
+        'initial_balance',
         'target_amount',
         'planning_mode',
         'monthly_contribution',
@@ -62,6 +64,7 @@ final class Pocket extends Model
             'user_id' => 'integer',
             'sort_order' => 'integer',
             'currency_id' => 'integer',
+            'initial_balance' => 'decimal:2',
             'target_amount' => 'decimal:2',
             'planning_mode' => PocketPlanningMode::class,
             'monthly_contribution' => 'decimal:2',
