@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureRegistrationEnabled;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetApplicationLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         //        $middleware->web(prepend: [
         //            SecurityHeaders::class,
         //        ]);
+
+        $middleware->web(prepend: [
+            SetApplicationLocale::class,
+        ]);
 
         $middleware->web(append: [
             HandleInertiaRequests::class,
