@@ -308,15 +308,18 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 12) Bezpieczeństwo i UX poprawki **[plan §9]**
 
-#### 12.1 Rate limiting
+#### 12.1 Nagłówki i proxy (kod aplikacji)
+- [x] Middleware `SecurityHeaders` (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP, Permissions-Policy).
+- [x] `TrustProxies` w `bootstrap/app.php` (reverse proxy w kontenerze).
+- [x] `URL::forceScheme('https')` w `AppServiceProvider::boot()` (tylko `production`).
+- [x] Prod env w `.env.example`: `APP_URL=https://…`, `SESSION_SECURE_COOKIE`, `SESSION_ENCRYPT`.
+- [x] Przykład nginx: `docker/nginx/production.conf.example` (TLS, redirect 80→443, `X-Forwarded-*`).
+
+#### 12.1a Rate limiting (PRD §8)
 - [x] `RateLimiter::for('imports', ...)` w `AppServiceProvider::boot` — 10/min per `user_id` (fallback per IP).
 - [x] `RateLimiter::for('api', ...)` — 60/min per zalogowanego użytkownika (`throttle:api` na `POST /telemetry/event`).
 - [x] Middleware `throttle:imports` na trasach upload/commit w `routes/imports.php`.
 - [x] `throttle:6,1` na `POST /login`, `POST /forgot-password`, `POST /reset-password` (PRD §8).
-
-#### 12.1a Nagłówki i proxy (kod aplikacji)
-- [x] Middleware `SecurityHeaders` (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP, Permissions-Policy).
-- [x] `TrustProxies` w `bootstrap/app.php` (reverse proxy w kontenerze).
 
 #### 12.1b Horizon
 - [x] `viewHorizon` — allowlista z `HORIZON_ALLOWED_EMAILS` w `config/horizon.php`.
@@ -347,6 +350,14 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Izolacja wave 2: categories, pockets, budget, transfer unlink (`Wave2IsolationTest`).
 - [x] Mass assignment (`MassAssignmentTest`).
 - [x] Backup smoke (`BackupCommandTest`).
+- [x] HTTPS URL scheme w prod (`ProductionUrlSchemeTest`).
+
+#### 12.5 Weryfikacja HTTPS po wdrożeniu (manual QA)
+- [ ] `curl -I http://domena` → `301`/`308` na `https://`
+- [ ] `curl -I https://domena/up` → `200`
+- [ ] Linki w UI / Inertia / Ziggy zaczynają się od `https://`
+- [ ] Cookie sesji ma flagę `Secure` (DevTools → Application → Cookies)
+- [ ] Reverb (jeśli używany): `REVERB_SCHEME=https` + proxy WebSocket
 
 ---
 

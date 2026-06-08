@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -63,6 +64,10 @@ class AppServiceProvider extends ServiceProvider
     {
         if (! $this->app->isProduction()) {
             Model::shouldBeStrict();
+        }
+
+        if ($this->app->isProduction()) {
+            URL::forceScheme('https');
         }
 
         RateLimiter::for('imports', function (Request $request): Limit {
