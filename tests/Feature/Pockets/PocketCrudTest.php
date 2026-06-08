@@ -90,3 +90,74 @@ test('cannot delete pocket with linked transactions', function () {
     $this->actingAs($user)->delete(route('pockets.destroy', $pocket))->assertForbidden();
     expect(Pocket::find($pocket->id))->not->toBeNull();
 });
+
+test('user can create pocket with initial balance', function () {
+    $user = User::factory()->create();
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+
+    $this->actingAs($user)->post(route('pockets.store'), [
+        'name' => 'Wakacje',
+        'icon' => 'target',
+        'color' => '#6366f1',
+        'currency_id' => $plnId,
+        'initial_balance' => '1500.50',
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    $pocket = Pocket::query()->where('user_id', $user->id)->where('name', 'Wakacje')->first();
+
+    expect($pocket)->not->toBeNull();
+    expect((string) $pocket->initial_balance)->toBe('1500.50');
+});
+
+test('create pocket without initial balance defaults to zero', function () {
+    $user = User::factory()->create();
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+
+    $this->actingAs($user)->post(route('pockets.store'), [
+        'name' => 'Bez kwoty',
+        'icon' => 'target',
+        'color' => '#6366f1',
+        'currency_id' => $plnId,
+    ])->assertRedirect()->assertSessionHasNoErrors();
+
+    $pocket = Pocket::query()->where('user_id', $user->id)->where('name', 'Bez kwoty')->first();
+
+    expect((string) $pocket->initial_balance)->toBe('0.00');
+});
+
+test('update pocket cannot change initial balance', function () {
+    $user = User::factory()->create();
+    $pocket = Pocket::factory()->create([
+        'user_id' => $user->id,
+        'initial_balance' => '500.00',
+    ]);
+
+    $this->actingAs($user)->patch(route('pockets.update', $pocket), [
+        'name' => $pocket->name,
+        'icon' => $pocket->icon,
+        'color' => $pocket->color,
+        'initial_balance' => '999.00',
+    ])->assertSessionHasErrors('initial_balance');
+
+    expect((string) $pocket->fresh()->initial_balance)->toBe('500.00');
+});
+
+test('pockets index balance includes initial balance', function () {
+    $user = User::factory()->create();
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+
+    $this->actingAs($user)->post(route('pockets.store'), [
+        'name' => 'Start',
+        'icon' => 'target',
+        'color' => '#6366f1',
+        'currency_id' => $plnId,
+        'initial_balance' => '300',
+    ])->assertSessionHasNoErrors();
+
+    $this->actingAs($user)->get(route('pockets.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('pockets', 1)
+            ->where('pockets.0.balance', '300.00')
+        );
+});

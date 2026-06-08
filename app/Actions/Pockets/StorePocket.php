@@ -26,6 +26,7 @@ final class StorePocket
             'color' => $validated['color'],
             'sort_order' => $maxSort + 10,
             'currency_id' => (int) $validated['currency_id'],
+            'initial_balance' => $validated['initial_balance'] ?? 0,
             'target_amount' => $validated['target_amount'] ?? null,
             'planning_mode' => $validated['planning_mode'] ?? null,
             'monthly_contribution' => $validated['monthly_contribution'] ?? null,

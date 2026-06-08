@@ -21,6 +21,10 @@ final class StorePocketRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->input('initial_balance') === '' || $this->input('initial_balance') === null) {
+            $this->merge(['initial_balance' => 0]);
+        }
+
         if ($this->input('target_amount') === '' || $this->input('target_amount') === null) {
             $this->merge([
                 'target_amount' => null,
@@ -46,6 +50,7 @@ final class StorePocketRequest extends FormRequest
             'icon' => ['required', 'string', Rule::in(CategoryIcons::values())],
             'color' => ['required', 'string', Rule::in(CategoryColors::values())],
             'currency_id' => ['required', 'integer', Rule::exists('currencies', 'id')],
+            'initial_balance' => ['nullable', 'numeric', 'min:0'],
             'target_amount' => ['nullable', 'numeric', 'min:0'],
             'planning_mode' => ['nullable', Rule::enum(PocketPlanningMode::class), 'required_with:target_amount'],
             'monthly_contribution' => ['nullable', 'numeric', 'min:0', 'required_if:planning_mode,monthly', 'prohibited_if:planning_mode,by_date'],

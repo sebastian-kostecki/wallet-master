@@ -61,6 +61,7 @@ final class UpdatePocketRequest extends FormRequest
             'icon' => ['sometimes', 'required', 'string', Rule::in(CategoryIcons::values())],
             'color' => ['sometimes', 'required', 'string', Rule::in(CategoryColors::values())],
             'currency_id' => ['prohibited'],
+            'initial_balance' => ['prohibited'],
             'target_amount' => ['nullable', 'numeric', 'min:0'],
             'planning_mode' => ['nullable', Rule::enum(PocketPlanningMode::class), Rule::requiredIf($hasTarget && $this->filled('target_amount'))],
             'monthly_contribution' => ['nullable', 'numeric', 'min:0', 'required_if:planning_mode,monthly', 'prohibited_if:planning_mode,by_date'],
