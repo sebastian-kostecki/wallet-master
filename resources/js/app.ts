@@ -11,7 +11,9 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { initializeTheme } from './composables/useAppearance';
 import type { SupportedLocale } from './i18n';
 import { i18n, supportedLocales } from './i18n';
+import { bootstrapZiggyFromDom } from './lib/ziggy';
 
+bootstrapZiggyFromDom();
 globalThis.route = route;
 
 configureEcho({

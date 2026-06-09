@@ -605,8 +605,8 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         </button>
                                     </th>
                                     <th class="px-6 py-3" scope="col">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="w-40 px-6 py-3" scope="col">{{ t('transactions.index.table.category') }}</th>
-                                    <th class="w-72 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
+                                    <th class="w-56 px-6 py-3" scope="col">{{ t('transactions.index.table.category') }}</th>
+                                    <th class="w-64 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
                                     <th class="w-44 px-6 py-3" scope="col" :aria-sort="ariaSortFor('amount')">
                                         <button
                                             class="inline-flex items-center gap-2 hover:text-foreground"
@@ -750,7 +750,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="overflow-hidden px-6 py-4">
                                         <div v-if="tx.transfer_id" class="flex flex-col gap-0.5">
                                             <span class="text-sm text-muted-foreground">
                                                 {{ t('transactions.index.table.transfer') }}
@@ -759,16 +759,17 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                                 {{ tx.pocket.name }}
                                             </span>
                                         </div>
-                                        <CategoryBadge
-                                            v-else-if="tx.category"
-                                            :name="tx.category.name"
-                                            :icon="tx.category.icon"
-                                            :color="tx.category.color"
-                                            size="md"
-                                        />
+                                        <div v-else-if="tx.category" class="min-w-0 max-w-full">
+                                            <CategoryBadge
+                                                :name="tx.category.name"
+                                                :icon="tx.category.icon"
+                                                :color="tx.category.color"
+                                                size="md"
+                                            />
+                                        </div>
                                         <span v-else class="text-sm text-muted-foreground">—</span>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="overflow-hidden px-6 py-4">
                                         <div class="flex min-w-0 items-center gap-2">
                                             <div class="shrink-0">
                                                 <img
@@ -1026,6 +1027,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                             :paginator="transactions"
                             :query="{
                                 account_id: filters.account_id ?? undefined,
+                                category_id: filters.category_id ?? undefined,
                                 from: filters.from ?? undefined,
                                 to: filters.to ?? undefined,
                                 sort: filters.sort ?? 'date',

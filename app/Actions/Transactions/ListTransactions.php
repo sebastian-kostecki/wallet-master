@@ -82,7 +82,9 @@ final class ListTransactions
         $this->totalIncome = $summary !== null ? $summary->total_income : 0;
         $this->totalExpense = $summary !== null ? $summary->total_expense : 0;
 
-        $this->transactions = $query->paginate(perPage: $request->getPerPage(), page: $request->getPage());
+        $this->transactions = $query
+            ->paginate(perPage: $request->getPerPage(), page: $request->getPage())
+            ->withQueryString();
     }
 
     private function handleAccounts(TransactionIndexRequest $request): void

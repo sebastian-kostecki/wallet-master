@@ -4,23 +4,24 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeftRight, BarChart3, Target, Wallet } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
 
 const { t } = useI18n();
 
-const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
         title: 'Dashboard',
         href: route('dashboard'),
     },
-];
+]);
 
-const quickActions = [
+const quickActions = computed(() => [
     { key: 'accounts', href: route('accounts.index'), icon: Wallet },
     { key: 'transactions', href: route('transactions.index'), icon: ArrowLeftRight },
     { key: 'pockets', href: route('pockets.index'), icon: Target },
-];
+]);
 
 const previewItems = ['imports', 'budget', 'pockets'];
 </script>
