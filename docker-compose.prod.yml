@@ -17,6 +17,7 @@ services:
       SUPERVISOR_PHP_USER: sail
     volumes:
       - ./storage:/var/www/html/storage
+      - ${BACKUP_HOST_DIR:-/storage/wallet-master-backups}:/var/www/html/storage/app/backups
       - ./.env:/var/www/html/.env:ro
     networks:
       - wallet-internal

@@ -11,6 +11,12 @@ git pull
 echo "==> Building app image..."
 $COMPOSE build app
 
+BACKUP_HOST_DIR="${BACKUP_HOST_DIR:-/storage/wallet-master-backups}"
+
+echo "==> Ensuring backup directory exists..."
+sudo mkdir -p "$BACKUP_HOST_DIR"
+sudo chown -R "$(id -u)":"$(id -g)" "$BACKUP_HOST_DIR"
+
 echo "==> Starting stack..."
 $COMPOSE up -d
 
