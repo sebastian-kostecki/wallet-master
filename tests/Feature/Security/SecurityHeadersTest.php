@@ -2,13 +2,26 @@
 
 declare(strict_types=1);
 
-test('web responses include security headers', function () {
+use App\Http\Middleware\SecurityHeaders;
+use Illuminate\Http\Request;
+
+test('web responses do not include security headers outside production', function () {
     $response = $this->get(route('login', absolute: false));
 
     $response->assertOk();
-    $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
-    $response->assertHeader('X-Content-Type-Options', 'nosniff');
-    $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    $response->assertHeaderMissing('X-Frame-Options');
+    $response->assertHeaderMissing('Content-Security-Policy');
+});
+
+test('security headers middleware adds expected headers', function () {
+    $middleware = new SecurityHeaders;
+    $request = Request::create(route('login', absolute: false));
+
+    $response = $middleware->handle($request, fn (Request $request) => response('ok'));
+
+    expect($response->headers->get('X-Frame-Options'))->toBe('SAMEORIGIN');
+    expect($response->headers->get('X-Content-Type-Options'))->toBe('nosniff');
+    expect($response->headers->get('Referrer-Policy'))->toBe('strict-origin-when-cross-origin');
     $csp = $response->headers->get('Content-Security-Policy');
     expect($csp)->toContain("default-src 'self'");
     expect($csp)->toContain("script-src 'self' 'nonce-");
