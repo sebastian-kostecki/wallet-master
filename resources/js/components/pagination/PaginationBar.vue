@@ -122,36 +122,36 @@ const perPage = computed(() => {
     return props.perPageOptions[0] ?? 10;
 });
 
-const prevUrl = computed(() => {
-    const paginator = props.paginator as any;
-    const resourcePrev = paginator?.links?.prev ?? null;
-    if (typeof resourcePrev === 'string' || resourcePrev === null) {
-        return resourcePrev;
-    }
-
-    return paginatorLinks.value[0]?.url ?? null;
-});
-
-const nextUrl = computed(() => {
-    const paginator = props.paginator as any;
-    const resourceNext = paginator?.links?.next ?? null;
-    if (typeof resourceNext === 'string' || resourceNext === null) {
-        return resourceNext;
-    }
-
-    return paginatorLinks.value[paginatorLinks.value.length - 1]?.url ?? null;
-});
-
 const middleLinks = computed(() => {
     if (paginatorLinks.value.length <= 2) {
         return [];
     }
 
-    return paginatorLinks.value.slice(1, -1).map((l) => ({
-        ...l,
-        label: normalizeLabel(l.label),
-    }));
+    return paginatorLinks.value.slice(1, -1).map((l) => {
+        const page = Number.parseInt(normalizeLabel(l.label), 10);
+
+        return {
+            ...l,
+            label: normalizeLabel(l.label),
+            page: Number.isFinite(page) ? page : null,
+        };
+    });
 });
+
+function pageParams(page: number): Record<string, unknown> {
+    return {
+        ...props.query,
+        page: page <= 1 ? undefined : page,
+    };
+}
+
+function pageUrl(page: number): string {
+    return route('transactions.index', pageParams(page));
+}
+
+const prevUrl = computed(() => (currentPage.value > 1 ? pageUrl(currentPage.value - 1) : null));
+
+const nextUrl = computed(() => (currentPage.value < lastPage.value ? pageUrl(currentPage.value + 1) : null));
 
 function trackPageChanged(page: number): void {
     track('transactions_page_changed', { page, per_page: perPage.value });
@@ -207,16 +207,16 @@ function changePerPage(next: number) {
                 <Link
                     v-for="link in middleLinks"
                     :key="link.label"
-                    :href="link.url ?? ''"
+                    :href="link.page !== null ? pageUrl(link.page) : ''"
                     :preserve-scroll="preserveScroll"
                     :aria-current="link.active ? 'page' : undefined"
                     :aria-label="t('transactions.index.pagination.pageLink', { page: link.label })"
-                    @click="() => link.url && trackPageChanged(Number.parseInt(link.label, 10) || currentPage)"
+                    @click="() => link.page !== null && trackPageChanged(link.page)"
                     :class="
                         cn(
                             'inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors',
                             link.active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                            !link.url ? 'pointer-events-none opacity-50' : '',
+                            link.page === null ? 'pointer-events-none opacity-50' : '',
                         )
                     "
                 >

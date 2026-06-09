@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\SecurityHeaders;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 test('web responses do not include security headers outside production', function () {
@@ -35,4 +36,21 @@ test('ziggy routes are embedded as non-executable json', function () {
     $response->assertSee('id="ziggy-routes-json"', false);
     $response->assertSee('type="application/json"', false);
     expect($response->getContent())->not->toMatch('/<script type="text\/javascript">const Ziggy=/');
+});
+
+test('ziggy json embed includes dashboard route', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $response = $this->get(route('dashboard', absolute: false));
+
+    $response->assertOk();
+
+    preg_match('/<script id="ziggy-routes-json" type="application\/json">(.*?)<\/script>/s', $response->getContent(), $matches);
+    expect($matches)->toHaveCount(2);
+
+    $ziggy = json_decode($matches[1], true);
+
+    expect($ziggy)->toHaveKey('routes');
+    expect($ziggy['routes'])->toHaveKey('dashboard');
 });

@@ -276,6 +276,73 @@ test('users can change per-page size', function () {
     CarbonImmutable::setTestNow();
 });
 
+test('pagination links preserve active date filters', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 4, 25, 12, 0, 0));
+
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'A',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    foreach (range(1, 20) as $i) {
+        Transaction::query()->create([
+            'user_id' => $user->id,
+            'account_id' => $account->id,
+            'currency_id' => $plnId,
+            'date' => '2026-04-10',
+            'booked_at' => '2026-04-10',
+            'amount' => $i,
+            'type' => 'income',
+            'description' => 'Tx '.$i,
+            'subject' => null,
+            'normalized_description' => 'tx '.$i,
+            'dedupe_hash' => md5('2026-04-10|'.$i.'.00|tx '.$i, true),
+        ]);
+    }
+
+    $filters = [
+        'from' => '01-04-2026',
+        'to' => '30-04-2026',
+    ];
+
+    $response = $this->actingAs($user)->get(route('transactions.index', $filters, absolute: false));
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('transactions/Index', false)
+        ->where('filters.from', '01-04-2026')
+        ->where('filters.to', '30-04-2026')
+        ->where('transactions.links.next', fn (?string $url) => is_string($url)
+            && str_contains($url, 'from=')
+            && str_contains($url, 'to=')
+            && str_contains($url, 'page=2'))
+    );
+
+    $pageTwoResponse = $this->actingAs($user)->get(route('transactions.index', [
+        ...$filters,
+        'page' => 2,
+    ], absolute: false));
+
+    $pageTwoResponse->assertOk();
+    $pageTwoResponse->assertInertia(fn (Assert $page) => $page
+        ->component('transactions/Index', false)
+        ->where('filters.from', '01-04-2026')
+        ->where('filters.to', '30-04-2026')
+        ->where('transactions.meta.current_page', 2)
+        ->has('transactions.data', 5)
+    );
+
+    CarbonImmutable::setTestNow();
+});
+
 test('per-page size is validated', function () {
     $user = User::factory()->create();
 

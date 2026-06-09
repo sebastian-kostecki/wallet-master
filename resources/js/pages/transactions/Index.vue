@@ -1026,6 +1026,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                             :paginator="transactions"
                             :query="{
                                 account_id: filters.account_id ?? undefined,
+                                category_id: filters.category_id ?? undefined,
                                 from: filters.from ?? undefined,
                                 to: filters.to ?? undefined,
                                 sort: filters.sort ?? 'date',
