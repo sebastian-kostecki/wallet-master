@@ -12,7 +12,7 @@ WORKDIR /var/www/html
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY --from=vendor /var/www/html/vendor ./vendor
-COPY vite.config.ts tsconfig.json tsconfig.*.json ./
+COPY vite.config.ts tsconfig.json tsconfig.*.json tailwind.config.js components.json ./
 COPY resources ./resources
 COPY public ./public
 ARG VITE_APP_NAME="Wallet Master"
