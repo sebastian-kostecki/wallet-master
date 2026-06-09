@@ -14,3 +14,12 @@ test('web responses include security headers', function () {
     expect($csp)->toContain("script-src 'self' 'nonce-");
     expect($csp)->toContain("connect-src 'self'");
 });
+
+test('ziggy routes are embedded as non-executable json', function () {
+    $response = $this->get(route('login', absolute: false));
+
+    $response->assertOk();
+    $response->assertSee('id="ziggy-routes-json"', false);
+    $response->assertSee('type="application/json"', false);
+    expect($response->getContent())->not->toMatch('/<script type="text\/javascript">const Ziggy=/');
+});
