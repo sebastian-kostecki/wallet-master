@@ -6,10 +6,13 @@ import { configureEcho } from '@laravel/echo-vue';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
+import { route } from 'ziggy-js';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { initializeTheme } from './composables/useAppearance';
 import type { SupportedLocale } from './i18n';
 import { i18n, supportedLocales } from './i18n';
+
+globalThis.route = route;
 
 configureEcho({
     broadcaster: 'reverb',
