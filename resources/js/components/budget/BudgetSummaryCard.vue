@@ -31,7 +31,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <section class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+    <section class="rounded-xl border border-sidebar-border/70 bg-muted/30 p-4 shadow-sm dark:border-sidebar-border dark:bg-muted/20">
         <div class="overflow-x-auto">
             <table class="budget-table text-sm">
                 <BudgetTableColgroup layout="summary" :period="variant" />
