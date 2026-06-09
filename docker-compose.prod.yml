@@ -39,7 +39,8 @@ services:
       - traefik.http.routers.wallet-ws.tls.certresolver=letsencrypt
       - traefik.http.routers.wallet-ws.service=wallet-ws
       - traefik.http.services.wallet-ws.loadbalancer.server.port=8080
-
+      - traefik.http.routers.wallet.service=wallet
+      - traefik.http.routers.wallet-ws.service=wallet-ws
   mysql:
     image: mysql:8.4
     container_name: wallet-mysql
