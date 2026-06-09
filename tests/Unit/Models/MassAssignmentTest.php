@@ -6,7 +6,7 @@ use App\Models\Currency;
 use App\Models\Transaction;
 
 test('transaction model does not declare empty guarded property', function () {
-    $reflection = new \ReflectionClass(Transaction::class);
+    $reflection = new ReflectionClass(Transaction::class);
 
     if ($reflection->hasProperty('guarded')) {
         expect($reflection->getProperty('guarded')->getDeclaringClass()->getName())

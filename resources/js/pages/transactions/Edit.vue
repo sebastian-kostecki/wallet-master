@@ -143,14 +143,14 @@ function onDeleted() {
     router.visit(transactionsIndexHref.value);
 }
 
-function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, includeHint: boolean): string | undefined {
+function fieldDescribedBy(errorId: string | undefined, hasError: boolean, hintId: string | undefined, includeHint: boolean): string | undefined {
     const ids: string[] = [];
 
-    if (hasError) {
+    if (hasError && errorId) {
         ids.push(errorId);
     }
 
-    if (includeHint) {
+    if (includeHint && hintId) {
         ids.push(hintId);
     }
 
@@ -200,7 +200,11 @@ function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, in
                                             :options="accountOptions"
                                             :placeholder="t('transactions.form.account')"
                                             :disabled="form.processing || accounts.length === 0 || isLinkedTransfer"
-                                            @update:model-value="(value) => (form.account_id = value)"
+                                            @update:model-value="
+                                                (value) => {
+                                                    if (value !== null) form.account_id = value;
+                                                }
+                                            "
                                         >
                                             <template #trigger-leading>
                                                 <span
@@ -262,7 +266,11 @@ function fieldDescribedBy(errorId: string, hasError: boolean, hintId: string, in
                                             :options="categoryOptions"
                                             :placeholder="t('transactions.fields.category')"
                                             :disabled="form.processing || categoryOptions.length === 0"
-                                            @update:model-value="(value) => (form.category_id = value)"
+                                            @update:model-value="
+                                                (value) => {
+                                                    if (value !== null) form.category_id = value;
+                                                }
+                                            "
                                         >
                                             <template #trigger-leading>
                                                 <CategoryBadge

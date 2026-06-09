@@ -11,7 +11,6 @@ use App\Support\Imports\DateParser;
 use App\Support\Imports\SignBasedSubjectColumnResolver;
 use App\Support\Imports\SubjectSanitizer;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 

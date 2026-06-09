@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
-import { Head, Link } from '@inertiajs/vue3';
+import type { SharedData } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ArrowRight, BarChart3, CircleDollarSign, Target } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const page = usePage<SharedData>();
 
 const features = [
     { key: 'accounts', icon: CircleDollarSign },
@@ -33,14 +35,14 @@ const features = [
                         </Link>
 
                         <div class="flex items-center gap-3">
-                            <Button v-if="$page.props.auth.user" as-child>
+                            <Button v-if="page.props.auth.user" as-child>
                                 <Link :href="route('dashboard')">{{ t('welcome.dashboardCta') }}</Link>
                             </Button>
                             <template v-else>
-                                <Button :variant="$page.props.canRegister ? 'ghost' : 'default'" as-child>
+                                <Button :variant="page.props.canRegister ? 'ghost' : 'default'" as-child>
                                     <Link :href="route('login')">{{ t('welcome.secondaryCta') }}</Link>
                                 </Button>
-                                <Button v-if="$page.props.canRegister" as-child>
+                                <Button v-if="page.props.canRegister" as-child>
                                     <Link :href="route('register')">{{ t('welcome.primaryCta') }}</Link>
                                 </Button>
                             </template>
@@ -55,11 +57,11 @@ const features = [
                         <p class="text-lg leading-8 text-muted-foreground">{{ t('welcome.description') }}</p>
                     </div>
 
-                    <div v-if="!$page.props.auth.user" class="flex flex-col gap-3 sm:flex-row">
-                        <Button v-if="$page.props.canRegister" size="lg" as-child>
+                    <div v-if="!page.props.auth.user" class="flex flex-col gap-3 sm:flex-row">
+                        <Button v-if="page.props.canRegister" size="lg" as-child>
                             <Link :href="route('register')">{{ t('welcome.primaryCta') }}</Link>
                         </Button>
-                        <Button size="lg" :variant="$page.props.canRegister ? 'outline' : 'default'" as-child>
+                        <Button size="lg" :variant="page.props.canRegister ? 'outline' : 'default'" as-child>
                             <Link :href="route('login')">{{ t('welcome.secondaryCta') }}</Link>
                         </Button>
                     </div>

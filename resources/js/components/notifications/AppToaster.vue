@@ -41,7 +41,7 @@ const toastOptions = computed(() => ({
     },
 }));
 
-const page = usePage<{ props: PagePropsWithToast }>();
+const page = usePage<PagePropsWithToast>();
 const { t } = useI18n();
 
 watch(

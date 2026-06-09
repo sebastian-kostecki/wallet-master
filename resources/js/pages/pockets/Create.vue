@@ -112,13 +112,7 @@ function submit(): void {
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form class="grid gap-6" @submit.prevent="submit">
                     <div class="flex items-center gap-4 rounded-lg border border-sidebar-border/50 p-4 dark:border-sidebar-border">
-                        <PocketBadge
-                            v-if="form.color"
-                            :name="previewName"
-                            :icon="form.icon"
-                            :color="form.color"
-                            size="md"
-                        />
+                        <PocketBadge v-if="form.color" :name="previewName" :icon="form.icon" :color="form.color" size="md" />
                         <p v-else class="text-sm text-muted-foreground">{{ t('categories.fields.previewHint') }}</p>
                     </div>
 
@@ -231,12 +225,7 @@ function submit(): void {
                             </template>
                         </FormField>
 
-                        <FormField
-                            v-else
-                            for-id="target_date"
-                            :label="t('pockets.fields.targetDate')"
-                            :error="form.errors.target_date"
-                        >
+                        <FormField v-else for-id="target_date" :label="t('pockets.fields.targetDate')" :error="form.errors.target_date">
                             <Input id="target_date" v-model="form.target_date" type="date" />
                         </FormField>
                     </div>

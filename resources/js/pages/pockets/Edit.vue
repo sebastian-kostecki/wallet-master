@@ -111,13 +111,7 @@ function submit(): void {
                     </FormField>
 
                     <FormField for-id="currency" :label="t('pockets.fields.currency.label')">
-                        <Input
-                            id="currency"
-                            :model-value="`${pocket.currency.code} (${pocket.currency.symbol})`"
-                            type="text"
-                            disabled
-                            readonly
-                        />
+                        <Input id="currency" :model-value="`${pocket.currency.code} (${pocket.currency.symbol})`" type="text" disabled readonly />
                     </FormField>
 
                     <div
@@ -143,9 +137,7 @@ function submit(): void {
                                     :aria-invalid="hasError ? true : undefined"
                                     :aria-describedby="hasError ? errorId : undefined"
                                 />
-                                <span
-                                    class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
-                                >
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
                                     {{ pocket.currency.symbol }}
                                 </span>
                             </div>
@@ -188,21 +180,14 @@ function submit(): void {
                                         :aria-invalid="hasError ? true : undefined"
                                         :aria-describedby="hasError ? errorId : undefined"
                                     />
-                                    <span
-                                        class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
-                                    >
+                                    <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
                                         {{ pocket.currency.symbol }}
                                     </span>
                                 </div>
                             </template>
                         </FormField>
 
-                        <FormField
-                            v-else
-                            for-id="target_date"
-                            :label="t('pockets.fields.targetDate')"
-                            :error="form.errors.target_date"
-                        >
+                        <FormField v-else for-id="target_date" :label="t('pockets.fields.targetDate')" :error="form.errors.target_date">
                             <Input id="target_date" v-model="form.target_date" type="date" />
                         </FormField>
                     </div>

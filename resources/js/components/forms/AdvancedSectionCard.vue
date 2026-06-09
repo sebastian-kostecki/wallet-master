@@ -2,7 +2,7 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-vue-next';
-import { computed, ref, useSlots } from 'vue';
+import { computed, ref, useSlots, type Slots } from 'vue';
 
 withDefaults(
     defineProps<{
@@ -14,9 +14,9 @@ withDefaults(
     },
 );
 
-const slots = useSlots();
+const slots: Slots = useSlots();
 
-const hasHint = computed(() => Boolean(slots.hint));
+const hasHint = computed((): boolean => Boolean(slots.hint));
 
 const isOpen = ref(false);
 </script>

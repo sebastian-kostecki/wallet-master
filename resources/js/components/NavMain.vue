@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type SharedData } from '@/types';
+import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import type { Component } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-interface NavItem {
-    title: string;
-    href: string;
-    icon: Component;
-}
 
 defineProps<{
     items: NavItem[];
@@ -26,11 +19,11 @@ const { t } = useI18n();
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
                     as-child
-                    :is-active="item.href === page.href"
+                    :is-active="item.href === page.url"
                     class="transition-colors data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground"
                 >
-                    <Link :href="item.href" :aria-current="item.href === page.href ? 'page' : undefined">
-                        <component :is="item.icon" />
+                    <Link :href="item.href" :aria-current="item.href === page.url ? 'page' : undefined">
+                        <component :is="item.icon" v-if="item.icon" />
                         <span>{{ item.title }}</span>
                     </Link>
                 </SidebarMenuButton>

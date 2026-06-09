@@ -28,10 +28,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <section
-        v-if="rows.length > 0"
-        class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
-    >
+    <section v-if="rows.length > 0" class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-lg font-semibold">{{ t('budget.monthly.pockets_section') }}</h2>
             <Button variant="link" class="h-auto p-0" as-child>
@@ -50,11 +47,7 @@ const { t } = useI18n();
                     </tr>
                 </thead>
                 <tbody>
-                    <tr
-                        v-for="row in rows"
-                        :key="row.pocket_id"
-                        class="border-b border-sidebar-border/40"
-                    >
+                    <tr v-for="row in rows" :key="row.pocket_id" class="border-b border-sidebar-border/40">
                         <td class="py-2 pr-4">
                             <PocketBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                         </td>
@@ -62,11 +55,7 @@ const { t } = useI18n();
                             {{ formatMoney(row.monthly_plan, row.currency) }}
                         </td>
                         <td class="py-2 pr-4">
-                            <BudgetPocketMovementCell
-                                :saved="row.saved"
-                                :released="row.released"
-                                :currency="row.currency"
-                            />
+                            <BudgetPocketMovementCell :saved="row.saved" :released="row.released" :currency="row.currency" />
                         </td>
                         <td class="py-2">
                             <BudgetProgressCell :percent="row.progress_percent" category-type="expense" />

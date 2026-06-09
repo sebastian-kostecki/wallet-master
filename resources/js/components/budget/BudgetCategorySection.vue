@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import BudgetProgressCell from '@/components/budget/BudgetProgressCell.vue';
 import BudgetTableColgroup from '@/components/budget/BudgetTableColgroup.vue';
 import EditableEstimateCell from '@/components/budget/EditableEstimateCell.vue';
+import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { useI18n } from 'vue-i18n';
 

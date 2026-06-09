@@ -38,9 +38,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const editingCategoryId = ref<number | null>(null);
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: t('budget.yearly.title'), href: route('budget.yearly') },
-]);
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('budget.yearly.title'), href: route('budget.yearly') }]);
 
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
@@ -63,7 +61,7 @@ function cancelEdit() {
     editingCategoryId.value = null;
 }
 
-function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
+function saveAnnualEstimate(row: { category_id: number; annual_plan?: string | null }, rawValue: string) {
     const trimmed = rawValue.trim();
     const normalized = trimmed.replace(',', '.');
     const current = row.annual_plan ?? '';
@@ -75,15 +73,19 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
 
     const amount = trimmed === '' ? null : normalized;
 
-    router.patch(route('categories.estimates.annual', row.category_id), {
-        year: props.year,
-        amount,
-    }, {
-        preserveScroll: true,
-        onFinish: () => {
-            editingCategoryId.value = null;
+    router.patch(
+        route('categories.estimates.annual', row.category_id),
+        {
+            year: props.year,
+            amount,
         },
-    });
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                editingCategoryId.value = null;
+            },
+        },
+    );
 }
 </script>
 
@@ -135,7 +137,6 @@ function saveAnnualEstimate(row: BudgetRow, rawValue: string) {
                 @cancel="cancelEdit"
                 @save="saveAnnualEstimate"
             />
-
         </div>
     </AppLayout>
 </template>

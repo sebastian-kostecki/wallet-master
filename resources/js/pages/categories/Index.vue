@@ -23,9 +23,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: t('categories.index.title'), href: route('categories.index') },
-]);
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('categories.index.title'), href: route('categories.index') }]);
 
 const expenseList = ref<Category[]>([]);
 const incomeList = ref<Category[]>([]);
@@ -88,10 +86,7 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                     {{ t(`budget.sections.${sectionKey}`) }}
                 </h2>
 
-                <p
-                    v-if="(sectionKey === 'expense' ? expenseList : incomeList).length === 0"
-                    class="px-4 py-6 text-sm text-muted-foreground"
-                >
+                <p v-if="(sectionKey === 'expense' ? expenseList : incomeList).length === 0" class="px-4 py-6 text-sm text-muted-foreground">
                     {{ t('categories.index.empty') }}
                 </p>
 

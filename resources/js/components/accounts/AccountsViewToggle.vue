@@ -17,11 +17,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <div
-        role="group"
-        class="inline-flex gap-1 rounded-lg border border-input bg-muted/30 p-1"
-        :aria-label="t('accounts.index.view.toggleAria')"
-    >
+    <div role="group" class="inline-flex gap-1 rounded-lg border border-input bg-muted/30 p-1" :aria-label="t('accounts.index.view.toggleAria')">
         <Button
             type="button"
             :variant="modelValue === 'grid' ? 'secondary' : 'ghost'"

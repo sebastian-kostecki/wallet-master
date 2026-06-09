@@ -27,12 +27,7 @@ const tileStyle = computed(() => ({
 
 <template>
     <span class="inline-flex min-w-0 items-center gap-2">
-        <span
-            class="inline-flex shrink-0 items-center justify-center rounded-md"
-            :class="tileSizeClass"
-            :style="tileStyle"
-            aria-hidden="true"
-        >
+        <span class="inline-flex shrink-0 items-center justify-center rounded-md" :class="tileSizeClass" :style="tileStyle" aria-hidden="true">
             <Icon :name="icon" :class="iconSizeClass" :color="color" />
         </span>
         <span v-if="showName && name" class="truncate text-sm font-medium">{{ name }}</span>

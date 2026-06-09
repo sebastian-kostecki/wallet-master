@@ -357,10 +357,10 @@ function setSort(sort: 'date' | 'amount') {
 
 const hasActiveFilters = computed(() => {
     return Boolean(
-        props.filters.account_id !== null
-            || props.filters.category_id !== null
-            || (props.filters.from ?? '').trim() !== ''
-            || (props.filters.to ?? '').trim() !== '',
+        props.filters.account_id !== null ||
+            props.filters.category_id !== null ||
+            (props.filters.from ?? '').trim() !== '' ||
+            (props.filters.to ?? '').trim() !== '',
     );
 });
 
@@ -939,12 +939,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                             {{ tx.date_relative || operationDateRelative(transactionDisplayDateIso(tx)) }}
                                         </p>
                                         <div v-if="tx.category" class="mt-1">
-                                            <CategoryBadge
-                                                :name="tx.category.name"
-                                                :icon="tx.category.icon"
-                                                :color="tx.category.color"
-                                                size="sm"
-                                            />
+                                            <CategoryBadge :name="tx.category.name" :icon="tx.category.icon" :color="tx.category.color" size="sm" />
                                         </div>
                                         <p class="mt-1 text-xs text-muted-foreground">
                                             {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}

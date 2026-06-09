@@ -294,12 +294,7 @@ function submit() {
                             </FormField>
                         </div>
 
-                        <FormField
-                            v-if="involvesSavings"
-                            for-id="pocket_id"
-                            :label="t('transfers.form.pocket')"
-                            :error="form.errors.pocket_id"
-                        >
+                        <FormField v-if="involvesSavings" for-id="pocket_id" :label="t('transfers.form.pocket')" :error="form.errors.pocket_id">
                             <template #default="{ errorId, hasError }">
                                 <DropdownSelect
                                     id="pocket_id"

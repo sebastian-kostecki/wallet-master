@@ -3,11 +3,7 @@ export type CurrencyDisplay = {
     precision?: number;
 };
 
-export function formatMoney(
-    value: string | number | null | undefined,
-    currency?: CurrencyDisplay | null,
-    locale = 'pl-PL',
-): string {
+export function formatMoney(value: string | number | null | undefined, currency?: CurrencyDisplay | null, locale = 'pl-PL'): string {
     if (value === null || value === undefined || value === '') {
         return '—';
     }

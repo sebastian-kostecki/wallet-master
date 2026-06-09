@@ -64,10 +64,7 @@ function destroy() {
                 <DialogDescription>{{ t('categories.delete.description') }}</DialogDescription>
             </DialogHeader>
 
-            <div
-                v-if="categoryName && icon && color"
-                class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border"
-            >
+            <div v-if="categoryName && icon && color" class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
                 <CategoryBadge :name="categoryName" :icon="icon" :color="color" size="md" />
             </div>
             <div v-else-if="categoryName" class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">

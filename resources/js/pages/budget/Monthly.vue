@@ -52,9 +52,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const editingCategoryId = ref<number | null>(null);
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: t('budget.monthly.title'), href: route('budget.monthly') },
-]);
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('budget.monthly.title'), href: route('budget.monthly') }]);
 
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
@@ -81,7 +79,7 @@ function cancelEdit() {
     editingCategoryId.value = null;
 }
 
-function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
+function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string | null }, rawValue: string) {
     const trimmed = rawValue.trim();
     const normalized = trimmed.replace(',', '.');
     const current = row.monthly_plan ?? '';
@@ -93,16 +91,20 @@ function saveMonthlyEstimate(row: BudgetRow, rawValue: string) {
 
     const amount = trimmed === '' ? null : normalized;
 
-    router.patch(route('categories.estimates.monthly', row.category_id), {
-        year: props.year,
-        month: props.month,
-        amount,
-    }, {
-        preserveScroll: true,
-        onFinish: () => {
-            editingCategoryId.value = null;
+    router.patch(
+        route('categories.estimates.monthly', row.category_id),
+        {
+            year: props.year,
+            month: props.month,
+            amount,
         },
-    });
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                editingCategoryId.value = null;
+            },
+        },
+    );
 }
 </script>
 

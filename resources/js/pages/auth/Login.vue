@@ -7,7 +7,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import type { SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -18,6 +19,7 @@ defineProps<{
 }>();
 
 const { t } = useI18n();
+const page = usePage<SharedData>();
 
 const form = useForm({
     email: '',
@@ -100,7 +102,7 @@ const submit = () => {
                 </Button>
             </div>
 
-            <div v-if="$page.props.canRegister" class="text-center text-sm text-muted-foreground">
+            <div v-if="page.props.canRegister" class="text-center text-sm text-muted-foreground">
                 {{ t('auth.login.noAccount') }}
                 <TextLink :href="route('register')">{{ t('auth.login.signUp') }}</TextLink>
             </div>

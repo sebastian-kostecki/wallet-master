@@ -25,13 +25,8 @@ const normalizedPercent = computed(() => {
             aria-valuemin="0"
             aria-valuemax="100"
         >
-            <div
-                class="h-full rounded-full bg-emerald-500 transition-[width] duration-200 ease-out"
-                :style="{ width: `${normalizedPercent}%` }"
-            />
+            <div class="h-full rounded-full bg-emerald-500 transition-[width] duration-200 ease-out" :style="{ width: `${normalizedPercent}%` }" />
         </div>
-        <p class="text-xs text-muted-foreground">
-            {{ formatMoney(balance, currency) }} / {{ formatMoney(targetAmount, currency) }}
-        </p>
+        <p class="text-xs text-muted-foreground">{{ formatMoney(balance, currency) }} / {{ formatMoney(targetAmount, currency) }}</p>
     </div>
 </template>

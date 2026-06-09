@@ -69,13 +69,7 @@ function submit() {
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form class="grid gap-6" @submit.prevent="submit">
                     <div class="flex items-center gap-4 rounded-lg border border-sidebar-border/50 p-4 dark:border-sidebar-border">
-                        <CategoryBadge
-                            v-if="form.color"
-                            :name="previewName"
-                            :icon="form.icon"
-                            :color="form.color"
-                            size="md"
-                        />
+                        <CategoryBadge v-if="form.color" :name="previewName" :icon="form.icon" :color="form.color" size="md" />
                         <p v-else class="text-sm text-muted-foreground">{{ t('categories.fields.previewHint') }}</p>
                     </div>
 
@@ -90,7 +84,7 @@ function submit() {
                             :options="typeOptions"
                             :placeholder="t('categories.index.fields.type')"
                             :disabled="form.processing"
-                            @update:model-value="(value) => (form.type = value)"
+                            @update:model-value="(value) => (form.type = value ?? '')"
                         />
                     </FormField>
 

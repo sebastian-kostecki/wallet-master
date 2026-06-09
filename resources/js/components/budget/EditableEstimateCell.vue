@@ -76,14 +76,7 @@ function onInputKeydown(event: KeyboardEvent) {
 <template>
     <div v-if="!isEditing" class="flex items-center gap-1">
         <span class="tabular-nums">{{ formatMoney(plan, currency) }}</span>
-        <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            class="h-8 w-8 shrink-0"
-            :aria-label="editLabel"
-            @click="emit('start-edit')"
-        >
+        <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="editLabel" @click="emit('start-edit')">
             <Pencil class="h-4 w-4" />
         </Button>
     </div>
@@ -98,24 +91,10 @@ function onInputKeydown(event: KeyboardEvent) {
             :aria-invalid="error !== null"
             @keydown="onInputKeydown"
         />
-        <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            class="h-8 w-8 shrink-0"
-            :aria-label="saveLabel"
-            @click="onSave"
-        >
+        <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="saveLabel" @click="onSave">
             <Check class="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
         </Button>
-        <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            class="h-8 w-8 shrink-0"
-            :aria-label="cancelLabel"
-            @click="onCancel"
-        >
+        <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="cancelLabel" @click="onCancel">
             <X class="h-4 w-4 text-muted-foreground" />
         </Button>
     </div>

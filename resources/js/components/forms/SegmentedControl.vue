@@ -39,12 +39,7 @@ const gridClass = computed(() => {
 </script>
 
 <template>
-    <div
-        :id="id"
-        role="group"
-        :aria-label="ariaLabel"
-        :class="cn('grid gap-1 rounded-lg border border-input bg-muted/30 p-1', gridClass)"
-    >
+    <div :id="id" role="group" :aria-label="ariaLabel" :class="cn('grid gap-1 rounded-lg border border-input bg-muted/30 p-1', gridClass)">
         <Button
             v-for="option in options"
             :key="String(option.value)"

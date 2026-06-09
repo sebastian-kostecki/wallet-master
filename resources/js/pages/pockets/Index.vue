@@ -4,8 +4,8 @@ import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import PocketProgressBar from '@/components/pockets/PocketProgressBar.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cn } from '@/lib/utils';
 import { formatMoney } from '@/lib/formatMoney';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Archive, ArchiveRestore, GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
@@ -42,9 +42,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: t('pockets.index.title'), href: route('pockets.index') },
-]);
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('pockets.index.title'), href: route('pockets.index') }]);
 
 const list = ref<Pocket[]>([]);
 const archiveDialogOpen = ref(false);
@@ -208,13 +206,7 @@ function deletePocket(pocket: Pocket): void {
                                 <Archive v-else class="h-4 w-4 text-muted-foreground" />
                             </Button>
 
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                :aria-label="t('pockets.index.delete')"
-                                @click="deletePocket(pocket)"
-                            >
+                            <Button variant="ghost" size="icon" type="button" :aria-label="t('pockets.index.delete')" @click="deletePocket(pocket)">
                                 <Trash2 class="h-4 w-4 text-muted-foreground" />
                             </Button>
                         </div>

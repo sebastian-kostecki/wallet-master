@@ -33,7 +33,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const form = useForm({ is_archived: false });
+const form = useForm<{ is_archived: boolean }>({ is_archived: false });
 
 const dialogKey = computed(() => (props.isArchived ? 'unarchive' : 'archive'));
 
@@ -69,10 +69,7 @@ function submit(): void {
                 <DialogDescription>{{ t(`pockets.${dialogKey}.description`) }}</DialogDescription>
             </DialogHeader>
 
-            <div
-                v-if="pocketName && icon && color"
-                class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border"
-            >
+            <div v-if="pocketName && icon && color" class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
                 <PocketBadge :name="pocketName" :icon="icon" :color="color" />
             </div>
             <div v-else-if="pocketName" class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">

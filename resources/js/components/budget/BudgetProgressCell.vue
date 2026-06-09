@@ -36,11 +36,7 @@ const badgeClasses: Record<string, string> = {
 
 <template>
     <span v-if="percent === null" class="text-muted-foreground">—</span>
-    <span
-        v-else
-        class="inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-medium tabular-nums"
-        :class="badgeClasses[tone]"
-    >
+    <span v-else class="inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-medium tabular-nums" :class="badgeClasses[tone]">
         {{ percent }}%
     </span>
 </template>

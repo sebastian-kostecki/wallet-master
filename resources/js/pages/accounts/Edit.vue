@@ -154,7 +154,7 @@ const adjustProcessing = ref(false);
                                     :options="bankOptions"
                                     :placeholder="t('accounts.create.fields.bank.placeholder')"
                                     :disabled="form.processing"
-                                    @update:model-value="(value) => (form.bank = value)"
+                                    @update:model-value="(value) => (form.bank = value ?? '')"
                                 >
                                     <template #trigger-leading>
                                         <span
@@ -221,7 +221,7 @@ const adjustProcessing = ref(false);
                                     :options="accountTypeOptions"
                                     :placeholder="t('accounts.create.fields.type.placeholder')"
                                     :disabled="form.processing"
-                                    @update:model-value="(value) => (form.type = value)"
+                                    @update:model-value="(value) => (form.type = value ?? '')"
                                 >
                                     <template #trigger-leading>
                                         <span

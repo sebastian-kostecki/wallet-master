@@ -34,11 +34,7 @@ const config = computed(() => {
 
 <template>
     <span class="inline-flex min-w-0 items-center gap-2">
-        <span
-            class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
-            :class="config.tileClass"
-            aria-hidden="true"
-        >
+        <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md" :class="config.tileClass" aria-hidden="true">
             <Icon :name="config.icon" class="h-4 w-4" :color="config.color" />
         </span>
         <span class="font-medium">{{ label }}</span>
