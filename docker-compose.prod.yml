@@ -17,7 +17,6 @@ services:
       SUPERVISOR_PHP_USER: sail
     volumes:
       - ./storage:/var/www/html/storage
-      - ./bootstrap/cache:/var/www/html/bootstrap/cache
       - ./.env:/var/www/html/.env:ro
     networks:
       - wallet-internal
