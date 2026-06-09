@@ -1,0 +1,96 @@
+# syntax=docker/dockerfile:1
+
+FROM composer:2 AS vendor
+WORKDIR /var/www/html
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+COPY . .
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+FROM node:24-alpine AS assets
+WORKDIR /var/www/html
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY --from=vendor /var/www/html/vendor ./vendor
+COPY vite.config.ts tsconfig.json tsconfig.*.json ./
+COPY resources ./resources
+COPY public ./public
+ARG VITE_APP_NAME="Wallet Master"
+ARG VITE_REVERB_APP_KEY
+ARG VITE_REVERB_HOST=ws.budget.kostecki.dev
+ARG VITE_REVERB_PORT=443
+ARG VITE_REVERB_SCHEME=https
+ENV VITE_APP_NAME="${VITE_APP_NAME}" \
+    VITE_REVERB_APP_KEY="${VITE_REVERB_APP_KEY}" \
+    VITE_REVERB_HOST="${VITE_REVERB_HOST}" \
+    VITE_REVERB_PORT="${VITE_REVERB_PORT}" \
+    VITE_REVERB_SCHEME="${VITE_REVERB_SCHEME}"
+RUN npm run build
+
+FROM ubuntu:24.04 AS runtime
+
+LABEL maintainer="wallet-master"
+
+ARG WWWGROUP=1000
+ARG NODE_VERSION=24
+
+WORKDIR /var/www/html
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+ENV LANG=C.UTF-8
+ENV SUPERVISOR_PHP_COMMAND="/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan serve --host=0.0.0.0 --port=80"
+ENV SUPERVISOR_PHP_USER="sail"
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && apt-get upgrade -y \
+    && mkdir -p /etc/apt/keyrings \
+    && apt-get install -y gnupg gosu curl ca-certificates zip unzip git supervisor sqlite3 libcap2-bin libpng-dev python3 dnsutils librsvg2-bin nano \
+    && curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xb8dc7e53946656efbce4c1dd71daeaab4ad4cab6' | gpg --dearmor | tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null \
+    && echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu noble main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
+    && apt-get update \
+    && apt-get install -y \
+        libgd3 \
+        php8.5-cli \
+        php8.5-dev \
+        php8.5-pgsql \
+        php8.5-sqlite3 \
+        php8.5-gd \
+        php8.5-curl \
+        php8.5-mysql \
+        php8.5-mbstring \
+        php8.5-xml \
+        php8.5-zip \
+        php8.5-bcmath \
+        php8.5-intl \
+        php8.5-readline \
+        php8.5-redis \
+        php8.5-igbinary \
+        php8.5-msgpack \
+        mysql-client \
+    && curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
+    && apt-get -y autoremove \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.5
+
+RUN groupadd --force -g $WWWGROUP sail \
+    && useradd -ms /bin/bash --no-user-group -g $WWWGROUP -u 1337 sail \
+    && git config --global --add safe.directory /var/www/html
+
+COPY docker/8.5/start-container /usr/local/bin/start-container
+COPY docker/8.5/supervisord.prod.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/8.5/php.ini /etc/php/8.5/cli/conf.d/99-sail.ini
+RUN chmod +x /usr/local/bin/start-container
+
+COPY --from=vendor --chown=sail:sail /var/www/html /var/www/html
+COPY --from=assets --chown=sail:sail /var/www/html/public/build /var/www/html/public/build
+
+RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
+    && chown -R sail:sail storage bootstrap/cache
+
+EXPOSE 80/tcp 8080/tcp
+
+ENTRYPOINT ["start-container"]
