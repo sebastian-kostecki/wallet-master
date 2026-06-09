@@ -9,5 +9,8 @@ test('web responses include security headers', function () {
     $response->assertHeader('X-Frame-Options', 'SAMEORIGIN');
     $response->assertHeader('X-Content-Type-Options', 'nosniff');
     $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    expect($response->headers->get('Content-Security-Policy'))->toContain("default-src 'self'");
+    $csp = $response->headers->get('Content-Security-Policy');
+    expect($csp)->toContain("default-src 'self'");
+    expect($csp)->toContain("script-src 'self' 'nonce-");
+    expect($csp)->toContain("connect-src 'self'");
 });

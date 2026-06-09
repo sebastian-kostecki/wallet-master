@@ -32,10 +32,12 @@ services:
       - traefik.http.routers.wallet.rule=Host(`budget.kostecki.dev`)
       - traefik.http.routers.wallet.entrypoints=websecure
       - traefik.http.routers.wallet.tls.certresolver=letsencrypt
+      - traefik.http.routers.wallet.service=wallet
       - traefik.http.services.wallet.loadbalancer.server.port=80
       - traefik.http.routers.wallet-ws.rule=Host(`ws.budget.kostecki.dev`)
       - traefik.http.routers.wallet-ws.entrypoints=websecure
       - traefik.http.routers.wallet-ws.tls.certresolver=letsencrypt
+      - traefik.http.routers.wallet-ws.service=wallet-ws
       - traefik.http.services.wallet-ws.loadbalancer.server.port=8080
 
   mysql:
