@@ -1,14 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('imports', function (Blueprint $table) {
@@ -21,6 +20,7 @@ return new class extends Migration
             $table->unsignedInteger('rows_skipped_duplicate')->default(0);
             $table->unsignedInteger('rows_failed_validation')->default(0);
             $table->json('mapping')->nullable();
+            $table->json('details')->nullable();
             $table->text('error_summary')->nullable();
             $table->timestamp('committed_at')->nullable();
             $table->timestamps();
@@ -31,9 +31,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('imports');

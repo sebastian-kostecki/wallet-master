@@ -2,6 +2,9 @@
 
 use App\Models\Pocket;
 use App\Models\User;
+use Database\Seeders\CurrencySeeder;
+
+beforeEach(fn () => $this->seed(CurrencySeeder::class));
 
 test('reorder updates pocket sort order', function () {
     $user = User::factory()->create();

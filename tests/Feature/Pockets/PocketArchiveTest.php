@@ -3,7 +3,10 @@
 use App\Enums\PocketPlanningMode;
 use App\Models\Pocket;
 use App\Models\User;
+use Database\Seeders\CurrencySeeder;
 use Inertia\Testing\AssertableInertia as Assert;
+
+beforeEach(fn () => $this->seed(CurrencySeeder::class));
 
 test('archived pocket is hidden from default index and monthly budget', function () {
     $user = User::factory()->create();

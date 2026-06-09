@@ -2,6 +2,9 @@
 
 use App\Models\Pocket;
 use App\Models\User;
+use Database\Seeders\CurrencySeeder;
+
+beforeEach(fn () => $this->seed(CurrencySeeder::class));
 
 test('user cannot update another users pocket', function () {
     $owner = User::factory()->create();
