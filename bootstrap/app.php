@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(prepend: [
-            // SecurityHeaders::class,
+            SecurityHeaders::class,
             SetApplicationLocale::class,
         ]);
 
