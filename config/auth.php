@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -62,7 +64,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => env('AUTH_MODEL', User::class),
         ],
 
         // 'users' => [
@@ -111,5 +113,20 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registration
+    |--------------------------------------------------------------------------
+    |
+    | When disabled, public self-signup routes (GET/POST /register) return 404
+    | and registration links are hidden in the UI. Admin user creation via
+    | `php artisan user:create` is unaffected.
+    |
+    */
+
+    'registration' => [
+        'enabled' => (bool) env('REGISTRATION_ENABLED', true),
+    ],
 
 ];

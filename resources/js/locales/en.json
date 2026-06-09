@@ -1,0 +1,830 @@
+{
+    "accounts": {
+        "toast": {
+            "created": "Account created.",
+            "updated": "Account updated."
+        },
+        "index": {
+            "title": "Accounts",
+            "addAccount": "Add account",
+            "view": {
+                "toggleAria": "Toggle accounts view",
+                "grid": "Grid",
+                "list": "List"
+            },
+            "empty": {
+                "heading": "No accounts yet",
+                "message": "You don't have any accounts yet.",
+                "cta": "Add your first account"
+            }
+        },
+        "edit": {
+            "title": "Edit account",
+            "back": "Back",
+            "deleteAction": "Delete account",
+            "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference.",
+            "dangerZone": {
+                "title": "Danger zone",
+                "description": "This action is irreversible. Transactions will remain in history as read-only."
+            }
+        },
+        "create": {
+            "title": "Add account",
+            "back": "Back",
+            "fields": {
+                "name": {
+                    "label": "Name",
+                    "placeholder": "e.g. Main account"
+                },
+                "bank": {
+                    "label": "Bank",
+                    "placeholder": "Select bank"
+                },
+                "type": {
+                    "label": "Account type",
+                    "placeholder": "Select account type"
+                },
+                "currency": {
+                    "label": "Currency",
+                    "placeholder": "Select currency"
+                },
+                "openingBalance": {
+                    "label": "Opening balance",
+                    "placeholder": "e.g. 1000.00"
+                }
+            },
+            "openingBalanceHint": "In the MVP, the current balance starts from the opening balance."
+        },
+        "summary": {
+            "title": "Summary",
+            "description": "Sum of balances for all PLN accounts.",
+            "totalPln": "Total balance (PLN)",
+            "countPln": "Number of accounts (PLN): {count}",
+            "invalidSkipped": "Some balances were skipped in the total.",
+            "addToSeeSummary": "Add an account to see the summary."
+        },
+        "card": {
+            "deleteAria": "Delete account",
+            "currentBalance": "Current balance"
+        },
+        "adjust": {
+            "title": "Set balance",
+            "description": "This records a balance adjustment transaction (the delta needed to reach the new balance) and updates the current balance. Existing transactions are not modified.",
+            "newBalanceLabel": "New balance",
+            "newBalancePlaceholder": "e.g. 1234.56",
+            "confirmLabel": "I understand this operation does not change transaction history.",
+            "confirmHint": "Use only to correct the current balance."
+        },
+        "delete": {
+            "title": "Delete account?",
+            "description": "The account will be removed from the list. Transactions will remain in history, but will be read-only.",
+            "currentBalanceLine": "Current balance: {amount} {symbol}",
+            "confirm": "Delete account"
+        },
+        "enums": {
+            "accountType": {
+                "checking": "Checking account",
+                "savings": "Savings account"
+            },
+            "bank": {
+                "bnp-paribas": "BNP Paribas",
+                "mbank": "mBank",
+                "cash": "Cash"
+            }
+        }
+    },
+    "actions": {
+        "edit": "Edit",
+        "setBalance": "Set balance",
+        "cancel": "Cancel",
+        "save": "Save"
+    },
+    "auth": {
+        "fields": {
+            "email": {
+                "label": "Email address",
+                "placeholder": "email{'@'}example.com"
+            },
+            "password": {
+                "label": "Password",
+                "placeholder": "Password"
+            },
+            "passwordConfirmation": {
+                "label": "Confirm password",
+                "placeholder": "Confirm password"
+            },
+            "name": {
+                "label": "Name",
+                "placeholder": "Full name"
+            }
+        },
+        "submitLoading": "Processing…",
+        "login": {
+            "title": "Log in to your account",
+            "description": "Enter your email and password below to log in",
+            "headTitle": "Log in",
+            "remember": "Remember me",
+            "forgotPassword": "Forgot password?",
+            "submit": "Log in",
+            "noAccount": "Don't have an account?",
+            "signUp": "Sign up"
+        },
+        "register": {
+            "title": "Create an account",
+            "description": "Enter your details below to create your account",
+            "headTitle": "Register",
+            "submit": "Create account",
+            "hasAccount": "Already have an account?",
+            "logIn": "Log in"
+        },
+        "forgotPassword": {
+            "title": "Forgot password",
+            "description": "Enter your email to receive a password reset link",
+            "headTitle": "Forgot password",
+            "submit": "Email password reset link",
+            "returnPrefix": "Or, return to",
+            "logIn": "log in"
+        },
+        "resetPassword": {
+            "title": "Reset password",
+            "description": "Please enter your new password below",
+            "headTitle": "Reset password",
+            "submit": "Reset password"
+        },
+        "brand": {
+            "eyebrow": "Ogarniam Portfel",
+            "promise": "Take back control of your household budget",
+            "description": "Import history, organize transactions, and track envelopes without spreadsheets.",
+            "benefits": {
+                "imports": "Bank history imports",
+                "budget": "Budget and categories in one place",
+                "pockets": "Savings envelopes close at hand"
+            }
+        },
+        "confirmPassword": {
+            "title": "Confirm your password",
+            "description": "This is a secure area of the application. Please confirm your password before continuing.",
+            "headTitle": "Confirm password",
+            "submit": "Confirm password"
+        },
+        "verifyEmail": {
+            "title": "Verify email",
+            "description": "Please verify your email address by clicking the link we just emailed to you.",
+            "headTitle": "Email verification",
+            "sent": "A new verification link has been sent to the email address you provided during registration.",
+            "submit": "Resend verification email",
+            "logout": "Log out"
+        }
+    },
+    "brand": {
+        "name": "Ogarniam Portfel",
+        "promise": "Take back control of your household budget",
+        "shortPromise": "Budget under control",
+        "description": "Accounts, transactions, imports, budgets, and envelopes in one organized place."
+    },
+    "welcome": {
+        "headTitle": "Ogarniam Portfel",
+        "eyebrow": "Household budget without chaos",
+        "title": "Take back control of your household budget",
+        "description": "Bring accounts, transactions, imports, budgets, and envelopes into one place. See where money flows and what you can improve faster.",
+        "primaryCta": "Create account",
+        "secondaryCta": "Log in",
+        "dashboardCta": "Go to dashboard",
+        "features": {
+            "accounts": {
+                "title": "Accounts and balance",
+                "description": "Organize accounts and keep a current money overview."
+            },
+            "imports": {
+                "title": "History imports",
+                "description": "Upload statements and organize transactions faster."
+            },
+            "pockets": {
+                "title": "Budget and envelopes",
+                "description": "Plan spending, categories, and savings envelopes."
+            }
+        }
+    },
+    "dashboard": {
+        "headTitle": "Dashboard",
+        "title": "Welcome to Ogarniam Portfel",
+        "description": "Start with accounts, history imports, or a manual transaction. This screen will grow with your data.",
+        "quickActions": {
+            "accounts": {
+                "title": "Add account",
+                "description": "Set up an account and opening balance.",
+                "cta": "Go to accounts"
+            },
+            "transactions": {
+                "title": "Add transaction",
+                "description": "Record income, expense, or transfer.",
+                "cta": "Go to transactions"
+            },
+            "pockets": {
+                "title": "Plan an envelope",
+                "description": "Give your savings a clear direction.",
+                "cta": "Go to envelopes"
+            }
+        },
+        "preview": {
+            "title": "A cleaner money overview",
+            "items": {
+                "imports": "Imports organize history",
+                "budget": "Budget shows plan and actuals",
+                "pockets": "Envelopes show savings progress"
+            }
+        }
+    },
+    "advancedSection": {
+        "toggle": "Advanced options",
+        "hintDefault": "Extra settings — rarely needed."
+    },
+    "transactions": {
+        "fields": {
+            "category": "Category",
+            "pocket": "Envelope",
+            "pocketNone": "None"
+        },
+        "index": {
+            "title": "Transactions",
+            "addTransaction": "Add transaction",
+            "addTransfer": "Transfer",
+            "actionsMenu": {
+                "label": "Add"
+            },
+            "filters": {
+                "account": {
+                    "label": "Account",
+                    "all": "All accounts"
+                },
+                "category": {
+                    "label": "Category",
+                    "all": "All categories"
+                },
+                "from": "From",
+                "to": "To",
+                "sort": "Sort",
+                "direction": "Direction",
+                "apply": "Apply",
+                "clear": "Clear filters",
+                "errors": {
+                    "dateRange": "The “From” date cannot be later than the “To” date.",
+                    "dateFormat": "Enter a date in DD-MM-YYYY format."
+                },
+                "presets": {
+                    "thisMonth": "This month",
+                    "previousMonth": "Previous month",
+                    "thisYear": "This year",
+                    "previousYear": "Previous year",
+                    "last7Days": "Last 7 days"
+                },
+                "a11y": {
+                    "clearDateRange": "Clear date range"
+                }
+            },
+            "sort": {
+                "date": "Date",
+                "amount": "Amount",
+                "asc": "Ascending",
+                "desc": "Descending"
+            },
+            "summary": {
+                "income": "Income",
+                "expense": "Expenses"
+            },
+            "table": {
+                "date": "Date",
+                "account": "Account",
+                "description": "Description",
+                "subject": "Subject",
+                "amount": "Amount",
+                "category": "Category",
+                "transfer": "Internal transfer",
+                "actions": "Actions"
+            },
+            "badges": {
+                "adjustment": "Adjustment"
+            },
+            "readOnly": {
+                "badge": "Read-only",
+                "deletedAccount": "Deleted account",
+                "noActions": "No actions"
+            },
+            "empty": {
+                "filtered": "No transactions match your filters.",
+                "firstUse": "You don't have any transactions yet.",
+                "import": "Import file"
+            },
+            "pagination": {
+                "aria": "Pagination",
+                "prev": "Previous",
+                "next": "Next",
+                "pageOf": "Page {page} of {pages}",
+                "pageLink": "Page {page}",
+                "perPageLabel": "Items per page"
+            },
+            "a11y": {
+                "tableCaption": "Transactions list",
+                "filters": "Filter transactions",
+                "sortInactive": "Sort by {column}",
+                "sortActive": "Sort by {column}, currently {direction}",
+                "sortByDate": "Sort by date",
+                "sortByAmount": "Sort by amount",
+                "edit": "Edit transaction: {description}",
+                "showStatementDescription": "Show statement data and full description"
+            },
+            "importPreset": {
+                "label": "Imported just now",
+                "clearAria": "Clear filter: Imported just now"
+            }
+        },
+        "create": {
+            "title": "Add transaction",
+            "back": "Back",
+            "hints": {
+                "title": "Tips",
+                "type": "Choose “Income” or “Expense”. This affects the amount sign.",
+                "amount": "You can enter decimals. For expenses we'll store the amount as negative.",
+                "description": "A clear description makes it easier to find the transaction later."
+            }
+        },
+        "edit": {
+            "title": "Edit transaction",
+            "back": "Back",
+            "deleteAction": "Delete transaction",
+            "dangerZone": {
+                "title": "Warning",
+                "description": "This action cannot be undone."
+            },
+            "transfer": {
+                "bannerTitle": "Linked transfer",
+                "bannerDescription": "Amount and account are locked. Unlink the transfer first to change them.",
+                "unlinkAction": "Unlink transfer",
+                "accountHint": "Account is locked while the transfer is linked. Use “Unlink transfer” to change it.",
+                "amountHint": "Amount is locked while the transfer is linked. Use “Unlink transfer” to change it."
+            },
+            "hints": {
+                "title": "Info",
+                "scope": "You're editing an existing transaction — changes will be reflected in history.",
+                "amount": "Double-check the amount sign (+/−). It affects the account balance.",
+                "amountTransfer": "Amount is locked while the transfer is linked. Use “Unlink transfer” to change it.",
+                "save": "After saving, you'll be taken back to the transactions list."
+            },
+            "statement": {
+                "title": "Statement data",
+                "description": "Raw statement description from the bank (read-only)."
+            }
+        },
+        "form": {
+            "account": "Account",
+            "date": "Date",
+            "booked_at": "Booked date",
+            "advancedDates": "Advanced: booking period",
+            "advancedDatesHint": "Optionally assign a booked date that differs from the operation date.",
+            "amount": "Amount",
+            "description": "Description",
+            "subject": "Subject",
+            "type": "Type"
+        },
+        "types": {
+            "income": "Income",
+            "expense": "Expense"
+        },
+        "unlink": {
+            "title": "Unlink transfer?",
+            "description": "Both linked transactions will become a regular income and expense. Account balances will not change.",
+            "confirm": "Unlink"
+        },
+        "delete": {
+            "title": "Delete transaction?",
+            "description": "The transaction will be permanently deleted.",
+            "descriptionTransfer": "This is a transfer — deleting it removes both linked transactions.",
+            "confirm": "Delete transaction"
+        },
+        "toast": {
+            "created": "Transaction added",
+            "updated": "Transaction updated",
+            "deleted": "Transaction deleted",
+            "genericError": "We couldn't save your changes. Please try again."
+        }
+    },
+    "transfers": {
+        "create": {
+            "title": "Transfer",
+            "description": "Move funds between your own accounts. We'll create two linked transactions with the same date.",
+            "empty": "To make a transfer, add at least two accounts."
+        },
+        "form": {
+            "fromAccount": "From account",
+            "toAccount": "To account",
+            "selectPlaceholder": "Select an account",
+            "amount": "Amount",
+            "amountPlaceholder": "e.g. 120.50",
+            "date": "Date",
+            "subjectOptional": "Subject (optional)",
+            "descriptionOptional": "Description (optional)",
+            "pocket": "Savings envelope",
+            "pocketPlaceholder": "Select an envelope",
+            "hint": "We'll save an expense on the source account and an income on the destination account.",
+            "sameAccountError": "Choose a different destination account than the source account.",
+            "deletedNotice": "This account is deleted — transfers are blocked.",
+            "deletedSuffix": "deleted",
+            "submit": "Make transfer",
+            "saving": "Saving…"
+        },
+        "candidates": {
+            "banner": {
+                "title": "{count} possible transfers to confirm",
+                "subtitle": "We matched transaction pairs across accounts. Confirm the transfer or mark that it is not an internal transfer.",
+                "a11y": {
+                    "toggle": "Transfer candidates, {count} pairs. Expand or collapse details."
+                }
+            },
+            "table": {
+                "from": "From account",
+                "to": "To account",
+                "amount": "Amount",
+                "dates": "Date difference",
+                "dateDelta": "±{days} days",
+                "actions": "Actions"
+            },
+            "actions": {
+                "confirm": "Confirm transfer",
+                "reject": "Not a transfer",
+                "a11y": {
+                    "confirm": "Confirm transfer from {from} to {to}",
+                    "reject": "Mark as not a transfer from {from} to {to}"
+                }
+            }
+        },
+        "toast": {
+            "created": "Transfer saved.",
+            "genericError": "We couldn't make the transfer. Please try again."
+        }
+    },
+    "imports": {
+        "cta": "Import",
+        "dialog": {
+            "title": "Import transactions",
+            "a11y": {
+                "stepTitle": "Step {current} of {total}: {step}",
+                "steps": {
+                    "form": "Upload",
+                    "processing": "Processing",
+                    "result": "Result"
+                }
+            },
+            "context": "Account: {account} • Bank: {bank}",
+            "contextEmpty": "Select an account to start the import.",
+            "account": {
+                "label": "Account",
+                "hint": "The import bank is derived from the account."
+            },
+            "file": {
+                "label": "File",
+                "title": "Upload a file",
+                "description": "Upload a CSV or XLSX file with column headers.",
+                "change": "Change file",
+                "a11y": {
+                    "dropzone": "File upload. Press Enter or Space to choose a file, or drag and drop here."
+                }
+            },
+            "warning": {
+                "title": "Warning",
+                "undo": "Imports cannot be undone.",
+                "dedupe": "Duplicates will be skipped (duplicate = raw description + date + amount + account).",
+                "after": "After importing, we'll show only the newly added transactions."
+            },
+            "processing": {
+                "title": "Import in progress…",
+                "hint": "This may take a few minutes. You can close this window — the import will continue in the background.",
+                "progress": "Imported {imported} of {total}. Duplicates skipped: {duplicates}. Failed rows: {failed}.",
+                "longRunning": "The import is still running. You can refresh the status.",
+                "refresh": "Refresh"
+            },
+            "actions": {
+                "start": "Start import",
+                "startLoading": "Importing…",
+                "cancel": "Cancel",
+                "close": "Close",
+                "goToTransactions": "Go to transactions"
+            }
+        },
+        "validation": {
+            "required": "This field is required.",
+            "fileType": "Unsupported file format. Upload a CSV or XLSX.",
+            "fileSize": "File is too large (max 10 MB).",
+            "cashBlocked": "File import is not available for cash accounts.",
+            "generic": "We couldn't upload the file. Please try again."
+        },
+        "toast": {
+            "started": "Import started.",
+            "startFailed": "We couldn't start the import. Please try again.",
+            "unrecognizedHeaders": "We couldn't recognize the file headers for the selected bank."
+        },
+        "result": {
+            "successTitle": "Import completed",
+            "failedTitle": "Import failed",
+            "summary": "Imported {rows_imported}, skipped duplicates {rows_skipped_duplicate}, failed rows {rows_failed_validation}.",
+            "allDuplicates": "We didn't find any new transactions. All rows were duplicates.",
+            "validationHint": "If some rows failed, check date formats (DD-MM-YYYY or ISO) and amounts (e.g. 123.45).",
+            "metrics": {
+                "imported": "Imported",
+                "duplicates": "Duplicates",
+                "failed": "Failed rows"
+            }
+        },
+        "failed_rows": {
+            "banner": {
+                "title": "{count} import rows were not added",
+                "subtitle": "Your balance may not match the bank statement. Add missing transactions manually or mark as resolved.",
+                "a11y": {
+                    "toggle": "Import failed rows, {count} rows. Expand or collapse details."
+                }
+            },
+            "modal": {
+                "title": "Failed rows from file",
+                "hint": "These rows did not affect your balance. Add them manually or check the source file.",
+                "more_on_transactions": "and {count} more — see the full list on the transactions page.",
+                "a11y": {
+                    "toggle": "Failed rows from file. Expand or collapse details.",
+                    "tableCaption": "Failed import rows"
+                }
+            },
+            "table": {
+                "caption": "Failed import rows",
+                "row": "Row",
+                "date": "Date",
+                "amount": "Amount",
+                "description": "Description",
+                "reason": "Reason",
+                "actions": "Actions"
+            },
+            "actions": {
+                "dismiss": "Mark as resolved",
+                "dismiss_all": "Mark all as resolved",
+                "a11y": {
+                    "dismissRow": "Mark import row {row} as resolved",
+                    "dismissAll": "Mark all {count} import failed rows as resolved"
+                }
+            },
+            "reasons": {
+                "missing_fields": "Missing required fields (date, amount, or description)",
+                "invalid_date": "Invalid date",
+                "invalid_amount": "Invalid amount",
+                "zero_amount": "Amount is zero",
+                "invalid_row": "Invalid row"
+            }
+        }
+    },
+    "categories": {
+        "create": {
+            "title": "New category"
+        },
+        "edit": {
+            "title": "Edit category"
+        },
+        "fields": {
+            "color": "Color",
+            "icon": "Icon",
+            "preview": "Preview",
+            "previewHint": "Pick a color to see the preview"
+        },
+        "validation": {
+            "colorRequired": "Select a category color."
+        },
+        "index": {
+            "title": "Categories",
+            "add": "Add category",
+            "empty": "No categories yet.",
+            "fields": {
+                "name": "Name",
+                "type": "Type"
+            },
+            "types": {
+                "expense": "Expense",
+                "income": "Income"
+            },
+            "annualEstimate": "Annual plan",
+            "annualEstimatePlaceholder": "e.g. 12000",
+            "system": "system",
+            "dragHandle": "Drag to reorder",
+            "delete": "Delete category"
+        },
+        "delete": {
+            "title": "Delete category?",
+            "description": "The category will be permanently removed. Categories used in transactions cannot be deleted.",
+            "confirm": "Delete category"
+        },
+        "enums": {
+            "type": {
+                "expense": "Expense",
+                "income": "Income"
+            }
+        },
+        "toast": {
+            "created": "Category added.",
+            "updated": "Category updated.",
+            "deleted": "Category deleted.",
+            "estimate_saved": "Plan saved."
+        }
+    },
+    "pockets": {
+        "create": {
+            "title": "New envelope"
+        },
+        "edit": {
+            "title": "Edit envelope",
+            "recommendedMonthly": "Recommended monthly",
+            "projectedCompletionDate": "Projected completion date"
+        },
+        "fields": {
+            "targetAmount": "Target amount",
+            "monthlyContribution": "Monthly contribution",
+            "targetDate": "Target date",
+            "planningMode": "Planning mode",
+            "currency": {
+                "label": "Currency",
+                "placeholder": "Select currency"
+            },
+            "initialBalance": {
+                "label": "Initial amount",
+                "hint": "Amount already saved toward this goal. Does not create a transfer or change account balances."
+            }
+        },
+        "planning": {
+            "monthly": "Monthly contribution",
+            "by_date": "Target date"
+        },
+        "status": {
+            "completed": "Completed",
+            "overdue": "Overdue",
+            "archived": "Archived"
+        },
+        "filters": {
+            "active": "Active",
+            "archived": "Archived",
+            "all": "All"
+        },
+        "archive": {
+            "title": "Archive envelope?",
+            "description": "The envelope will be hidden from the active list and monthly budget. You can restore it later from the archived filter.",
+            "confirm": "Archive envelope"
+        },
+        "unarchive": {
+            "title": "Restore envelope?",
+            "description": "The envelope will return to the active list and monthly budget.",
+            "confirm": "Restore envelope"
+        },
+        "index": {
+            "title": "Envelopes",
+            "add": "Add envelope",
+            "listTitle": "Your envelopes",
+            "empty": "No envelopes yet.",
+            "fields": {
+                "name": "Name"
+            },
+            "archive": "Archive envelope",
+            "unarchive": "Restore envelope",
+            "delete": "Delete envelope",
+            "deleteConfirm": "Delete envelope “{name}”?"
+        },
+        "toast": {
+            "created": "Envelope added.",
+            "updated": "Envelope updated.",
+            "deleted": "Envelope deleted.",
+            "estimate_saved": "Estimate saved."
+        }
+    },
+    "budget": {
+        "nav": "Budget",
+        "monthly": {
+            "title": "Budget — monthly",
+            "plan": "Plan",
+            "actual": "Actual",
+            "difference": "Difference",
+            "pockets_section": "Savings envelopes",
+            "saved": "Saved",
+            "released": "Released",
+            "movement": "Monthly movement",
+            "balance": "Balance",
+            "manage_pockets": "Manage envelopes",
+            "allocation_hint": "Monthly estimates total: {monthly} / annual: {annual}",
+            "planPlaceholder": "Monthly override"
+        },
+        "yearly": {
+            "title": "Budget — yearly",
+            "plan": "Annual plan",
+            "actual": "Actual",
+            "difference": "Difference",
+            "planPlaceholder": "e.g. 12000",
+            "manage_categories": "Manage categories"
+        },
+        "view": {
+            "monthly": "Monthly",
+            "yearly": "Yearly"
+        },
+        "sections": {
+            "expense": "Expenses",
+            "income": "Income"
+        },
+        "summary": {
+            "plan": "Plan",
+            "execution": "Actual",
+            "forecast": "Forecast",
+            "income": "Income",
+            "expense": "Expenses",
+            "balance": "Balance"
+        },
+        "columns": {
+            "progress": "Progress %",
+            "forecast": "Forecast"
+        },
+        "estimate": {
+            "edit": "Edit plan — {name}",
+            "save": "Save",
+            "cancel": "Cancel"
+        }
+    },
+    "nav": {
+        "platform": "Platform",
+        "dashboard": "Dashboard",
+        "pockets": "Envelopes",
+        "settings": "Settings",
+        "logout": "Log out"
+    },
+    "settings": {
+        "title": "Settings",
+        "description": "Manage your profile and account settings",
+        "nav": {
+            "profile": "Profile",
+            "password": "Password",
+            "appearance": "Appearance"
+        },
+        "profile": {
+            "title": "Profile settings",
+            "heading": "Profile information",
+            "description": "Update your name and email address",
+            "fields": {
+                "name": "Name",
+                "email": "Email address"
+            },
+            "placeholders": {
+                "name": "Full name",
+                "email": "Email address"
+            },
+            "verification": {
+                "unverified": "Your email address is unverified.",
+                "resend": "Click here to re-send the verification email.",
+                "sent": "A new verification link has been sent to your email address."
+            },
+            "save": "Save",
+            "saved": "Saved."
+        },
+        "password": {
+            "title": "Password settings",
+            "heading": "Update password",
+            "description": "Ensure your account is using a long, random password to stay secure",
+            "fields": {
+                "current": "Current password",
+                "new": "New password",
+                "confirm": "Confirm password"
+            },
+            "placeholders": {
+                "current": "Current password",
+                "new": "New password",
+                "confirm": "Confirm password"
+            },
+            "save": "Save password",
+            "saved": "Saved"
+        },
+        "appearance": {
+            "title": "Appearance settings",
+            "heading": "Appearance settings",
+            "description": "Update your account's appearance settings",
+            "tabs": {
+                "light": "Light",
+                "dark": "Dark",
+                "system": "System"
+            }
+        },
+        "deleteAccount": {
+            "heading": "Delete account",
+            "description": "Delete your account and all of its resources",
+            "warningTitle": "Warning",
+            "warningDescription": "Please proceed with caution, this cannot be undone.",
+            "action": "Delete account",
+            "dialogTitle": "Are you sure you want to delete your account?",
+            "dialogDescription": "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.",
+            "passwordPlaceholder": "Password",
+            "cancel": "Cancel",
+            "confirm": "Delete account"
+        }
+    },
+    "a11y": {
+        "skip_to_content": "Skip to main content"
+    },
+    "currency": {
+        "defaultSymbol": "zł"
+    }
+}

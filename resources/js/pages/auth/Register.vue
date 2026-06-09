@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import InputError from '@/components/InputError.vue';
+import FormField from '@/components/forms/FormField.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const form = useForm({
     name: '',
@@ -23,60 +25,91 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthBase title="Create an account" description="Enter your details below to create your account">
-        <Head title="Register" />
+    <AuthBase :title="t('auth.register.title')" :description="t('auth.register.description')">
+        <Head :title="t('auth.register.headTitle')" />
 
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
-                <div class="grid gap-2">
-                    <Label for="name">Name</Label>
-                    <Input id="name" type="text" required autofocus tabindex="1" autocomplete="name" v-model="form.name" placeholder="Full name" />
-                    <InputError :message="form.errors.name" />
-                </div>
+                <FormField for-id="name" :label="t('auth.fields.name.label')" :error="form.errors.name">
+                    <template #default="{ errorId, hasError }">
+                        <Input
+                            id="name"
+                            type="text"
+                            required
+                            autofocus
+                            autocomplete="name"
+                            v-model="form.name"
+                            :placeholder="t('auth.fields.name.placeholder')"
+                            :aria-invalid="hasError ? true : undefined"
+                            :aria-describedby="hasError ? errorId : undefined"
+                        />
+                    </template>
+                </FormField>
 
-                <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
-                    <Input id="email" type="email" required tabindex="2" autocomplete="email" v-model="form.email" placeholder="email@example.com" />
-                    <InputError :message="form.errors.email" />
-                </div>
+                <FormField for-id="email" :label="t('auth.fields.email.label')" :error="form.errors.email">
+                    <template #default="{ errorId, hasError }">
+                        <Input
+                            id="email"
+                            type="email"
+                            required
+                            autocomplete="email"
+                            v-model="form.email"
+                            :placeholder="t('auth.fields.email.placeholder')"
+                            :aria-invalid="hasError ? true : undefined"
+                            :aria-describedby="hasError ? errorId : undefined"
+                        />
+                    </template>
+                </FormField>
 
-                <div class="grid gap-2">
-                    <Label for="password">Password</Label>
-                    <Input
-                        id="password"
-                        type="password"
-                        required
-                        tabindex="3"
-                        autocomplete="new-password"
-                        v-model="form.password"
-                        placeholder="Password"
-                    />
-                    <InputError :message="form.errors.password" />
-                </div>
+                <FormField for-id="password" :label="t('auth.fields.password.label')" :error="form.errors.password">
+                    <template #default="{ errorId, hasError }">
+                        <Input
+                            id="password"
+                            type="password"
+                            required
+                            autocomplete="new-password"
+                            v-model="form.password"
+                            :placeholder="t('auth.fields.password.placeholder')"
+                            :aria-invalid="hasError ? true : undefined"
+                            :aria-describedby="hasError ? errorId : undefined"
+                        />
+                    </template>
+                </FormField>
 
-                <div class="grid gap-2">
-                    <Label for="password_confirmation">Confirm password</Label>
-                    <Input
-                        id="password_confirmation"
-                        type="password"
-                        required
-                        tabindex="4"
-                        autocomplete="new-password"
-                        v-model="form.password_confirmation"
-                        placeholder="Confirm password"
-                    />
-                    <InputError :message="form.errors.password_confirmation" />
-                </div>
+                <FormField
+                    for-id="password_confirmation"
+                    :label="t('auth.fields.passwordConfirmation.label')"
+                    :error="form.errors.password_confirmation"
+                >
+                    <template #default="{ errorId, hasError }">
+                        <Input
+                            id="password_confirmation"
+                            type="password"
+                            required
+                            autocomplete="new-password"
+                            v-model="form.password_confirmation"
+                            :placeholder="t('auth.fields.passwordConfirmation.placeholder')"
+                            :aria-invalid="hasError ? true : undefined"
+                            :aria-describedby="hasError ? errorId : undefined"
+                        />
+                    </template>
+                </FormField>
 
-                <Button type="submit" class="mt-2 w-full" tabindex="5" :disabled="form.processing">
+                <Button
+                    type="submit"
+                    class="mt-2 w-full"
+                    :disabled="form.processing"
+                    :aria-busy="form.processing ? 'true' : 'false'"
+                    :aria-label="form.processing ? t('auth.submitLoading') : undefined"
+                >
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Create account
+                    {{ t('auth.register.submit') }}
                 </Button>
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Already have an account?
-                <TextLink :href="route('login')" class="underline underline-offset-4" tabindex="6">Log in</TextLink>
+                {{ t('auth.register.hasAccount') }}
+                <TextLink :href="route('login')" class="underline underline-offset-4">{{ t('auth.register.logIn') }}</TextLink>
             </div>
         </form>
     </AuthBase>

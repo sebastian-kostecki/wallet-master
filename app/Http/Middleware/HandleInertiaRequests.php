@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Transactions\TransactionsIndexQuery;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -39,12 +40,15 @@ class HandleInertiaRequests extends Middleware
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
         return array_merge(parent::share($request), [
-            ...parent::share($request),
             'name' => config('app.name'),
+            'locale' => app()->getLocale(),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
             ],
+            'canRegister' => config('auth.registration.enabled'),
+            'toast' => fn () => $request->session()->get('toast'),
+            'transactionsIndexSearch' => fn () => TransactionsIndexQuery::toQueryString(),
         ]);
     }
 }

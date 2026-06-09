@@ -1,0 +1,330 @@
+<script setup lang="ts">
+import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
+import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
+import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
+import FormField from '@/components/forms/FormField.vue';
+import Icon from '@/components/Icon.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { displayAmount, normalizeAmount } from '@/lib/money';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { route } from 'ziggy-js';
+
+type Option = {
+    value: string;
+    label_key: string;
+    icon_url?: string | null;
+    icon_name?: string | null;
+};
+
+type Currency = {
+    id: number;
+    code: string;
+    symbol: string | null;
+    precision: number;
+};
+
+type Account = {
+    id: number;
+    name: string;
+    bank: string;
+    type: string;
+    currency_id: number;
+    opening_balance: string;
+    current_balance: string;
+    currency: Currency | null;
+};
+
+const props = defineProps<{
+    account: Account;
+    banks: Option[];
+    accountTypes: Option[];
+}>();
+
+const { t, locale } = useI18n();
+
+const bankOptions = computed<DropdownOption<string>[]>(() => {
+    return props.banks.map((b) => ({ value: b.value, label: t(b.label_key) }));
+});
+
+const selectedBank = computed(() => props.banks.find((b) => b.value === form.bank) ?? null);
+const selectedAccountType = computed(() => props.accountTypes.find((t) => t.value === form.type) ?? null);
+
+function accountTypeIconClasses(typeValue: string | undefined): string {
+    if (typeValue === 'checking') {
+        return 'bg-gradient-to-br from-sky-100 to-indigo-200 text-sky-900 dark:from-sky-950/40 dark:to-indigo-950/40 dark:text-sky-200';
+    }
+
+    if (typeValue === 'savings') {
+        return 'bg-gradient-to-br from-emerald-100 to-lime-200 text-emerald-900 dark:from-emerald-950/40 dark:to-lime-950/40 dark:text-emerald-200';
+    }
+
+    return 'bg-muted text-muted-foreground';
+}
+
+function resolveBankIconUrl(bankValue: string): string | null {
+    return props.banks.find((b) => b.value === bankValue)?.icon_url ?? null;
+}
+
+const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
+    return props.accountTypes.map((a) => ({ value: a.value, label: t(a.label_key) }));
+});
+
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
+    {
+        title: t('accounts.index.title'),
+        href: route('accounts.index'),
+    },
+    {
+        title: t('accounts.edit.title'),
+        href: route('accounts.edit', props.account.id),
+    },
+]);
+
+const money = computed(() => {
+    const resolvedLocale = locale.value === 'pl' ? 'pl-PL' : 'en-US';
+
+    return new Intl.NumberFormat(resolvedLocale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+});
+
+function formatMoney(value: string) {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) {
+        return value;
+    }
+
+    return money.value.format(parsed);
+}
+
+const form = useForm({
+    name: props.account.name,
+    bank: props.account.bank,
+    type: props.account.type,
+    opening_balance: displayAmount(props.account.opening_balance),
+});
+
+const currencySymbol = computed(() => props.account.currency?.symbol ?? t('currency.defaultSymbol'));
+
+function submit() {
+    form.opening_balance = normalizeAmount(form.opening_balance);
+    form.patch(route('accounts.update', props.account.id));
+}
+
+const deleteDialogOpen = ref(false);
+const deleteProcessing = ref(false);
+
+const adjustDialogOpen = ref(false);
+const adjustProcessing = ref(false);
+</script>
+
+<template>
+    <AppLayout :breadcrumbs="breadcrumbs">
+        <Head :title="t('accounts.edit.title')" />
+
+        <div class="flex flex-col gap-6 p-4">
+            <div class="grid gap-6 lg:grid-cols-2">
+                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                    <form @submit.prevent="submit" class="grid gap-6">
+                        <FormField for-id="name" :label="t('accounts.create.fields.name.label')" :error="form.errors.name">
+                            <template #default="{ errorId, hasError }">
+                                <Input
+                                    id="name"
+                                    v-model="form.name"
+                                    required
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                />
+                            </template>
+                        </FormField>
+
+                        <FormField for-id="bank" :label="t('accounts.create.fields.bank.label')" :error="form.errors.bank">
+                            <template #default="{ errorId, hasError }">
+                                <DropdownSelect
+                                    id="bank"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                    :model-value="form.bank"
+                                    :options="bankOptions"
+                                    :placeholder="t('accounts.create.fields.bank.placeholder')"
+                                    :disabled="form.processing"
+                                    @update:model-value="(value) => (form.bank = value ?? '')"
+                                >
+                                    <template #trigger-leading>
+                                        <span
+                                            class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                            :class="
+                                                selectedBank?.value === 'cash'
+                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                    : 'bg-muted'
+                                            "
+                                            aria-hidden="true"
+                                        >
+                                            <img
+                                                v-if="selectedBank?.icon_url"
+                                                :src="selectedBank.icon_url"
+                                                :alt="t(selectedBank.label_key)"
+                                                class="h-5 w-5 object-cover"
+                                                loading="lazy"
+                                            />
+                                            <Icon
+                                                v-else
+                                                :name="selectedBank?.value === 'cash' ? 'coins' : 'landmark'"
+                                                class="h-3.5 w-3.5"
+                                                aria-hidden="true"
+                                            />
+                                        </span>
+                                    </template>
+
+                                    <template #option-leading="{ option }">
+                                        <span
+                                            class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                            :class="
+                                                option.value === 'cash'
+                                                    ? 'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-800 dark:from-amber-950/40 dark:to-orange-950/40 dark:text-amber-300'
+                                                    : 'bg-muted'
+                                            "
+                                            aria-hidden="true"
+                                        >
+                                            <img
+                                                v-if="resolveBankIconUrl(option.value)"
+                                                :src="resolveBankIconUrl(option.value) ?? undefined"
+                                                :alt="option.label"
+                                                class="h-5 w-5 object-cover"
+                                                loading="lazy"
+                                            />
+                                            <Icon
+                                                v-else
+                                                :name="option.value === 'cash' ? 'coins' : 'landmark'"
+                                                class="h-3.5 w-3.5"
+                                                aria-hidden="true"
+                                            />
+                                        </span>
+                                    </template>
+                                </DropdownSelect>
+                            </template>
+                        </FormField>
+
+                        <FormField for-id="type" :label="t('accounts.create.fields.type.label')" :error="form.errors.type">
+                            <template #default="{ errorId, hasError }">
+                                <DropdownSelect
+                                    id="type"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                    :model-value="form.type"
+                                    :options="accountTypeOptions"
+                                    :placeholder="t('accounts.create.fields.type.placeholder')"
+                                    :disabled="form.processing"
+                                    @update:model-value="(value) => (form.type = value ?? '')"
+                                >
+                                    <template #trigger-leading>
+                                        <span
+                                            class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                            :class="accountTypeIconClasses(selectedAccountType?.value)"
+                                            aria-hidden="true"
+                                        >
+                                            <Icon :name="selectedAccountType?.icon_name ?? 'wallet'" class="h-3.5 w-3.5" aria-hidden="true" />
+                                        </span>
+                                    </template>
+
+                                    <template #option-leading="{ option }">
+                                        <span
+                                            class="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded"
+                                            :class="accountTypeIconClasses(option.value)"
+                                            aria-hidden="true"
+                                        >
+                                            <Icon
+                                                :name="props.accountTypes.find((a) => a.value === option.value)?.icon_name ?? 'wallet'"
+                                                class="h-3.5 w-3.5"
+                                                aria-hidden="true"
+                                            />
+                                        </span>
+                                    </template>
+                                </DropdownSelect>
+                            </template>
+                        </FormField>
+
+                        <FormField
+                            for-id="opening_balance"
+                            :label="t('accounts.create.fields.openingBalance.label')"
+                            :error="form.errors.opening_balance"
+                            :hint="t('accounts.edit.openingBalanceHint')"
+                        >
+                            <template #default="{ errorId, hasError }">
+                                <div class="relative">
+                                    <Input
+                                        id="opening_balance"
+                                        inputmode="decimal"
+                                        v-model="form.opening_balance"
+                                        class="pr-10"
+                                        :aria-invalid="hasError ? true : undefined"
+                                        :aria-describedby="hasError ? errorId : undefined"
+                                    />
+                                    <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                                        {{ currencySymbol }}
+                                    </span>
+                                </div>
+                            </template>
+                        </FormField>
+
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <Button variant="secondary" as-child>
+                                <Link :href="route('accounts.index')">{{ t('accounts.edit.back') }}</Link>
+                            </Button>
+
+                            <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                        <p class="text-xs text-muted-foreground">{{ t('accounts.card.currentBalance') }}</p>
+                        <p class="mt-2 text-2xl font-semibold tabular-nums">
+                            {{ formatMoney(account.current_balance) }}
+                            {{ account.currency?.symbol ?? t('currency.defaultSymbol') }}
+                        </p>
+
+                        <Button class="mt-4" variant="outline" :disabled="adjustProcessing" @click="adjustDialogOpen = true">
+                            {{ t('actions.setBalance') }}
+                        </Button>
+                    </div>
+
+                    <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-6 dark:border-destructive/40 dark:bg-destructive/10">
+                        <p class="text-sm font-semibold text-destructive">{{ t('accounts.edit.dangerZone.title') }}</p>
+                        <p class="mt-2 text-sm text-muted-foreground">
+                            {{ t('accounts.edit.dangerZone.description') }}
+                        </p>
+
+                        <Button class="mt-4" variant="destructive" :disabled="deleteProcessing" @click="deleteDialogOpen = true">
+                            {{ t('accounts.edit.deleteAction') }}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <AdjustAccountBalanceDialog
+            v-model:open="adjustDialogOpen"
+            :account-id="account.id"
+            :initial-new-balance="displayAmount(account.current_balance)"
+            @processing="(value) => (adjustProcessing = value)"
+        />
+
+        <DeleteAccountDialog
+            v-model:open="deleteDialogOpen"
+            :account-id="account.id"
+            :account-name="account.name"
+            :current-balance="account.current_balance"
+            :currency-symbol="account.currency?.symbol ?? null"
+            :format-money="formatMoney"
+            @processing="(value) => (deleteProcessing = value)"
+        />
+    </AppLayout>
+</template>

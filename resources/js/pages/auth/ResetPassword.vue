@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import InputError from '@/components/InputError.vue';
+import FormField from '@/components/forms/FormField.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 interface Props {
     token: string;
@@ -13,6 +13,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { t } = useI18n();
 
 const form = useForm({
     token: props.token,
@@ -31,49 +33,73 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthLayout title="Reset password" description="Please enter your new password below">
-        <Head title="Reset password" />
+    <AuthLayout :title="t('auth.resetPassword.title')" :description="t('auth.resetPassword.description')">
+        <Head :title="t('auth.resetPassword.headTitle')" />
 
         <form @submit.prevent="submit">
             <div class="grid gap-6">
-                <div class="grid gap-2">
-                    <Label for="email">Email</Label>
-                    <Input id="email" type="email" name="email" autocomplete="email" v-model="form.email" class="mt-1 block w-full" readonly />
-                    <InputError :message="form.errors.email" class="mt-2" />
-                </div>
+                <FormField for-id="email" :label="t('auth.fields.email.label')" :error="form.errors.email">
+                    <template #default="{ errorId, hasError }">
+                        <Input
+                            id="email"
+                            type="email"
+                            name="email"
+                            autocomplete="email"
+                            v-model="form.email"
+                            class="mt-1 block w-full"
+                            readonly
+                            :aria-invalid="hasError ? true : undefined"
+                            :aria-describedby="hasError ? errorId : undefined"
+                        />
+                    </template>
+                </FormField>
 
-                <div class="grid gap-2">
-                    <Label for="password">Password</Label>
-                    <Input
-                        id="password"
-                        type="password"
-                        name="password"
-                        autocomplete="new-password"
-                        v-model="form.password"
-                        class="mt-1 block w-full"
-                        autofocus
-                        placeholder="Password"
-                    />
-                    <InputError :message="form.errors.password" />
-                </div>
+                <FormField for-id="password" :label="t('auth.fields.password.label')" :error="form.errors.password">
+                    <template #default="{ errorId, hasError }">
+                        <Input
+                            id="password"
+                            type="password"
+                            name="password"
+                            autocomplete="new-password"
+                            v-model="form.password"
+                            class="mt-1 block w-full"
+                            autofocus
+                            :placeholder="t('auth.fields.password.placeholder')"
+                            :aria-invalid="hasError ? true : undefined"
+                            :aria-describedby="hasError ? errorId : undefined"
+                        />
+                    </template>
+                </FormField>
 
-                <div class="grid gap-2">
-                    <Label for="password_confirmation"> Confirm Password </Label>
-                    <Input
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        autocomplete="new-password"
-                        v-model="form.password_confirmation"
-                        class="mt-1 block w-full"
-                        placeholder="Confirm password"
-                    />
-                    <InputError :message="form.errors.password_confirmation" />
-                </div>
+                <FormField
+                    for-id="password_confirmation"
+                    :label="t('auth.fields.passwordConfirmation.label')"
+                    :error="form.errors.password_confirmation"
+                >
+                    <template #default="{ errorId, hasError }">
+                        <Input
+                            id="password_confirmation"
+                            type="password"
+                            name="password_confirmation"
+                            autocomplete="new-password"
+                            v-model="form.password_confirmation"
+                            class="mt-1 block w-full"
+                            :placeholder="t('auth.fields.passwordConfirmation.placeholder')"
+                            :aria-invalid="hasError ? true : undefined"
+                            :aria-describedby="hasError ? errorId : undefined"
+                        />
+                    </template>
+                </FormField>
 
-                <Button type="submit" class="mt-4 w-full" :disabled="form.processing">
+                <Button
+                    type="submit"
+                    class="mt-4 w-full"
+                    :disabled="form.processing"
+                    :aria-busy="form.processing ? 'true' : 'false'"
+                    :aria-label="form.processing ? t('auth.submitLoading') : undefined"
+                >
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Reset password
+                    {{ t('auth.resetPassword.submit') }}
                 </Button>
             </div>
         </form>

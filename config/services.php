@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    'typesense' => [
+        'enabled' => (bool) env('TYPESENSE_ENABLED', false),
+
+        'protocol' => (string) env('TYPESENSE_PROTOCOL', 'http'),
+        'host' => (string) env('TYPESENSE_HOST', 'typesense'),
+        'port' => (int) env('TYPESENSE_PORT', 8108),
+        'api_key' => (string) env('TYPESENSE_API_KEY', ''),
+
+        'timeout_ms' => (int) env('TYPESENSE_TIMEOUT_MS', 800),
+
+        'fuzzy_num_typos' => (int) env('TYPESENSE_FUZZY_NUM_TYPOS', 2),
+        'min_text_match' => (int) env('TYPESENSE_MIN_TEXT_MATCH', 10),
+    ],
+
 ];

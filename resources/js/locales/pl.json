@@ -1,0 +1,835 @@
+{
+    "accounts": {
+        "toast": {
+            "created": "Konto zostało dodane.",
+            "updated": "Konto zostało zaktualizowane."
+        },
+        "index": {
+            "title": "Konta",
+            "addAccount": "Dodaj konto",
+            "view": {
+                "toggleAria": "Przełącz widok listy kont",
+                "grid": "Siatka",
+                "list": "Lista"
+            },
+            "empty": {
+                "heading": "Brak kont",
+                "message": "Nie masz jeszcze żadnych kont.",
+                "cta": "Dodaj pierwsze konto"
+            }
+        },
+        "edit": {
+            "title": "Edytuj konto",
+            "back": "Wróć",
+            "deleteAction": "Usuń konto",
+            "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę.",
+            "dangerZone": {
+                "title": "Uwaga",
+                "description": "Ta operacja jest nieodwracalna. Transakcje pozostaną w historii jako tylko do odczytu."
+            }
+        },
+        "create": {
+            "title": "Dodaj konto",
+            "back": "Wróć",
+            "fields": {
+                "name": {
+                    "label": "Nazwa",
+                    "placeholder": "np. Konto główne"
+                },
+                "bank": {
+                    "label": "Bank",
+                    "placeholder": "Wybierz bank"
+                },
+                "type": {
+                    "label": "Typ konta",
+                    "placeholder": "Wybierz typ konta"
+                },
+                "currency": {
+                    "label": "Waluta",
+                    "placeholder": "Wybierz walutę"
+                },
+                "openingBalance": {
+                    "label": "Saldo początkowe",
+                    "placeholder": "np. 1000,00"
+                }
+            },
+            "openingBalanceHint": "W MVP saldo bieżące startuje od salda początkowego."
+        },
+        "summary": {
+            "title": "Podsumowanie",
+            "description": "Suma sald wszystkich kont w PLN.",
+            "totalPln": "Suma sald (PLN)",
+            "countPln": "Liczba kont (PLN): {count}",
+            "invalidSkipped": "Niektóre salda pominięto w sumie.",
+            "addToSeeSummary": "Dodaj konto, aby zobaczyć podsumowanie."
+        },
+        "card": {
+            "deleteAria": "Usuń konto",
+            "currentBalance": "Saldo bieżące"
+        },
+        "adjust": {
+            "title": "Ustaw saldo",
+            "description": "Zapisujemy transakcję korekty (deltę potrzebną do osiągnięcia nowego salda) i aktualizujemy saldo bieżące. Nie zmieniamy istniejących transakcji.",
+            "newBalanceLabel": "Nowe saldo",
+            "newBalancePlaceholder": "np. 1234,56",
+            "confirmLabel": "Rozumiem, że zostanie utworzona transakcja korekty salda.",
+            "confirmHint": "Używaj tylko do korekty salda bieżącego."
+        },
+        "delete": {
+            "title": "Usunąć konto?",
+            "description": "Konto zostanie usunięte z listy. Transakcje pozostaną w historii, ale będą tylko do odczytu.",
+            "currentBalanceLine": "Saldo bieżące: {amount} {symbol}",
+            "confirm": "Usuń konto"
+        },
+        "enums": {
+            "accountType": {
+                "checking": "Rozliczeniowe",
+                "savings": "Oszczędnościowe"
+            },
+            "bank": {
+                "bnp-paribas": "BNP Paribas",
+                "mbank": "mBank",
+                "cash": "Gotówka"
+            }
+        }
+    },
+    "actions": {
+        "edit": "Edytuj",
+        "setBalance": "Ustaw saldo",
+        "cancel": "Anuluj",
+        "save": "Zapisz"
+    },
+    "auth": {
+        "fields": {
+            "email": {
+                "label": "Adres e-mail",
+                "placeholder": "np. jan{'@'}example.com"
+            },
+            "password": {
+                "label": "Hasło",
+                "placeholder": "Hasło"
+            },
+            "passwordConfirmation": {
+                "label": "Potwierdź hasło",
+                "placeholder": "Powtórz hasło"
+            },
+            "name": {
+                "label": "Imię i nazwisko",
+                "placeholder": "Jan Kowalski"
+            }
+        },
+        "submitLoading": "Przetwarzanie…",
+        "login": {
+            "title": "Zaloguj się",
+            "description": "Wpisz adres e-mail i hasło, aby się zalogować",
+            "headTitle": "Logowanie",
+            "remember": "Zapamiętaj mnie",
+            "forgotPassword": "Nie pamiętasz hasła?",
+            "submit": "Zaloguj się",
+            "noAccount": "Nie masz konta?",
+            "signUp": "Zarejestruj się"
+        },
+        "register": {
+            "title": "Utwórz konto",
+            "description": "Wpisz dane, aby utworzyć konto",
+            "headTitle": "Rejestracja",
+            "submit": "Utwórz konto",
+            "hasAccount": "Masz już konto?",
+            "logIn": "Zaloguj się"
+        },
+        "forgotPassword": {
+            "title": "Przypomnienie hasła",
+            "description": "Wpisz adres e-mail, aby otrzymać link do resetu hasła",
+            "headTitle": "Przypomnienie hasła",
+            "submit": "Wyślij link do resetu hasła",
+            "returnPrefix": "Lub wróć do",
+            "logIn": "logowania"
+        },
+        "resetPassword": {
+            "title": "Reset hasła",
+            "description": "Wpisz nowe hasło poniżej",
+            "headTitle": "Reset hasła",
+            "submit": "Zresetuj hasło"
+        },
+        "brand": {
+            "eyebrow": "Ogarniam Portfel",
+            "promise": "Odzyskaj kontrolę nad domowym budżetem",
+            "description": "Importuj historię, porządkuj transakcje i śledź kieszenie bez arkuszy kalkulacyjnych.",
+            "benefits": {
+                "imports": "Import historii z banku",
+                "budget": "Budżet i kategorie w jednym miejscu",
+                "pockets": "Kieszenie oszczędnościowe pod ręką"
+            }
+        },
+        "confirmPassword": {
+            "title": "Potwierdź hasło",
+            "description": "To bezpieczna część aplikacji. Potwierdź hasło, aby kontynuować.",
+            "headTitle": "Potwierdzenie hasła",
+            "submit": "Potwierdź hasło"
+        },
+        "verifyEmail": {
+            "title": "Zweryfikuj e-mail",
+            "description": "Kliknij link, który wysłaliśmy na Twój adres e-mail.",
+            "headTitle": "Weryfikacja e-mail",
+            "sent": "Nowy link weryfikacyjny został wysłany na adres e-mail podany podczas rejestracji.",
+            "submit": "Wyślij link ponownie",
+            "logout": "Wyloguj się"
+        }
+    },
+    "brand": {
+        "name": "Ogarniam Portfel",
+        "promise": "Odzyskaj kontrolę nad domowym budżetem",
+        "shortPromise": "Budżet pod kontrolą",
+        "description": "Konta, transakcje, importy, budżet i kieszenie w jednym uporządkowanym miejscu."
+    },
+    "welcome": {
+        "headTitle": "Ogarniam Portfel",
+        "eyebrow": "Budżet domowy bez chaosu",
+        "title": "Odzyskaj kontrolę nad domowym budżetem",
+        "description": "Zbieraj konta, transakcje, importy, budżet i kieszenie w jednym miejscu. Szybciej zobaczysz, dokąd płyną pieniądze i co możesz poprawić.",
+        "primaryCta": "Utwórz konto",
+        "secondaryCta": "Zaloguj się",
+        "dashboardCta": "Przejdź do dashboardu",
+        "features": {
+            "accounts": {
+                "title": "Konta i saldo",
+                "description": "Porządkuj konta i miej bieżący obraz pieniędzy."
+            },
+            "imports": {
+                "title": "Import historii",
+                "description": "Wczytuj wyciągi i szybciej porządkuj transakcje."
+            },
+            "pockets": {
+                "title": "Budżet i kieszenie",
+                "description": "Planuj wydatki, kategorie i odkładanie w kieszeniach."
+            }
+        }
+    },
+    "dashboard": {
+        "headTitle": "Dashboard",
+        "title": "Dzień dobry w Ogarniam Portfel",
+        "description": "Zacznij od kont, importu historii albo ręcznego dodania transakcji. Ten ekran będzie rosnąć razem z Twoimi danymi.",
+        "quickActions": {
+            "accounts": {
+                "title": "Dodaj konto",
+                "description": "Ustaw konto i saldo początkowe.",
+                "cta": "Przejdź do kont"
+            },
+            "transactions": {
+                "title": "Dodaj transakcję",
+                "description": "Zapisz przychód, wydatek lub transfer.",
+                "cta": "Przejdź do transakcji"
+            },
+            "pockets": {
+                "title": "Zaplanuj kieszeń",
+                "description": "Nadaj kierunek odkładanym środkom.",
+                "cta": "Przejdź do kieszeni"
+            }
+        },
+        "preview": {
+            "title": "Podgląd porządku w finansach",
+            "items": {
+                "imports": "Importy porządkują historię",
+                "budget": "Budżet pokazuje plan i wykonanie",
+                "pockets": "Kieszenie pokazują postęp oszczędzania"
+            }
+        }
+    },
+    "advancedSection": {
+        "toggle": "Opcje zaawansowane",
+        "hintDefault": "Dodatkowe ustawienia — zwykle nie są potrzebne."
+    },
+    "transactions": {
+        "fields": {
+            "category": "Kategoria",
+            "pocket": "Kieszeń",
+            "pocketNone": "Brak"
+        },
+        "index": {
+            "title": "Transakcje",
+            "addTransaction": "Dodaj transakcję",
+            "addTransfer": "Transfer",
+            "actionsMenu": {
+                "label": "Dodaj"
+            },
+            "filters": {
+                "account": {
+                    "label": "Konto",
+                    "all": "Wszystkie konta"
+                },
+                "category": {
+                    "label": "Kategoria",
+                    "all": "Wszystkie kategorie"
+                },
+                "from": "Od",
+                "to": "Do",
+                "sort": "Sortuj",
+                "direction": "Kierunek",
+                "apply": "Zastosuj",
+                "clear": "Wyczyść filtry",
+                "errors": {
+                    "dateRange": "Data „Od” nie może być późniejsza niż „Do”.",
+                    "dateFormat": "Podaj datę w formacie DD-MM-YYYY."
+                },
+                "presets": {
+                    "thisMonth": "Ten miesiąc",
+                    "previousMonth": "Poprzedni miesiąc",
+                    "thisYear": "Bieżący rok",
+                    "previousYear": "Poprzedni rok",
+                    "last7Days": "Ostatnie 7 dni"
+                },
+                "a11y": {
+                    "clearDateRange": "Wyczyść zakres dat"
+                }
+            },
+            "sort": {
+                "date": "Data",
+                "amount": "Kwota",
+                "asc": "Rosnąco",
+                "desc": "Malejąco"
+            },
+            "summary": {
+                "income": "Wpływy",
+                "expense": "Wydatki"
+            },
+            "table": {
+                "date": "Data",
+                "account": "Konto",
+                "description": "Opis",
+                "subject": "Subject",
+                "amount": "Kwota",
+                "category": "Kategoria",
+                "transfer": "Transfer wewnętrzny",
+                "actions": "Akcje"
+            },
+            "badges": {
+                "adjustment": "Korekta"
+            },
+            "readOnly": {
+                "badge": "Tylko odczyt",
+                "deletedAccount": "Usunięte konto",
+                "noActions": "Brak akcji"
+            },
+            "empty": {
+                "filtered": "Brak transakcji dla wybranych filtrów.",
+                "firstUse": "Nie masz jeszcze żadnych transakcji.",
+                "import": "Zaimportuj plik"
+            },
+            "pagination": {
+                "aria": "Paginacja",
+                "prev": "Poprzednia",
+                "next": "Następna",
+                "pageOf": "Strona {page} z {pages}",
+                "pageLink": "Strona {page}",
+                "perPageLabel": "Na stronę"
+            },
+            "a11y": {
+                "tableCaption": "Lista transakcji",
+                "filters": "Filtruj transakcje",
+                "sortInactive": "Sortuj po {column}",
+                "sortActive": "Sortuj po {column}, obecnie {direction}",
+                "sortByDate": "Sortuj po dacie",
+                "sortByAmount": "Sortuj po kwocie",
+                "edit": "Edytuj transakcję: {description}",
+                "showStatementDescription": "Pokaż dane z wyciągu i pełny opis"
+            },
+            "importPreset": {
+                "label": "Zaimportowane przed chwilą",
+                "clearAria": "Wyczyść filtr: Zaimportowane przed chwilą"
+            }
+        },
+        "create": {
+            "title": "Dodaj transakcję",
+            "back": "Wróć",
+            "hints": {
+                "title": "Wskazówki",
+                "type": "Wybierz „Przychód” lub „Wydatek”. To wpływa na znak kwoty.",
+                "amount": "Kwota może być wpisana z przecinkiem. Dla wydatku zostanie zapisana jako ujemna.",
+                "description": "Opis pomaga szybciej znaleźć transakcję w historii."
+            }
+        },
+        "edit": {
+            "title": "Edytuj transakcję",
+            "back": "Wróć",
+            "deleteAction": "Usuń transakcję",
+            "dangerZone": {
+                "title": "Uwaga",
+                "description": "Ta operacja jest nieodwracalna."
+            },
+            "transfer": {
+                "bannerTitle": "Połączony transfer",
+                "bannerDescription": "Kwoty i konta są zablokowane. Aby je zmienić, najpierw rozłącz transfer.",
+                "unlinkAction": "Rozłącz transfer",
+                "accountHint": "Konto jest zablokowane, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby je zmienić.",
+                "amountHint": "Kwota jest zablokowana, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby ją zmienić."
+            },
+            "hints": {
+                "title": "Informacje",
+                "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
+                "amount": "Sprawdź znak kwoty (plus/minus). To wpływa na saldo konta.",
+                "amountTransfer": "Kwota jest zablokowana, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby ją zmienić.",
+                "save": "Po zapisaniu wrócisz do listy transakcji."
+            },
+            "statement": {
+                "title": "Dane z wyciągu",
+                "description": "Surowy opis z wyciągu bankowego (nieedytowalny)."
+            }
+        },
+        "form": {
+            "account": "Konto",
+            "date": "Data",
+            "booked_at": "Data przypisania do okresu",
+            "advancedDates": "Zaawansowane: okres rozliczeniowy",
+            "advancedDatesHint": "Opcjonalnie ustaw inną datę przypisania do okresu niż data operacji.",
+            "amount": "Kwota",
+            "description": "Opis",
+            "subject": "Nadawca/Odbiorca",
+            "type": "Typ"
+        },
+        "types": {
+            "income": "Przychód",
+            "expense": "Wydatek"
+        },
+        "toast": {
+            "created": "Transakcja dodana",
+            "updated": "Transakcja zaktualizowana",
+            "deleted": "Transakcja usunięta",
+            "genericError": "Nie udało się zapisać zmian. Spróbuj ponownie."
+        },
+        "unlink": {
+            "title": "Rozłącz transfer?",
+            "description": "Obie powiązane transakcje staną się zwykłym przychodem i wydatkiem. Salda kont pozostaną bez zmian.",
+            "confirm": "Rozłącz"
+        },
+        "delete": {
+            "action": "Usuń",
+            "iconLabel": "Usuń transakcję: {description}",
+            "title": "Usunąć transakcję?",
+            "description": "Transakcja zostanie trwale usunięta.",
+            "descriptionTransfer": "To jest transfer — usunięcie spowoduje usunięcie dwóch powiązanych transakcji.",
+            "confirm": "Usuń transakcję"
+        }
+    },
+    "transfers": {
+        "create": {
+            "title": "Transfer",
+            "description": "Przenieś środki między własnymi kontami. Utworzymy dwie powiązane transakcje z tą samą datą.",
+            "empty": "Aby wykonać transfer, dodaj co najmniej dwa konta."
+        },
+        "form": {
+            "fromAccount": "Konto źródłowe",
+            "toAccount": "Konto docelowe",
+            "selectPlaceholder": "Wybierz konto",
+            "amount": "Kwota",
+            "amountPlaceholder": "np. 120,50",
+            "date": "Data",
+            "subjectOptional": "Nadawca/Odbiorca (opcjonalnie)",
+            "descriptionOptional": "Opis (opcjonalnie)",
+            "pocket": "Kieszeń oszczędnościowa",
+            "pocketPlaceholder": "Wybierz kieszeń",
+            "hint": "Zapiszemy wydatek na koncie źródłowym i przychód na koncie docelowym.",
+            "sameAccountError": "Wybierz inne konto docelowe niż źródłowe.",
+            "deletedNotice": "To konto jest usunięte — transfer jest zablokowany.",
+            "deletedSuffix": "usunięte",
+            "submit": "Wykonaj transfer",
+            "saving": "Zapisywanie…"
+        },
+        "candidates": {
+            "banner": {
+                "title": "{count} możliwych transferów do potwierdzenia",
+                "subtitle": "System dopasował pary transakcji z różnych kont. Potwierdź transfer lub oznacz, że to nie jest przelew wewnętrzny.",
+                "a11y": {
+                    "toggle": "Kandydaci transferów, {count} par. Rozwiń lub zwiń szczegóły."
+                }
+            },
+            "table": {
+                "from": "Z konta",
+                "to": "Na konto",
+                "amount": "Kwota",
+                "dates": "Różnica dat",
+                "dateDelta": "±{days} dni",
+                "actions": "Akcje"
+            },
+            "actions": {
+                "confirm": "Potwierdź transfer",
+                "reject": "To nie transfer",
+                "a11y": {
+                    "confirm": "Potwierdź transfer z {from} na {to}",
+                    "reject": "Oznacz jako nie transfer z {from} na {to}"
+                }
+            }
+        },
+        "toast": {
+            "created": "Transfer zapisany.",
+            "candidate_confirmed": "Transfer potwierdzony.",
+            "candidate_rejected": "Para oznaczona jako niebędąca transferem.",
+            "unlinked": "Transfer rozłączony.",
+            "genericError": "Nie udało się wykonać transferu. Spróbuj ponownie."
+        }
+    },
+    "imports": {
+        "cta": "Importuj",
+        "dialog": {
+            "title": "Import transakcji",
+            "a11y": {
+                "stepTitle": "Krok {current} z {total}: {step}",
+                "steps": {
+                    "form": "Wgranie pliku",
+                    "processing": "Przetwarzanie",
+                    "result": "Wynik"
+                }
+            },
+            "context": "Konto: {account} • Bank: {bank}",
+            "contextEmpty": "Wybierz konto, aby rozpocząć import.",
+            "account": {
+                "label": "Konto",
+                "hint": "Bank importu wynika z konta."
+            },
+            "file": {
+                "label": "Plik",
+                "title": "Wgraj plik",
+                "description": "Wgraj plik CSV lub XLSX z nagłówkami kolumn.",
+                "change": "Zmień plik",
+                "a11y": {
+                    "dropzone": "Wgranie pliku. Naciśnij Enter lub Spację, aby wybrać plik, lub przeciągnij i upuść tutaj."
+                }
+            },
+            "warning": {
+                "title": "Uwaga",
+                "undo": "Importu nie można cofnąć.",
+                "dedupe": "Duplikaty zostaną pominięte (duplikat = surowy opis + data + kwota + konto).",
+                "after": "Po imporcie pokażemy tylko nowo dodane transakcje."
+            },
+            "processing": {
+                "title": "Import w toku…",
+                "hint": "Może to potrwać do kilku minut. Możesz zamknąć to okno — import dokończy się w tle.",
+                "progress": "Zaimportowano {imported} z {total}. Pominięte duplikaty: {duplicates}. Błędne wiersze: {failed}.",
+                "longRunning": "Import nadal trwa. Możesz odświeżyć status.",
+                "refresh": "Odśwież"
+            },
+            "actions": {
+                "start": "Rozpocznij import",
+                "startLoading": "Importuję…",
+                "cancel": "Anuluj",
+                "close": "Zamknij",
+                "goToTransactions": "Przejdź do transakcji"
+            }
+        },
+        "validation": {
+            "required": "To pole jest wymagane.",
+            "fileType": "Nieobsługiwany format pliku. Wgraj CSV lub XLSX.",
+            "fileSize": "Plik jest zbyt duży (max 10 MB).",
+            "cashBlocked": "Import z pliku nie jest dostępny dla kont gotówkowych.",
+            "generic": "Nie udało się wgrać pliku. Spróbuj ponownie."
+        },
+        "toast": {
+            "started": "Import uruchomiony.",
+            "startFailed": "Nie udało się uruchomić importu. Spróbuj ponownie.",
+            "unrecognizedHeaders": "Nie udało się rozpoznać nagłówków pliku dla wybranego banku."
+        },
+        "result": {
+            "successTitle": "Import zakończony",
+            "failedTitle": "Import nie powiódł się",
+            "summary": "Zaimportowano {rows_imported}, pominięto duplikaty {rows_skipped_duplicate}, błędne wiersze {rows_failed_validation}.",
+            "allDuplicates": "Nie znaleźliśmy nowych transakcji. Wszystkie wiersze były duplikatami.",
+            "validationHint": "Jeśli część wierszy była błędna, sprawdź format dat (DD-MM-YYYY lub ISO) i kwot (np. 123,45).",
+            "metrics": {
+                "imported": "Zaimportowano",
+                "duplicates": "Duplikaty",
+                "failed": "Błędne wiersze"
+            }
+        },
+        "failed_rows": {
+            "banner": {
+                "title": "{count} wierszy z importu nie zostało dodanych",
+                "subtitle": "Saldo może być niezgodne z wyciągiem bankowym. Dodaj brakujące transakcje ręcznie lub oznacz jako rozwiązane.",
+                "a11y": {
+                    "toggle": "Błędne wiersze importu, {count} wierszy. Rozwiń lub zwiń szczegóły."
+                }
+            },
+            "modal": {
+                "title": "Błędne wiersze z pliku",
+                "hint": "Te wiersze nie wpłynęły na saldo. Dodaj je ręcznie lub sprawdź dane w pliku źródłowym.",
+                "more_on_transactions": "i jeszcze {count} — pełna lista na stronie transakcji.",
+                "a11y": {
+                    "toggle": "Błędne wiersze z pliku. Rozwiń lub zwiń szczegóły.",
+                    "tableCaption": "Błędne wiersze importu"
+                }
+            },
+            "table": {
+                "caption": "Błędne wiersze importu",
+                "row": "Wiersz",
+                "date": "Data",
+                "amount": "Kwota",
+                "description": "Opis",
+                "reason": "Powód",
+                "actions": "Akcje"
+            },
+            "actions": {
+                "dismiss": "Oznacz jako rozwiązane",
+                "dismiss_all": "Oznacz wszystkie jako rozwiązane",
+                "a11y": {
+                    "dismissRow": "Oznacz wiersz importu {row} jako rozwiązany",
+                    "dismissAll": "Oznacz wszystkie {count} błędne wiersze importu jako rozwiązane"
+                }
+            },
+            "reasons": {
+                "missing_fields": "Brak wymaganych pól (data, kwota lub opis)",
+                "invalid_date": "Niepoprawna data",
+                "invalid_amount": "Niepoprawna kwota",
+                "zero_amount": "Kwota równa zero",
+                "invalid_row": "Niepoprawny wiersz"
+            }
+        }
+    },
+    "categories": {
+        "create": {
+            "title": "Nowa kategoria"
+        },
+        "edit": {
+            "title": "Edycja kategorii"
+        },
+        "fields": {
+            "color": "Kolor",
+            "icon": "Ikona",
+            "preview": "Podgląd",
+            "previewHint": "Wybierz kolor, aby zobaczyć podgląd"
+        },
+        "validation": {
+            "colorRequired": "Wybierz kolor kategorii."
+        },
+        "index": {
+            "title": "Kategorie",
+            "add": "Dodaj kategorię",
+            "empty": "Brak kategorii.",
+            "fields": {
+                "name": "Nazwa",
+                "type": "Typ"
+            },
+            "types": {
+                "expense": "Wydatek",
+                "income": "Przychód"
+            },
+            "annualEstimate": "Plan roczny",
+            "annualEstimatePlaceholder": "np. 12000",
+            "system": "systemowa",
+            "dragHandle": "Przeciągnij, aby zmienić kolejność",
+            "delete": "Usuń kategorię"
+        },
+        "delete": {
+            "title": "Usunąć kategorię?",
+            "description": "Kategoria zostanie trwale usunięta. Kategorii używanych w transakcjach nie można usunąć.",
+            "confirm": "Usuń kategorię"
+        },
+        "enums": {
+            "type": {
+                "expense": "Wydatek",
+                "income": "Przychód"
+            }
+        },
+        "toast": {
+            "created": "Kategoria została dodana.",
+            "updated": "Kategoria została zaktualizowana.",
+            "deleted": "Kategoria została usunięta.",
+            "estimate_saved": "Plan został zapisany."
+        }
+    },
+    "pockets": {
+        "create": {
+            "title": "Nowa kieszeń"
+        },
+        "edit": {
+            "title": "Edytuj kieszeń",
+            "recommendedMonthly": "Rekomendowana kwota miesięczna",
+            "projectedCompletionDate": "Przewidywana data realizacji"
+        },
+        "fields": {
+            "targetAmount": "Kwota docelowa",
+            "monthlyContribution": "Wpłata miesięczna",
+            "targetDate": "Data realizacji",
+            "planningMode": "Tryb planowania",
+            "currency": {
+                "label": "Waluta",
+                "placeholder": "Wybierz walutę"
+            },
+            "initialBalance": {
+                "label": "Wstępna kwota",
+                "hint": "Kwota już odłożona na ten cel. Nie tworzy transferu ani nie zmienia salda kont."
+            }
+        },
+        "planning": {
+            "monthly": "Wpłata miesięczna",
+            "by_date": "Data realizacji"
+        },
+        "status": {
+            "completed": "Zrealizowana",
+            "overdue": "Opóźniona",
+            "archived": "Zarchiwizowana"
+        },
+        "filters": {
+            "active": "Aktywne",
+            "archived": "Zarchiwizowane",
+            "all": "Wszystkie"
+        },
+        "archive": {
+            "title": "Zarchiwizować kieszeń?",
+            "description": "Kieszeń zniknie z aktywnej listy i budżetu miesięcznego. Możesz ją później przywrócić z filtra zarchiwizowanych.",
+            "confirm": "Zarchiwizuj kieszeń"
+        },
+        "unarchive": {
+            "title": "Przywrócić kieszeń?",
+            "description": "Kieszeń wróci do aktywnej listy i budżetu miesięcznego.",
+            "confirm": "Przywróć kieszeń"
+        },
+        "index": {
+            "title": "Kieszenie",
+            "add": "Dodaj kieszeń",
+            "listTitle": "Twoje kieszenie",
+            "empty": "Brak kieszeni.",
+            "fields": {
+                "name": "Nazwa"
+            },
+            "archive": "Zarchiwizuj kieszeń",
+            "unarchive": "Przywróć kieszeń",
+            "delete": "Usuń kieszeń",
+            "deleteConfirm": "Usunąć kieszeń „{name}”?"
+        },
+        "toast": {
+            "created": "Kieszeń została dodana.",
+            "updated": "Kieszeń została zaktualizowana.",
+            "deleted": "Kieszeń została usunięta.",
+            "estimate_saved": "Szacunek został zapisany."
+        }
+    },
+    "budget": {
+        "nav": "Budżet",
+        "monthly": {
+            "title": "Budżet — miesięczny",
+            "plan": "Plan",
+            "actual": "Wykonanie",
+            "difference": "Różnica",
+            "pockets_section": "Kieszenie oszczędnościowe",
+            "saved": "Odłożono",
+            "released": "Wypłacono",
+            "movement": "Ruch w miesiącu",
+            "balance": "Saldo",
+            "manage_pockets": "Zarządzaj kieszeniami",
+            "allocation_hint": "Suma szacunków miesięcznych: {monthly} / roczny: {annual}",
+            "planPlaceholder": "Nadpisanie miesięczne"
+        },
+        "yearly": {
+            "title": "Budżet — roczny",
+            "plan": "Plan roczny",
+            "actual": "Wykonanie",
+            "difference": "Różnica",
+            "planPlaceholder": "np. 12000",
+            "manage_categories": "Zarządzaj kategoriami"
+        },
+        "view": {
+            "monthly": "Miesięczny",
+            "yearly": "Roczny"
+        },
+        "sections": {
+            "expense": "Wydatki",
+            "income": "Przychody"
+        },
+        "summary": {
+            "plan": "Plan",
+            "execution": "Wykonanie",
+            "forecast": "Prognoza",
+            "income": "Przychody",
+            "expense": "Wydatki",
+            "balance": "Saldo"
+        },
+        "columns": {
+            "progress": "Wykonanie %",
+            "forecast": "Prognoza"
+        },
+        "estimate": {
+            "edit": "Edytuj plan — {name}",
+            "save": "Zapisz",
+            "cancel": "Anuluj"
+        }
+    },
+    "nav": {
+        "platform": "Platforma",
+        "dashboard": "Panel",
+        "pockets": "Kieszenie",
+        "settings": "Ustawienia",
+        "logout": "Wyloguj się"
+    },
+    "settings": {
+        "title": "Ustawienia",
+        "description": "Zarządzaj profilem i ustawieniami konta",
+        "nav": {
+            "profile": "Profil",
+            "password": "Hasło",
+            "appearance": "Wygląd"
+        },
+        "profile": {
+            "title": "Ustawienia profilu",
+            "heading": "Informacje o profilu",
+            "description": "Zaktualizuj imię i adres e-mail",
+            "fields": {
+                "name": "Imię i nazwisko",
+                "email": "Adres e-mail"
+            },
+            "placeholders": {
+                "name": "Imię i nazwisko",
+                "email": "Adres e-mail"
+            },
+            "verification": {
+                "unverified": "Twój adres e-mail nie został zweryfikowany.",
+                "resend": "Kliknij tutaj, aby ponownie wysłać e-mail weryfikacyjny.",
+                "sent": "Nowy link weryfikacyjny został wysłany na Twój adres e-mail."
+            },
+            "save": "Zapisz",
+            "saved": "Zapisano."
+        },
+        "password": {
+            "title": "Ustawienia hasła",
+            "heading": "Zmień hasło",
+            "description": "Używaj długiego, losowego hasła, aby zabezpieczyć konto",
+            "fields": {
+                "current": "Obecne hasło",
+                "new": "Nowe hasło",
+                "confirm": "Potwierdź hasło"
+            },
+            "placeholders": {
+                "current": "Obecne hasło",
+                "new": "Nowe hasło",
+                "confirm": "Potwierdź hasło"
+            },
+            "save": "Zapisz hasło",
+            "saved": "Zapisano"
+        },
+        "appearance": {
+            "title": "Ustawienia wyglądu",
+            "heading": "Ustawienia wyglądu",
+            "description": "Zaktualizuj ustawienia wyglądu konta",
+            "tabs": {
+                "light": "Jasny",
+                "dark": "Ciemny",
+                "system": "Systemowy"
+            }
+        },
+        "deleteAccount": {
+            "heading": "Usuń konto",
+            "description": "Usuń konto wraz ze wszystkimi powiązanymi danymi",
+            "warningTitle": "Uwaga",
+            "warningDescription": "Postępuj ostrożnie — tej operacji nie można cofnąć.",
+            "action": "Usuń konto",
+            "dialogTitle": "Czy na pewno chcesz usunąć konto?",
+            "dialogDescription": "Po usunięciu konta wszystkie powiązane dane zostaną trwale usunięte. Wpisz hasło, aby potwierdzić trwałe usunięcie konta.",
+            "passwordPlaceholder": "Hasło",
+            "cancel": "Anuluj",
+            "confirm": "Usuń konto"
+        }
+    },
+    "a11y": {
+        "skip_to_content": "Przejdź do treści"
+    },
+    "currency": {
+        "defaultSymbol": "zł"
+    }
+}

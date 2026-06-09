@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "php",
+      "args": [
+        "/home/sebastian/my-projects/wallet-master/artisan",
+        "boost:mcp"
+      ]
+    }
+  }
+}
