@@ -18,7 +18,7 @@ COPY resources ./resources
 COPY public ./public
 ARG VITE_APP_NAME="Wallet Master"
 ARG VITE_REVERB_APP_KEY
-ARG VITE_REVERB_HOST=ws.budget.kostecki.dev
+ARG VITE_REVERB_HOST=budget.kostecki.dev
 ARG VITE_REVERB_PORT=443
 ARG VITE_REVERB_SCHEME=https
 ENV VITE_APP_NAME="${VITE_APP_NAME}" \
