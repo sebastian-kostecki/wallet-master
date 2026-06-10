@@ -605,7 +605,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         </button>
                                     </th>
                                     <th class="px-6 py-3" scope="col">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="w-56 px-6 py-3" scope="col">{{ t('transactions.index.table.category') }}</th>
+                                    <th class="w-56 px-6 py-3 xl:w-64 2xl:w-72" scope="col">{{ t('transactions.index.table.category') }}</th>
                                     <th class="w-64 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
                                     <th class="w-44 px-6 py-3" scope="col" :aria-sort="ariaSortFor('amount')">
                                         <button
