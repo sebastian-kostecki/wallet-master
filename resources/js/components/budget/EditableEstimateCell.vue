@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
-import { Check, Equal, Pencil, X } from 'lucide-vue-next';
+import { ArrowRightLeft, Check, Pencil, X } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 const props = withDefaults(
@@ -81,9 +81,9 @@ function onInputKeydown(event: KeyboardEvent) {
 
 <template>
     <div v-if="!isEditing" class="flex items-center gap-1">
-        <span class="w-28 shrink-0 text-right tabular-nums">{{ formatMoney(plan, currency) }}</span>
+        <span class="w-28 shrink-0 text-left tabular-nums">{{ formatMoney(plan, currency) }}</span>
         <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="editLabel" @click="emit('start-edit')">
-            <Pencil class="h-4 w-4" />
+            <Pencil class="h-4 w-4 text-muted-foreground" />
         </Button>
         <Button
             v-if="showAlignButton"
@@ -94,7 +94,7 @@ function onInputKeydown(event: KeyboardEvent) {
             :aria-label="alignLabel"
             @click="emit('start-align')"
         >
-            <Equal class="h-4 w-4" />
+            <ArrowRightLeft class="h-4 w-4 text-muted-foreground" />
         </Button>
     </div>
     <div v-else class="flex items-center gap-1">
