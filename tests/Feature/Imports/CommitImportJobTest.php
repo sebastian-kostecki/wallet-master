@@ -202,6 +202,140 @@ test('job skips duplicates when importing same file twice', function () {
     expect($secondImport->rows_skipped_duplicate)->toBe(1);
 });
 
+test('job skips duplicate rows within the same import file', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $content = "date;amount;description;subject\n"
+        ."24-04-2026;-12.34;Coffee;Cafe\n"
+        .'24-04-2026;-12.34;Coffee;Cafe';
+
+    $import = createImportWithFile($user, $account, $content);
+    app(CommitImportJob::class, ['importId' => $import->id])->handle(app(CommitImport::class));
+
+    $import->refresh();
+
+    expect($import->rows_imported)->toBe(1);
+    expect($import->rows_skipped_duplicate)->toBe(1);
+});
+
+test('job skips duplicates after imported transaction descriptions are edited', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $content = "date;amount;description;subject\n"
+        ."24-04-2026;-12.34;Coffee;Cafe\n"
+        .'25-04-2026;100.00;Salary;Work';
+
+    $firstImport = createImportWithFile($user, $account, $content);
+    app(CommitImportJob::class, ['importId' => $firstImport->id])->handle(app(CommitImport::class));
+
+    Transaction::query()
+        ->where('import_id', $firstImport->id)
+        ->orderBy('date')
+        ->get()
+        ->each(function (Transaction $transaction, int $index): void {
+            $transaction->forceFill([
+                'description' => "Edited description {$index}",
+                'subject' => "Edited subject {$index}",
+                'normalized_description' => "edited description {$index}",
+                'dedupe_hash' => md5("changed-hash-{$index}", true),
+            ])->save();
+        });
+
+    $secondImport = createImportWithFile($user, $account, $content);
+    app(CommitImportJob::class, ['importId' => $secondImport->id])->handle(app(CommitImport::class));
+
+    $secondImport->refresh();
+
+    expect($secondImport->rows_imported)->toBe(0);
+    expect($secondImport->rows_skipped_duplicate)->toBe(2);
+    expect(Transaction::query()->where('account_id', $account->id)->count())->toBe(2);
+});
+
+test('job skips duplicates after imported transaction date and amount are edited', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $content = "date;amount;description;subject\n24-04-2026;-12.34;Coffee;Cafe";
+
+    $firstImport = createImportWithFile($user, $account, $content);
+    app(CommitImportJob::class, ['importId' => $firstImport->id])->handle(app(CommitImport::class));
+
+    $transaction = Transaction::query()->where('import_id', $firstImport->id)->firstOrFail();
+    $transaction->forceFill([
+        'date' => '2026-04-30',
+        'booked_at' => '2026-04-30',
+        'amount' => '-20.00',
+        'dedupe_hash' => md5('changed-date-and-amount', true),
+    ])->save();
+
+    $secondImport = createImportWithFile($user, $account, $content);
+    app(CommitImportJob::class, ['importId' => $secondImport->id])->handle(app(CommitImport::class));
+
+    $secondImport->refresh();
+
+    expect($secondImport->rows_imported)->toBe(0);
+    expect($secondImport->rows_skipped_duplicate)->toBe(1);
+    expect(Transaction::query()->where('account_id', $account->id)->count())->toBe(1);
+});
+
+test('job stores import fingerprint for imported rows', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Main',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = createImportWithFile(
+        $user,
+        $account,
+        "date;amount;description;subject\n24-04-2026;-12.34;Coffee;Cafe"
+    );
+
+    app(CommitImportJob::class, ['importId' => $import->id])->handle(app(CommitImport::class));
+
+    $transaction = Transaction::query()->where('import_id', $import->id)->firstOrFail();
+
+    expect($transaction->import_fingerprint)->not->toBeNull();
+    expect(bin2hex($transaction->import_fingerprint))->toBe(
+        bin2hex(md5($account->id.'|2026-04-24|-12.34|coffee', true))
+    );
+});
+
 test('job counts invalid rows and keeps valid ones', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
