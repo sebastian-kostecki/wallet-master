@@ -748,7 +748,8 @@
         "estimate": {
             "edit": "Edytuj plan — {name}",
             "save": "Zapisz",
-            "cancel": "Anuluj"
+            "cancel": "Anuluj",
+            "align": "Wyrównaj do wykonania — {name}"
         }
     },
     "nav": {
