@@ -32,6 +32,7 @@ test('remember stores only whitelisted non-empty query keys', function () {
         'sort' => 'amount',
         'direction' => 'asc',
         'per_page' => 25,
+        'page' => 3,
     ]);
 });
 
@@ -65,6 +66,17 @@ test('redirect prefers request query over session', function () {
     $response = TransactionsIndexQuery::redirect($request);
 
     expect($response->getTargetUrl())->toBe(route('transactions.index', ['from' => '15-06-2026']));
+});
+
+test('redirect includes page from request query', function () {
+    $request = Request::create('/transakcje?from=01-04-2026&to=30-04-2026&page=2', 'PUT');
+    $response = TransactionsIndexQuery::redirect($request);
+
+    expect($response->getTargetUrl())->toBe(route('transactions.index', [
+        'from' => '01-04-2026',
+        'to' => '30-04-2026',
+        'page' => 2,
+    ]));
 });
 
 test('redirect falls back to session when request has no whitelisted keys', function () {

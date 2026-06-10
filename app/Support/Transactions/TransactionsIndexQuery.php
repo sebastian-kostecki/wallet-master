@@ -20,6 +20,7 @@ final class TransactionsIndexQuery
         'sort',
         'direction',
         'per_page',
+        'page',
     ];
 
     public static function sessionKey(): string
@@ -76,7 +77,7 @@ final class TransactionsIndexQuery
                 continue;
             }
 
-            $filtered[$key] = $key === 'account_id' || $key === 'category_id' || $key === 'per_page'
+            $filtered[$key] = $key === 'account_id' || $key === 'category_id' || $key === 'per_page' || $key === 'page'
                 ? (int) $value
                 : (string) $value;
         }

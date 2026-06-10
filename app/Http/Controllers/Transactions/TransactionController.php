@@ -108,7 +108,7 @@ final class TransactionController extends Controller
     {
         $update->handle($transaction, $request->validated());
 
-        return to_route('transactions.edit', $transaction)->with('toast', [
+        return TransactionsIndexQuery::redirect($request)->with('toast', [
             'type' => 'success',
             'message_key' => 'transactions.toast.updated',
         ]);
