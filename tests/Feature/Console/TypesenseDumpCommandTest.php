@@ -48,8 +48,8 @@ test('typesense:dump queries import_description_memory for user and prints a tab
     ])
         ->expectsOutputToContain('Typesense import_description_memory: found=1 page=1 perPage=50')
         ->expectsTable(
-            ['id', 'bank', 'raw_key', 'learned_subject', 'learned_description', 'updated_at'],
-            [['abc', 'mbank', 'raw key', 'Subject', 'Description', '1234567890']],
+            ['bank', 'raw_key', 'learned_category_id', 'learned_subject', 'learned_description', 'updated_at'],
+            [['mbank', 'raw key', '', 'Subject', 'Description', '1234567890']],
         )
         ->assertExitCode(0);
 });
