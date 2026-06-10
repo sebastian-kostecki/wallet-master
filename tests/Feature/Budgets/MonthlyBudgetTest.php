@@ -492,3 +492,25 @@ test('monthly budget exposes summary currency and progress without difference', 
         ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $expenseCategory->id)['progress_percent'] === 0)
     );
 });
+
+test('monthly budget shows pocket plan without target when monthly contribution is set', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $pocket = Pocket::factory()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'target_amount' => null,
+        'planning_mode' => null,
+        'monthly_contribution' => '500.00',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['monthly_plan'] === '500.00')
+        ->where('summary.plan.expense', fn ($expense) => bccomp((string) $expense, '500.00', 2) >= 0)
+    );
+});
