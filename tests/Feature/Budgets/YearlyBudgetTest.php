@@ -145,3 +145,39 @@ test('yearly budget exposes forecast and summary for current year', function () 
 
     Carbon::setTestNow();
 });
+
+test('yearly budget exposes monthly_template for uniform eligible overrides', function () {
+    Carbon::setTestNow('2026-06-15');
+
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $food = Category::query()
+        ->where('user_id', $user->id)
+        ->where('name', 'Artykuły spożywcze')
+        ->firstOrFail();
+
+    CategoryAnnualEstimate::query()->create([
+        'category_id' => $food->id,
+        'year' => 2026,
+        'amount' => 12000,
+    ]);
+
+    foreach (range(6, 12) as $month) {
+        CategoryMonthlyEstimate::query()->create([
+            'category_id' => $food->id,
+            'year' => 2026,
+            'month' => $month,
+            'amount' => 400,
+        ]);
+    }
+
+    $response = $this->actingAs($user)->get(route('budget.yearly', ['year' => 2026], absolute: false));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $food->id)['monthly_template'] === '400.00')
+    );
+
+    Carbon::setTestNow();
+});

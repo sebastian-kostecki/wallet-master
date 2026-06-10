@@ -18,6 +18,7 @@ use App\Support\Budgets\BudgetProgress;
 use App\Support\Budgets\BudgetSummary;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Budgets\CategoryPlanAmount;
+use App\Support\Budgets\YearlyMonthlyTemplate;
 use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -104,6 +105,12 @@ final class ListYearlyBudget
                 'type' => $category->type->value,
                 'type_label_key' => $category->type->labelKey(),
                 'annual_plan' => $plan,
+                'monthly_template' => YearlyMonthlyTemplate::template(
+                    $this->year,
+                    $monthlyEstimates,
+                    $annual,
+                    $category,
+                ),
                 'actual_income' => $actualIncome,
                 'actual_expense' => $actualExpense,
                 'actual' => $actualPrimary,
