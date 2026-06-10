@@ -723,6 +723,8 @@
             "actual": "Wykonanie",
             "difference": "Różnica",
             "planPlaceholder": "np. 12000",
+            "monthlyPlanPlaceholder": "Opcjonalnie",
+            "monthlyPlanLabel": "Plan miesięczny",
             "manage_categories": "Zarządzaj kategoriami"
         },
         "view": {
