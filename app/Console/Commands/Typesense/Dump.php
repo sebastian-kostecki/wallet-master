@@ -81,9 +81,9 @@ final class Dump extends Command
             ->filter(fn ($doc) => is_array($doc))
             ->map(function (array $doc) {
                 return [
-                    'id' => (string) ($doc['id'] ?? ''),
                     'bank' => (string) ($doc['bank'] ?? ''),
                     'raw_key' => Str::limit((string) ($doc['raw_key'] ?? ''), 80),
+                    'learned_category_id' => (string) ($doc['learned_category_id'] ?? ''),
                     'learned_subject' => Str::limit((string) ($doc['learned_subject'] ?? ''), 60),
                     'learned_description' => Str::limit((string) ($doc['learned_description'] ?? ''), 80),
                     'updated_at' => (string) ($doc['updated_at'] ?? ''),
@@ -94,7 +94,7 @@ final class Dump extends Command
 
         $this->info("Typesense {$collection}: found={$found} page={$page} perPage={$perPage}");
         $this->table(
-            ['id', 'bank', 'raw_key', 'learned_subject', 'learned_description', 'updated_at'],
+            ['bank', 'raw_key', 'learned_category_id', 'learned_subject', 'learned_description', 'updated_at'],
             $rows,
         );
 
