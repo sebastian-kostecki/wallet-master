@@ -1,3 +1,4 @@
+/* eslint-disable no-var -- TypeScript global augmentation requires var */
 import type { Config } from 'ziggy-js';
 import { route as ziggyRoute } from 'ziggy-js';
 
