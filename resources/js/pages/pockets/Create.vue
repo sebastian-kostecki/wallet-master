@@ -92,8 +92,8 @@ function submit(): void {
 
     if (!hasTarget.value) {
         form.target_amount = '';
-        form.monthly_contribution = '';
         form.target_date = '';
+        (form as { planning_mode: 'monthly' | 'by_date' | null }).planning_mode = null;
     } else if (form.planning_mode === 'monthly') {
         form.target_date = '';
     } else {
@@ -179,6 +179,32 @@ function submit(): void {
                         </template>
                     </FormField>
 
+                    <FormField
+                        for-id="monthly_contribution"
+                        :label="t('pockets.fields.monthlyContribution')"
+                        :error="form.errors.monthly_contribution"
+                    >
+                        <template #default="{ errorId, hasError }">
+                            <div class="relative">
+                                <Input
+                                    id="monthly_contribution"
+                                    v-model="form.monthly_contribution"
+                                    type="text"
+                                    inputmode="decimal"
+                                    class="pr-10"
+                                    :aria-invalid="hasError ? true : undefined"
+                                    :aria-describedby="hasError ? errorId : undefined"
+                                />
+                                <span
+                                    v-if="selectedCurrency?.symbol"
+                                    class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
+                                >
+                                    {{ selectedCurrency.symbol }}
+                                </span>
+                            </div>
+                        </template>
+                    </FormField>
+
                     <FormField :label="t('categories.fields.color')" :error="form.errors.color ?? colorError ?? undefined">
                         <CategoryColorPicker :colors="props.colors" :model-value="form.color" @update:model-value="(v) => (form.color = v)" />
                     </FormField>
@@ -198,34 +224,7 @@ function submit(): void {
                             />
                         </FormField>
 
-                        <FormField
-                            v-if="form.planning_mode === 'monthly'"
-                            for-id="monthly_contribution"
-                            :label="t('pockets.fields.monthlyContribution')"
-                            :error="form.errors.monthly_contribution"
-                        >
-                            <template #default="{ errorId, hasError }">
-                                <div class="relative">
-                                    <Input
-                                        id="monthly_contribution"
-                                        v-model="form.monthly_contribution"
-                                        type="text"
-                                        inputmode="decimal"
-                                        class="pr-10"
-                                        :aria-invalid="hasError ? true : undefined"
-                                        :aria-describedby="hasError ? errorId : undefined"
-                                    />
-                                    <span
-                                        v-if="selectedCurrency?.symbol"
-                                        class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
-                                    >
-                                        {{ selectedCurrency.symbol }}
-                                    </span>
-                                </div>
-                            </template>
-                        </FormField>
-
-                        <FormField v-else for-id="target_date" :label="t('pockets.fields.targetDate')" :error="form.errors.target_date">
+                        <FormField v-if="form.planning_mode === 'by_date'" for-id="target_date" :label="t('pockets.fields.targetDate')" :error="form.errors.target_date">
                             <Input id="target_date" v-model="form.target_date" type="date" />
                         </FormField>
                     </div>
