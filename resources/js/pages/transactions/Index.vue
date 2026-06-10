@@ -760,12 +760,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                             </span>
                                         </div>
                                         <div v-else-if="tx.category" class="min-w-0 max-w-full">
-                                            <CategoryBadge
-                                                :name="tx.category.name"
-                                                :icon="tx.category.icon"
-                                                :color="tx.category.color"
-                                                size="md"
-                                            />
+                                            <CategoryBadge :name="tx.category.name" :icon="tx.category.icon" :color="tx.category.color" size="md" />
                                         </div>
                                         <span v-else class="text-sm text-muted-foreground">—</span>
                                     </td>
