@@ -26,11 +26,13 @@ const props = defineProps<{
     currency: CurrencyDisplay;
     variant: 'monthly' | 'yearly';
     editingCategoryId: number | null;
+    editingMode?: 'plan' | 'align' | null;
     planPlaceholder: string;
 }>();
 
 const emit = defineEmits<{
     'start-edit': [categoryId: number];
+    'start-align': [categoryId: number];
     cancel: [];
     save: [row: BudgetRow, rawValue: string];
 }>();
@@ -69,10 +71,15 @@ function planForRow(row: BudgetRow): string | null {
                                 :input-id="`${variant}-plan-${row.category_id}`"
                                 :placeholder="planPlaceholder"
                                 :edit-label="t('budget.estimate.edit', { name: row.name })"
+                                :align-label="t('budget.estimate.align', { name: row.name })"
                                 :save-label="t('budget.estimate.save')"
                                 :cancel-label="t('budget.estimate.cancel')"
                                 :is-editing="editingCategoryId === row.category_id"
+                                :mode="editingCategoryId === row.category_id ? (editingMode ?? 'plan') : null"
+                                :align-value="row.actual"
+                                :show-align-button="variant === 'monthly'"
                                 @start-edit="emit('start-edit', row.category_id)"
+                                @start-align="emit('start-align', row.category_id)"
                                 @cancel="emit('cancel')"
                                 @save="(raw) => emit('save', row, raw)"
                             />
