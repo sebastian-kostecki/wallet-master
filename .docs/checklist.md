@@ -52,7 +52,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] `transactions(account_id, booked_at)` **[plan §1]** (indeksy po `date` usunięte na MySQL po migracji)
   - [x] `transactions(user_id, booked_at)` **[plan §1]**
   - [x] `transactions(transfer_id)`
-  - [x] Unique `(account_id, dedupe_hash)` zostaje dla importu; ręczne wpisy używają `manualDedupeHash()` (UUID) — migracja non-unique **nie jest potrzebna** **[plan §2, audyt 2026-06-03]**
+  - [x] Unique `(account_id, import_fingerprint)` dla importu; `dedupe_hash` bez unique constraint; ręczne wpisy używają `manualDedupeHash()` (UUID) **[import-fingerprint-dedupe 2026-06-10]**
 
 ---
 
@@ -180,7 +180,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Fallback: pozostawić puste, jeśli nie da się wyciągnąć **[Assumption]**
 
 #### 6.3 Deduplikacja (zawsze pomijamy w imporcie)
-- [x] Klucz dedupe importu: `date + amount + normalized_description` w obrębie `account_id`. **Bez `bank_reference_id`** — wspierane banki (BNP, mBank) nie eksportują takiego identyfikatora.
+- [x] Klucz dedupe importu: `account_id + date + amount + normalized(raw_statement_description)` jako `import_fingerprint` (niezmienny po edycji transakcji). **Bez `bank_reference_id`** — wspierane banki (BNP, mBank) nie eksportują takiego identyfikatora. **[import-fingerprint-dedupe 2026-06-10]**
 - [x] Zaimplementować normalizację opisu:
   - [x] `trim`
   - [x] `case-fold` (np. lowercase)
@@ -190,7 +190,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 #### 6.4 Salda po imporcie + chunked processing
 - [x] Agregować sumę kwot tylko dla faktycznie utworzonych transakcji (`imported_amount_sum`).
 - [x] Wykonać jedną aktualizację `current_balance` po przetworzeniu importu.
-- [x] Zabezpieczyć przed podwójnym zapisem (idempotencja importu przez `import_id` + dedupe).
+- [x] Zabezpieczyć przed podwójnym zapisem (idempotencja importu przez `import_fingerprint` + dedupe w pliku).
 - [x] **Chunked processing**: batch po `config('imports.chunk_size', 500)`, `flushChunk()` w `DB::transaction`, bulk insert; `lockForUpdate` konta tylko przy finalnym zapisie salda **[plan §7]**.
 - [ ] Importer odporny na `Lock wait timeout` przy pliku 5000+ wierszy (test obciążeniowy).
 

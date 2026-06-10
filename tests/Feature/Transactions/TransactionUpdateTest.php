@@ -165,3 +165,64 @@ test('updates an imported transaction and remembers user corrections (best-effor
     expect($fakeRepo->rememberCalls[0]['subject'])->toBe('ATM');
     expect($fakeRepo->rememberCalls[0]['description'])->toBe('Cash withdrawal');
 });
+
+test('updating an imported transaction preserves import fingerprint', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Imported',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $import = Import::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'status' => 'committed',
+        'mapping' => [],
+        'details' => [],
+        'rows_total' => 0,
+        'rows_imported' => 0,
+        'rows_skipped_duplicate' => 0,
+        'rows_failed_validation' => 0,
+    ]);
+
+    $fingerprint = md5($account->id.'|2026-04-20|-10.00|atm cash out', true);
+    $transaction = Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'import_id' => $import->id,
+        'raw_statement_description' => 'ATM CASH OUT',
+        'import_fingerprint' => $fingerprint,
+        'date' => '2026-04-20',
+        'booked_at' => '2026-04-20',
+        'amount' => -10,
+        'type' => 'expense',
+        'description' => 'ATM CASH OUT',
+        'subject' => null,
+        'normalized_description' => 'atm cash out',
+        'dedupe_hash' => md5('2026-04-20|-10.00|atm cash out', true),
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->put(route('transactions.update', $transaction, absolute: false), [
+            'account_id' => $account->id,
+            'date' => '21-04-2026',
+            'amount' => -20,
+            'description' => 'Cash withdrawal',
+            'subject' => 'ATM',
+            'category_id' => $transaction->category_id,
+        ])
+        ->assertSessionHasNoErrors();
+
+    $transaction->refresh();
+
+    expect($transaction->import_fingerprint)->toBe($fingerprint);
+});

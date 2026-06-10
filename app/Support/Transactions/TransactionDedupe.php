@@ -35,6 +35,18 @@ final class TransactionDedupe
     }
 
     /**
+     * @param  numeric-string  $amountDecimalString
+     */
+    public static function importFingerprint(
+        int $accountId,
+        string $dateYmd,
+        string $amountDecimalString,
+        string $normalizedRawStatementDescription,
+    ): string {
+        return md5($accountId.'|'.$dateYmd.'|'.$amountDecimalString.'|'.$normalizedRawStatementDescription, true);
+    }
+
+    /**
      * Unique hash for manual entries so identical rows are not blocked by account dedupe index.
      *
      * @param  numeric-string  $amountDecimalString

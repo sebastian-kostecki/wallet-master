@@ -21,6 +21,8 @@ use Illuminate\Support\Carbon;
  * @property int $category_id
  * @property int|null $pocket_id
  * @property int|null $import_id
+ * @property string|null $raw_statement_description
+ * @property string|null $import_fingerprint
  * @property string|null $transfer_id
  * @property TransferMatchStatus $transfer_match_status
  * @property int|null $transfer_candidate_for_id
@@ -49,6 +51,7 @@ final class Transaction extends Model
         'normalized_description',
         'raw_statement_description',
         'dedupe_hash',
+        'import_fingerprint',
         'transfer_id',
         'transfer_match_status',
         'transfer_candidate_for_id',

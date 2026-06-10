@@ -52,8 +52,8 @@ function planForRow(row: BudgetRow): string | null {
                     <tr class="border-b text-left text-muted-foreground">
                         <th class="py-2 pr-4">{{ t('categories.index.fields.name') }}</th>
                         <th class="py-2 pr-4">{{ variant === 'monthly' ? t('budget.monthly.plan') : t('budget.yearly.plan') }}</th>
+                        <th v-if="variant === 'yearly'" class="py-2 pr-4 text-muted-foreground">{{ t('budget.columns.forecast') }}</th>
                         <th class="py-2 pr-4">{{ variant === 'monthly' ? t('budget.monthly.actual') : t('budget.yearly.actual') }}</th>
-                        <th v-if="variant === 'yearly'" class="py-2 pr-4">{{ t('budget.columns.forecast') }}</th>
                         <th class="py-2">{{ t('budget.columns.progress') }}</th>
                     </tr>
                 </thead>
@@ -77,10 +77,10 @@ function planForRow(row: BudgetRow): string | null {
                                 @save="(raw) => emit('save', row, raw)"
                             />
                         </td>
-                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(row.actual, currency) }}</td>
-                        <td v-if="variant === 'yearly'" class="py-2 pr-4 tabular-nums">
+                        <td v-if="variant === 'yearly'" class="py-2 pr-4 tabular-nums text-muted-foreground">
                             {{ formatMoney(row.forecast ?? null, currency) }}
                         </td>
+                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(row.actual, currency) }}</td>
                         <td class="py-2">
                             <BudgetProgressCell :percent="row.progress_percent" :category-type="categoryType" />
                         </td>

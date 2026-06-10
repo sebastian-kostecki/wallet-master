@@ -98,8 +98,8 @@ final class CommitImport
         ], $lockedImport->user_id);
 
         $counters = new ImportCommitCounters;
-        /** @var array<string, true> $seenDedupeHashes */
-        $seenDedupeHashes = [];
+        /** @var array<string, true> $seenImportFingerprints */
+        $seenImportFingerprints = [];
         /** @var list<array<string, mixed>> $pendingInserts */
         $pendingInserts = [];
         /** @var list<array<string, mixed>> $pendingFailedRows */
@@ -118,7 +118,7 @@ final class CommitImport
                 mapping: $mapping,
                 row: $row,
                 counters: $counters,
-                seenDedupeHashes: $seenDedupeHashes,
+                seenImportFingerprints: $seenImportFingerprints,
                 pendingFailedRows: $pendingFailedRows,
                 timestamp: $timestamp,
             );
@@ -196,7 +196,7 @@ final class CommitImport
     /**
      * @param  array<string, string>  $row
      * @param  array{date: string, amount: string, description: string, subject?: ?string}  $mapping
-     * @param  array<string, true>  $seenDedupeHashes
+     * @param  array<string, true>  $seenImportFingerprints
      * @param  list<array<string, mixed>>  $pendingFailedRows
      * @return array<string, mixed>|null
      */
@@ -207,7 +207,7 @@ final class CommitImport
         array $mapping,
         array $row,
         ImportCommitCounters $counters,
-        array &$seenDedupeHashes,
+        array &$seenImportFingerprints,
         array &$pendingFailedRows,
         string $timestamp,
     ): ?array {
@@ -229,11 +229,16 @@ final class CommitImport
             return null;
         }
 
-        $normalizedDescription = TransactionDedupe::normalizeDescription($parsedRow->description);
-        $dedupeHash = TransactionDedupe::dedupeHash($parsedRow->date, $parsedRow->amount, $normalizedDescription);
-        $dedupeKey = bin2hex($dedupeHash);
+        $normalizedRawStatementDescription = TransactionDedupe::normalizeDescription($parsedRow->rawStatementDescription);
+        $importFingerprint = TransactionDedupe::importFingerprint(
+            accountId: (int) $account->id,
+            dateYmd: $parsedRow->date,
+            amountDecimalString: $parsedRow->amount,
+            normalizedRawStatementDescription: $normalizedRawStatementDescription,
+        );
+        $importFingerprintKey = bin2hex($importFingerprint);
 
-        if (isset($seenDedupeHashes[$dedupeKey])) {
+        if (isset($seenImportFingerprints[$importFingerprintKey])) {
             $counters->rowsSkippedDuplicate++;
 
             return null;
@@ -241,7 +246,7 @@ final class CommitImport
 
         $exists = Transaction::query()
             ->where('account_id', $account->id)
-            ->where('dedupe_hash', $dedupeHash)
+            ->where('import_fingerprint', $importFingerprint)
             ->exists();
 
         if ($exists) {
@@ -250,7 +255,9 @@ final class CommitImport
             return null;
         }
 
-        $seenDedupeHashes[$dedupeKey] = true;
+        $seenImportFingerprints[$importFingerprintKey] = true;
+        $normalizedDescription = TransactionDedupe::normalizeDescription($parsedRow->description);
+        $dedupeHash = TransactionDedupe::dedupeHash($parsedRow->date, $parsedRow->amount, $normalizedDescription);
 
         $enriched = $this->enrichImportRowDescription->enrich(
             import: $lockedImport,
@@ -301,6 +308,7 @@ final class CommitImport
             'raw_statement_description' => $parsedRow->rawStatementDescription,
             'normalized_description' => $normalizedDescription,
             'dedupe_hash' => $dedupeHash,
+            'import_fingerprint' => $importFingerprint,
             'category_id' => $categoryId,
             'created_at' => $timestamp,
             'updated_at' => $timestamp,

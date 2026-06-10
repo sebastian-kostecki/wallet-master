@@ -24,3 +24,21 @@ export function formatMoney(value: string | number | null | undefined, currency?
 
     return symbol ? `${formatted} ${symbol}` : formatted;
 }
+
+export function signedMoneyClass(value: string | number | null | undefined): string {
+    if (value === null || value === undefined || value === '') {
+        return '';
+    }
+
+    const parsed = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
+
+    if (Number.isNaN(parsed) || parsed === 0) {
+        return '';
+    }
+
+    if (parsed > 0) {
+        return 'text-emerald-600 dark:text-emerald-400';
+    }
+
+    return 'text-rose-600 dark:text-rose-400';
+}

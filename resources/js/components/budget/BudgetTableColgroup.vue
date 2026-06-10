@@ -15,8 +15,8 @@ defineProps<{
     <colgroup v-else-if="layout === 'summary' && period === 'yearly'">
         <col class="budget-col-label" />
         <col class="budget-col-plan" />
-        <col class="budget-col-amount" />
         <col class="budget-col-forecast" />
+        <col class="budget-col-amount" />
         <col class="budget-col-progress" />
     </colgroup>
     <colgroup v-else-if="layout === 'category' && period === 'monthly'">
@@ -34,8 +34,8 @@ defineProps<{
     <colgroup v-else>
         <col class="budget-col-label" />
         <col class="budget-col-plan" />
-        <col class="budget-col-amount" />
         <col class="budget-col-forecast" />
+        <col class="budget-col-amount" />
         <col class="budget-col-progress" />
     </colgroup>
 </template>
