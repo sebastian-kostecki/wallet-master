@@ -37,7 +37,7 @@
 - **Nowy użytkownik (aktywacja importu):** do 7 dni od `user_registered`; metryka „Activation import” (§3.3).
 - **Kategoria:** wpis w katalogu użytkownika (`income` \| `expense`) z kolejnością wyświetlania, ikoną (Lucide) i kolorem (paleta hex); etykieta przepływów **zewnętrznych** P&L — wymagana na `income`, `expense`, `adjustment`; **brak** na transferze wewnętrznym (`category_id = null`).
 - **Szacunek roczny:** planowana kwota na rok kalendarzowy per kategoria (przychód lub wydatek); można przekroczyć — to nie jest twardy limit.
-- **Szacunek miesięczny:** opcjonalne nadpisanie planu na dany miesiąc; może różnić się od `szacunek_roczny ÷ 12`.
+- **Szacunek miesięczny:** opcjonalne, jawne nadpisanie planu na dany miesiąc; niezależne od rocznego (brak nadpisania = plan `0` w widoku miesięcznym). Prognoza roczna nadal może używać `szacunek_roczny ÷ 12` dla zamkniętych miesięcy bez nadpisania.
 - **Kieszeń (pocket, EN: envelope):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L** i **bez roku kalendarzowego** (jak katalog kategorii, nie jak wiersz budżetu P&L). Każda kieszeń ma **walutę** (`currency_id`) — kwoty docelowe, saldo i planowanie są w tej walucie (MVP: tylko PLN w UI; pole w DB jak przy koncie). Opcjonalna **kwota docelowa** (`target_amount`); przy kwocie — wzajemnie wykluczające się planowanie: **składka miesięczna** (deklaracja użytkownika) **lub** **data docelowa** (termin; system liczy rekomendowaną składkę). Wykonanie: skumulowane saldo z transferów na kontach `Savings` **w walucie kieszeni** (flow A: odkładanie → wypłata na ROR → wydatek na ROR z opcjonalnym powiązaniem kieszeni). Ręczna archiwizacja ukrywa kieszeń z domyślnych list i sekcji budżetu.
 - **Widok budżetu miesięczny:** plan vs wykonanie per kategoria P&L w miesiącu + sekcja **Kieszenie** (plan / odłożono / wypłacono / saldo per kieszeń).
 - **Widok budżetu roczny:** szacunek roczny vs wykonanie per kategoria P&L w roku; bez agregacji transferów wewnętrznych; edycja planów P&L na tym ekranie (FR-UX1).
@@ -219,7 +219,7 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 | Pole | Opis |
 |------|------|
 | `category_id`, `year`, `month` | Miesiąc 1–12; unikalna trójka |
-| `amount` | Nadpisanie szacunku miesięcznego (nullable = brak zapisanego nadpisania; UI może pokazać `roczny ÷ 12`) |
+| `amount` | Nadpisanie szacunku miesięcznego (nullable = brak zapisanego nadpisania; widok miesięczny pokazuje `0`) |
 
 ### Pocket
 
@@ -692,7 +692,7 @@ Użytkownik ustawia opcjonalny **szacunek roczny** per kategoria i rok kalendarz
 | **Domena** | Budgets |
 
 **Zachowanie**
-Użytkownik może nadpisać plan na konkretny miesiąc. Gdy brak nadpisania, widok miesięczny pokazuje **`szacunek_roczny ÷ 12`**, jeśli roczny istnieje. Suma 12 nadpisań może różnić się od rocznego — **miękka informacja** (bez blokady zapisu); istotna głównie na początku roku. **Edycja nadpisań:** widok budżetu miesięcznego (FR-UX1), nie ekran kategorii.
+Użytkownik może nadpisać plan na konkretny miesiąc. Gdy brak nadpisania, widok miesięczny pokazuje **`0`** (plan miesięczny jest jawny, niezależny od rocznego). Suma 12 nadpisań może różnić się od rocznego — **miękka informacja** (bez blokady zapisu); istotna głównie na początku roku. **Edycja nadpisań:** widok budżetu miesięcznego (FR-UX1), nie ekran kategorii. Z widoku rocznego można opcjonalnie ustawić jednolitą kwotę miesięczną dla bieżącego i przyszłych miesięcy roku (bez nadpisywania miesięcy z własnym planem).
 
 **Kryteria akceptacji**
 1. Given roczny 5000 i nadpisanie marca = 1500 When widok marzec Then plan 1500 dla kategorii.
@@ -925,7 +925,7 @@ Widok budżetu miesięcznego (FR-C5) zawiera sekcję **Cele** z metrykami per ce
 | **Domena** | Budgets |
 
 **Zachowanie**
-Ekran **Kategorie** (`/categories`) to wyłącznie katalog etykiet P&L: CRUD, kolejność — **bez** selektora roku, pól szacunków rocznych ani miesięcznych. Edycja planów P&L: **szacunek roczny** na widoku budżetu rocznego; **nadpisania miesięczne** na widoku budżetu miesięcznego (te same reguły co FR-C3/C4). Link „Zarządzaj kategoriami” z budżetu → `/categories`. Kategorie **nie** przenoszą się do Ustawień.
+Ekran **Kategorie** (`/categories`) to wyłącznie katalog etykiet P&L: CRUD, kolejność — **bez** selektora roku, pól szacunków rocznych ani miesięcznych. Edycja planów P&L: na widoku budżetu rocznego — **szacunek roczny** oraz opcjonalna **jednolita kwota miesięczna** (bulk od bieżącego miesiąca do grudnia, bez nadpisywania istniejących override’ów); na widoku budżetu miesięcznego — **nadpisania miesięczne** per miesiąc (FR-C4). Link „Zarządzaj kategoriami” z budżetu → `/categories`. Kategorie **nie** przenoszą się do Ustawień.
 
 **Kryteria akceptacji**
 1. Given ekran kategorii When render Then brak pól kwot / selektora roku.
@@ -936,7 +936,7 @@ Ekran **Kategorie** (`/categories`) to wyłącznie katalog etykiet P&L: CRUD, ko
 - API szacunków kategorii bez zmian semantyki; zmiana tylko miejsca edycji w UI.
 - Sidebar: Konta · Transakcje · Budżet · Kategorie · Kieszenie (§7).
 
-**Zdarzenia:** `category_estimate_annual_saved`, `category_estimate_monthly_saved` (kontekst: budget screen)
+**Zdarzenia:** `category_estimate_annual_saved`, `category_estimate_monthly_saved`, `category_estimate_yearly_plan_saved` (kontekst: budget screen)
 
 ---
 
