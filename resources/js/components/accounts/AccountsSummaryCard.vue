@@ -77,7 +77,7 @@ const formattedSavingsTotal = computed(() => `${money.format(savingsTotalBalance
 
             <div>
                 <p class="text-xs text-muted-foreground">{{ t('accounts.summary.savingsPln') }}</p>
-                <p class="mt-1 text-2xl font-semibold tabular-nums">{{ formattedSavingsTotal }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums">{{ formattedSavingsTotal }}</p>
             </div>
 
             <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
