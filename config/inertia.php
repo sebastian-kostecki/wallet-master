@@ -10,6 +10,11 @@ return [
 
         'ensure_bundle_exists' => (bool) env('INERTIA_SSR_ENSURE_BUNDLE_EXISTS', true),
 
+        'except_paths' => array_values(array_filter(array_map(
+            static fn (string $path): string => trim($path),
+            explode(',', (string) env('INERTIA_SSR_EXCEPT_PATHS', '')),
+        ))),
+
     ],
 
     'ensure_pages_exist' => false,
