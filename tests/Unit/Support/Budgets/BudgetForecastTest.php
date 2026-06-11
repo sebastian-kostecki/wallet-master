@@ -16,6 +16,15 @@ test('referenceMonth returns 12 for past year and 0 for future year', function (
     expect(BudgetForecast::referenceMonth(2027, 2026, 5))->toBe(0);
 });
 
+test('closedMonthForForecast returns previous month for current year', function () {
+    expect(BudgetForecast::closedMonthForForecast(2026, 2026, 5))->toBe(4);
+});
+
+test('closedMonthForForecast returns 12 for past year and 0 for future year', function () {
+    expect(BudgetForecast::closedMonthForForecast(2025, 2026, 5))->toBe(12);
+    expect(BudgetForecast::closedMonthForForecast(2027, 2026, 5))->toBe(0);
+});
+
 test('forecast adds remaining annual plan after elapsed monthly plans', function () {
     $category = new Category(['type' => CategoryType::Expense]);
     $annual = new CategoryAnnualEstimate(['amount' => '12000.00']);
@@ -23,13 +32,13 @@ test('forecast adds remaining annual plan after elapsed monthly plans', function
     $elapsed = BudgetForecast::elapsedPlansSum(
         $category,
         2026,
-        5,
+        4,
         $annual,
         new Collection,
     );
 
-    expect($elapsed)->toBe('5000.00');
-    expect(BudgetForecast::forecast('4200.00', '12000.00', $elapsed))->toBe('11200.00');
+    expect($elapsed)->toBe('4000.00');
+    expect(BudgetForecast::forecast('4200.00', '12000.00', $elapsed))->toBe('12200.00');
 });
 
 test('forecast uses monthly overrides in elapsed sum', function () {

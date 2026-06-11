@@ -11,6 +11,22 @@ use Illuminate\Support\Collection;
 
 final class BudgetForecast
 {
+    public static function closedMonthForForecast(int $viewYear, ?int $nowYear = null, ?int $nowMonth = null): int
+    {
+        $nowYear ??= (int) now()->format('Y');
+        $nowMonth ??= (int) now()->format('n');
+
+        if ($viewYear < $nowYear) {
+            return 12;
+        }
+
+        if ($viewYear > $nowYear) {
+            return 0;
+        }
+
+        return max(0, $nowMonth - 1);
+    }
+
     public static function referenceMonth(int $viewYear, ?int $nowYear = null, ?int $nowMonth = null): int
     {
         $nowYear ??= (int) now()->format('Y');
@@ -33,15 +49,15 @@ final class BudgetForecast
     public static function elapsedPlansSum(
         Category $category,
         int $year,
-        int $referenceMonth,
+        int $throughMonth,
         ?CategoryAnnualEstimate $annual,
         Collection $monthlyEstimatesByMonth,
     ): string {
         $sum = '0.00';
 
-        for ($month = 1; $month <= $referenceMonth; $month++) {
+        for ($month = 1; $month <= $throughMonth; $month++) {
             $monthly = $monthlyEstimatesByMonth->get($month);
-            $plan = CategoryPlanAmount::monthly($category, $year, $month, $annual, $monthly);
+            $plan = CategoryPlanAmount::monthlyForForecast($category, $year, $month, $annual, $monthly);
 
             if ($plan !== null) {
                 $sum = bcadd($sum, $plan, 2);
