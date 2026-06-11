@@ -2,6 +2,8 @@ import { onMounted, ref } from 'vue';
 
 type Appearance = 'light' | 'dark' | 'system';
 
+let systemThemeListenerRegistered = false;
+
 function getStoredAppearance(): Appearance | null {
     if (typeof localStorage === 'undefined') {
         return null;
@@ -42,7 +44,11 @@ export function initializeTheme(): void {
     }
 
     updateTheme(getStoredAppearance() || 'system');
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', handleSystemThemeChange);
+
+    if (!systemThemeListenerRegistered) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', handleSystemThemeChange);
+        systemThemeListenerRegistered = true;
+    }
 }
 
 export function useAppearance() {

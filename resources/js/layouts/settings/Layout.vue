@@ -14,15 +14,15 @@ const page = usePage();
 const sidebarNavItems = computed<NavItem[]>(() => [
     {
         title: t('settings.nav.profile'),
-        href: route('profile.edit'),
+        href: route('profile.edit', undefined, false),
     },
     {
         title: t('settings.nav.password'),
-        href: route('password.edit'),
+        href: route('password.edit', undefined, false),
     },
     {
         title: t('settings.nav.appearance'),
-        href: route('appearance'),
+        href: route('appearance', undefined, false),
     },
 ]);
 
