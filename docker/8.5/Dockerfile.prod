@@ -91,6 +91,7 @@ RUN chmod +x /usr/local/bin/start-container
 
 COPY --from=vendor --chown=sail:sail /var/www/html /var/www/html
 COPY --from=assets --chown=sail:sail /var/www/html/public/build /var/www/html/public/build
+COPY --from=assets --chown=sail:sail /var/www/html/bootstrap/ssr /var/www/html/bootstrap/ssr
 
 RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
     && chown -R sail:sail storage bootstrap/cache
