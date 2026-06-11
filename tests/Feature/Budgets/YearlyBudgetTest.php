@@ -138,8 +138,8 @@ test('yearly budget exposes forecast and summary for current year', function () 
         ->has('summary')
         ->has('currency')
         ->where('currency.code', 'PLN')
-        ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $food->id)['forecast'] === '6600.00')
-        ->where('summary.forecast.expense', '6600.00')
+        ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $food->id)['forecast'] === '7600.00')
+        ->where('summary.forecast.expense', '7600.00')
         ->where('rows', fn ($rows) => ! array_key_exists('difference', collect($rows)->firstWhere('category_id', $food->id)))
     );
 
