@@ -65,7 +65,7 @@ function planForRow(row: BudgetRow): string | null {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="row in rows" :key="row.category_id" class="border-b border-sidebar-border/40">
+                    <tr v-for="row in rows" :key="row.category_id" class="list-row-hover border-b border-sidebar-border/40">
                         <td class="py-2 pr-4">
                             <CategoryBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                         </td>

@@ -143,7 +143,7 @@ function deletePocket(pocket: Pocket): void {
                     <li
                         v-for="pocket in list"
                         :key="pocket.id"
-                        class="flex flex-col gap-3 px-4 py-3 text-sm lg:flex-row lg:items-center lg:justify-between"
+                        class="list-row-hover flex flex-col gap-3 px-4 py-3 text-sm lg:flex-row lg:items-center lg:justify-between"
                     >
                         <div class="flex min-w-0 flex-1 items-start gap-2">
                             <button
