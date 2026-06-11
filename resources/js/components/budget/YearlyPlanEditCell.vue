@@ -12,6 +12,7 @@ const props = defineProps<{
     inputIdPrefix: string;
     annualPlaceholder: string;
     monthlyPlaceholder: string;
+    monthlyPlanLabel: string;
     editLabel: string;
     saveLabel: string;
     cancelLabel: string;
@@ -72,8 +73,18 @@ function onInputKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-    <div v-if="!isEditing" class="flex items-center gap-1">
-        <span class="w-28 shrink-0 text-left tabular-nums">{{ formatMoney(annualPlan, currency) }}</span>
+    <div v-if="!isEditing" class="flex gap-1" :class="monthlyTemplate ? 'items-start' : 'items-center'">
+        <div class="w-28 shrink-0 text-left">
+            <div class="tabular-nums">{{ formatMoney(annualPlan, currency) }}</div>
+            <div
+                v-if="monthlyTemplate"
+                class="text-xs tabular-nums text-muted-foreground"
+                :title="monthlyPlanLabel"
+                :aria-label="`${monthlyPlanLabel}: ${formatMoney(monthlyTemplate, currency)}`"
+            >
+                {{ formatMoney(monthlyTemplate, currency) }}
+            </div>
+        </div>
         <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="editLabel" @click="emit('start-edit')">
             <Pencil class="h-4 w-4 text-muted-foreground" />
         </Button>

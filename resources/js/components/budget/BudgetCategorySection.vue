@@ -31,6 +31,7 @@ const props = defineProps<{
     editingMode?: 'plan' | 'align' | null;
     planPlaceholder: string;
     monthlyPlanPlaceholder?: string;
+    monthlyPlanLabel?: string;
 }>();
 
 const emit = defineEmits<{
@@ -77,6 +78,7 @@ function planForRow(row: BudgetRow): string | null {
                                 :input-id-prefix="`${variant}-plan-${row.category_id}`"
                                 :annual-placeholder="planPlaceholder"
                                 :monthly-placeholder="monthlyPlanPlaceholder ?? ''"
+                                :monthly-plan-label="monthlyPlanLabel ?? t('budget.yearly.monthlyPlanLabel')"
                                 :edit-label="t('budget.estimate.edit', { name: row.name })"
                                 :save-label="t('budget.estimate.save')"
                                 :cancel-label="t('budget.estimate.cancel')"
