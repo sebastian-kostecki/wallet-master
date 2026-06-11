@@ -8,6 +8,7 @@ type Currency = {
 };
 
 type Account = {
+    type: string;
     current_balance: string;
     currency: Currency;
 };
@@ -36,8 +37,16 @@ function parseAmount(input: string): number | null {
 
 const accountsInPln = computed(() => props.accounts.filter((a) => a.currency.code === 'PLN'));
 
+const savingsAccountsInPln = computed(() => accountsInPln.value.filter((a) => a.type === 'savings'));
+
 const parsedBalances = computed(() =>
     accountsInPln.value.map((a) => ({
+        value: parseAmount(a.current_balance),
+    })),
+);
+
+const parsedSavingsBalances = computed(() =>
+    savingsAccountsInPln.value.map((a) => ({
         value: parseAmount(a.current_balance),
     })),
 );
@@ -46,7 +55,11 @@ const invalidBalancesCount = computed(() => parsedBalances.value.filter((b) => b
 
 const totalBalance = computed(() => parsedBalances.value.reduce((sum, b) => sum + (b.value ?? 0), 0));
 
+const savingsTotalBalance = computed(() => parsedSavingsBalances.value.reduce((sum, b) => sum + (b.value ?? 0), 0));
+
 const formattedTotal = computed(() => `${money.format(totalBalance.value)} ${t('currency.defaultSymbol')}`);
+
+const formattedSavingsTotal = computed(() => `${money.format(savingsTotalBalance.value)} ${t('currency.defaultSymbol')}`);
 </script>
 
 <template>
@@ -60,6 +73,11 @@ const formattedTotal = computed(() => `${money.format(totalBalance.value)} ${t('
             <div>
                 <p class="text-xs text-muted-foreground">{{ t('accounts.summary.totalPln') }}</p>
                 <p class="mt-1 text-2xl font-semibold tabular-nums">{{ formattedTotal }}</p>
+            </div>
+
+            <div>
+                <p class="text-xs text-muted-foreground">{{ t('accounts.summary.savingsPln') }}</p>
+                <p class="mt-1 text-xl font-semibold tabular-nums">{{ formattedSavingsTotal }}</p>
             </div>
 
             <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">

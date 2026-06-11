@@ -59,6 +59,7 @@
             "title": "Podsumowanie",
             "description": "Suma sald wszystkich kont w PLN.",
             "totalPln": "Suma sald (PLN)",
+            "savingsPln": "Oszczędności (PLN)",
             "countPln": "Liczba kont (PLN): {count}",
             "invalidSkipped": "Niektóre salda pominięto w sumie.",
             "addToSeeSummary": "Dodaj konto, aby zobaczyć podsumowanie."
