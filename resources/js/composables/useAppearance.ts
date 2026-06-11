@@ -2,29 +2,47 @@ import { onMounted, ref } from 'vue';
 
 type Appearance = 'light' | 'dark' | 'system';
 
-export function updateTheme(value: Appearance) {
-    if (value === 'system') {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.classList.toggle('dark', systemTheme === 'dark');
-    } else {
-        document.documentElement.classList.toggle('dark', value === 'dark');
+function getStoredAppearance(): Appearance | null {
+    if (typeof localStorage === 'undefined') {
+        return null;
     }
+
+    return localStorage.getItem('appearance') as Appearance | null;
 }
 
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+function getSystemTheme(): 'light' | 'dark' {
+    if (typeof window === 'undefined') {
+        return 'light';
+    }
 
-const handleSystemThemeChange = () => {
-    const currentAppearance = localStorage.getItem('appearance') as Appearance | null;
-    updateTheme(currentAppearance || 'system');
-};
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
 
-export function initializeTheme() {
-    // Initialize theme from saved preference or default to system...
-    const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
-    updateTheme(savedAppearance || 'system');
+export function updateTheme(value: Appearance): void {
+    if (typeof document === 'undefined') {
+        return;
+    }
 
-    // Set up system theme change listener...
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    if (value === 'system') {
+        document.documentElement.classList.toggle('dark', getSystemTheme() === 'dark');
+
+        return;
+    }
+
+    document.documentElement.classList.toggle('dark', value === 'dark');
+}
+
+function handleSystemThemeChange(): void {
+    updateTheme(getStoredAppearance() || 'system');
+}
+
+export function initializeTheme(): void {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    updateTheme(getStoredAppearance() || 'system');
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', handleSystemThemeChange);
 }
 
 export function useAppearance() {
@@ -33,16 +51,20 @@ export function useAppearance() {
     onMounted(() => {
         initializeTheme();
 
-        const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
+        const savedAppearance = getStoredAppearance();
 
         if (savedAppearance) {
             appearance.value = savedAppearance;
         }
     });
 
-    function updateAppearance(value: Appearance) {
+    function updateAppearance(value: Appearance): void {
         appearance.value = value;
-        localStorage.setItem('appearance', value);
+
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('appearance', value);
+        }
+
         updateTheme(value);
     }
 

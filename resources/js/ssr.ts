@@ -28,7 +28,7 @@ createServer((page) =>
         title: (title) => `${title} - ${appName}`,
         resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob<DefineComponent>('./pages/**/*.vue')),
         setup({ App, props, plugin }) {
-            const pageProps = page.props as SsrPageProps;
+            const pageProps = page.props as unknown as SsrPageProps;
             const locale = resolveSupportedLocale(pageProps.locale);
             const i18n = createAppI18n(locale);
             const ziggy = {

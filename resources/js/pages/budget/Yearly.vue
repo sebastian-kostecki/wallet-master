@@ -82,7 +82,11 @@ function saveYearlyPlan(
         return;
     }
 
-    const payload: Record<string, unknown> = {
+    const payload: {
+        year: number;
+        annual_amount: string | null;
+        monthly_amount?: string;
+    } = {
         year: props.year,
         annual_amount: annualTrimmed === '' ? null : annualNormalized,
     };
