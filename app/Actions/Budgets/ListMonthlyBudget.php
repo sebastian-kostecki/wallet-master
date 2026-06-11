@@ -104,9 +104,7 @@ final class ListMonthlyBudget
                 : '0.00';
             $actualPrimary = $category->type === CategoryType::Income ? $actualIncome : $actualExpense;
 
-            if ($plan !== null) {
-                $monthlyPlansSum = bcadd($monthlyPlansSum, $plan, 2);
-            }
+            $monthlyPlansSum = bcadd($monthlyPlansSum, $plan, 2);
 
             if ($annual?->amount !== null) {
                 $annualPlansSum = bcadd($annualPlansSum, (string) $annual->amount, 2);

@@ -20,4 +20,7 @@ Route::middleware('auth')->group(function () {
 
     Route::patch(route_path('categories.estimates.monthly'), [CategoryController::class, 'saveMonthlyEstimate'])
         ->name('categories.estimates.monthly');
+
+    Route::patch(route_path('categories.estimates.yearly-plan'), [CategoryController::class, 'saveYearlyCategoryPlan'])
+        ->name('categories.estimates.yearly-plan');
 });

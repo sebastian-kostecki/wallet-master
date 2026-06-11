@@ -718,6 +718,8 @@
             "actual": "Actual",
             "difference": "Difference",
             "planPlaceholder": "e.g. 12000",
+            "monthlyPlanPlaceholder": "Optional",
+            "monthlyPlanLabel": "Monthly plan",
             "manage_categories": "Manage categories"
         },
         "view": {
