@@ -47,7 +47,7 @@ const { t } = useI18n();
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="row in rows" :key="row.pocket_id" class="border-b border-sidebar-border/40">
+                    <tr v-for="row in rows" :key="row.pocket_id" class="list-row-hover border-b border-sidebar-border/40">
                         <td class="py-2 pr-4">
                             <PocketBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                         </td>

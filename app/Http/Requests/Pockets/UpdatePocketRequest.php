@@ -32,7 +32,6 @@ final class UpdatePocketRequest extends FormRequest
             $this->merge([
                 'target_amount' => null,
                 'planning_mode' => null,
-                'monthly_contribution' => null,
                 'target_date' => null,
             ]);
         }

@@ -9,6 +9,7 @@ use App\Actions\Categories\ListCategories;
 use App\Actions\Categories\ReorderCategories;
 use App\Actions\Categories\SaveAnnualEstimate;
 use App\Actions\Categories\SaveMonthlyEstimate;
+use App\Actions\Categories\SaveYearlyCategoryPlan;
 use App\Actions\Categories\StoreCategory;
 use App\Actions\Categories\UpdateCategory;
 use App\Data\Categories\CategoryFormOptions;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Categories\ReorderCategoriesRequest;
 use App\Http\Requests\Categories\SaveAnnualEstimateRequest;
 use App\Http\Requests\Categories\SaveMonthlyEstimateRequest;
+use App\Http\Requests\Categories\SaveYearlyCategoryPlanRequest;
 use App\Http\Requests\Categories\StoreCategoryRequest;
 use App\Http\Requests\Categories\UpdateCategoryRequest;
 use App\Http\Resources\Categories\CategoryResource;
@@ -135,6 +137,20 @@ final class CategoryController extends Controller
     ): RedirectResponse {
         $this->authorize('update', $category);
         $saveMonthlyEstimate->handle($category, $request->validated());
+
+        return back()->with('toast', [
+            'type' => 'success',
+            'message_key' => 'categories.toast.estimate_saved',
+        ]);
+    }
+
+    public function saveYearlyCategoryPlan(
+        SaveYearlyCategoryPlanRequest $request,
+        Category $category,
+        SaveYearlyCategoryPlan $saveYearlyCategoryPlan,
+    ): RedirectResponse {
+        $this->authorize('update', $category);
+        $saveYearlyCategoryPlan->handle($category, $request->validated());
 
         return back()->with('toast', [
             'type' => 'success',

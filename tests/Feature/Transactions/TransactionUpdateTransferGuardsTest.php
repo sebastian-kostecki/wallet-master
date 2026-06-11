@@ -133,7 +133,7 @@ test('can update description on a linked transfer leg', function () {
             'subject' => 'Bank',
         ])
         ->assertSessionHasNoErrors()
-        ->assertRedirect(route('transactions.edit', $withdrawal));
+        ->assertRedirect(route('transactions.index'));
 
     $withdrawal->refresh();
     expect($withdrawal->description)->toBe('Updated label');

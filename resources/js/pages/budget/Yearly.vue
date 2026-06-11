@@ -16,6 +16,7 @@ type BudgetRow = {
     color: string;
     type: string;
     annual_plan: string | null;
+    monthly_template?: string | null;
     actual: string;
     forecast: string;
     progress_percent: number | null;
@@ -61,31 +62,41 @@ function cancelEdit() {
     editingCategoryId.value = null;
 }
 
-function saveAnnualEstimate(row: { category_id: number; annual_plan?: string | null }, rawValue: string) {
-    const trimmed = rawValue.trim();
-    const normalized = trimmed.replace(',', '.');
-    const current = row.annual_plan ?? '';
+function saveYearlyPlan(
+    row: { category_id: number; annual_plan?: string | null; monthly_template?: string | null },
+    annualRaw: string,
+    monthlyRaw: string,
+) {
+    const annualTrimmed = annualRaw.trim();
+    const monthlyTrimmed = monthlyRaw.trim();
+    const annualNormalized = annualTrimmed.replace(',', '.');
+    const monthlyNormalized = monthlyTrimmed.replace(',', '.');
+    const currentAnnual = row.annual_plan ?? '';
+    const currentMonthly = row.monthly_template ?? '';
 
-    if (normalized === current || (normalized === '' && current === '')) {
+    const annualUnchanged = annualNormalized === currentAnnual || (annualNormalized === '' && currentAnnual === '');
+    const monthlyUnchanged = monthlyNormalized === currentMonthly || (monthlyNormalized === '' && currentMonthly === '');
+
+    if (annualUnchanged && monthlyUnchanged) {
         editingCategoryId.value = null;
         return;
     }
 
-    const amount = trimmed === '' ? null : normalized;
+    const payload: Record<string, unknown> = {
+        year: props.year,
+        annual_amount: annualTrimmed === '' ? null : annualNormalized,
+    };
 
-    router.patch(
-        route('categories.estimates.annual', row.category_id),
-        {
-            year: props.year,
-            amount,
+    if (monthlyTrimmed !== '') {
+        payload.monthly_amount = monthlyNormalized;
+    }
+
+    router.patch(route('categories.estimates.yearly-plan', row.category_id), payload, {
+        preserveScroll: true,
+        onFinish: () => {
+            editingCategoryId.value = null;
         },
-        {
-            preserveScroll: true,
-            onFinish: () => {
-                editingCategoryId.value = null;
-            },
-        },
-    );
+    });
 }
 </script>
 
@@ -120,9 +131,11 @@ function saveAnnualEstimate(row: { category_id: number; annual_plan?: string | n
                 variant="yearly"
                 :editing-category-id="editingCategoryId"
                 :plan-placeholder="t('budget.yearly.planPlaceholder')"
+                :monthly-plan-placeholder="t('budget.yearly.monthlyPlanPlaceholder')"
+                :monthly-plan-label="t('budget.yearly.monthlyPlanLabel')"
                 @start-edit="startEdit"
                 @cancel="cancelEdit"
-                @save="saveAnnualEstimate"
+                @save-yearly="saveYearlyPlan"
             />
 
             <BudgetCategorySection
@@ -133,9 +146,11 @@ function saveAnnualEstimate(row: { category_id: number; annual_plan?: string | n
                 variant="yearly"
                 :editing-category-id="editingCategoryId"
                 :plan-placeholder="t('budget.yearly.planPlaceholder')"
+                :monthly-plan-placeholder="t('budget.yearly.monthlyPlanPlaceholder')"
+                :monthly-plan-label="t('budget.yearly.monthlyPlanLabel')"
                 @start-edit="startEdit"
                 @cancel="cancelEdit"
-                @save="saveAnnualEstimate"
+                @save-yearly="saveYearlyPlan"
             />
         </div>
     </AppLayout>
@@ -144,7 +159,7 @@ function saveAnnualEstimate(row: { category_id: number; annual_plan?: string | n
 <style scoped>
 .budget-page {
     --budget-col-label: 11rem;
-    --budget-col-plan: 9rem;
+    --budget-col-plan: 18rem;
     --budget-col-amount: 8.5rem;
     --budget-col-forecast: 8.5rem;
     --budget-col-progress: 4.5rem;

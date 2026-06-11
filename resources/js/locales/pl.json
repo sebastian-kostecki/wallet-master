@@ -59,6 +59,7 @@
             "title": "Podsumowanie",
             "description": "Suma sald wszystkich kont w PLN.",
             "totalPln": "Suma sald (PLN)",
+            "savingsPln": "Oszczędności (PLN)",
             "countPln": "Liczba kont (PLN): {count}",
             "invalidSkipped": "Niektóre salda pominięto w sumie.",
             "addToSeeSummary": "Dodaj konto, aby zobaczyć podsumowanie."
@@ -723,6 +724,8 @@
             "actual": "Wykonanie",
             "difference": "Różnica",
             "planPlaceholder": "np. 12000",
+            "monthlyPlanPlaceholder": "Opcjonalnie",
+            "monthlyPlanLabel": "Plan miesięczny",
             "manage_categories": "Zarządzaj kategoriami"
         },
         "view": {
@@ -748,7 +751,8 @@
         "estimate": {
             "edit": "Edytuj plan — {name}",
             "save": "Zapisz",
-            "cancel": "Anuluj"
+            "cancel": "Anuluj",
+            "align": "Wyrównaj do wykonania — {name}"
         }
     },
     "nav": {

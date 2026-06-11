@@ -605,7 +605,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         </button>
                                     </th>
                                     <th class="px-6 py-3" scope="col">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="w-56 px-6 py-3" scope="col">{{ t('transactions.index.table.category') }}</th>
+                                    <th class="w-56 px-6 py-3 xl:w-64 2xl:w-72" scope="col">{{ t('transactions.index.table.category') }}</th>
                                     <th class="w-64 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
                                     <th class="w-44 px-6 py-3" scope="col" :aria-sort="ariaSortFor('amount')">
                                         <button
@@ -629,7 +629,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                 <tr
                                     v-for="tx in transactions.data"
                                     :key="tx.id"
-                                    class="border-b border-sidebar-border/50 last:border-b-0 dark:border-sidebar-border"
+                                    class="list-row-hover border-b border-sidebar-border/50 last:border-b-0 dark:border-sidebar-border"
                                 >
                                     <td class="whitespace-nowrap px-6 py-4 tabular-nums">
                                         <div class="text-sm font-medium text-foreground">
@@ -860,7 +860,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
 
                     <div class="md:hidden">
                         <div class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border">
-                            <div v-for="tx in transactions.data" :key="tx.id" class="p-4">
+                            <div v-for="tx in transactions.data" :key="tx.id" class="list-row-hover p-4">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <div v-if="tx.type === 'adjustment'" class="mb-1">

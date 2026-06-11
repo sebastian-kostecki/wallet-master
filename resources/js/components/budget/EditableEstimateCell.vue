@@ -2,22 +2,34 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
-import { Check, Pencil, X } from 'lucide-vue-next';
+import { ArrowRightLeft, Check, Pencil, X } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
-const props = defineProps<{
-    plan: string | null;
-    currency: CurrencyDisplay;
-    inputId: string;
-    placeholder: string;
-    editLabel: string;
-    saveLabel: string;
-    cancelLabel: string;
-    isEditing: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        plan: string | null;
+        currency: CurrencyDisplay;
+        inputId: string;
+        placeholder: string;
+        editLabel: string;
+        alignLabel: string;
+        saveLabel: string;
+        cancelLabel: string;
+        isEditing: boolean;
+        mode?: 'plan' | 'align' | null;
+        alignValue?: string | null;
+        showAlignButton?: boolean;
+    }>(),
+    {
+        mode: null,
+        alignValue: null,
+        showAlignButton: false,
+    },
+);
 
 const emit = defineEmits<{
     'start-edit': [];
+    'start-align': [];
     cancel: [];
     save: [rawValue: string];
 }>();
@@ -26,10 +38,10 @@ const draft = ref('');
 const error = ref<string | null>(null);
 
 watch(
-    () => props.isEditing,
-    (editing) => {
+    () => [props.isEditing, props.mode] as const,
+    ([editing, mode]) => {
         if (editing) {
-            draft.value = props.plan ?? '';
+            draft.value = mode === 'align' ? (props.alignValue ?? '') : (props.plan ?? '');
             error.value = null;
         }
     },
@@ -37,11 +49,7 @@ watch(
 
 function isValidAmount(raw: string): boolean {
     const trimmed = raw.trim();
-
-    if (trimmed === '') {
-        return true;
-    }
-
+    if (trimmed === '') return true;
     return /^\d+([.,]\d{1,2})?$/.test(trimmed);
 }
 
@@ -50,7 +58,6 @@ function onSave() {
         error.value = 'invalid';
         return;
     }
-
     error.value = null;
     emit('save', draft.value);
 }
@@ -65,7 +72,6 @@ function onInputKeydown(event: KeyboardEvent) {
         event.preventDefault();
         onSave();
     }
-
     if (event.key === 'Escape') {
         event.preventDefault();
         onCancel();
@@ -75,9 +81,20 @@ function onInputKeydown(event: KeyboardEvent) {
 
 <template>
     <div v-if="!isEditing" class="flex items-center gap-1">
-        <span class="tabular-nums">{{ formatMoney(plan, currency) }}</span>
+        <span class="w-28 shrink-0 text-left tabular-nums">{{ formatMoney(plan, currency) }}</span>
         <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="editLabel" @click="emit('start-edit')">
-            <Pencil class="h-4 w-4" />
+            <Pencil class="h-4 w-4 text-muted-foreground" />
+        </Button>
+        <Button
+            v-if="showAlignButton"
+            type="button"
+            variant="ghost"
+            size="icon"
+            class="h-8 w-8 shrink-0"
+            :aria-label="alignLabel"
+            @click="emit('start-align')"
+        >
+            <ArrowRightLeft class="h-4 w-4 text-muted-foreground" />
         </Button>
     </div>
     <div v-else class="flex items-center gap-1">

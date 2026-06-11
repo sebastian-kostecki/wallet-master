@@ -43,3 +43,23 @@ test('monthly mode projects completion using effective savings rate', function (
     // remaining 900, effective rate (100+200)/2 = 150, ceil(900/150)=6 months -> 2026-12-31
     expect($projected?->toDateString())->toBe('2026-12-31');
 });
+
+test('monthlyPlanForBudget returns monthly_contribution without target or planning mode', function () {
+    $pocket = new Pocket([
+        'target_amount' => null,
+        'planning_mode' => null,
+        'monthly_contribution' => '200.00',
+    ]);
+
+    expect(PocketPlanningProjection::monthlyPlanForBudget($pocket, '0.00'))->toBe('200.00');
+});
+
+test('monthlyPlanForBudget returns null without target and without monthly contribution', function () {
+    $pocket = new Pocket([
+        'target_amount' => null,
+        'planning_mode' => null,
+        'monthly_contribution' => null,
+    ]);
+
+    expect(PocketPlanningProjection::monthlyPlanForBudget($pocket, '0.00'))->toBeNull();
+});

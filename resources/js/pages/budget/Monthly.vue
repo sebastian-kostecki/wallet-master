@@ -51,6 +51,7 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const editingCategoryId = ref<number | null>(null);
+const editingMode = ref<'plan' | 'align' | null>(null);
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('budget.monthly.title'), href: route('budget.monthly') }]);
 
@@ -73,10 +74,17 @@ function changePeriod(delta: number) {
 
 function startEdit(categoryId: number) {
     editingCategoryId.value = categoryId;
+    editingMode.value = 'plan';
 }
 
 function cancelEdit() {
     editingCategoryId.value = null;
+    editingMode.value = null;
+}
+
+function startAlign(categoryId: number) {
+    editingCategoryId.value = categoryId;
+    editingMode.value = 'align';
 }
 
 function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string | null }, rawValue: string) {
@@ -86,6 +94,7 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
 
     if (normalized === current || (normalized === '' && current === '')) {
         editingCategoryId.value = null;
+        editingMode.value = null;
         return;
     }
 
@@ -102,6 +111,7 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
             preserveScroll: true,
             onFinish: () => {
                 editingCategoryId.value = null;
+                editingMode.value = null;
             },
         },
     );
@@ -138,8 +148,10 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
                 :currency="currency"
                 variant="monthly"
                 :editing-category-id="editingCategoryId"
+                :editing-mode="editingMode"
                 :plan-placeholder="t('budget.monthly.planPlaceholder')"
                 @start-edit="startEdit"
+                @start-align="startAlign"
                 @cancel="cancelEdit"
                 @save="saveMonthlyEstimate"
             />
@@ -151,8 +163,10 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
                 :currency="currency"
                 variant="monthly"
                 :editing-category-id="editingCategoryId"
+                :editing-mode="editingMode"
                 :plan-placeholder="t('budget.monthly.planPlaceholder')"
                 @start-edit="startEdit"
+                @start-align="startAlign"
                 @cancel="cancelEdit"
                 @save="saveMonthlyEstimate"
             />
@@ -165,7 +179,7 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
 <style scoped>
 .budget-page {
     --budget-col-label: 11rem;
-    --budget-col-plan: 9rem;
+    --budget-col-plan: 11.5rem;
     --budget-col-amount: 8.5rem;
     --budget-col-forecast: 8.5rem;
     --budget-col-progress: 4.5rem;

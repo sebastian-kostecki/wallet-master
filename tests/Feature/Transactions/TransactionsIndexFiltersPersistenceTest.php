@@ -78,6 +78,57 @@ test('store redirects to index with remembered filters', function () {
         ]));
 });
 
+test('update redirects to index with remembered filters and page', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Cash',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 100,
+        'current_balance' => 90,
+    ]);
+
+    $transaction = Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-04-10',
+        'booked_at' => '2026-04-10',
+        'amount' => -10,
+        'type' => 'expense',
+        'description' => 'Expense',
+        'subject' => null,
+        'normalized_description' => 'expense',
+        'dedupe_hash' => md5('update-persist', true),
+        'category_id' => defaultCategoryId($user),
+    ]);
+
+    $this->actingAs($user)->get(route('transactions.index', [
+        'account_id' => $account->id,
+        'from' => '01-04-2026',
+        'to' => '30-04-2026',
+        'page' => 2,
+    ]))->assertOk();
+
+    $this->actingAs($user)
+        ->put(route('transactions.update', $transaction, absolute: false), [
+            'account_id' => $account->id,
+            'date' => '10-04-2026',
+            'amount' => -15,
+            'description' => 'Updated',
+            'category_id' => defaultCategoryId($user),
+        ])
+        ->assertRedirect(route('transactions.index', [
+            'account_id' => $account->id,
+            'from' => '01-04-2026',
+            'to' => '30-04-2026',
+            'page' => 2,
+        ]));
+});
+
 test('destroy redirects to index with remembered filters', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();

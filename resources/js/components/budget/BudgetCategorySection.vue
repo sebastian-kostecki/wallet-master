@@ -2,6 +2,7 @@
 import BudgetProgressCell from '@/components/budget/BudgetProgressCell.vue';
 import BudgetTableColgroup from '@/components/budget/BudgetTableColgroup.vue';
 import EditableEstimateCell from '@/components/budget/EditableEstimateCell.vue';
+import YearlyPlanEditCell from '@/components/budget/YearlyPlanEditCell.vue';
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { useI18n } from 'vue-i18n';
@@ -14,6 +15,7 @@ type BudgetRow = {
     type: string;
     monthly_plan?: string | null;
     annual_plan?: string | null;
+    monthly_template?: string | null;
     actual: string;
     forecast?: string;
     progress_percent: number | null;
@@ -26,13 +28,18 @@ const props = defineProps<{
     currency: CurrencyDisplay;
     variant: 'monthly' | 'yearly';
     editingCategoryId: number | null;
+    editingMode?: 'plan' | 'align' | null;
     planPlaceholder: string;
+    monthlyPlanPlaceholder?: string;
+    monthlyPlanLabel?: string;
 }>();
 
 const emit = defineEmits<{
     'start-edit': [categoryId: number];
+    'start-align': [categoryId: number];
     cancel: [];
     save: [row: BudgetRow, rawValue: string];
+    'save-yearly': [row: BudgetRow, annualRaw: string, monthlyRaw: string];
 }>();
 
 const { t } = useI18n();
@@ -58,21 +65,44 @@ function planForRow(row: BudgetRow): string | null {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="row in rows" :key="row.category_id" class="border-b border-sidebar-border/40">
+                    <tr v-for="row in rows" :key="row.category_id" class="list-row-hover border-b border-sidebar-border/40">
                         <td class="py-2 pr-4">
                             <CategoryBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                         </td>
                         <td class="py-2 pr-4">
-                            <EditableEstimateCell
-                                :plan="planForRow(row)"
+                            <YearlyPlanEditCell
+                                v-if="variant === 'yearly'"
+                                :annual-plan="row.annual_plan ?? null"
+                                :monthly-template="row.monthly_template ?? null"
                                 :currency="currency"
-                                :input-id="`${variant}-plan-${row.category_id}`"
-                                :placeholder="planPlaceholder"
+                                :input-id-prefix="`${variant}-plan-${row.category_id}`"
+                                :annual-placeholder="planPlaceholder"
+                                :monthly-placeholder="monthlyPlanPlaceholder ?? ''"
+                                :monthly-plan-label="monthlyPlanLabel ?? t('budget.yearly.monthlyPlanLabel')"
                                 :edit-label="t('budget.estimate.edit', { name: row.name })"
                                 :save-label="t('budget.estimate.save')"
                                 :cancel-label="t('budget.estimate.cancel')"
                                 :is-editing="editingCategoryId === row.category_id"
                                 @start-edit="emit('start-edit', row.category_id)"
+                                @cancel="emit('cancel')"
+                                @save="(annualRaw, monthlyRaw) => emit('save-yearly', row, annualRaw, monthlyRaw)"
+                            />
+                            <EditableEstimateCell
+                                v-else
+                                :plan="planForRow(row)"
+                                :currency="currency"
+                                :input-id="`${variant}-plan-${row.category_id}`"
+                                :placeholder="planPlaceholder"
+                                :edit-label="t('budget.estimate.edit', { name: row.name })"
+                                :align-label="t('budget.estimate.align', { name: row.name })"
+                                :save-label="t('budget.estimate.save')"
+                                :cancel-label="t('budget.estimate.cancel')"
+                                :is-editing="editingCategoryId === row.category_id"
+                                :mode="editingCategoryId === row.category_id ? (editingMode ?? 'plan') : null"
+                                :align-value="row.actual"
+                                :show-align-button="variant === 'monthly'"
+                                @start-edit="emit('start-edit', row.category_id)"
+                                @start-align="emit('start-align', row.category_id)"
                                 @cancel="emit('cancel')"
                                 @save="(raw) => emit('save', row, raw)"
                             />

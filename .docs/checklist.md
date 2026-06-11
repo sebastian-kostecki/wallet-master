@@ -476,4 +476,5 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Link „Zarządzaj kieszeniami”; sekcja ukryta przy braku kieszeni
 
 - [x] Wstępna kwota przy tworzeniu kieszeni (`initial_balance`; tylko create; spec `2026-06-08-pocket-initial-balance-design.md`)
+- [x] Miesięczna kwota odkładania bez celu — widoczna w budżecie (`2026-06-10-pocket-monthly-without-target-design.md`)
 

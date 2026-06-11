@@ -71,9 +71,13 @@ final class PocketPlanningProjection
     public static function monthlyPlanForBudget(Pocket $pocket, string $balance): ?string
     {
         return match ($pocket->planning_mode) {
-            PocketPlanningMode::Monthly => $pocket->monthly_contribution !== null ? (string) $pocket->monthly_contribution : null,
+            PocketPlanningMode::Monthly => $pocket->monthly_contribution !== null
+                ? (string) $pocket->monthly_contribution
+                : null,
             PocketPlanningMode::ByDate => self::recommendedMonthly($pocket, $balance),
-            default => null,
+            default => $pocket->monthly_contribution !== null
+                ? (string) $pocket->monthly_contribution
+                : null,
         };
     }
 

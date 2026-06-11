@@ -18,7 +18,7 @@ beforeEach(function () {
     $this->seed(CurrencySeeder::class);
 });
 
-test('monthly budget uses annual divided by twelve when no monthly override', function () {
+test('monthly budget shows zero plan when no monthly override', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     ensureUserCategories($user);
@@ -39,7 +39,7 @@ test('monthly budget uses annual divided by twelve when no monthly override', fu
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
         ->component('budget/Monthly', false)
-        ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $food->id)['monthly_plan'] === '1000.00')
+        ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $food->id)['monthly_plan'] === '0.00')
     );
 });
 
@@ -414,7 +414,7 @@ test('monthly budget summary includes pocket saved as expense and released as in
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
-        ->where('summary.plan.expense', '800.00')
+        ->where('summary.plan.expense', '500.00')
         ->where('summary.execution.expense', '200.00')
         ->where('summary.execution.income', '150.00')
         ->where('summary.execution.balance', '-50.00')
@@ -448,7 +448,7 @@ test('monthly budget summary plan expense includes pocket monthly plan', functio
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
-        ->where('summary.plan.expense', '800.00')
+        ->where('summary.plan.expense', '500.00')
     );
 });
 
@@ -485,10 +485,32 @@ test('monthly budget exposes summary currency and progress without difference', 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
         ->has('summary')
-        ->where('summary.plan.income', '500.00')
-        ->where('summary.plan.expense', '300.00')
+        ->where('summary.plan.income', '0.00')
+        ->where('summary.plan.expense', '0.00')
         ->where('currency.code', 'PLN')
         ->where('rows', fn ($rows) => ! array_key_exists('difference', collect($rows)->firstWhere('category_id', $expenseCategory->id)))
-        ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $expenseCategory->id)['progress_percent'] === 0)
+        ->where('rows', fn ($rows) => collect($rows)->firstWhere('category_id', $expenseCategory->id)['progress_percent'] === null)
+    );
+});
+
+test('monthly budget shows pocket plan without target when monthly contribution is set', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $pocket = Pocket::factory()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'target_amount' => null,
+        'planning_mode' => null,
+        'monthly_contribution' => '500.00',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['monthly_plan'] === '500.00')
+        ->where('summary.plan.expense', fn ($expense) => bccomp((string) $expense, '500.00', 2) >= 0)
     );
 });

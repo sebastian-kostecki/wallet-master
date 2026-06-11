@@ -59,6 +59,7 @@
             "title": "Summary",
             "description": "Sum of balances for all PLN accounts.",
             "totalPln": "Total balance (PLN)",
+            "savingsPln": "Savings (PLN)",
             "countPln": "Number of accounts (PLN): {count}",
             "invalidSkipped": "Some balances were skipped in the total.",
             "addToSeeSummary": "Add an account to see the summary."
@@ -718,6 +719,8 @@
             "actual": "Actual",
             "difference": "Difference",
             "planPlaceholder": "e.g. 12000",
+            "monthlyPlanPlaceholder": "Optional",
+            "monthlyPlanLabel": "Monthly plan",
             "manage_categories": "Manage categories"
         },
         "view": {
@@ -743,7 +746,8 @@
         "estimate": {
             "edit": "Edit plan — {name}",
             "save": "Save",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "align": "Align to actual — {name}"
         }
     },
     "nav": {

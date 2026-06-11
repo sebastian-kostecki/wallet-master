@@ -105,7 +105,7 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                     <li
                         v-for="cat in expenseList"
                         :key="cat.id"
-                        class="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                        class="list-row-hover flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                     >
                         <div class="flex min-w-0 flex-1 items-center gap-2">
                             <button
@@ -161,7 +161,7 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                     <li
                         v-for="cat in incomeList"
                         :key="cat.id"
-                        class="flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                        class="list-row-hover flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                     >
                         <div class="flex min-w-0 flex-1 items-center gap-2">
                             <button

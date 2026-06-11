@@ -95,3 +95,9 @@ html {
         @apply bg-background text-foreground;
     }
 }
+
+@layer components {
+    .list-row-hover {
+        @apply transition-colors hover:bg-muted/40;
+    }
+}

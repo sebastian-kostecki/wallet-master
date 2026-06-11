@@ -28,4 +28,12 @@ final readonly class BudgetPeriod
 
         return new self($start, $end);
     }
+
+    public static function throughMonth(int $year, int $month): self
+    {
+        $start = CarbonImmutable::createFromDate($year, 1, 1)->startOfDay();
+        $end = CarbonImmutable::createFromDate($year, $month, 1)->endOfMonth()->endOfDay();
+
+        return new self($start, $end);
+    }
 }

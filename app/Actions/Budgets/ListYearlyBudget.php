@@ -18,6 +18,7 @@ use App\Support\Budgets\BudgetProgress;
 use App\Support\Budgets\BudgetSummary;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Budgets\CategoryPlanAmount;
+use App\Support\Budgets\YearlyMonthlyTemplate;
 use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -46,7 +47,7 @@ final class ListYearlyBudget
         $this->categories = $listCategories->getCategories();
 
         $period = BudgetPeriod::forYear($this->year);
-        $referenceMonth = BudgetForecast::referenceMonth($this->year);
+        $closedMonth = BudgetForecast::closedMonthForForecast($this->year);
 
         $annualByCategory = CategoryAnnualEstimate::query()
             ->whereIn('category_id', $this->categories->pluck('id'))
@@ -74,9 +75,28 @@ final class ListYearlyBudget
             ->get()
             ->keyBy('category_id');
 
+        /** @var Collection<int, object{category_id: int, income: string, expense: string}> $forecastActuals */
+        $forecastActuals = new Collection;
+
+        if ($closedMonth > 0) {
+            $forecastPeriod = BudgetPeriod::throughMonth($this->year, $closedMonth);
+            $forecastActualsQuery = BudgetTransactionQuery::forUser($user);
+            BudgetTransactionQuery::inPeriod($forecastActualsQuery, $forecastPeriod);
+            BudgetTransactionQuery::excludeTransfers($forecastActualsQuery);
+
+            $forecastActuals = $forecastActualsQuery
+                ->select('category_id')
+                ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as income')
+                ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) as expense')
+                ->groupBy('category_id')
+                ->get()
+                ->keyBy('category_id');
+        }
+
         foreach ($this->categories as $category) {
             $annual = $annualByCategory->get($category->id);
             $actual = $actuals->get($category->id);
+            $forecastActual = $forecastActuals->get($category->id);
             $plan = CategoryPlanAmount::annual($annual);
             $actualIncome = $actual !== null
                 ? TransactionDedupe::amountToDecimalString((string) $actual->income)
@@ -85,16 +105,23 @@ final class ListYearlyBudget
                 ? TransactionDedupe::amountToDecimalString((string) $actual->expense)
                 : '0.00';
             $actualPrimary = $category->type === CategoryType::Income ? $actualIncome : $actualExpense;
+            $forecastActualIncome = $forecastActual !== null
+                ? TransactionDedupe::amountToDecimalString((string) $forecastActual->income)
+                : '0.00';
+            $forecastActualExpense = $forecastActual !== null
+                ? TransactionDedupe::amountToDecimalString((string) $forecastActual->expense)
+                : '0.00';
+            $forecastActualPrimary = $category->type === CategoryType::Income ? $forecastActualIncome : $forecastActualExpense;
 
             $monthlyEstimates = $monthlyByCategoryAndMonth->get($category->id, new Collection);
             $elapsedPlansSum = BudgetForecast::elapsedPlansSum(
                 $category,
                 $this->year,
-                $referenceMonth,
+                $closedMonth,
                 $annual,
                 $monthlyEstimates,
             );
-            $forecast = BudgetForecast::forecast($actualPrimary, $plan, $elapsedPlansSum);
+            $forecast = BudgetForecast::forecast($forecastActualPrimary, $plan, $elapsedPlansSum);
 
             $this->rows[] = [
                 'category_id' => $category->id,
@@ -104,6 +131,12 @@ final class ListYearlyBudget
                 'type' => $category->type->value,
                 'type_label_key' => $category->type->labelKey(),
                 'annual_plan' => $plan,
+                'monthly_template' => YearlyMonthlyTemplate::template(
+                    $this->year,
+                    $monthlyEstimates,
+                    $annual,
+                    $category,
+                ),
                 'actual_income' => $actualIncome,
                 'actual_expense' => $actualExpense,
                 'actual' => $actualPrimary,

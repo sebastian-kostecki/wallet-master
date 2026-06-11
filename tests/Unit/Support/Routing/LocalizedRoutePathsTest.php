@@ -18,4 +18,5 @@ test('get returns key unchanged when missing from map', function () {
 
 test('route_path helper delegates to LocalizedRoutePaths', function () {
     expect(route_path('accounts'))->toBe('konta');
+    expect(route_path('categories.estimates.yearly-plan'))->toBe('kategorie/{category}/szacunki/plan-roczny');
 });
