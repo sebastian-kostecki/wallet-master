@@ -26,7 +26,8 @@ ENV VITE_APP_NAME="${VITE_APP_NAME}" \
     VITE_REVERB_HOST="${VITE_REVERB_HOST}" \
     VITE_REVERB_PORT="${VITE_REVERB_PORT}" \
     VITE_REVERB_SCHEME="${VITE_REVERB_SCHEME}"
-RUN npm run build:ssr
+RUN npm run build:ssr \
+    && npm prune --omit=dev
 
 FROM ubuntu:24.04 AS runtime
 
@@ -92,6 +93,8 @@ RUN chmod +x /usr/local/bin/start-container
 COPY --from=vendor --chown=sail:sail /var/www/html /var/www/html
 COPY --from=assets --chown=sail:sail /var/www/html/public/build /var/www/html/public/build
 COPY --from=assets --chown=sail:sail /var/www/html/bootstrap/ssr /var/www/html/bootstrap/ssr
+COPY --from=assets --chown=sail:sail /var/www/html/node_modules /var/www/html/node_modules
+COPY --from=assets --chown=sail:sail /var/www/html/package.json /var/www/html/package.json
 
 RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
     && chown -R sail:sail storage bootstrap/cache
