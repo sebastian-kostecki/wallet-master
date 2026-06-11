@@ -1,7 +1,7 @@
 # Transaction duplicate detection command
 
 **Date:** 2026-06-11  
-**Status:** Approved (brainstorming)  
+**Status:** Approved  
 **Scope:** `transactions:detect-duplicates` Artisan command, `Support/Transactions/TransactionDuplicateFinder`, tests
 
 ## Problem
