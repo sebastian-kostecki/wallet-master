@@ -16,6 +16,20 @@ final class CategoryPlanAmount
         int $month,
         ?CategoryAnnualEstimate $annual,
         ?CategoryMonthlyEstimate $monthly,
+    ): string {
+        if ($monthly?->amount !== null) {
+            return (string) $monthly->amount;
+        }
+
+        return '0.00';
+    }
+
+    public static function monthlyForForecast(
+        Category $category,
+        int $year,
+        int $month,
+        ?CategoryAnnualEstimate $annual,
+        ?CategoryMonthlyEstimate $monthly,
     ): ?string {
         if ($monthly?->amount !== null) {
             return (string) $monthly->amount;
