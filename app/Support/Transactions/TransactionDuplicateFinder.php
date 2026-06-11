@@ -87,10 +87,10 @@ final class TransactionDuplicateFinder
             usort($rows, fn (array $a, array $b): int => $a['id'] <=> $b['id']);
 
             $keep = $rows[0];
-            $duplicateIds = array_values(array_map(
+            $duplicateIds = array_map(
                 fn (array $row): int => $row['id'],
                 array_slice($rows, 1),
-            ));
+            );
 
             $groups[] = [
                 'key' => [

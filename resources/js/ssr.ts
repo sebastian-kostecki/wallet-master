@@ -6,8 +6,8 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { route } from 'ziggy-js';
 import type { Config as ZiggyConfig } from 'ziggy-js';
+import { route } from 'ziggy-js';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { createAppI18n, resolveSupportedLocale } from './i18n';
 

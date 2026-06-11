@@ -29,4 +29,16 @@ final class SaveYearlyCategoryPlanRequest extends FormRequest
             'monthly_amount' => ['nullable', 'numeric', 'decimal:0,2', 'min:0'],
         ];
     }
+
+    /**
+     * @return array{
+     *   year: int,
+     *   annual_amount: numeric-string|float|int|null,
+     *   monthly_amount?: numeric-string|float|int|null,
+     * }
+     */
+    public function validated($key = null, $default = null): array
+    {
+        return parent::validated($key, $default);
+    }
 }

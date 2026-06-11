@@ -224,7 +224,12 @@ function submit(): void {
                             />
                         </FormField>
 
-                        <FormField v-if="form.planning_mode === 'by_date'" for-id="target_date" :label="t('pockets.fields.targetDate')" :error="form.errors.target_date">
+                        <FormField
+                            v-if="form.planning_mode === 'by_date'"
+                            for-id="target_date"
+                            :label="t('pockets.fields.targetDate')"
+                            :error="form.errors.target_date"
+                        >
                             <Input id="target_date" v-model="form.target_date" type="date" />
                         </FormField>
                     </div>

@@ -21,7 +21,7 @@ final class SetAccountBalance extends Command
         $accountId = (int) $this->argument('account');
         $balanceArg = $this->argument('balance');
 
-        if (! is_string($balanceArg) && ! is_numeric($balanceArg)) {
+        if (! is_numeric($balanceArg)) {
             $this->error('Balance must be a numeric value.');
 
             return self::FAILURE;
