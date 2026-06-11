@@ -5,6 +5,24 @@ cd "$(dirname "$0")/.."
 
 COMPOSE="docker compose -f docker-compose.prod.yml"
 
+check_inertia_ssr() {
+    echo "==> Checking Inertia SSR..."
+
+    for attempt in {1..5}; do
+        if $COMPOSE exec -T app php artisan inertia:check-ssr; then
+            echo "==> Inertia SSR is healthy."
+            return 0
+        fi
+
+        if [[ "$attempt" -lt 5 ]]; then
+            sleep 2
+        fi
+    done
+
+    echo "WARNING: Inertia SSR health check failed; the app will continue with CSR fallback." >&2
+    return 0
+}
+
 echo "==> Stopping stack..."
 $COMPOSE down
 
@@ -35,11 +53,6 @@ $COMPOSE exec -T app php artisan config:cache
 $COMPOSE exec -T app php artisan route:cache
 $COMPOSE exec -T app php artisan view:cache
 
-echo "==> Checking Inertia SSR..."
-if $COMPOSE exec -T app php artisan inertia:check-ssr; then
-    echo "==> Inertia SSR is healthy."
-else
-    echo "WARNING: Inertia SSR health check failed; the app will continue with CSR fallback." >&2
-fi
+check_inertia_ssr
 
 echo "==> Done. Check https://budget.kostecki.dev/up"
