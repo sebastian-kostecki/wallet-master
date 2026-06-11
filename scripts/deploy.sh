@@ -32,4 +32,11 @@ $COMPOSE exec -T app php artisan config:cache
 $COMPOSE exec -T app php artisan route:cache
 $COMPOSE exec -T app php artisan view:cache
 
+echo "==> Checking Inertia SSR..."
+if $COMPOSE exec -T app php artisan inertia:check-ssr; then
+    echo "==> Inertia SSR is healthy."
+else
+    echo "WARNING: Inertia SSR health check failed; the app will continue with CSR fallback." >&2
+fi
+
 echo "==> Done. Check https://budget.kostecki.dev/up"
