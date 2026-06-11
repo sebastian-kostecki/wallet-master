@@ -138,9 +138,9 @@ Deletion never bypasses `DeleteTransaction` — no raw `DELETE` queries.
 
 ## Verification checklist
 
-- [ ] `TransactionDuplicateFinder` implemented with tests
-- [ ] `transactions:detect-duplicates` command registered and working
-- [ ] Report and delete modes behave as specified
-- [ ] Transfer-linked and soft-deleted account guards work
-- [ ] Pint on touched PHP files
-- [ ] Feature and unit tests pass
+- [x] `TransactionDuplicateFinder` implemented with tests
+- [x] `transactions:detect-duplicates` command registered and working
+- [x] Report and delete modes behave as specified
+- [x] Transfer-linked and soft-deleted account guards work
+- [x] Pint on touched PHP files
+- [x] Feature and unit tests pass
