@@ -341,7 +341,7 @@ Cover:
 - duplicates present → exit `1`, summary in output
 - `--delete-duplicates --dry-run` → no rows deleted, `[dry-run]` lines
 - `--delete-duplicates` → deletes only newer IDs, keeps `MIN(id)`
-- account balance updated after delete (set `current_balance` to include duplicate amounts before command)
+- account balance updated after delete (use `accounts:set-balance` to set `current_balance` to include duplicate amounts before command — no adjustment transaction)
 - transfer-linked duplicate candidate skipped (create pair with same logical fields + `transfer_id`; assert row remains and warning in output)
 
 Use helpers from unit test file or duplicate minimal setup inline. Invoke command via:

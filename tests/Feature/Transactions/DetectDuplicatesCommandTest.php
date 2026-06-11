@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Transactions\TransactionDedupe;
 use Database\Seeders\CurrencySeeder;
+use Illuminate\Support\Facades\Artisan;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
@@ -103,7 +104,11 @@ test('detect duplicates dry run does not delete rows', function () {
 test('detect duplicates command deletes redundant rows and keeps oldest id', function () {
     $user = User::factory()->create();
     $account = createDuplicateCommandAccount($user);
-    $account->forceFill(['current_balance' => '-99.98'])->save();
+
+    Artisan::call('accounts:set-balance', [
+        'account' => (string) $account->id,
+        'balance' => '-99.98',
+    ]);
 
     $first = createDuplicateCommandTransaction($user, $account);
     $second = createDuplicateCommandTransaction($user, $account, [
