@@ -6,13 +6,19 @@ import pl from '@/locales/pl.json';
 export const supportedLocales = ['en', 'pl'] as const;
 export type SupportedLocale = (typeof supportedLocales)[number];
 
-export const i18n = createI18n({
-    legacy: false,
-    globalInjection: true,
-    locale: 'en',
-    fallbackLocale: 'en',
-    messages: {
-        en,
-        pl,
-    },
-});
+export function resolveSupportedLocale(locale: string | undefined): SupportedLocale {
+    return supportedLocales.includes(locale as SupportedLocale) ? (locale as SupportedLocale) : 'pl';
+}
+
+export function createAppI18n(locale: string | undefined = 'pl') {
+    return createI18n({
+        legacy: false,
+        globalInjection: true,
+        locale: resolveSupportedLocale(locale),
+        fallbackLocale: 'en',
+        messages: {
+            en,
+            pl,
+        },
+    });
+}

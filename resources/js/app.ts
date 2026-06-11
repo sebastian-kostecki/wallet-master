@@ -5,13 +5,22 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { configureEcho } from '@laravel/echo-vue';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
-import { createApp, h } from 'vue';
+import { createSSRApp, h } from 'vue';
 import { route } from 'ziggy-js';
+import type { Config as ZiggyConfig } from 'ziggy-js';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import { initializeTheme } from './composables/useAppearance';
-import type { SupportedLocale } from './i18n';
-import { i18n, supportedLocales } from './i18n';
+import { createAppI18n, resolveSupportedLocale } from './i18n';
 import { bootstrapZiggyFromDom } from './lib/ziggy';
+
+type WalletPageProps = Record<string, unknown> & {
+    locale?: string;
+    ziggy?: ZiggyConfig;
+};
+
+function resolveZiggyConfig(pageProps: WalletPageProps): ZiggyConfig | undefined {
+    return pageProps.ziggy ?? globalThis.Ziggy;
+}
 
 bootstrapZiggyFromDom();
 globalThis.route = route;
@@ -26,22 +35,30 @@ createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./pages/${name}.vue`, import.meta.glob<DefineComponent>('./pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
-        const initialLocale = (props.initialPage.props.locale as string | undefined) ?? 'pl';
-        const resolvedLocale: SupportedLocale = supportedLocales.includes(initialLocale as SupportedLocale)
-            ? (initialLocale as SupportedLocale)
-            : 'pl';
-        i18n.global.locale.value = resolvedLocale;
+        const pageProps = props.initialPage.props as WalletPageProps;
+        const locale = resolveSupportedLocale(pageProps.locale);
+        const i18n = createAppI18n(locale);
+        const ziggy = resolveZiggyConfig(pageProps);
 
-        createApp({ render: () => h(App, props) })
+        if (ziggy) {
+            globalThis.Ziggy = ziggy;
+        }
+
+        const vueApp = createSSRApp({ render: () => h(App, props) })
             .use(plugin)
-            .use(i18n)
-            .use(ZiggyVue)
-            .mount(el);
+            .use(i18n);
+
+        if (ziggy) {
+            vueApp.use(ZiggyVue, ziggy);
+        } else {
+            vueApp.use(ZiggyVue);
+        }
+
+        vueApp.mount(el);
     },
     progress: {
         color: '#4B5563',
     },
 });
 
-// This will set light / dark mode on page load...
 initializeTheme();
