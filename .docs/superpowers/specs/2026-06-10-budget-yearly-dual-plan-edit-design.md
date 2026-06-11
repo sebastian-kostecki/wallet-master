@@ -1,6 +1,6 @@
 # Budget yearly view — dual plan edit (annual + optional monthly) — design spec
 
-**Status:** Approved in brainstorming (2026-06-10)  
+**Status:** Superseded by `.docs/superpowers/specs/2026-06-11-budget-yearly-dual-plan-edit-design.md` (display/forecast model revised)  
 **Builds on:** `.docs/superpowers/specs/2026-06-03-categories-budget-estimates-design.md`, `.docs/superpowers/specs/2026-06-10-budget-plan-cell-actions-design.md`  
 **Next step:** Implementation plan (`.docs/superpowers/plans/`)  
 **Scope:** `resources/js/pages/budget/Yearly.vue`, new `YearlyPlanEditCell.vue`, `BudgetCategorySection.vue`, `ListYearlyBudget`, new `SaveYearlyCategoryPlan` action, routes, requests, tests, i18n
