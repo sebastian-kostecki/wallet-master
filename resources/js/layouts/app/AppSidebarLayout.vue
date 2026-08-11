@@ -19,12 +19,16 @@ withDefaults(defineProps<Props>(), {
     <AppShell variant="sidebar">
         <AppSidebar />
         <AppContent variant="sidebar">
-            <AppSidebarHeader :breadcrumbs="breadcrumbs">
-                <template #actions>
-                    <slot name="headerActions" />
-                </template>
-            </AppSidebarHeader>
-            <slot />
+            <div class="mx-auto w-full max-w-[1600px]">
+                <div class="px-4 pt-6">
+                    <AppSidebarHeader :breadcrumbs="breadcrumbs">
+                        <template #actions>
+                            <slot name="headerActions" />
+                        </template>
+                    </AppSidebarHeader>
+                </div>
+                <slot />
+            </div>
         </AppContent>
     </AppShell>
     <AppToaster />
