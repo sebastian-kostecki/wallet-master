@@ -755,7 +755,15 @@
         "dashboard": "Dashboard",
         "pockets": "Envelopes",
         "settings": "Settings",
-        "logout": "Log out"
+        "logout": "Log out",
+        "addTransaction": "Add transaction",
+        "collapse": "Collapse sidebar",
+        "expand": "Expand sidebar",
+        "theme": {
+            "light": "Theme: light (switch to dark)",
+            "dark": "Theme: dark (switch to system)",
+            "system": "Theme: system (switch to light)"
+        }
     },
     "settings": {
         "title": "Settings",

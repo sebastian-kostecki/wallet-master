@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import SidebarThemeToggle from '@/components/SidebarThemeToggle.vue';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from '@/components/ui/sidebar';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { ArrowLeftRight, LayoutGrid, PieChart, Tags, Target, Wallet } from 'lucide-vue-next';
+import { ArrowLeftRight, LayoutGrid, PanelLeftClose, PanelLeftOpen, PieChart, Plus, Tags, Target, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
@@ -13,6 +14,9 @@ import AppLogo from './AppLogo.vue';
 
 const { t } = useI18n();
 const { transactionsIndexHref } = useTransactionsIndexSearch();
+const { state, toggleSidebar, isMobile } = useSidebar();
+
+const isCollapsed = computed(() => state.value === 'collapsed' && !isMobile.value);
 
 const mainNavItems = computed<NavItem[]>(() => [
     {
@@ -46,31 +50,60 @@ const mainNavItems = computed<NavItem[]>(() => [
         icon: Target,
     },
 ]);
+
+const createTransactionHref = computed(() => route('transactions.create'));
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset" class="border-sidebar-border/80">
-        <SidebarHeader class="border-b border-sidebar-border/70">
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        size="lg"
-                        as-child
-                        class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+    <Sidebar collapsible="icon" variant="inset" class="border-0">
+        <SidebarHeader class="gap-0 p-0">
+            <div class="flex items-center px-4 py-5" :class="isCollapsed ? 'flex-col gap-3 pb-3' : 'justify-between gap-2'">
+                <Link
+                    :href="route('dashboard')"
+                    class="flex min-w-0 items-center gap-2.5 overflow-hidden"
+                    :class="isCollapsed ? 'justify-center' : ''"
+                >
+                    <AppLogo compact />
+                </Link>
+
+                <div class="flex shrink-0 items-center" :class="isCollapsed ? 'flex-col gap-1' : 'gap-1'">
+                    <SidebarThemeToggle />
+                    <button
+                        type="button"
+                        class="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+                        :aria-label="isCollapsed ? t('nav.expand') : t('nav.collapse')"
+                        :title="isCollapsed ? t('nav.expand') : t('nav.collapse')"
+                        @click="toggleSidebar"
                     >
-                        <Link :href="route('dashboard')">
-                            <AppLogo />
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
+                        <PanelLeftOpen v-if="isCollapsed" class="size-4" />
+                        <PanelLeftClose v-else class="size-4" />
+                    </button>
+                </div>
+            </div>
+            <div class="mx-3 h-px bg-sidebar-border/60" />
         </SidebarHeader>
 
-        <SidebarContent>
-            <NavMain :items="mainNavItems" />
+        <SidebarContent class="relative min-h-0 gap-0 overflow-hidden px-0 pb-0 pt-0">
+            <div class="h-full overflow-y-auto px-3 pb-12 pt-3 group-data-[collapsible=icon]:overflow-hidden">
+                <NavMain :items="mainNavItems" />
+            </div>
+            <div class="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-sidebar to-transparent" aria-hidden="true" />
         </SidebarContent>
 
-        <SidebarFooter>
+        <div class="px-3 pb-2 pt-1">
+            <Link
+                :href="createTransactionHref"
+                class="relative flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500/90 via-teal-500/90 to-sky-500/90 px-3 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-500/20 transition-all hover:shadow-md hover:shadow-emerald-500/30 hover:brightness-110 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-0 dark:from-emerald-400/90 dark:via-teal-500/90 dark:to-sky-500/90"
+                :title="t('nav.addTransaction')"
+            >
+                <span class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.15),transparent_70%)]" aria-hidden="true" />
+                <Plus class="relative size-4 shrink-0" :stroke-width="2.5" />
+                <span class="relative group-data-[collapsible=icon]:hidden">{{ t('nav.addTransaction') }}</span>
+            </Link>
+        </div>
+
+        <SidebarFooter class="gap-0 px-3 pb-4 pt-1">
+            <div class="mx-2 mb-3 h-px bg-sidebar-border/60" />
             <NavUser />
         </SidebarFooter>
     </Sidebar>

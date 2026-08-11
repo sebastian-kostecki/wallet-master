@@ -760,7 +760,15 @@
         "dashboard": "Panel",
         "pockets": "Kieszenie",
         "settings": "Ustawienia",
-        "logout": "Wyloguj się"
+        "logout": "Wyloguj się",
+        "addTransaction": "Dodaj transakcję",
+        "collapse": "Zwiń pasek boczny",
+        "expand": "Rozwiń pasek boczny",
+        "theme": {
+            "light": "Motyw: jasny (przełącz na ciemny)",
+            "dark": "Motyw: ciemny (przełącz na systemowy)",
+            "system": "Motyw: systemowy (przełącz na jasny)"
+        }
     },
     "settings": {
         "title": "Ustawienia",
