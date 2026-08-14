@@ -106,7 +106,7 @@ function deletePocket(pocket: Pocket): void {
             </Button>
         </template>
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <div class="inline-flex rounded-lg bg-muted p-1">
                 <Link
                     v-for="tab in tabs"

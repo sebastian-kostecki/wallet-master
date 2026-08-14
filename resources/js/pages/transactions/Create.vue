@@ -146,7 +146,7 @@ function submit() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('transactions.create.title')" />
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
                 <div class="flex flex-col gap-6">
                     <form id="transaction-form" class="flex flex-col gap-6" @submit.prevent="submit" :aria-busy="form.processing ? 'true' : 'false'">

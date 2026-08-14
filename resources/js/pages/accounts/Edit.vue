@@ -128,7 +128,7 @@ const adjustProcessing = ref(false);
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('accounts.edit.title')" />
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <div class="grid gap-6 lg:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                     <form @submit.prevent="submit" class="grid gap-6">

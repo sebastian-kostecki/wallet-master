@@ -103,7 +103,7 @@ function submit() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('accounts.create.title')" />
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form @submit.prevent="submit" class="grid gap-6">
                     <FormField for-id="name" :label="t('accounts.create.fields.name.label')" :error="form.errors.name">

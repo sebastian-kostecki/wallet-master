@@ -121,7 +121,7 @@ function openDeleteDialog(accountId: number) {
             </Button>
         </template>
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <AccountsSummaryCard :accounts="accounts" />
 
             <section

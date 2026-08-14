@@ -108,7 +108,7 @@ function saveYearlyPlan(
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('budget.yearly.title')" />
 
-        <div class="budget-page flex flex-col gap-6 p-4">
+        <div class="budget-page flex flex-col gap-6">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex gap-2">
                     <Button variant="ghost" as-child>

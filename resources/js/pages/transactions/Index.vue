@@ -509,7 +509,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
             </div>
         </template>
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <ImportFailedRowsBanner
                 v-if="(unresolved_import_failed_rows ?? []).length > 0"
                 :rows="unresolved_import_failed_rows ?? []"

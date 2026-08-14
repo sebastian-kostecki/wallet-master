@@ -2,6 +2,7 @@
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import SidebarThemeToggle from '@/components/SidebarThemeToggle.vue';
+import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from '@/components/ui/sidebar';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { type NavItem } from '@/types';
@@ -91,15 +92,12 @@ const createTransactionHref = computed(() => route('transactions.create'));
         </SidebarContent>
 
         <div class="px-3 pb-2 pt-1">
-            <Link
-                :href="createTransactionHref"
-                class="relative flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500/90 via-teal-500/90 to-sky-500/90 px-3 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-500/20 transition-all hover:shadow-md hover:shadow-emerald-500/30 hover:brightness-110 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-0 dark:from-emerald-400/90 dark:via-teal-500/90 dark:to-sky-500/90"
-                :title="t('nav.addTransaction')"
-            >
-                <span class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.15),transparent_70%)]" aria-hidden="true" />
-                <Plus class="relative size-4 shrink-0" :stroke-width="2.5" />
-                <span class="relative group-data-[collapsible=icon]:hidden">{{ t('nav.addTransaction') }}</span>
-            </Link>
+            <Button as-child :size="isCollapsed ? 'icon' : 'default'" class="w-full group-data-[collapsible=icon]:size-8">
+                <Link :href="createTransactionHref" :title="t('nav.addTransaction')">
+                    <Plus class="size-4 shrink-0" :stroke-width="1.7" />
+                    <span class="group-data-[collapsible=icon]:hidden">{{ t('nav.addTransaction') }}</span>
+                </Link>
+            </Button>
         </div>
 
         <SidebarFooter class="gap-0 px-3 pb-4 pt-1">

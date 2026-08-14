@@ -30,7 +30,7 @@ const currentPath = computed(() => page.url.split('?')[0]);
 </script>
 
 <template>
-    <div class="px-4 py-6">
+    <div>
         <Heading :title="t('settings.title')" :description="t('settings.description')" />
 
         <div class="flex flex-col space-y-8 md:space-y-0 lg:flex-row lg:space-x-12 lg:space-y-0">
@@ -40,7 +40,7 @@ const currentPath = computed(() => page.url.split('?')[0]);
                         v-for="item in sidebarNavItems"
                         :key="item.href"
                         variant="ghost"
-                        :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"
+                        :class="['w-full justify-start rounded-xl', { 'bg-foreground/[0.07] text-foreground': currentPath === item.href }]"
                         as-child
                     >
                         <Link :href="item.href">

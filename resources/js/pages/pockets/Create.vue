@@ -108,7 +108,7 @@ function submit(): void {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('pockets.create.title')" />
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form class="grid gap-6" @submit.prevent="submit">
                     <div class="flex items-center gap-4 rounded-lg border border-sidebar-border/50 p-4 dark:border-sidebar-border">

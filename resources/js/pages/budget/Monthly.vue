@@ -122,7 +122,7 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('budget.monthly.title')" />
 
-        <div class="budget-page flex flex-col gap-6 p-4">
+        <div class="budget-page flex flex-col gap-6">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex gap-2">
                     <Button variant="outline" as-child>

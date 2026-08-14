@@ -6,6 +6,7 @@
         },
         "index": {
             "title": "Accounts",
+            "description": "Balances and types of your checking and savings accounts.",
             "addAccount": "Add account",
             "view": {
                 "toggleAria": "Toggle accounts view",
@@ -20,6 +21,7 @@
         },
         "edit": {
             "title": "Edit account",
+            "description": "Update account details or opening balance.",
             "back": "Back",
             "deleteAction": "Delete account",
             "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference.",
@@ -30,6 +32,7 @@
         },
         "create": {
             "title": "Add account",
+            "description": "Set up an account and opening balance.",
             "back": "Back",
             "fields": {
                 "name": {
@@ -248,6 +251,7 @@
         },
         "index": {
             "title": "Transactions",
+            "description": "Income, expenses, and transfers across your accounts.",
             "addTransaction": "Add transaction",
             "addTransfer": "Transfer",
             "actionsMenu": {
@@ -341,6 +345,7 @@
         },
         "create": {
             "title": "Add transaction",
+            "description": "Record income or an expense.",
             "back": "Back",
             "hints": {
                 "title": "Tips",
@@ -351,6 +356,7 @@
         },
         "edit": {
             "title": "Edit transaction",
+            "description": "Update an existing transaction.",
             "back": "Back",
             "deleteAction": "Delete transaction",
             "dangerZone": {
@@ -580,10 +586,12 @@
     },
     "categories": {
         "create": {
-            "title": "New category"
+            "title": "New category",
+            "description": "Add a label for income or expenses."
         },
         "edit": {
-            "title": "Edit category"
+            "title": "Edit category",
+            "description": "Update this category's name, color, or type."
         },
         "fields": {
             "color": "Color",
@@ -596,6 +604,7 @@
         },
         "index": {
             "title": "Categories",
+            "description": "Labels for income and expenses in your budget.",
             "add": "Add category",
             "empty": "No categories yet.",
             "fields": {
@@ -632,10 +641,12 @@
     },
     "pockets": {
         "create": {
-            "title": "New envelope"
+            "title": "New envelope",
+            "description": "Give a savings goal a name and a plan."
         },
         "edit": {
             "title": "Edit envelope",
+            "description": "Update this envelope's target and plan.",
             "recommendedMonthly": "Recommended monthly",
             "projectedCompletionDate": "Projected completion date"
         },
@@ -679,6 +690,7 @@
         },
         "index": {
             "title": "Envelopes",
+            "description": "Savings envelopes with a monthly plan.",
             "add": "Add envelope",
             "listTitle": "Your envelopes",
             "empty": "No envelopes yet.",
@@ -701,6 +713,7 @@
         "nav": "Budget",
         "monthly": {
             "title": "Budget — monthly",
+            "description": "Plan versus actual for this month.",
             "plan": "Plan",
             "actual": "Actual",
             "difference": "Difference",
@@ -715,6 +728,7 @@
         },
         "yearly": {
             "title": "Budget — yearly",
+            "description": "Annual plan versus actuals.",
             "plan": "Annual plan",
             "actual": "Actual",
             "difference": "Difference",

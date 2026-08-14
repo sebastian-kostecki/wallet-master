@@ -60,7 +60,7 @@ function submit() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="t('categories.edit.title')" />
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form class="grid gap-6" @submit.prevent="submit">
                     <CategoryBadge :name="previewName" :icon="form.icon" :color="form.color" size="md" />

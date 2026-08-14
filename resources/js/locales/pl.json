@@ -6,6 +6,7 @@
         },
         "index": {
             "title": "Konta",
+            "description": "Salda i typy kont rozliczeniowych i oszczędnościowych.",
             "addAccount": "Dodaj konto",
             "view": {
                 "toggleAria": "Przełącz widok listy kont",
@@ -20,6 +21,7 @@
         },
         "edit": {
             "title": "Edytuj konto",
+            "description": "Zmień dane konta lub saldo początkowe.",
             "back": "Wróć",
             "deleteAction": "Usuń konto",
             "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę.",
@@ -30,6 +32,7 @@
         },
         "create": {
             "title": "Dodaj konto",
+            "description": "Dodaj konto i saldo początkowe.",
             "back": "Wróć",
             "fields": {
                 "name": {
@@ -248,6 +251,7 @@
         },
         "index": {
             "title": "Transakcje",
+            "description": "Przychody, wydatki i transfery na Twoich kontach.",
             "addTransaction": "Dodaj transakcję",
             "addTransfer": "Transfer",
             "actionsMenu": {
@@ -341,6 +345,7 @@
         },
         "create": {
             "title": "Dodaj transakcję",
+            "description": "Zapisz przychód lub wydatek.",
             "back": "Wróć",
             "hints": {
                 "title": "Wskazówki",
@@ -351,6 +356,7 @@
         },
         "edit": {
             "title": "Edytuj transakcję",
+            "description": "Zmień istniejącą transakcję.",
             "back": "Wróć",
             "deleteAction": "Usuń transakcję",
             "dangerZone": {
@@ -585,10 +591,12 @@
     },
     "categories": {
         "create": {
-            "title": "Nowa kategoria"
+            "title": "Nowa kategoria",
+            "description": "Dodaj etykietę przychodu lub wydatku."
         },
         "edit": {
-            "title": "Edycja kategorii"
+            "title": "Edycja kategorii",
+            "description": "Zmień nazwę, kolor lub typ kategorii."
         },
         "fields": {
             "color": "Kolor",
@@ -601,6 +609,7 @@
         },
         "index": {
             "title": "Kategorie",
+            "description": "Etykiety przychodów i wydatków w budżecie.",
             "add": "Dodaj kategorię",
             "empty": "Brak kategorii.",
             "fields": {
@@ -637,10 +646,12 @@
     },
     "pockets": {
         "create": {
-            "title": "Nowa kieszeń"
+            "title": "Nowa kieszeń",
+            "description": "Nadaj celowi oszczędnościowemu nazwę i plan."
         },
         "edit": {
             "title": "Edytuj kieszeń",
+            "description": "Zmień cel i plan tej kieszeni.",
             "recommendedMonthly": "Rekomendowana kwota miesięczna",
             "projectedCompletionDate": "Przewidywana data realizacji"
         },
@@ -684,6 +695,7 @@
         },
         "index": {
             "title": "Kieszenie",
+            "description": "Kieszenie oszczędnościowe z planem miesięcznym.",
             "add": "Dodaj kieszeń",
             "listTitle": "Twoje kieszenie",
             "empty": "Brak kieszeni.",
@@ -706,6 +718,7 @@
         "nav": "Budżet",
         "monthly": {
             "title": "Budżet — miesięczny",
+            "description": "Plan i wykonanie w tym miesiącu.",
             "plan": "Plan",
             "actual": "Wykonanie",
             "difference": "Różnica",
@@ -720,6 +733,7 @@
         },
         "yearly": {
             "title": "Budżet — roczny",
+            "description": "Roczny plan i wykonanie.",
             "plan": "Plan roczny",
             "actual": "Wykonanie",
             "difference": "Różnica",
