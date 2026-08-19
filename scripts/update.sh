@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "${ROOT}"
+
+# shellcheck source=lib/production-deploy.sh
+source "$(dirname "$0")/lib/production-deploy.sh"
 
 COMPOSE="docker compose -f docker-compose.prod.yml"
 
@@ -26,8 +30,7 @@ check_inertia_ssr() {
 echo "==> Stopping stack..."
 $COMPOSE down
 
-echo "==> Pulling latest..."
-git pull
+production_pull_latest
 
 echo "==> Building app image..."
 $COMPOSE build app
