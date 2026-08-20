@@ -767,6 +767,7 @@
     "nav": {
         "platform": "Platform",
         "dashboard": "Dashboard",
+        "accounts": "Accounts and wallets",
         "pockets": "Envelopes",
         "settings": "Settings",
         "logout": "Log out",

@@ -26,7 +26,7 @@ const mainNavItems = computed<NavItem[]>(() => [
         icon: LayoutGrid,
     },
     {
-        title: t('accounts.index.title'),
+        title: t('nav.accounts'),
         href: route('accounts.index'),
         icon: Wallet,
     },
