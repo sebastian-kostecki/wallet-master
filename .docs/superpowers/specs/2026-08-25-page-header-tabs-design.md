@@ -36,6 +36,7 @@ The previously approved spec `2026-08-20-remove-breadcrumbs-design.md` (never im
 | Composition | One block inside page content: crumbs → `h1` + actions → description → tab strip |
 | Table integration | Shared page shell (header + toolbar + content slot + pagination); no generic DataTable |
 | `accounts` view toggle | Out of scope — presentation toggle, not navigation |
+| Budget query state | Tab params may be a resolver over current params, preserving `year`/`month` and the existing month heuristic |
 | Testing | Add Vitest; unit-test the resolver |
 
 ## Technical constraint that shapes the design
@@ -75,17 +76,22 @@ export type PageNode = {
     tabGroup?: string;
 };
 
+export type TabParams = Record<string, string | number>;
+
 export type PageTab = {
     key: string;
     labelKey: string;
     route: string;
-    params?: Record<string, string | number>;
+    /**
+     * Static params identify the tab and are also used to detect the active one.
+     * A resolver receives the current params instead, for tabs whose target
+     * depends on where the user currently is.
+     */
+    params?: TabParams | ((current: Record<string, string>) => TabParams);
 };
 
 export type PageTabGroup = {
     defaultKey: string;
-    /** Query params carried over when switching tabs. */
-    preserveQuery?: string[];
     tabs: PageTab[];
 };
 ```
@@ -102,7 +108,7 @@ Deriving the crumb href from the first `matchRoutes` entry keeps the tree almost
 2. Find the node whose `matchRoutes ?? [nodeId]` contains `name`. If there is none, return the empty fallback (see below).
 3. Walk the `parent` chain upward, collecting ancestors, then reverse. Each ancestor becomes a linked crumb whose href resolves through `route ?? matchRoutes[0] ?? nodeId` plus `routeParams`.
 4. Append the node's own crumb.
-5. If the node has a `tabGroup`, pick the active tab: the first tab whose `route` equals `name` **and** whose every `params` entry equals the corresponding current param (compared as strings). If none matches, fall back to `defaultKey`. Append the active tab's label as a further crumb.
+5. If the node has a `tabGroup`, pick the active tab: the first tab whose `route` equals `name` **and** whose every static `params` entry equals the corresponding current param (compared as strings). Tabs with a resolver instead of static params match on the route name alone, which is exactly how budget distinguishes its two tabs. If none matches, fall back to `defaultKey`. Append the active tab's label as a further crumb.
 6. Render the last crumb of the finished trail as a non-clickable `BreadcrumbPage`, every earlier one as a link. Because the leaf never needs an href, detail routes such as `accounts.edit` never have to reconstruct their record params for the trail.
 7. `title` = override, else `t(node.titleKey)`.
 8. `description` = override, else `node.descriptionKey` translated, else undefined.
@@ -139,7 +145,7 @@ These tabs change the URL and reload data, so they are **navigation, not an ARIA
 
 Styling per the `openship-inspired-ui` skill: `border-b border-border/50`, active item `text-foreground` with an `h-0.5 bg-primary` underline inset to the label, never a pill background. Transitions use `<Link preserve-scroll>` so switching a filter does not jump to the top. The strip scrolls horizontally on narrow viewports.
 
-`preserveQuery` exists because a tab carries only its own `params`; without it, switching tabs would drop every other query param. Empty for both current groups, but required before tabs can ever land on transactions with their sort and pagination state.
+The param resolver exists because budget carries state in the query string: both views take `year`, and the monthly view also takes `month`. A tab that emitted only its own static params would silently reset the user to the current year on every switch. `Yearly.vue` today also applies a heuristic when moving to the monthly view — the current month if the user is looking at the current year, otherwise January, which the backend does not replicate (`MonthlyBudgetRequest::getMonth()` always falls back to the current month). The resolver keeps that behaviour inside the registry, with no page involvement and no backend change.
 
 ### `TablePage.vue`
 
@@ -173,10 +179,33 @@ Nodes marked ✱ have no route of their own — they exist to group children or 
 
 Tab groups:
 
-| Group | Default | Tabs |
-|-------|---------|------|
-| `budget` | `monthly` | `monthly` → `budget.monthly` / `budget.view.monthly`; `yearly` → `budget.yearly` / `budget.view.yearly` |
-| `pockets` | `active` | `active` / `archived` / `all` → `pockets.index` with `{ filter }`, labels `pockets.filters.*` |
+| Group | Default | Tab | Route | Label key | Params |
+|-------|---------|-----|-------|-----------|--------|
+| `pockets` | `active` | `active` | `pockets.index` | `pockets.filters.active` | `{ filter: 'active' }` |
+| | | `archived` | `pockets.index` | `pockets.filters.archived` | `{ filter: 'archived' }` |
+| | | `all` | `pockets.index` | `pockets.filters.all` | `{ filter: 'all' }` |
+| `budget` | `monthly` | `monthly` | `budget.monthly` | `budget.view.monthly` | resolver (below) |
+| | | `yearly` | `budget.yearly` | `budget.view.yearly` | resolver (below) |
+
+The budget resolvers preserve the viewed period and carry over the month heuristic from `Yearly.vue`:
+
+```ts
+const budgetYear = (current: Record<string, string>): number => Number(current.year) || new Date().getFullYear();
+
+// monthly tab
+params: (current) => {
+    const year = budgetYear(current);
+    const now = new Date();
+
+    return {
+        year,
+        month: Number(current.month) || (year === now.getFullYear() ? now.getMonth() + 1 : 1),
+    };
+},
+
+// yearly tab
+params: (current) => ({ year: budgetYear(current) }),
+```
 
 Resulting trails: `Kieszenie / Aktywne`, `Budżet / Roczny`, `Transakcje / Nowy transfer`, `Konta / mBank ROR`, `Ustawienia / Profil`.
 
@@ -192,7 +221,13 @@ Routes deliberately absent: `home` and `auth.*` (no `AppLayout`), `imports.*` (n
 
 ## i18n
 
-Almost no new keys: `budget.nav`, `budget.view.monthly`, `budget.view.yearly`, `pockets.filters.*`, `{domain}.index|create|edit.title`, `settings.title` and `settings.nav.*` all exist already. `descriptionKey` is optional and is added to `en.json` / `pl.json` only where a subtitle earns its place; `transactions.index.description` is the existing precedent.
+Every label the registry needs already exists in both `en.json` and `pl.json` — verified for all 19 nodes: `dashboard.title`, `{domain}.index|create|edit.title`, `transfers.create.title`, `budget.nav`, `budget.view.*`, `pockets.filters.*`, `settings.title` and `settings.nav.*`.
+
+Exactly one key is added: `a11y.page_tabs` (`"Page views"` / `"Widoki strony"`), the `aria-label` for the tab `<nav>`. The `a11y` block currently holds only `skip_to_content`.
+
+Three keys fall out of use and are removed with their last usage: `budget.monthly.title` and `budget.yearly.title`, obsolete once the trail reads `Budżet / Miesięczny`, and `settings.description`, which only fed the `Heading` block deleted from `settings/Layout.vue`.
+
+`descriptionKey` is set on exactly two nodes, both from keys that already exist: `dashboard` → `dashboard.description` and `transactions` → `transactions.index.description`. No new description keys are invented, and settings pages get no subtitle.
 
 ## Page migration
 
@@ -222,7 +257,7 @@ Header plumbing is removed from all 19 app views: the `BreadcrumbItem` import, t
 | `resources/js/components/AppHeader.vue` | Delete — unused, holds a dead `<Breadcrumbs>` reference |
 | `resources/js/pages/**` | Remove header plumbing; pockets/budget lose local switchers |
 | `resources/js/types/index.ts` | `BreadcrumbItem` stays; consumer moves to `PageHeader` |
-| `resources/js/locales/{en,pl}.json` | Optional description keys only |
+| `resources/js/locales/{en,pl}.json` | Add `a11y.page_tabs`; drop `budget.monthly.title`, `budget.yearly.title`, `settings.description` |
 | `.docs/superpowers/specs/2026-08-20-remove-breadcrumbs-design.md` | Mark `Status: Superseded` |
 | `.docs/checklist.md` | Record the new page chrome |
 
@@ -233,6 +268,7 @@ Vitest is added as a dev dependency (the project has no frontend test runner tod
 - trail for a root, a child and a detail page with a title override
 - tab-group anchoring: `budget.monthly` and `budget.yearly` resolve to the same node with different leaves
 - active tab by query param, including the `defaultKey` fallback on `/kieszenie` with no `?filter=`
+- budget param resolvers: `year` survives a switch in both directions, and the monthly target month is the current month for the current year but January for a past one
 - `h1` shows the node title while the document title carries the tab label
 - unregistered route returns the empty fallback and does not throw
 
