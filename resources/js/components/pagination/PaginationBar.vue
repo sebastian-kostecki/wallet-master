@@ -183,8 +183,10 @@ function changePerPage(next: number) {
                     @click="() => link.page !== null && trackPageChanged(link.page)"
                     :class="
                         cn(
-                            'inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors',
-                            link.active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                            'inline-flex h-9 min-w-9 items-center justify-center rounded-xl px-2 text-sm font-medium transition-colors',
+                            link.active
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground',
                             link.page === null ? 'pointer-events-none opacity-50' : '',
                         )
                     "
