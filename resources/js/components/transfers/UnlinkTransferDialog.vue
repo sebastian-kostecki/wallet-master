@@ -43,6 +43,7 @@ function unlink() {
         {},
         {
             preserveScroll: true,
+            preserveState: true,
             onFinish: () => {
                 processing.value = false;
                 emit('update:open', false);
