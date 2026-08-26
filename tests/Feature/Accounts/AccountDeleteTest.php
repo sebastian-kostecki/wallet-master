@@ -27,7 +27,28 @@ test('user can soft delete account', function () {
         ->actingAs($user)
         ->delete(route('accounts.destroy', $account, absolute: false));
 
-    $response->assertRedirect(route('accounts.index', absolute: false));
+    $response->assertRedirect(route('accounts.index', ['kind' => 'wallets'], absolute: false));
+
+    $this->assertSoftDeleted('accounts', ['id' => $account->id]);
+});
+
+test('deleting a bank account redirects to the accounts tab', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'mBank',
+        'bank' => 'mbank',
+        'type' => 'checking',
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this->actingAs($user)
+        ->delete(route('accounts.destroy', $account, absolute: false))
+        ->assertRedirect(route('accounts.index', ['kind' => 'accounts'], absolute: false));
 
     $this->assertSoftDeleted('accounts', ['id' => $account->id]);
 });

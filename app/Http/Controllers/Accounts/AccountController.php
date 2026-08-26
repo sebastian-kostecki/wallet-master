@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accounts;
 use App\Actions\Accounts\StoreAccount;
 use App\Actions\Accounts\UpdateAccountDetails;
 use App\Data\Accounts\AccountFormOptions;
+use App\Enums\Bank;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
@@ -52,9 +53,9 @@ class AccountController extends Controller
 
     public function store(StoreAccountRequest $request, StoreAccount $storeAccount): RedirectResponse
     {
-        $storeAccount->handle($request->user(), $request->validated());
+        $account = $storeAccount->handle($request->user(), $request->validated());
 
-        return to_route('accounts.index')->with('toast', [
+        return to_route('accounts.index', $this->accountsIndexQuery($account))->with('toast', [
             'type' => 'success',
             'message_key' => 'accounts.toast.created',
         ]);
@@ -73,8 +74,9 @@ class AccountController extends Controller
     public function update(UpdateAccountRequest $request, Account $account, UpdateAccountDetails $updater): RedirectResponse
     {
         $updater->handle($account, $request->validated());
+        $account->refresh();
 
-        return to_route('accounts.index')->with('toast', [
+        return to_route('accounts.index', $this->accountsIndexQuery($account))->with('toast', [
             'type' => 'success',
             'message_key' => 'accounts.toast.updated',
         ]);
@@ -92,6 +94,16 @@ class AccountController extends Controller
 
         $account->delete();
 
-        return to_route('accounts.index');
+        return to_route('accounts.index', $this->accountsIndexQuery($account));
+    }
+
+    /**
+     * @return array{kind: string}
+     */
+    private function accountsIndexQuery(Account $account): array
+    {
+        return [
+            'kind' => $account->bank === Bank::Cash ? 'wallets' : 'accounts',
+        ];
     }
 }
