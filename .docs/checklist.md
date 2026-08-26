@@ -79,6 +79,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Zmiana nazwy, salda początkowego.
   - [x] Zmiana `bank` i `type` + konsekwencje dla importu (bank wynika z konta) — do uwzględnienia, gdy import będzie wdrażany.
   - [x] Zdefiniować wpływ zmiany salda początkowego na `current_balance` (rekomendacja: przeliczyć różnicą). 
+- [x] Dodanie i edycja konta z listy `/konta` (modal; GET create/edit → redirect na index) **[plan 2026-08-26-accounts-modals]**
 - [x] Usuwanie konta:
   - [x] Soft delete konta.
   - [x] Zablokować edycję/usuwanie transakcji na usuniętym koncie:
