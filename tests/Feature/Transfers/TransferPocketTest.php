@@ -2,6 +2,7 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\PocketMovement;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\Pocket;
@@ -14,7 +15,7 @@ beforeEach(function () {
     $this->seed(CurrencySeeder::class);
 });
 
-test('transfer to savings account requires pocket_id', function () {
+test('savings transfer without pocket succeeds', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     ensureUserCategories($user);
@@ -44,43 +45,34 @@ test('transfer to savings account requires pocket_id', function () {
         'to_account_id' => $savings->id,
         'date' => '01-03-2026',
         'amount' => '200',
-    ])->assertSessionHasErrors('pocket_id');
+    ])->assertSessionHasNoErrors();
+
+    $transferId = Transaction::query()
+        ->where('user_id', $user->id)
+        ->whereNotNull('transfer_id')
+        ->value('transfer_id');
+
+    expect($transferId)->not->toBeNull();
+
+    $withdraw = Transaction::query()
+        ->where('transfer_id', $transferId)
+        ->where('amount', '<', 0)
+        ->first();
+
+    $deposit = Transaction::query()
+        ->where('transfer_id', $transferId)
+        ->where('amount', '>', 0)
+        ->first();
+
+    expect($withdraw)->not->toBeNull();
+    expect($deposit)->not->toBeNull();
+    expect($withdraw->pocket_id)->toBeNull();
+    expect($deposit->pocket_id)->toBeNull();
+    expect($withdraw->pocket_movement)->toBeNull();
+    expect($deposit->pocket_movement)->toBeNull();
 });
 
-test('transfer from savings account requires pocket_id', function () {
-    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
-    $user = User::factory()->create();
-    ensureUserCategories($user);
-
-    $checking = Account::query()->create([
-        'user_id' => $user->id,
-        'currency_id' => $plnId,
-        'name' => 'Checking',
-        'bank' => Bank::Cash,
-        'type' => AccountType::Checking,
-        'opening_balance' => 0,
-        'current_balance' => 0,
-    ]);
-
-    $savings = Account::query()->create([
-        'user_id' => $user->id,
-        'currency_id' => $plnId,
-        'name' => 'Savings',
-        'bank' => Bank::Cash,
-        'type' => AccountType::Savings,
-        'opening_balance' => 500,
-        'current_balance' => 500,
-    ]);
-
-    $this->actingAs($user)->post(route('transfers.store'), [
-        'from_account_id' => $savings->id,
-        'to_account_id' => $checking->id,
-        'date' => '01-03-2026',
-        'amount' => '150',
-    ])->assertSessionHasErrors('pocket_id');
-});
-
-test('transfer between checking accounts prohibits pocket_id', function () {
+test('checking-to-checking transfer with pocket and deposit persists both legs', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     $pocket = Pocket::factory()->create(['user_id' => $user->id]);
@@ -111,7 +103,68 @@ test('transfer between checking accounts prohibits pocket_id', function () {
         'date' => '01-03-2026',
         'amount' => '50',
         'pocket_id' => $pocket->id,
-    ])->assertSessionHasErrors('pocket_id');
+        'pocket_movement' => 'deposit',
+    ])->assertSessionHasNoErrors();
+
+    $transferId = Transaction::query()
+        ->where('user_id', $user->id)
+        ->whereNotNull('transfer_id')
+        ->value('transfer_id');
+
+    expect($transferId)->not->toBeNull();
+
+    $withdraw = Transaction::query()
+        ->where('transfer_id', $transferId)
+        ->where('amount', '<', 0)
+        ->first();
+
+    $deposit = Transaction::query()
+        ->where('transfer_id', $transferId)
+        ->where('amount', '>', 0)
+        ->first();
+
+    expect($withdraw)->not->toBeNull();
+    expect($deposit)->not->toBeNull();
+    expect($withdraw->pocket_id)->toBe($pocket->id);
+    expect($deposit->pocket_id)->toBe($pocket->id);
+    expect($withdraw->pocket_movement)->toBe(PocketMovement::Deposit);
+    expect($deposit->pocket_movement)->toBe(PocketMovement::Deposit);
+});
+
+test('transfer with pocket_id without pocket_movement fails', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $pocket = Pocket::factory()->create(['user_id' => $user->id]);
+
+    $checking = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Checking',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 1000,
+        'current_balance' => 1000,
+    ]);
+
+    $savings = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'Savings',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Savings,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this->actingAs($user)->post(route('transfers.store'), [
+        'from_account_id' => $checking->id,
+        'to_account_id' => $savings->id,
+        'date' => '01-03-2026',
+        'amount' => '200',
+        'pocket_id' => $pocket->id,
+    ])->assertSessionHasErrors('pocket_movement');
 });
 
 test('transfer persists same pocket_id on both legs with null category', function () {
@@ -147,6 +200,7 @@ test('transfer persists same pocket_id on both legs with null category', functio
         'date' => '01-03-2026',
         'amount' => '200',
         'pocket_id' => $pocket->id,
+        'pocket_movement' => 'deposit',
     ])->assertSessionHasNoErrors();
 
     $transferId = Transaction::query()
@@ -170,6 +224,8 @@ test('transfer persists same pocket_id on both legs with null category', functio
     expect($deposit)->not->toBeNull();
     expect($withdraw->pocket_id)->toBe($pocket->id);
     expect($deposit->pocket_id)->toBe($pocket->id);
+    expect($withdraw->pocket_movement)->toBe(PocketMovement::Deposit);
+    expect($deposit->pocket_movement)->toBe(PocketMovement::Deposit);
     expect($withdraw->category_id)->toBeNull();
     expect($deposit->category_id)->toBeNull();
 });
@@ -214,6 +270,7 @@ test('transfer rejects pocket when pocket currency does not match savings accoun
         'date' => '01-03-2026',
         'amount' => '200',
         'pocket_id' => $pocket->id,
+        'pocket_movement' => 'deposit',
     ])->assertSessionHasErrors('pocket_id');
 });
 

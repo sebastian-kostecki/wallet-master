@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Transfers;
 
+use App\Enums\PocketMovement;
 use App\Events\TransferFailedValidation;
 use App\Http\Requests\Concerns\ValidatesPocketId;
 use App\Models\Account;
@@ -76,6 +77,23 @@ final class StoreTransferRequest extends FormRequest
             'subject' => ['nullable', 'string', 'max:255'],
             'category_id' => ['prohibited'],
             ...$this->pocketIdRulesForTransfer(),
+            'pocket_movement' => [
+                Rule::requiredIf(fn () => $this->filled('pocket_id')),
+                Rule::prohibitedIf(fn () => ! $this->filled('pocket_id')),
+                Rule::enum(PocketMovement::class),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'pocket_movement.required' => 'Wybierz odłożenie albo wypłatę.',
+            'pocket_movement.required_with' => 'Wybierz odłożenie albo wypłatę.',
+            'pocket_id.prohibited' => 'Kieszeń dotyczy tylko przelewów wewnętrznych.',
         ];
     }
 
@@ -88,6 +106,7 @@ final class StoreTransferRequest extends FormRequest
      *   description?: ?string,
      *   subject?: ?string,
      *   pocket_id?: int,
+     *   pocket_movement?: string,
      * }
      */
     public function validated($key = null, $default = null): array

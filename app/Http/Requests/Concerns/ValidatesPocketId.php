@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Concerns;
 
-use App\Enums\AccountType;
 use App\Models\Account;
 use App\Models\Pocket;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -45,32 +44,26 @@ trait ValidatesPocketId
         string $fromAccountField = 'from_account_id',
         string $toAccountField = 'to_account_id',
     ): array {
-        if ($this->transferInvolvesSavingsAccount($fromAccountField, $toAccountField)) {
-            return [
-                'pocket_id' => [
-                    'required',
-                    'integer',
-                    Rule::exists('pockets', 'id')->where(
-                        fn ($query) => $query->where('user_id', $this->user()->id),
-                    ),
-                    function (string $attribute, mixed $value, \Closure $fail) use ($fromAccountField, $toAccountField): void {
-                        $fromId = $this->input($fromAccountField);
-                        $toId = $this->input($toAccountField);
-
-                        if (! is_numeric($value) || ! is_numeric($fromId) || ! is_numeric($toId)) {
-                            return;
-                        }
-
-                        if (! $this->pocketCurrencyMatchesAccounts((int) $value, [(int) $fromId, (int) $toId])) {
-                            $fail('Pocket currency must match the savings account currency.');
-                        }
-                    },
-                ],
-            ];
-        }
-
         return [
-            'pocket_id' => ['prohibited'],
+            'pocket_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('pockets', 'id')->where(
+                    fn ($query) => $query->where('user_id', $this->user()->id),
+                ),
+                function (string $attribute, mixed $value, \Closure $fail) use ($fromAccountField, $toAccountField): void {
+                    $fromId = $this->input($fromAccountField);
+                    $toId = $this->input($toAccountField);
+
+                    if (! is_numeric($value) || ! is_numeric($fromId) || ! is_numeric($toId)) {
+                        return;
+                    }
+
+                    if (! $this->pocketCurrencyMatchesAccounts((int) $value, [(int) $fromId, (int) $toId])) {
+                        $fail('Pocket currency must match the savings account currency.');
+                    }
+                },
+            ],
         ];
     }
 
@@ -113,31 +106,5 @@ trait ValidatesPocketId
         }
 
         return (int) $currencyIds->first() === (int) $pocket->currency_id;
-    }
-
-    protected function transferInvolvesSavingsAccount(
-        string $fromAccountField = 'from_account_id',
-        string $toAccountField = 'to_account_id',
-    ): bool {
-        $fromId = $this->input($fromAccountField);
-        $toId = $this->input($toAccountField);
-
-        if (! is_numeric($fromId) || ! is_numeric($toId)) {
-            return false;
-        }
-
-        $accounts = Account::query()
-            ->where('user_id', $this->user()->id)
-            ->whereIn('id', [(int) $fromId, (int) $toId])
-            ->whereNull('deleted_at')
-            ->get(['id', 'type']);
-
-        foreach ($accounts as $account) {
-            if ($account->type === AccountType::Savings) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
