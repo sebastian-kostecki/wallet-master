@@ -5,10 +5,9 @@ import AccountsViewToggle from '@/components/accounts/AccountsViewToggle.vue';
 import AccountFormDialog from '@/components/accounts/modals/AccountFormDialog.vue';
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { accountKindFromUrl, isWalletAccount } from '@/lib/accountKind';
-import { cn } from '@/lib/utils';
 import { usePage } from '@inertiajs/vue3';
 import { PiggyBank, Wallet } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
@@ -154,11 +153,13 @@ function openDeleteDialog(accountId: number) {
                 v-if="visibleAccounts.length === 0"
                 role="region"
                 aria-labelledby="accounts-empty-heading"
-                class="rounded-xl border border-sidebar-border/70 p-8 text-center dark:border-sidebar-border"
+                class="flex flex-col items-center py-16 text-center"
             >
-                <h2 id="accounts-empty-heading" class="text-lg font-semibold">{{ t(`accounts.index.empty.${kind}.heading`) }}</h2>
-                <p class="mt-2 text-sm text-muted-foreground">{{ t(`accounts.index.empty.${kind}.message`) }}</p>
-                <Button :class="cn(buttonVariants({}), 'mt-4')" @click="openCreateDialog">{{ t(`accounts.index.empty.${kind}.cta`) }}</Button>
+                <h2 id="accounts-empty-heading" class="text-2xl font-medium tracking-tight">
+                    {{ t(`accounts.index.empty.${kind}.heading`) }}
+                </h2>
+                <p class="mt-2 max-w-sm text-sm text-muted-foreground">{{ t(`accounts.index.empty.${kind}.message`) }}</p>
+                <Button class="mt-4" @click="openCreateDialog">{{ t(`accounts.index.empty.${kind}.cta`) }}</Button>
             </section>
 
             <div v-else class="flex items-center justify-end">
@@ -180,10 +181,11 @@ function openDeleteDialog(accountId: number) {
                 />
             </div>
 
-            <div v-else-if="visibleAccounts.length > 0" class="flex flex-col gap-2">
+            <div v-else-if="visibleAccounts.length > 0" class="overflow-hidden rounded-2xl border border-transparent bg-card">
                 <AccountRow
                     v-for="account in visibleAccounts"
                     :key="account.id"
+                    class="border-b border-border/50 last:border-b-0"
                     :account="account"
                     :format-money="formatMoney"
                     :account-type-icon="resolveAccountTypeIcon(account.type)"
