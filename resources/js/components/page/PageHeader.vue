@@ -61,6 +61,10 @@ const parentCrumb = computed(() => {
             </div>
         </div>
 
-        <PageTabs v-if="chrome.tabs.length > 0" :tabs="chrome.tabs" class="mt-4" />
+        <PageTabs v-if="chrome.tabs.length > 0" :tabs="chrome.tabs" class="mt-4">
+            <template v-if="$slots.tabsTrailing" #trailing>
+                <slot name="tabsTrailing" />
+            </template>
+        </PageTabs>
     </header>
 </template>

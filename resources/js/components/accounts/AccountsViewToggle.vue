@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LayoutGrid, List } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
@@ -17,26 +18,45 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <div role="group" class="inline-flex gap-1 rounded-lg border border-input bg-muted/30 p-1" :aria-label="t('accounts.index.view.toggleAria')">
-        <Button
-            type="button"
-            :variant="modelValue === 'grid' ? 'secondary' : 'ghost'"
-            class="h-9 px-3.5"
-            :aria-pressed="modelValue === 'grid'"
-            @click="$emit('update:modelValue', 'grid')"
+    <TooltipProvider :delay-duration="300">
+        <div
+            role="group"
+            class="inline-flex gap-0.5 rounded-xl border border-input bg-muted/30 p-0.5"
+            :aria-label="t('accounts.index.view.toggleAria')"
         >
-            <LayoutGrid aria-hidden="true" />
-            {{ t('accounts.index.view.grid') }}
-        </Button>
-        <Button
-            type="button"
-            :variant="modelValue === 'list' ? 'secondary' : 'ghost'"
-            class="h-9 px-3.5"
-            :aria-pressed="modelValue === 'list'"
-            @click="$emit('update:modelValue', 'list')"
-        >
-            <List aria-hidden="true" />
-            {{ t('accounts.index.view.list') }}
-        </Button>
-    </div>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <Button
+                        type="button"
+                        :variant="modelValue === 'grid' ? 'secondary' : 'ghost'"
+                        size="icon"
+                        class="size-8 rounded-lg"
+                        :aria-label="t('accounts.index.view.grid')"
+                        :aria-pressed="modelValue === 'grid'"
+                        @click="$emit('update:modelValue', 'grid')"
+                    >
+                        <LayoutGrid class="size-4" :stroke-width="1.7" aria-hidden="true" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>{{ t('accounts.index.view.grid') }}</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <Button
+                        type="button"
+                        :variant="modelValue === 'list' ? 'secondary' : 'ghost'"
+                        size="icon"
+                        class="size-8 rounded-lg"
+                        :aria-label="t('accounts.index.view.list')"
+                        :aria-pressed="modelValue === 'list'"
+                        @click="$emit('update:modelValue', 'list')"
+                    >
+                        <List class="size-4" :stroke-width="1.7" aria-hidden="true" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>{{ t('accounts.index.view.list') }}</TooltipContent>
+            </Tooltip>
+        </div>
+    </TooltipProvider>
 </template>

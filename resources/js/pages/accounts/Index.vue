@@ -148,6 +148,10 @@ function openDeleteDialog(accountId: number) {
             <Button @click="openCreateDialog">{{ t(kind === 'wallets' ? 'accounts.index.addWallet' : 'accounts.index.addAccount') }}</Button>
         </template>
 
+        <template #headerTabsTrailing>
+            <AccountsViewToggle :model-value="viewMode" @update:model-value="setViewMode" />
+        </template>
+
         <div class="flex flex-col gap-6">
             <section
                 v-if="visibleAccounts.length === 0"
@@ -161,10 +165,6 @@ function openDeleteDialog(accountId: number) {
                 <p class="mt-2 max-w-sm text-sm text-muted-foreground">{{ t(`accounts.index.empty.${kind}.message`) }}</p>
                 <Button class="mt-4" @click="openCreateDialog">{{ t(`accounts.index.empty.${kind}.cta`) }}</Button>
             </section>
-
-            <div v-else class="flex items-center justify-end">
-                <AccountsViewToggle :model-value="viewMode" @update:model-value="setViewMode" />
-            </div>
 
             <div v-if="visibleAccounts.length > 0 && viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <AccountCard

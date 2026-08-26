@@ -21,6 +21,9 @@ const { t } = useI18n();
         <template #headerActions>
             <slot name="headerActions" />
         </template>
+        <template v-if="$slots.headerTabsTrailing" #headerTabsTrailing>
+            <slot name="headerTabsTrailing" />
+        </template>
         <slot />
     </AppLayout>
 </template>
