@@ -5,9 +5,7 @@ import PocketProgressBar from '@/components/pockets/PocketProgressBar.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatMoney } from '@/lib/formatMoney';
-import { cn } from '@/lib/utils';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { Archive, ArchiveRestore, GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import type { SortableEvent } from 'sortablejs';
 import { computed, ref, watch } from 'vue';
@@ -42,8 +40,6 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('pockets.index.title'), href: route('pockets.index') }]);
-
 const list = ref<Pocket[]>([]);
 const archiveDialogOpen = ref(false);
 const archivingPocketId = ref<number | null>(null);
@@ -58,12 +54,6 @@ watch(
     },
     { immediate: true },
 );
-
-const tabs = computed<{ key: PocketFilter; label: string }[]>(() => [
-    { key: 'active', label: t('pockets.filters.active') },
-    { key: 'archived', label: t('pockets.filters.archived') },
-    { key: 'all', label: t('pockets.filters.all') },
-]);
 
 function onReorderEnd(event: SortableEvent): void {
     if (event.oldIndex === undefined || event.newIndex === undefined || event.oldIndex === event.newIndex) {
@@ -94,9 +84,7 @@ function deletePocket(pocket: Pocket): void {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('pockets.index.title')" />
-
+    <AppLayout>
         <template #headerActions>
             <Button as-child>
                 <Link :href="route('pockets.create')">
@@ -107,18 +95,6 @@ function deletePocket(pocket: Pocket): void {
         </template>
 
         <div class="flex flex-col gap-6">
-            <div class="inline-flex rounded-lg bg-muted p-1">
-                <Link
-                    v-for="tab in tabs"
-                    :key="tab.key"
-                    :href="route('pockets.index', { filter: tab.key })"
-                    class="rounded-md px-3 py-1.5 text-sm transition-colors"
-                    :class="cn(props.filter === tab.key ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')"
-                >
-                    {{ tab.label }}
-                </Link>
-            </div>
-
             <section class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                 <h2 class="border-b border-sidebar-border/70 px-4 py-3 text-lg font-semibold dark:border-sidebar-border">
                     {{ t('pockets.index.listTitle') }}

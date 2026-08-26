@@ -12,8 +12,7 @@ import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSe
 import AppLayout from '@/layouts/AppLayout.vue';
 import { categoriesByIdMap, filterCategoriesByType, type CategoryOption } from '@/lib/categories';
 import { displayAmount, normalizeAmount } from '@/lib/money';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Link, router, useForm } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -64,17 +63,6 @@ function isoToDdMmYyyy(input: string): string {
     const [yyyy, mm, dd] = parts;
     return `${dd}-${mm}-${yyyy}`;
 }
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('transactions.index.title'),
-        href: transactionsIndexHref.value,
-    },
-    {
-        title: t('transactions.edit.title'),
-        href: `/transactions/${props.transaction.id}/edit`,
-    },
-]);
 
 const accountOptions = computed<DropdownOption<number>[]>(() => props.accounts.map((a) => ({ value: a.id, label: a.name })));
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
@@ -159,9 +147,7 @@ function fieldDescribedBy(errorId: string | undefined, hasError: boolean, hintId
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('transactions.edit.title')" />
-
+    <AppLayout :title="transaction.description || t('transactions.edit.title')" :description="t('transactions.edit.title')">
         <div class="flex flex-col gap-6">
             <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
                 <div class="flex flex-col gap-6">

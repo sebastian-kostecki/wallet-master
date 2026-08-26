@@ -7,8 +7,7 @@ import FormField from '@/components/forms/FormField.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -27,11 +26,6 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: t('categories.index.title'), href: route('categories.index') },
-    { title: t('categories.create.title'), href: route('categories.create') },
-]);
 
 const typeOptions = computed<DropdownOption<string>[]>(() => [
     { value: 'expense', label: t('categories.enums.type.expense') },
@@ -62,9 +56,7 @@ function submit() {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('categories.create.title')" />
-
+    <AppLayout>
         <div class="flex flex-col gap-6">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form class="grid gap-6" @submit.prevent="submit">

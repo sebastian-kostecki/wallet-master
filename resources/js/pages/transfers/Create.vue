@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { normalizeAmount } from '@/lib/money';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
@@ -36,17 +35,6 @@ const props = defineProps<{
 
 const { t } = useI18n();
 const { transactionsIndexHref } = useTransactionsIndexSearch();
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('transactions.index.title'),
-        href: transactionsIndexHref.value,
-    },
-    {
-        title: t('transfers.create.title'),
-        href: route('transfers.create'),
-    },
-]);
 
 const selectableAccounts = computed(() => props.accounts.filter((a) => !a.is_deleted));
 const canTransfer = computed(() => selectableAccounts.value.length >= 2);
@@ -131,9 +119,7 @@ function submit() {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('transfers.create.title')" />
-
+    <AppLayout>
         <div class="flex flex-col gap-6">
             <div class="grid gap-6 lg:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">

@@ -717,7 +717,6 @@
     "budget": {
         "nav": "Budżet",
         "monthly": {
-            "title": "Budżet — miesięczny",
             "description": "Plan i wykonanie w tym miesiącu.",
             "plan": "Plan",
             "actual": "Wykonanie",
@@ -732,7 +731,6 @@
             "planPlaceholder": "Nadpisanie miesięczne"
         },
         "yearly": {
-            "title": "Budżet — roczny",
             "description": "Roczny plan i wykonanie.",
             "plan": "Plan roczny",
             "actual": "Wykonanie",
@@ -787,7 +785,6 @@
     },
     "settings": {
         "title": "Ustawienia",
-        "description": "Zarządzaj profilem i ustawieniami konta",
         "nav": {
             "profile": "Profil",
             "password": "Hasło",
@@ -854,7 +851,8 @@
         }
     },
     "a11y": {
-        "skip_to_content": "Przejdź do treści"
+        "skip_to_content": "Przejdź do treści",
+        "page_tabs": "Widoki strony"
     },
     "currency": {
         "defaultSymbol": "zł"

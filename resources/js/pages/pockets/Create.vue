@@ -8,8 +8,7 @@ import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -39,11 +38,6 @@ const props = defineProps<{
 const { t } = useI18n();
 
 const initialCurrencyId = computed(() => props.currencies[0]?.id ?? null);
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    { title: t('pockets.index.title'), href: route('pockets.index') },
-    { title: t('pockets.create.title'), href: route('pockets.create') },
-]);
 
 const colorError = ref<string | null>(null);
 
@@ -105,9 +99,7 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('pockets.create.title')" />
-
+    <AppLayout>
         <div class="flex flex-col gap-6">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form class="grid gap-6" @submit.prevent="submit">

@@ -11,8 +11,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { categoriesByIdMap, filterCategoriesByType, firstCategoryId, type CategoryOption } from '@/lib/categories';
 import { normalizeAmount } from '@/lib/money';
 import { track } from '@/lib/telemetry';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { Coins } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -38,17 +37,6 @@ const { transactionsIndexSearch, transactionsIndexHref } = useTransactionsIndexS
 onMounted(() => {
     track('transaction_create_opened');
 });
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('transactions.index.title'),
-        href: transactionsIndexHref.value,
-    },
-    {
-        title: t('transactions.create.title'),
-        href: route('transactions.create'),
-    },
-]);
 
 const accountOptions = computed<DropdownOption<number>[]>(() => props.accounts.map((a) => ({ value: a.id, label: a.name })));
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
@@ -143,9 +131,7 @@ function submit() {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('transactions.create.title')" />
-
+    <AppLayout>
         <div class="flex flex-col gap-6">
             <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
                 <div class="flex flex-col gap-6">

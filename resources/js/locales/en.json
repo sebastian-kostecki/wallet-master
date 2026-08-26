@@ -712,7 +712,6 @@
     "budget": {
         "nav": "Budget",
         "monthly": {
-            "title": "Budget — monthly",
             "description": "Plan versus actual for this month.",
             "plan": "Plan",
             "actual": "Actual",
@@ -727,7 +726,6 @@
             "planPlaceholder": "Monthly override"
         },
         "yearly": {
-            "title": "Budget — yearly",
             "description": "Annual plan versus actuals.",
             "plan": "Annual plan",
             "actual": "Actual",
@@ -782,7 +780,6 @@
     },
     "settings": {
         "title": "Settings",
-        "description": "Manage your profile and account settings",
         "nav": {
             "profile": "Profile",
             "password": "Password",
@@ -849,7 +846,8 @@
         }
     },
     "a11y": {
-        "skip_to_content": "Skip to main content"
+        "skip_to_content": "Skip to main content",
+        "page_tabs": "Page views"
     },
     "currency": {
         "defaultSymbol": "zł"

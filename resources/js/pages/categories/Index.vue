@@ -4,8 +4,7 @@ import DeleteCategoryDialog from '@/components/categories/modals/DeleteCategoryD
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { filterCategoriesByType, type CategoryOption } from '@/lib/categories';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import type { SortableEvent } from 'sortablejs';
 import { computed, ref, watch } from 'vue';
@@ -22,8 +21,6 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('categories.index.title'), href: route('categories.index') }]);
 
 const expenseList = ref<Category[]>([]);
 const incomeList = ref<Category[]>([]);
@@ -64,9 +61,7 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('categories.index.title')" />
-
+    <AppLayout>
         <template #headerActions>
             <Button as-child>
                 <Link :href="route('categories.create')">

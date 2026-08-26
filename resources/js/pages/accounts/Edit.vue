@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { displayAmount, normalizeAmount } from '@/lib/money';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
@@ -74,17 +73,6 @@ const accountTypeOptions = computed<DropdownOption<string>[]>(() => {
     return props.accountTypes.map((a) => ({ value: a.value, label: t(a.label_key) }));
 });
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('accounts.index.title'),
-        href: route('accounts.index'),
-    },
-    {
-        title: t('accounts.edit.title'),
-        href: route('accounts.edit', props.account.id),
-    },
-]);
-
 const money = computed(() => {
     const resolvedLocale = locale.value === 'pl' ? 'pl-PL' : 'en-US';
 
@@ -125,9 +113,7 @@ const adjustProcessing = ref(false);
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('accounts.edit.title')" />
-
+    <AppLayout :title="account.name" :description="t('accounts.edit.title')">
         <div class="flex flex-col gap-6">
             <div class="grid gap-6 lg:grid-cols-2">
                 <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">

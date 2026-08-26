@@ -1,21 +1,13 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { ArrowLeftRight, BarChart3, Target, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
 
 const { t } = useI18n();
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('dashboard.headTitle'),
-        href: route('dashboard'),
-    },
-]);
 
 const quickActions = computed(() => [
     { key: 'accounts', href: route('accounts.index'), icon: Wallet },
@@ -27,15 +19,8 @@ const previewItems = ['imports', 'budget', 'pockets'];
 </script>
 
 <template>
-    <Head :title="t('dashboard.headTitle')" />
-
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout>
         <div class="flex h-full flex-1 flex-col gap-6">
-            <div>
-                <h1 class="text-xl font-semibold tracking-tight text-foreground">{{ t('dashboard.title') }}</h1>
-                <p class="mt-1.5 text-sm text-muted-foreground">{{ t('dashboard.description') }}</p>
-            </div>
-
             <section class="grid gap-4 md:grid-cols-3">
                 <article
                     v-for="action in quickActions"

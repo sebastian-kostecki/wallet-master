@@ -478,3 +478,11 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Wstępna kwota przy tworzeniu kieszeni (`initial_balance`; tylko create; spec `2026-06-08-pocket-initial-balance-design.md`)
 - [x] Miesięczna kwota odkładania bez celu — widoczna w budżecie (`2026-06-10-pocket-monthly-without-target-design.md`)
 
+**Nagłówek strony, breadcrumbs i taby (`2026-08-25-page-header-tabs-design.md`):**
+
+- [x] Centralny rejestr stron (`lib/pageRegistry.ts`) — tytuł, rodzic, grupa tabów
+- [x] `PageHeader` w layoucie: breadcrumbs + `h1` + opis + akcje + `<Head>`; strony nie deklarują chrome
+- [x] `PageTabs` (nawigacja, nie ARIA tabs) — kieszenie (filtr) i budżet (miesięczny/roczny)
+- [x] `TablePage` — szkielet stron z danymi; wdrożony na indeksie transakcji
+- [x] Testy: Vitest, `pageRegistry.test.ts` + `pageChrome.test.ts`
+

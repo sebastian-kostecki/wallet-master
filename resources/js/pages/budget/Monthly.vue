@@ -5,8 +5,7 @@ import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type CurrencyDisplay } from '@/lib/formatMoney';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -52,8 +51,6 @@ const props = defineProps<{
 const { t } = useI18n();
 const editingCategoryId = ref<number | null>(null);
 const editingMode = ref<'plan' | 'align' | null>(null);
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('budget.monthly.title'), href: route('budget.monthly') }]);
 
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
@@ -119,19 +116,9 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('budget.monthly.title')" />
-
+    <AppLayout>
         <div class="budget-page flex flex-col gap-6">
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex gap-2">
-                    <Button variant="outline" as-child>
-                        <Link :href="route('budget.monthly', { year, month })">{{ t('budget.view.monthly') }}</Link>
-                    </Button>
-                    <Button variant="ghost" as-child>
-                        <Link :href="route('budget.yearly', { year })">{{ t('budget.view.yearly') }}</Link>
-                    </Button>
-                </div>
                 <div class="flex items-center gap-2">
                     <Button variant="outline" @click="changePeriod(-1)">←</Button>
                     <span class="text-sm font-medium">{{ month }}/{{ year }}</span>

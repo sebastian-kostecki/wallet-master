@@ -8,8 +8,7 @@ import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialo
 import { Button, buttonVariants } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { PiggyBank, Wallet } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -38,13 +37,6 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('accounts.index.title'),
-        href: route('accounts.index'),
-    },
-]);
 
 const money = new Intl.NumberFormat('pl-PL', {
     minimumFractionDigits: 2,
@@ -112,9 +104,7 @@ function openDeleteDialog(accountId: number) {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('accounts.index.title')" />
-
+    <AppLayout>
         <template #headerActions>
             <Button as-child>
                 <Link :href="route('accounts.create')">{{ t('accounts.index.addAccount') }}</Link>

@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { normalizeAmount } from '@/lib/money';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
@@ -36,17 +35,6 @@ const props = defineProps<{
 const { t } = useI18n();
 
 const initialCurrencyId = computed(() => props.currencies[0]?.id ?? null);
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('accounts.index.title'),
-        href: route('accounts.index'),
-    },
-    {
-        title: t('accounts.create.title'),
-        href: route('accounts.create'),
-    },
-]);
 
 const form = useForm<{
     name: string;
@@ -100,9 +88,7 @@ function submit() {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('accounts.create.title')" />
-
+    <AppLayout>
         <div class="flex flex-col gap-6">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form @submit.prevent="submit" class="grid gap-6">

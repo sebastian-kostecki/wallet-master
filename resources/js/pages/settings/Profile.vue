@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { TransitionRoot } from '@headlessui/vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
 
 import DeleteUser from '@/components/DeleteUser.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { type BreadcrumbItem, type SharedData, type User } from '@/types';
-import { computed } from 'vue';
+import { type SharedData, type User } from '@/types';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
 
@@ -24,13 +23,6 @@ interface Props {
 defineProps<Props>();
 
 const { t } = useI18n();
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('settings.profile.title'),
-        href: route('profile.edit'),
-    },
-]);
 
 const page = usePage<SharedData>();
 const user = page.props.auth.user as User;
@@ -48,9 +40,7 @@ const submit = () => {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('settings.profile.title')" />
-
+    <AppLayout>
         <SettingsLayout>
             <div class="flex flex-col space-y-6">
                 <HeadingSmall :title="t('settings.profile.heading')" :description="t('settings.profile.description')" />

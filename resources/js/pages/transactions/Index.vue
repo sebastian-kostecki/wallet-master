@@ -2,7 +2,7 @@
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import ImportDialog from '@/components/import/ImportDialog.vue';
 import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
-import PaginationBar from '@/components/pagination/PaginationBar.vue';
+import TablePage from '@/components/page/TablePage.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
 import TransferCandidatesBanner, { type TransferCandidatePair } from '@/components/transfers/TransferCandidatesBanner.vue';
@@ -14,8 +14,7 @@ import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSe
 import AppLayout from '@/layouts/AppLayout.vue';
 import { track } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowDown,
     ArrowDownLeft,
@@ -159,13 +158,6 @@ const props = defineProps<{
 
 const page = usePage<{ errors?: Record<string, string> }>();
 const { t, locale } = useI18n();
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('transactions.index.title'),
-        href: route('transactions.index'),
-    },
-]);
 
 const money = computed(() => {
     const resolvedLocale = locale.value === 'pl' ? 'pl-PL' : 'en-US';
@@ -467,9 +459,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('transactions.index.title')" />
-
+    <AppLayout>
         <template #headerActions>
             <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <TransactionsIndexHeaderFilters
@@ -557,29 +547,44 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                     </div>
                 </div>
 
-                <div v-else-if="isFilteredEmpty" class="p-8 text-center">
-                    <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.filtered') }}</p>
-                    <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                        <Button as-child>
-                            <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
-                        </Button>
-                        <Button variant="secondary" @click="clearFilters">{{ t('transactions.index.filters.clear') }}</Button>
-                    </div>
-                </div>
+                <TablePage
+                    v-else
+                    :is-empty="isFilteredEmpty || isFirstUseEmpty"
+                    :paginator="transactions"
+                    :query="{
+                        account_id: filters.account_id ?? undefined,
+                        category_id: filters.category_id ?? undefined,
+                        from: filters.from ?? undefined,
+                        to: filters.to ?? undefined,
+                        sort: filters.sort ?? 'date',
+                        direction: filters.direction ?? 'desc',
+                        per_page: filters.per_page ?? undefined,
+                    }"
+                >
+                    <template #empty>
+                        <div v-if="isFilteredEmpty" class="p-8 text-center">
+                            <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.filtered') }}</p>
+                            <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                                <Button as-child>
+                                    <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
+                                </Button>
+                                <Button variant="secondary" @click="clearFilters">{{ t('transactions.index.filters.clear') }}</Button>
+                            </div>
+                        </div>
 
-                <div v-else-if="isFirstUseEmpty" class="p-8 text-center">
-                    <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.firstUse') }}</p>
-                    <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                        <Button as-child>
-                            <Link :href="route('transactions.create')">{{ t('transactions.index.addTransaction') }}</Link>
-                        </Button>
-                        <Button v-if="hasImportRoute" variant="secondary" as-child>
-                            <Link :href="route('imports.index')">{{ t('transactions.index.empty.import') }}</Link>
-                        </Button>
-                    </div>
-                </div>
+                        <div v-else class="p-8 text-center">
+                            <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.firstUse') }}</p>
+                            <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                                <Button as-child>
+                                    <Link :href="route('transactions.create')">{{ t('transactions.index.addTransaction') }}</Link>
+                                </Button>
+                                <Button v-if="hasImportRoute" variant="secondary" as-child>
+                                    <Link :href="route('imports.index')">{{ t('transactions.index.empty.import') }}</Link>
+                                </Button>
+                            </div>
+                        </div>
+                    </template>
 
-                <div v-else>
                     <div class="hidden md:block">
                         <table class="w-full table-fixed text-sm">
                             <caption class="sr-only">
@@ -1016,22 +1021,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                             </div>
                         </div>
                     </div>
-
-                    <div class="border-t border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                        <PaginationBar
-                            :paginator="transactions"
-                            :query="{
-                                account_id: filters.account_id ?? undefined,
-                                category_id: filters.category_id ?? undefined,
-                                from: filters.from ?? undefined,
-                                to: filters.to ?? undefined,
-                                sort: filters.sort ?? 'date',
-                                direction: filters.direction ?? 'desc',
-                                per_page: filters.per_page ?? undefined,
-                            }"
-                        />
-                    </div>
-                </div>
+                </TablePage>
             </div>
         </div>
 
