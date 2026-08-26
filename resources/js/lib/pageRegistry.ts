@@ -35,12 +35,11 @@ function budgetYear(current: Record<string, string>): number {
 }
 
 export const pageTabGroups: Record<string, PageTabGroup> = {
-    pockets: {
-        defaultKey: 'active',
+    catalog: {
+        defaultKey: 'pnl',
         tabs: [
-            { key: 'active', labelKey: 'pockets.filters.active', route: 'pockets.index', params: { filter: 'active' } },
-            { key: 'archived', labelKey: 'pockets.filters.archived', route: 'pockets.index', params: { filter: 'archived' } },
-            { key: 'all', labelKey: 'pockets.filters.all', route: 'pockets.index', params: { filter: 'all' } },
+            { key: 'pnl', labelKey: 'categories.tabs.pnl', route: 'categories.index' },
+            { key: 'pockets', labelKey: 'categories.tabs.pockets', route: 'pockets.index' },
         ],
     },
     accounts: {
@@ -89,11 +88,11 @@ export const pageNodes: Record<string, PageNode> = {
     },
     'transfers.create': { titleKey: 'transfers.create.title', parent: 'transactions' },
 
-    categories: { titleKey: 'categories.index.title', matchRoutes: ['categories.index'] },
+    categories: { titleKey: 'categories.index.title', matchRoutes: ['categories.index'], tabGroup: 'catalog' },
     'categories.create': { titleKey: 'categories.create.title', parent: 'categories' },
     'categories.edit': { titleKey: 'categories.edit.title', parent: 'categories' },
 
-    pockets: { titleKey: 'pockets.index.title', matchRoutes: ['pockets.index'], tabGroup: 'pockets' },
+    pockets: { titleKey: 'pockets.index.title', matchRoutes: ['pockets.index'], tabGroup: 'catalog' },
     'pockets.create': { titleKey: 'pockets.create.title', parent: 'pockets' },
     'pockets.edit': { titleKey: 'pockets.edit.title', parent: 'pockets' },
 

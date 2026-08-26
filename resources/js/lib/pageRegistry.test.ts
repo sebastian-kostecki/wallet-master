@@ -51,4 +51,22 @@ describe('pageRegistry', () => {
             labelKey: 'accounts.tabs.wallets',
         });
     });
+
+    it('registers catalog tabs for categories and pockets routes', () => {
+        const group = pageTabGroups.catalog;
+
+        expect(pageNodes.categories.tabGroup).toBe('catalog');
+        expect(pageNodes.pockets.tabGroup).toBe('catalog');
+        expect(group.defaultKey).toBe('pnl');
+        expect(group.tabs.map((tab) => tab.key)).toEqual(['pnl', 'pockets']);
+        expect(group.tabs[0]).toMatchObject({
+            route: 'categories.index',
+            labelKey: 'categories.tabs.pnl',
+        });
+        expect(group.tabs[1]).toMatchObject({
+            route: 'pockets.index',
+            labelKey: 'categories.tabs.pockets',
+        });
+        expect(pageTabGroups.pockets).toBeUndefined();
+    });
 });

@@ -632,6 +632,10 @@
             "updated": "Category updated.",
             "deleted": "Category deleted.",
             "estimate_saved": "Plan saved."
+        },
+        "tabs": {
+            "pnl": "Income and expenses",
+            "pockets": "Envelopes"
         }
     },
     "pockets": {
@@ -667,11 +671,6 @@
             "completed": "Completed",
             "overdue": "Overdue",
             "archived": "Archived"
-        },
-        "filters": {
-            "active": "Active",
-            "archived": "Archived",
-            "all": "All"
         },
         "archive": {
             "title": "Archive envelope?",

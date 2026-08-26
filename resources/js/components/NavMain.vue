@@ -21,15 +21,22 @@ function pathOf(url: string): string {
     return url.split('?')[0];
 }
 
-function isNavItemActive(href: string): boolean {
-    const current = pathOf(page.url);
-    const target = pathOf(href);
-
+function pathMatches(current: string, target: string): boolean {
     if (target === '/' || /\/dashboard\/?$/.test(target)) {
         return current === target || /\/dashboard\/?$/.test(current);
     }
 
     return current === target || current.startsWith(`${target}/`);
+}
+
+function isNavItemActive(item: NavItem): boolean {
+    const current = pathOf(page.url);
+
+    if (pathMatches(current, pathOf(item.href))) {
+        return true;
+    }
+
+    return (item.alsoActiveFor ?? []).some((href) => pathMatches(current, pathOf(href)));
 }
 </script>
 
@@ -39,11 +46,11 @@ function isNavItemActive(href: string): boolean {
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
                     as-child
-                    :is-active="isNavItemActive(item.href)"
+                    :is-active="isNavItemActive(item)"
                     :tooltip="item.title"
                     class="h-auto rounded-xl px-3 py-2.5 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.04] hover:text-foreground data-[active=true]:bg-foreground/[0.07] data-[active=true]:font-medium data-[active=true]:text-foreground group-data-[collapsible=icon]:!size-9 group-data-[collapsible=icon]:!p-2 [&>svg]:!size-[18px]"
                 >
-                    <Link :href="item.href" :aria-current="isNavItemActive(item.href) ? 'page' : undefined">
+                    <Link :href="item.href" :aria-current="isNavItemActive(item) ? 'page' : undefined">
                         <component :is="item.icon" v-if="item.icon" :stroke-width="1.7" />
                         <span>{{ item.title }}</span>
                     </Link>

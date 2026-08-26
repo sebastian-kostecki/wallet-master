@@ -637,6 +637,10 @@
             "updated": "Kategoria została zaktualizowana.",
             "deleted": "Kategoria została usunięta.",
             "estimate_saved": "Plan został zapisany."
+        },
+        "tabs": {
+            "pnl": "Przychody i wydatki",
+            "pockets": "Kieszenie"
         }
     },
     "pockets": {
@@ -672,11 +676,6 @@
             "completed": "Zrealizowana",
             "overdue": "Opóźniona",
             "archived": "Zarchiwizowana"
-        },
-        "filters": {
-            "active": "Aktywne",
-            "archived": "Zarchiwizowane",
-            "all": "Wszystkie"
         },
         "archive": {
             "title": "Zarchiwizować kieszeń?",
