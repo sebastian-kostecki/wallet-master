@@ -28,31 +28,6 @@ trait ValidatesPocketId
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
-    protected function optionalPocketIdRules(): array
-    {
-        return [
-            'pocket_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('pockets', 'id')->where(
-                    fn ($query) => $query->where('user_id', $this->user()->id),
-                ),
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (! is_numeric($value) || ! is_numeric($this->input('account_id'))) {
-                        return;
-                    }
-
-                    if (! $this->pocketCurrencyMatchesAccounts((int) $value, [(int) $this->input('account_id')])) {
-                        $fail('Pocket currency must match the account currency.');
-                    }
-                },
-            ],
-        ];
-    }
-
-    /**
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     protected function pocketIdRulesForTransfer(
         string $fromAccountField = 'from_account_id',
         string $toAccountField = 'to_account_id',
@@ -73,7 +48,7 @@ trait ValidatesPocketId
                     }
 
                     if (! $this->pocketCurrencyMatchesAccounts((int) $value, [(int) $fromId, (int) $toId])) {
-                        $fail('Pocket currency must match the savings account currency.');
+                        $fail('Pocket currency must match the transfer currency.');
                     }
                 },
             ],
@@ -131,23 +106,7 @@ trait ValidatesPocketId
             $accountIds = [(int) $transaction->account_id, (int) $sibling->account_id];
 
             if (! $this->pocketCurrencyMatchesAccounts((int) $pocketId, $accountIds)) {
-                $validator->errors()->add('pocket_id', 'Pocket currency must match the savings account currency.');
-            }
-        });
-    }
-
-    protected function validateOptionalPocketCurrency(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator): void {
-            $pocketId = $this->input('pocket_id');
-            $accountId = $this->input('account_id');
-
-            if (! is_numeric($pocketId) || ! is_numeric($accountId)) {
-                return;
-            }
-
-            if (! $this->pocketCurrencyMatchesAccounts((int) $pocketId, [(int) $accountId])) {
-                $validator->errors()->add('pocket_id', 'Pocket currency must match the account currency.');
+                $validator->errors()->add('pocket_id', 'Pocket currency must match the transfer currency.');
             }
         });
     }

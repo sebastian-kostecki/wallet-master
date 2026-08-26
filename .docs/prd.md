@@ -914,7 +914,7 @@ Ekran **Kategorie** (`/categories`) to wyłącznie katalog etykiet P&L: CRUD, ko
 
 **Reguły**
 - API szacunków kategorii bez zmian semantyki; zmiana tylko miejsca edycji w UI.
-- Sidebar: Konta · Transakcje · Budżet · Kategorie · Kieszenie (§7).
+- Sidebar: Konta · Transakcje · Budżet · Kategorie (§7).
 
 **Zdarzenia:** `category_estimate_annual_saved`, `category_estimate_monthly_saved`, `category_estimate_yearly_plan_saved` (kontekst: budget screen)
 
@@ -951,9 +951,9 @@ Po dodaniu: uzupełnij **Indeks identyfikatorów FR** i tabelę zdarzeń w §3.4
 
 **Język UI:** polski. Architektura pod przyszłe i18n (formatowanie dat/kwot), bez pełnego i18n w MVP.
 
-**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista; dodaj/edytuj w modalu) · Transakcje (lista; dodaj/edytuj P&L w modalu **bez** pola kieszeni, **transfer bez kategorii** z opcjonalną kieszenią i ruchem FR-P3, baner kandydatów FR-I6; **kategoria** wymagana w formularzach P&L od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny z sekcją kieszeni + edycja planów P&L; widok roczny z edycją szacunków rocznych P&L) · **Kategorie** (CRUD, kolejność — **bez** szacunków, FR-UX1) · **Kieszenie** (katalog kopert: reorder, create/edit z ikoną, kolorem i planowaniem — **bez** archiwizacji i filtrów).
+**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista; dodaj/edytuj w modalu) · Transakcje (lista; dodaj/edytuj P&L w modalu **bez** pola kieszeni, **transfer bez kategorii** z opcjonalną kieszenią i ruchem FR-P3, baner kandydatów FR-I6; **kategoria** wymagana w formularzach P&L od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny z sekcją kieszeni + edycja planów P&L; widok roczny z edycją szacunków rocznych P&L) · **Kategorie** (katalog: zakładka **Przychody i wydatki** — CRUD kategorii P&L, kolejność, **bez** szacunków, FR-UX1; zakładka **Kieszenie** — katalog kopert: reorder, create/edit z ikoną, kolorem i planowaniem — **bez** archiwizacji i filtrów).
 
-**Nawigacja (sidebar):** Konta · Transakcje (Import jako akcja/modal, baner kandydatów z licznikiem) · **Budżet** (przełącznik miesięczny / roczny) · **Kategorie** (katalog P&L) · **Kieszenie** (jeden link do katalogu kopert). Ustawienia (`/settings/*`) — profil, hasło, wygląd; **kategorie nie przenoszą się do Ustawień**.
+**Nawigacja (sidebar):** Konta · Transakcje (Import jako akcja/modal, baner kandydatów z licznikiem) · **Budżet** (przełącznik miesięczny / roczny) · **Kategorie** (jeden link; aktywny na `categories.*` i `pockets.*`; zakładki **Przychody i wydatki** / **Kieszenie**). Ustawienia (`/settings/*`) — profil, hasło, wygląd; **kategorie nie przenoszą się do Ustawień**.
 
 **Formaty:** data **DD-MM-YYYY**; kwota w UI — PL (przecinek), tolerancja kropki; import — patrz FR-I1.
 
