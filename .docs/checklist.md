@@ -420,6 +420,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Migracje: `categories`, `category_*_estimates`, `transactions.category_id` + backfill
 - [x] Zestaw startowy kategorii (`EnsureUserCategories`) przy rejestracji
 - [x] CRUD kategorii (backend + `categories/Index.vue`)
+- [x] Dodanie i edycja kategorii z listy `/kategorie` (modal; GET create/edit → redirect na index) **[plan 2026-08-26-categories-modals]**
 - [x] Szacunki roczne i miesięczne (API + UI na kategoriach / budżecie miesięcznym)
 - [x] `category_id` wymagane na transakcji, transferze i imporcie
 - [x] Pamięć kategorii w DescriptionMemory + przypisanie przy imporcie
@@ -440,7 +441,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 **Wave 2 UX (shipped):**
 
 - [x] Migracje: `pockets` (legacy `goals`), `transactions.pocket_id`
-- [x] CRUD kieszeni (backend + `pockets/Index.vue`, `Create.vue`, `Edit.vue`)
+- [x] CRUD kieszeni (backend + `pockets/Index.vue` + modal `PocketFormDialog`)
+- [x] Dodanie i edycja kieszeni z listy `/kieszenie` (modal; GET create/edit → redirect na index) **[plan 2026-08-26-pockets-modals]**
 - [x] ~~Kieszeń wymagana na transferze z/do konta `Savings`; opcjonalna na wydatku~~ → zastąpione spec `2026-08-26-transaction-scope-pocket-catalog-design.md` (XOR kategoria/kieszeń; opcjonalna kieszeń + `pocket_movement` na transferze)
 - [x] Budżet miesięczny: sekcja per-kieszeń (`pocket_rows`)
 - [x] Plany P&L tylko na budżecie — `categories/Index.vue` bez pól szacunków

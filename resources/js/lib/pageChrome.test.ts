@@ -66,15 +66,15 @@ describe('resolvePageChrome', () => {
     });
 
     it('lets a detail page override the leaf, the title and the document title', () => {
-        const chrome = resolvePageChrome(at('pockets.edit', { pocket: '12' }), { title: 'Wakacje', description: 'pockets.edit.title' }, deps);
+        const chrome = resolvePageChrome(at('profile.edit'), { title: 'Jan Kowalski', description: 'settings.profile.heading' }, deps);
 
         expect(chrome.crumbs).toEqual([
-            { title: 'pockets.index.title', href: '/pockets.index' },
-            { title: 'Wakacje', href: null },
+            { title: 'settings.title', href: '/profile.edit' },
+            { title: 'Jan Kowalski', href: null },
         ]);
-        expect(chrome.title).toBe('Wakacje');
-        expect(chrome.description).toBe('pockets.edit.title');
-        expect(chrome.documentTitle).toBe('Wakacje');
+        expect(chrome.title).toBe('Jan Kowalski');
+        expect(chrome.description).toBe('settings.profile.heading');
+        expect(chrome.documentTitle).toBe('Jan Kowalski');
     });
 
     it('activates the pnl catalog tab on categories index', () => {

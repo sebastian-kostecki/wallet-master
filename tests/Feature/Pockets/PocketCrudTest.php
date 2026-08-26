@@ -170,6 +170,36 @@ test('update pocket cannot change initial balance', function () {
     expect((string) $pocket->fresh()->initial_balance)->toBe('500.00');
 });
 
+test('pockets index includes form options', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('pockets.index', absolute: false))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('icons')
+            ->has('colors')
+            ->has('currencies')
+        );
+});
+
+test('pocket create redirects to index', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('pockets.create', absolute: false))
+        ->assertRedirect(route('pockets.index', absolute: false));
+});
+
+test('pocket edit redirects to index', function () {
+    $user = User::factory()->create();
+    $pocket = Pocket::factory()->create(['user_id' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('pockets.edit', $pocket, absolute: false))
+        ->assertRedirect(route('pockets.index', absolute: false));
+});
+
 test('pockets index balance includes initial balance', function () {
     $user = User::factory()->create();
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');

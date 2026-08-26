@@ -1,15 +1,25 @@
 <script setup lang="ts">
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import CategoryFormDialog from '@/components/categories/modals/CategoryFormDialog.vue';
 import DeleteCategoryDialog from '@/components/categories/modals/DeleteCategoryDialog.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { filterCategoriesByType, type CategoryOption } from '@/lib/categories';
-import { Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import type { SortableEvent } from 'sortablejs';
 import { computed, ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import { useI18n } from 'vue-i18n';
+
+type IconOption = {
+    value: string;
+    label_key: string;
+};
+
+type ColorOption = {
+    value: string;
+};
 
 type Category = CategoryOption & {
     type_label_key: string;
@@ -18,6 +28,8 @@ type Category = CategoryOption & {
 
 const props = defineProps<{
     categories: Category[];
+    icons: IconOption[];
+    colors: ColorOption[];
 }>();
 
 const { t } = useI18n();
@@ -32,10 +44,26 @@ function syncLists(): void {
 
 watch(() => props.categories, syncLists, { deep: true, immediate: true });
 
+const formOpen = ref(false);
+const formMode = ref<'create' | 'edit'>('create');
+const editingCategory = ref<Category | null>(null);
+
 const deletingCategoryId = ref<number | null>(null);
 const deleteDialogOpen = ref(false);
 const deleteProcessing = ref(false);
 const deletingCategory = computed(() => props.categories.find((c) => c.id === deletingCategoryId.value) ?? null);
+
+function openCreateDialog(): void {
+    formMode.value = 'create';
+    editingCategory.value = null;
+    formOpen.value = true;
+}
+
+function openEditDialog(cat: Category): void {
+    formMode.value = 'edit';
+    editingCategory.value = cat;
+    formOpen.value = true;
+}
 
 function openDeleteDialog(cat: Category) {
     deletingCategoryId.value = cat.id;
@@ -63,11 +91,9 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
 <template>
     <AppLayout>
         <template #headerActions>
-            <Button as-child>
-                <Link :href="route('categories.create')">
-                    <Plus class="h-4 w-4" aria-hidden="true" />
-                    {{ t('categories.index.add') }}
-                </Link>
+            <Button type="button" @click="openCreateDialog">
+                <Plus class="h-4 w-4" aria-hidden="true" />
+                {{ t('categories.index.add') }}
             </Button>
         </template>
 
@@ -111,19 +137,21 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                                 <GripVertical class="h-4 w-4" />
                             </button>
 
-                            <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
+                            <button
+                                type="button"
+                                class="flex min-w-0 flex-1 items-center gap-3 text-left hover:opacity-80"
+                                @click="openEditDialog(cat)"
+                            >
                                 <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
                                 <span v-if="cat.is_system" class="shrink-0 text-xs font-normal text-muted-foreground">
                                     ({{ t('categories.index.system') }})
                                 </span>
-                            </Link>
+                            </button>
                         </div>
 
                         <div class="no-drag flex shrink-0 items-center gap-1">
-                            <Button variant="ghost" size="icon" as-child>
-                                <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
-                                    <Pencil class="h-4 w-4 text-muted-foreground" />
-                                </Link>
+                            <Button variant="ghost" size="icon" type="button" :aria-label="t('actions.edit')" @click="openEditDialog(cat)">
+                                <Pencil class="h-4 w-4 text-muted-foreground" />
                             </Button>
                             <Button
                                 v-if="!cat.is_system"
@@ -167,19 +195,21 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                                 <GripVertical class="h-4 w-4" />
                             </button>
 
-                            <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
+                            <button
+                                type="button"
+                                class="flex min-w-0 flex-1 items-center gap-3 text-left hover:opacity-80"
+                                @click="openEditDialog(cat)"
+                            >
                                 <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
                                 <span v-if="cat.is_system" class="shrink-0 text-xs font-normal text-muted-foreground">
                                     ({{ t('categories.index.system') }})
                                 </span>
-                            </Link>
+                            </button>
                         </div>
 
                         <div class="no-drag flex shrink-0 items-center gap-1">
-                            <Button variant="ghost" size="icon" as-child>
-                                <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
-                                    <Pencil class="h-4 w-4 text-muted-foreground" />
-                                </Link>
+                            <Button variant="ghost" size="icon" type="button" :aria-label="t('actions.edit')" @click="openEditDialog(cat)">
+                                <Pencil class="h-4 w-4 text-muted-foreground" />
                             </Button>
                             <Button
                                 v-if="!cat.is_system"
@@ -198,6 +228,8 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                 </VueDraggable>
             </section>
         </div>
+
+        <CategoryFormDialog v-model:open="formOpen" :mode="formMode" :category="editingCategory" :icons="icons" :colors="colors" />
 
         <DeleteCategoryDialog
             v-model:open="deleteDialogOpen"

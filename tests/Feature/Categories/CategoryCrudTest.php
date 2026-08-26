@@ -50,30 +50,28 @@ test('category resource includes icon and color on index', function () {
         ->has('categories', 25)
         ->where('categories.0.icon', fn ($v) => is_string($v) && $v !== '')
         ->where('categories.0.color', fn ($v) => is_string($v) && str_starts_with($v, '#'))
-    );
-});
-
-test('user can view category create page', function () {
-    $user = User::factory()->create();
-    ensureUserCategories($user);
-
-    $this->actingAs($user)->get(route('categories.create'))->assertOk()->assertInertia(fn ($page) => $page
-        ->component('categories/Create')
         ->has('icons')
         ->has('colors')
     );
 });
 
-test('user can view category edit page', function () {
+test('category create redirects to index', function () {
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $this->actingAs($user)
+        ->get(route('categories.create', absolute: false))
+        ->assertRedirect(route('categories.index', absolute: false));
+});
+
+test('category edit redirects to index', function () {
     $user = User::factory()->create();
     ensureUserCategories($user);
     $category = Category::where('user_id', $user->id)->first();
 
-    $this->actingAs($user)->get(route('categories.edit', $category))->assertOk()->assertInertia(fn ($page) => $page
-        ->component('categories/Edit')
-        ->has('category')
-        ->where('category.id', $category->id)
-    );
+    $this->actingAs($user)
+        ->get(route('categories.edit', $category, absolute: false))
+        ->assertRedirect(route('categories.index', absolute: false));
 });
 
 test('cannot delete category with transactions', function () {

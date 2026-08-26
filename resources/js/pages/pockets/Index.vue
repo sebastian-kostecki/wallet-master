@@ -1,15 +1,33 @@
 <script setup lang="ts">
+import PocketFormDialog from '@/components/pockets/modals/PocketFormDialog.vue';
 import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import PocketProgressBar from '@/components/pockets/PocketProgressBar.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatMoney } from '@/lib/formatMoney';
-import { Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import type { SortableEvent } from 'sortablejs';
 import { ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import { useI18n } from 'vue-i18n';
+
+type IconOption = {
+    value: string;
+    label_key: string;
+};
+
+type ColorOption = {
+    value: string;
+};
+
+type Currency = {
+    id: number;
+    code: string;
+    name: string;
+    symbol: string;
+    precision: number;
+};
 
 type Pocket = {
     id: number;
@@ -17,12 +35,15 @@ type Pocket = {
     icon: string;
     color: string;
     sort_order: number;
-    currency: {
-        code: string;
-        symbol: string;
-        precision: number;
-    };
+    currency_id: number;
+    currency: Currency;
+    initial_balance: string;
     target_amount: string | null;
+    planning_mode: 'monthly' | 'by_date' | null;
+    monthly_contribution: string | null;
+    target_date: string | null;
+    recommended_monthly: string | null;
+    projected_completion_date: string | null;
     is_completed: boolean;
     is_overdue: boolean;
     progress_percent: number | null;
@@ -31,6 +52,9 @@ type Pocket = {
 
 const props = defineProps<{
     pockets: Pocket[];
+    icons: IconOption[];
+    colors: ColorOption[];
+    currencies: Currency[];
 }>();
 
 const { t } = useI18n();
@@ -44,6 +68,22 @@ watch(
     },
     { immediate: true },
 );
+
+const formOpen = ref(false);
+const formMode = ref<'create' | 'edit'>('create');
+const editingPocket = ref<Pocket | null>(null);
+
+function openCreateDialog(): void {
+    formMode.value = 'create';
+    editingPocket.value = null;
+    formOpen.value = true;
+}
+
+function openEditDialog(pocket: Pocket): void {
+    formMode.value = 'edit';
+    editingPocket.value = pocket;
+    formOpen.value = true;
+}
 
 function onReorderEnd(event: SortableEvent): void {
     if (event.oldIndex === undefined || event.newIndex === undefined || event.oldIndex === event.newIndex) {
@@ -71,11 +111,9 @@ function deletePocket(pocket: Pocket): void {
 <template>
     <AppLayout>
         <template #headerActions>
-            <Button as-child>
-                <Link :href="route('pockets.create')">
-                    <Plus class="h-4 w-4" aria-hidden="true" />
-                    {{ t('pockets.index.add') }}
-                </Link>
+            <Button type="button" @click="openCreateDialog">
+                <Plus class="h-4 w-4" aria-hidden="true" />
+                {{ t('pockets.index.add') }}
             </Button>
         </template>
 
@@ -142,10 +180,8 @@ function deletePocket(pocket: Pocket): void {
                                 {{ t('pockets.status.overdue') }}
                             </span>
 
-                            <Button variant="ghost" size="icon" as-child>
-                                <Link :href="route('pockets.edit', pocket.id)" :aria-label="t('actions.edit')">
-                                    <Pencil class="h-4 w-4 text-muted-foreground" />
-                                </Link>
+                            <Button variant="ghost" size="icon" type="button" :aria-label="t('actions.edit')" @click="openEditDialog(pocket)">
+                                <Pencil class="h-4 w-4 text-muted-foreground" />
                             </Button>
 
                             <Button variant="ghost" size="icon" type="button" :aria-label="t('pockets.index.delete')" @click="deletePocket(pocket)">
@@ -156,5 +192,7 @@ function deletePocket(pocket: Pocket): void {
                 </VueDraggable>
             </section>
         </div>
+
+        <PocketFormDialog v-model:open="formOpen" :mode="formMode" :pocket="editingPocket" :icons="icons" :colors="colors" :currencies="currencies" />
     </AppLayout>
 </template>

@@ -585,8 +585,7 @@
             "description": "Add a label for income or expenses."
         },
         "edit": {
-            "title": "Edit category",
-            "description": "Update this category's name, color, or type."
+            "title": "Edit category"
         },
         "fields": {
             "color": "Color",
@@ -645,7 +644,6 @@
         },
         "edit": {
             "title": "Edit envelope",
-            "description": "Update this envelope's target and plan.",
             "recommendedMonthly": "Recommended monthly",
             "projectedCompletionDate": "Projected completion date"
         },

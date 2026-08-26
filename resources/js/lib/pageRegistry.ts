@@ -89,12 +89,8 @@ export const pageNodes: Record<string, PageNode> = {
     'transfers.create': { titleKey: 'transfers.create.title', parent: 'transactions' },
 
     categories: { titleKey: 'categories.index.title', matchRoutes: ['categories.index'], tabGroup: 'catalog' },
-    'categories.create': { titleKey: 'categories.create.title', parent: 'categories' },
-    'categories.edit': { titleKey: 'categories.edit.title', parent: 'categories' },
 
     pockets: { titleKey: 'pockets.index.title', matchRoutes: ['pockets.index'], tabGroup: 'catalog' },
-    'pockets.create': { titleKey: 'pockets.create.title', parent: 'pockets' },
-    'pockets.edit': { titleKey: 'pockets.edit.title', parent: 'pockets' },
 
     budget: { titleKey: 'budget.nav', matchRoutes: ['budget.monthly', 'budget.yearly'], tabGroup: 'budget' },
 

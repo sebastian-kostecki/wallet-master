@@ -590,8 +590,7 @@
             "description": "Dodaj etykietę przychodu lub wydatku."
         },
         "edit": {
-            "title": "Edycja kategorii",
-            "description": "Zmień nazwę, kolor lub typ kategorii."
+            "title": "Edycja kategorii"
         },
         "fields": {
             "color": "Kolor",
@@ -650,7 +649,6 @@
         },
         "edit": {
             "title": "Edytuj kieszeń",
-            "description": "Zmień cel i plan tej kieszeni.",
             "recommendedMonthly": "Rekomendowana kwota miesięczna",
             "projectedCompletionDate": "Przewidywana data realizacji"
         },
