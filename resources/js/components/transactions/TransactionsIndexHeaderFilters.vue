@@ -205,7 +205,7 @@ const hasError = computed(() => errorMessage.value.trim() !== '');
 
 <template>
     <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center" role="search" :aria-label="t('transactions.index.a11y.filters')">
-        <div class="grid gap-2 sm:flex sm:items-center">
+        <div class="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
             <div class="min-w-56 sm:min-w-64">
                 <DropdownSelect
                     id="account_id"
@@ -313,7 +313,7 @@ const hasError = computed(() => errorMessage.value.trim() !== '');
             </div>
         </div>
 
-        <div v-if="hasError" class="sm:ml-auto" aria-live="polite">
+        <div v-if="hasError" aria-live="polite">
             <div :id="errorId">
                 <InputError :message="errorMessage" />
             </div>
