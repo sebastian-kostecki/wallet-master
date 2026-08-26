@@ -43,8 +43,10 @@
             }
         },
         "create": {
-            "title": "Add account",
-            "description": "Set up an account and opening balance.",
+            "title": "Add bank account",
+            "titleWallet": "Add wallet",
+            "description": "Add a bank account and opening balance.",
+            "descriptionWallet": "Add a cash wallet and opening balance.",
             "back": "Back",
             "fields": {
                 "name": {

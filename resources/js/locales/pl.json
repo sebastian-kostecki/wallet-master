@@ -43,8 +43,10 @@
             }
         },
         "create": {
-            "title": "Dodaj konto",
-            "description": "Dodaj konto i saldo początkowe.",
+            "title": "Dodaj rachunek",
+            "titleWallet": "Dodaj portfel",
+            "description": "Dodaj rachunek bankowy i saldo początkowe.",
+            "descriptionWallet": "Dodaj portfel gotówkowy i saldo początkowe.",
             "back": "Wróć",
             "fields": {
                 "name": {

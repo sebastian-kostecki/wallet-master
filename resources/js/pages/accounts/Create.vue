@@ -5,8 +5,9 @@ import FormField from '@/components/forms/FormField.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { accountKindFromUrl, defaultBankForKind } from '@/lib/accountKind';
 import { normalizeAmount } from '@/lib/money';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
@@ -34,6 +35,9 @@ const props = defineProps<{
 
 const { t } = useI18n();
 
+const page = usePage();
+const kind = accountKindFromUrl(page.url);
+
 const initialCurrencyId = computed(() => props.currencies[0]?.id ?? null);
 
 const form = useForm<{
@@ -44,7 +48,7 @@ const form = useForm<{
     opening_balance: string;
 }>({
     name: '',
-    bank: props.banks[0]?.value ?? '',
+    bank: defaultBankForKind(kind, props.banks),
     type: props.accountTypes[0]?.value ?? '',
     currency_id: initialCurrencyId.value,
     opening_balance: '0,00',
@@ -88,7 +92,10 @@ function submit() {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout
+        :title="t(kind === 'wallets' ? 'accounts.create.titleWallet' : 'accounts.create.title')"
+        :description="t(kind === 'wallets' ? 'accounts.create.descriptionWallet' : 'accounts.create.description')"
+    >
         <div class="flex flex-col gap-6">
             <div class="max-w-xl rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
                 <form @submit.prevent="submit" class="grid gap-6">
