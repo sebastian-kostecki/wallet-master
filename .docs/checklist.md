@@ -117,15 +117,16 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Walidacje: kwota != 0 (FormRequest); konto nieusunięte
   - [x] Aktualizacja `current_balance` konta deltą kwoty
   - [x] Brak blokady duplikatów w `StoreTransactionRequest` / `UpdateTransactionRequest` — ręczne duplikaty przez `manualDedupeHash()` **[plan §2]**
+  - [x] Dodanie i edycja z listy `/transakcje` (modal; GET create → index?new=1; GET edit → index) **[plan 2026-08-26-transactions-modals]**
 - [~] Edycja transakcji:
   - [x] Zmiana pól i przeliczenie delty salda (stara kwota → nowa kwota)
   - [x] Blokada edycji dla transakcji na usuniętym koncie
   - [x] Edycja `booked_at` niezależnie od `date` (nie wpływa na saldo, tylko na okres) **[plan §1]**
-  - [x] Edycja transakcji typu `transfer` (z ustawionym `transfer_id`) — kwota/konto zablokowane; unlink w Edit **[plan §4, 2026-06-03]**
+  - [x] Edycja transakcji typu `transfer` (z ustawionym `transfer_id`) — kwota/konto zablokowane; unlink w modalu edycji **[plan §4, 2026-06-03; 2026-08-26-transactions-modals]**
 - [x] Usuwanie transakcji:
   - [x] Aktualizacja salda deltą (odwrócenie wpływu)
   - [x] Blokada usuwania dla transakcji na usuniętym koncie
-  - [x] UI: akcja usuwania (Index + Edit, dialog potwierdzenia)
+  - [x] UI: akcja usuwania (Index, dialog potwierdzenia)
 
 ---
 
