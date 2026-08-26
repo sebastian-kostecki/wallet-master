@@ -14,7 +14,7 @@ import { displayAmount, normalizeAmount } from '@/lib/money';
 import { track } from '@/lib/telemetry';
 import { useForm } from '@inertiajs/vue3';
 import { ChevronDown, Coins } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
 
@@ -49,6 +49,7 @@ const props = defineProps<{
     categories: CategoryOption[];
     pockets: { id: number; name: string }[];
     accountIdFilter: number | null;
+    formResetKey?: number;
 }>();
 
 const emit = defineEmits<{
@@ -202,15 +203,31 @@ function resetForm(): void {
     form.subject = '';
 }
 
+async function focusAccountTrigger(): Promise<void> {
+    await nextTick();
+    document.getElementById('account_id')?.focus();
+}
+
 watch(
     () => props.open,
-    (isOpen) => {
+    async (isOpen) => {
         if (isOpen) {
             resetForm();
 
             if (props.mode === 'create') {
                 track('transaction_create_opened');
+            } else {
+                await focusAccountTrigger();
             }
+        }
+    },
+);
+
+watch(
+    () => props.formResetKey,
+    () => {
+        if (props.open && props.mode === 'create') {
+            resetForm();
         }
     },
 );
@@ -304,6 +321,7 @@ function submit(): void {
                             class="h-9 justify-center rounded-lg"
                             :aria-pressed="transactionKind === 'income'"
                             :disabled="form.processing"
+                            autofocus
                             @click="transactionKind = 'income'"
                         >
                             {{ t('transactions.types.income') }}

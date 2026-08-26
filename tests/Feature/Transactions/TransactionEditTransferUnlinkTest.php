@@ -59,7 +59,7 @@ test('index exposes transfer_id for linked leg', function () {
         );
 });
 
-test('unlink from edit redirects back and clears transfer_id', function () {
+test('unlink from index redirects back and clears transfer_id', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     $transferId = (string) Str::uuid();

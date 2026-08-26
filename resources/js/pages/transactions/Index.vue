@@ -439,13 +439,21 @@ const { createRequested } = useTransactionFormDialog();
 
 const formDialogOpen = ref(false);
 const formDialogMode = ref<'create' | 'edit'>('create');
+const formResetKey = ref(0);
 const editingTransactionId = ref<number | null>(null);
 
 const editingTransaction = computed(() => props.transactions.data.find((tx) => tx.id === editingTransactionId.value) ?? null);
 
 function openCreateDialog(): void {
+    const alreadyOpenCreate = formDialogOpen.value && formDialogMode.value === 'create';
+
     formDialogMode.value = 'create';
     editingTransactionId.value = null;
+
+    if (alreadyOpenCreate) {
+        formResetKey.value++;
+    }
+
     formDialogOpen.value = true;
 }
 
@@ -1097,6 +1105,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
         <TransactionFormDialog
             v-model:open="formDialogOpen"
             :mode="formDialogMode"
+            :form-reset-key="formResetKey"
             :transaction="editingTransaction"
             :accounts="accounts"
             :categories="categories"
