@@ -30,15 +30,9 @@ final class PocketController extends Controller
 
     public function index(Request $request, ListPockets $listPockets): Response
     {
-        $filter = $request->query('filter', 'active');
-        if (! in_array($filter, ['active', 'archived', 'all'], true)) {
-            $filter = 'active';
-        }
-
-        $listPockets->handle($request->user(), $filter);
+        $listPockets->handle($request->user());
 
         return Inertia::render('pockets/Index', [
-            'filter' => $filter,
             'pockets' => PocketResource::collection($listPockets->getPockets())->resolve(),
         ]);
     }
@@ -75,17 +69,7 @@ final class PocketController extends Controller
         Pocket $pocket,
         UpdatePocket $updatePocket,
     ): RedirectResponse {
-        $validated = $request->validated();
-        $updatePocket->handle($pocket, $validated);
-
-        $onlyArchiveToggle = count($validated) === 1 && array_key_exists('is_archived', $validated);
-
-        if ($onlyArchiveToggle) {
-            return back()->with('toast', [
-                'type' => 'success',
-                'message_key' => 'pockets.toast.updated',
-            ]);
-        }
+        $updatePocket->handle($pocket, $request->validated());
 
         return to_route('pockets.index')->with('toast', [
             'type' => 'success',

@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import PocketArchiveDialog from '@/components/pockets/modals/PocketArchiveDialog.vue';
 import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import PocketProgressBar from '@/components/pockets/PocketProgressBar.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatMoney } from '@/lib/formatMoney';
 import { Link, router } from '@inertiajs/vue3';
-import { Archive, ArchiveRestore, GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import type { SortableEvent } from 'sortablejs';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import { useI18n } from 'vue-i18n';
 
@@ -24,28 +23,19 @@ type Pocket = {
         precision: number;
     };
     target_amount: string | null;
-    is_archived: boolean;
     is_completed: boolean;
     is_overdue: boolean;
     progress_percent: number | null;
     balance: string;
 };
 
-type PocketFilter = 'active' | 'archived' | 'all';
-
 const props = defineProps<{
     pockets: Pocket[];
-    filter: PocketFilter;
 }>();
 
 const { t } = useI18n();
 
 const list = ref<Pocket[]>([]);
-const archiveDialogOpen = ref(false);
-const archivingPocketId = ref<number | null>(null);
-const archiveProcessing = ref(false);
-
-const archivingPocket = computed(() => list.value.find((pocket) => pocket.id === archivingPocketId.value) ?? null);
 
 watch(
     () => props.pockets,
@@ -67,11 +57,6 @@ function onReorderEnd(event: SortableEvent): void {
         },
         { preserveScroll: true },
     );
-}
-
-function openArchiveDialog(pocket: Pocket): void {
-    archivingPocketId.value = pocket.id;
-    archiveDialogOpen.value = true;
 }
 
 function deletePocket(pocket: Pocket): void {
@@ -156,30 +141,11 @@ function deletePocket(pocket: Pocket): void {
                             >
                                 {{ t('pockets.status.overdue') }}
                             </span>
-                            <span
-                                v-if="pocket.is_archived"
-                                class="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
-                            >
-                                {{ t('pockets.status.archived') }}
-                            </span>
 
                             <Button variant="ghost" size="icon" as-child>
                                 <Link :href="route('pockets.edit', pocket.id)" :aria-label="t('actions.edit')">
                                     <Pencil class="h-4 w-4 text-muted-foreground" />
                                 </Link>
-                            </Button>
-
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                class="no-drag"
-                                :disabled="archiveProcessing"
-                                :aria-label="pocket.is_archived ? t('pockets.index.unarchive') : t('pockets.index.archive')"
-                                @click="openArchiveDialog(pocket)"
-                            >
-                                <ArchiveRestore v-if="pocket.is_archived" class="h-4 w-4 text-muted-foreground" />
-                                <Archive v-else class="h-4 w-4 text-muted-foreground" />
                             </Button>
 
                             <Button variant="ghost" size="icon" type="button" :aria-label="t('pockets.index.delete')" @click="deletePocket(pocket)">
@@ -190,17 +156,5 @@ function deletePocket(pocket: Pocket): void {
                 </VueDraggable>
             </section>
         </div>
-
-        <PocketArchiveDialog
-            v-model:open="archiveDialogOpen"
-            :pocket-id="archivingPocketId"
-            :pocket-name="archivingPocket?.name ?? null"
-            :icon="archivingPocket?.icon ?? null"
-            :color="archivingPocket?.color ?? null"
-            :is-archived="archivingPocket?.is_archived ?? false"
-            :disabled="archiveProcessing"
-            @processing="(value) => (archiveProcessing = value)"
-            @success="archivingPocketId = null"
-        />
     </AppLayout>
 </template>

@@ -65,7 +65,6 @@ final class UpdatePocketRequest extends FormRequest
             'planning_mode' => ['nullable', Rule::enum(PocketPlanningMode::class), Rule::requiredIf($hasTarget && $this->filled('target_amount'))],
             'monthly_contribution' => ['nullable', 'numeric', 'min:0', 'required_if:planning_mode,monthly', 'prohibited_if:planning_mode,by_date'],
             'target_date' => ['nullable', 'date', 'required_if:planning_mode,by_date', 'prohibited_if:planning_mode,monthly'],
-            'is_archived' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
         ];
     }

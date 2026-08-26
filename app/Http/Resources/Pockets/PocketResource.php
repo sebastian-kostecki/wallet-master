@@ -46,7 +46,6 @@ final class PocketResource extends JsonResource
             'planning_mode' => $this->planning_mode?->value,
             'monthly_contribution' => $this->monthly_contribution !== null ? (string) $this->monthly_contribution : null,
             'target_date' => $this->target_date?->toDateString(),
-            'is_archived' => $this->is_archived,
             'is_completed' => PocketBalance::isCompleted($this->resource, $balance),
             'is_overdue' => PocketPlanningProjection::isOverdue($this->resource, $balance),
             'progress_percent' => PocketBalance::progressPercent($this->resource, $balance),

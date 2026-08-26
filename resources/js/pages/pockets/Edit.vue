@@ -5,9 +5,7 @@ import FormField from '@/components/forms/FormField.vue';
 import SegmentedControl, { type SegmentedControlOption } from '@/components/forms/SegmentedControl.vue';
 import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatMoney } from '@/lib/formatMoney';
 import { Link, useForm } from '@inertiajs/vue3';
@@ -38,7 +36,6 @@ type Pocket = {
     planning_mode: 'monthly' | 'by_date' | null;
     monthly_contribution: string | null;
     target_date: string | null;
-    is_archived: boolean;
     recommended_monthly: string | null;
     projected_completion_date: string | null;
 };
@@ -59,7 +56,6 @@ const form = useForm({
     planning_mode: (props.pocket.planning_mode ?? 'monthly') as 'monthly' | 'by_date',
     monthly_contribution: props.pocket.monthly_contribution ?? '',
     target_date: props.pocket.target_date ?? '',
-    is_archived: props.pocket.is_archived,
 });
 
 const hasTarget = computed(() => {
@@ -197,18 +193,6 @@ function submit(): void {
                             {{ t('pockets.edit.projectedCompletionDate') }}:
                             <span class="font-medium text-foreground">{{ pocket.projected_completion_date ?? '—' }}</span>
                         </p>
-                    </div>
-
-                    <div class="flex items-start gap-3 rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
-                        <Checkbox
-                            id="is_archived"
-                            :checked="form.is_archived"
-                            :disabled="form.processing"
-                            @update:checked="(value) => (form.is_archived = value === true)"
-                        />
-                        <div class="grid gap-1 leading-tight">
-                            <Label for="is_archived" class="cursor-pointer">{{ t('pockets.status.archived') }}</Label>
-                        </div>
                     </div>
 
                     <div class="flex flex-wrap gap-3">

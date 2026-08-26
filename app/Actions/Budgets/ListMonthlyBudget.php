@@ -147,7 +147,6 @@ final class ListMonthlyBudget
     {
         $pockets = Pocket::query()
             ->forUser($user->id)
-            ->active()
             ->ordered()
             ->with('currency')
             ->get();
