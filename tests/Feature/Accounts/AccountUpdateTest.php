@@ -66,3 +66,27 @@ test('updating a cash account to a bank redirects to the accounts tab', function
         ])
         ->assertRedirect(route('accounts.index', ['kind' => 'accounts'], absolute: false));
 });
+
+test('updating a bank account to cash redirects to the wallets tab', function () {
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'mBank',
+        'bank' => 'mbank',
+        'type' => 'checking',
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('accounts.update', $account, absolute: false), [
+            'name' => 'Gotówka',
+            'bank' => 'cash',
+            'type' => 'checking',
+            'opening_balance' => 0,
+        ])
+        ->assertRedirect(route('accounts.index', ['kind' => 'wallets'], absolute: false));
+});

@@ -253,7 +253,7 @@ function submit() {
                     <div class="grid gap-3">
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <Button variant="secondary" as-child>
-                                <Link :href="route('accounts.index')">{{ t('accounts.create.back') }}</Link>
+                                <Link :href="route('accounts.index', { kind })">{{ t('accounts.create.back') }}</Link>
                             </Button>
 
                             <Button type="submit" :disabled="form.processing">{{ t('actions.save') }}</Button>
