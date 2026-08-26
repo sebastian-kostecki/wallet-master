@@ -2,6 +2,7 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\PocketMovement;
 use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Currency;
@@ -50,6 +51,7 @@ test('cumulative balance sums savings transfer legs across all months', function
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-01-15',
         'booked_at' => '2026-01-15',
         'amount' => '-300.00',
@@ -65,6 +67,7 @@ test('cumulative balance sums savings transfer legs across all months', function
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-01-15',
         'booked_at' => '2026-01-15',
         'amount' => '300.00',
@@ -82,6 +85,7 @@ test('cumulative balance sums savings transfer legs across all months', function
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Withdrawal,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '-100.00',
@@ -97,6 +101,7 @@ test('cumulative balance sums savings transfer legs across all months', function
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Withdrawal,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '100.00',
@@ -154,6 +159,7 @@ test('cumulative balance ignores savings legs in a different currency than the p
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-01-15',
         'booked_at' => '2026-01-15',
         'amount' => '100.00',
@@ -170,6 +176,7 @@ test('cumulative balance ignores savings legs in a different currency than the p
         'currency_id' => $eurId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-02-15',
         'booked_at' => '2026-02-15',
         'amount' => '999.00',
@@ -225,6 +232,7 @@ test('cumulative balance adds initial_balance to transfer net', function () {
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-01-15',
         'booked_at' => '2026-01-15',
         'amount' => '200.00',

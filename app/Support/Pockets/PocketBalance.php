@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Support\Pockets;
 
-use App\Enums\AccountType;
+use App\Enums\PocketMovement;
 use App\Models\Pocket;
-use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Transactions\TransactionDedupe;
+use Illuminate\Support\Carbon;
 
 final class PocketBalance
 {
@@ -18,30 +18,8 @@ final class PocketBalance
      */
     public static function cumulative(User $user, Pocket $pocket): array
     {
-        $savedQuery = BudgetTransactionQuery::forUser($user);
-        $savedSum = $savedQuery
-            ->where('pocket_id', $pocket->id)
-            ->whereNotNull('transfer_id')
-            ->where('amount', '>', 0)
-            ->whereHas('account', fn ($q) => $q
-                ->where('type', AccountType::Savings)
-                ->where('currency_id', $pocket->currency_id))
-            ->sum('amount');
-
-        $savedTotal = TransactionDedupe::amountToDecimalString((string) $savedSum);
-
-        $releasedQuery = BudgetTransactionQuery::forUser($user);
-        $releasedSum = $releasedQuery
-            ->where('pocket_id', $pocket->id)
-            ->whereNotNull('transfer_id')
-            ->where('amount', '<', 0)
-            ->whereHas('account', fn ($q) => $q
-                ->where('type', AccountType::Savings)
-                ->where('currency_id', $pocket->currency_id))
-            ->selectRaw('COALESCE(SUM(ABS(amount)), 0) as total')
-            ->value('total');
-
-        $releasedTotal = TransactionDedupe::amountToDecimalString((string) $releasedSum);
+        $savedTotal = PocketMovementTotal::sum($user, $pocket, PocketMovement::Deposit);
+        $releasedTotal = PocketMovementTotal::sum($user, $pocket, PocketMovement::Withdrawal);
         $transferNet = bcsub($savedTotal, $releasedTotal, 2);
         $balance = bcadd((string) $pocket->initial_balance, $transferNet, 2);
 
@@ -78,20 +56,29 @@ final class PocketBalance
      */
     public static function monthlyNetMap(User $user, Pocket $pocket): array
     {
-        $transactions = BudgetTransactionQuery::forUser($user)
+        $rows = BudgetTransactionQuery::forUser($user)
             ->where('pocket_id', $pocket->id)
             ->whereNotNull('transfer_id')
-            ->whereHas('account', fn ($q) => $q
-                ->where('type', AccountType::Savings)
-                ->where('currency_id', $pocket->currency_id))
-            ->get(['booked_at', 'amount']);
+            ->where('currency_id', $pocket->currency_id)
+            ->whereNotNull('pocket_movement')
+            ->groupBy('transfer_id', 'pocket_movement')
+            ->selectRaw('pocket_movement, MAX(booked_at) as booked_at, MAX(ABS(amount)) as amt')
+            ->get();
 
         $map = [];
 
-        foreach ($transactions as $transaction) {
-            /** @var Transaction $transaction */
-            $ym = $transaction->booked_at->format('Y-m');
-            $map[$ym] = bcadd($map[$ym] ?? '0.00', TransactionDedupe::amountToDecimalString((string) $transaction->amount), 2);
+        foreach ($rows as $row) {
+            $ym = Carbon::parse($row->booked_at)->format('Y-m');
+            $amt = TransactionDedupe::amountToDecimalString((string) $row->amt);
+            $movement = $row->pocket_movement instanceof PocketMovement
+                ? $row->pocket_movement
+                : PocketMovement::from((string) $row->pocket_movement);
+
+            if ($movement === PocketMovement::Deposit) {
+                $map[$ym] = bcadd($map[$ym] ?? '0.00', $amt, 2);
+            } else {
+                $map[$ym] = bcsub($map[$ym] ?? '0.00', $amt, 2);
+            }
         }
 
         return $map;
