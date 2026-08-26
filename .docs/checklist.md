@@ -441,7 +441,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 - [x] Migracje: `pockets` (legacy `goals`), `transactions.pocket_id`
 - [x] CRUD kieszeni (backend + `pockets/Index.vue`, `Create.vue`, `Edit.vue`)
-- [x] Kieszeń wymagana na transferze z/do konta `Savings`; opcjonalna na wydatku
+- [x] ~~Kieszeń wymagana na transferze z/do konta `Savings`; opcjonalna na wydatku~~ → zastąpione spec `2026-08-26-transaction-scope-pocket-catalog-design.md` (XOR kategoria/kieszeń; opcjonalna kieszeń + `pocket_movement` na transferze)
 - [x] Budżet miesięczny: sekcja per-kieszeń (`pocket_rows`)
 - [x] Plany P&L tylko na budżecie — `categories/Index.vue` bez pól szacunków
 - [x] Budżet roczny: edycja szacunków rocznych P&L inline
@@ -454,9 +454,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 - [x] Migracja target model; `PocketPlanningMode`, `PocketBalance`, `PocketPlanningProjection`
 - [x] CRUD backend: walidacja planowania; `PocketResource`
-- [x] `ListPockets` z filtrem; `ReorderPockets`; archiwizacja + telemetria `pocket_archived` / `pocket_unarchived`
+- [x] `ListPockets` bez filtra archiwum; `ReorderPockets`; ~~archiwizacja + telemetria `pocket_archived` / `pocket_unarchived`~~ → katalog bez archiwizacji (spec `2026-08-26-transaction-scope-pocket-catalog-design.md`)
 - [x] Trasy: `pockets` resource, `pockets.reorder`
-- [x] Frontend: reorder, progress bar, `PocketBadge`, `PocketArchiveDialog`
+- [x] Frontend: reorder, progress bar, `PocketBadge`; ~~`PocketArchiveDialog`~~ → bez archiwizacji
 - [x] Locale: `pockets.*`, `budget.monthly.pockets_section`
 
 **Waluta kieszeni:**
@@ -491,4 +491,13 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] `PageTabs` (nawigacja, nie ARIA tabs) — kieszenie (filtr) i budżet (miesięczny/roczny)
 - [x] `TablePage` — szkielet stron z danymi; wdrożony na indeksie transakcji
 - [x] Testy: Vitest, `pageRegistry.test.ts` + `pageChrome.test.ts`
+
+**Transaction scope + pocket catalog (`improvement/transaction-scope-pocket-catalog`, spec `2026-08-26-transaction-scope-pocket-catalog-design.md`):**
+
+- [x] XOR: kategoria P&L vs kieszeń na transferze (`category_id` ↔ `pocket_id` + `pocket_movement`)
+- [x] Opcjonalna kieszeń na dowolnym transferze (ROR↔ROR, Savings, Cash); wymagany `pocket_movement` gdy kieszeń ustawiona
+- [x] Metryki kieszeni z `pocket_movement` (deposit/withdrawal), liczone raz per `transfer_id`; bez `linked_expenses`
+- [x] Katalog kieszeni: jeden link w sidebarze; bez filtrów aktywne/zarchiwizowane
+- [x] Usunięcie kieszeni czyści `pocket_id` i `pocket_movement` na powiązanych transferach
+- [x] PRD delta (FR-P3, FR-C5, FR-P1; usunięte FR-P4) + testy `MonthlyBudgetTest`
 

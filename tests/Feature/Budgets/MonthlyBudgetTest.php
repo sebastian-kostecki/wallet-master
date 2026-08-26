@@ -2,6 +2,7 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\PocketMovement;
 use App\Enums\PocketPlanningMode;
 use App\Enums\TransactionType;
 use App\Models\Account;
@@ -114,6 +115,7 @@ test('monthly budget pocket row tracks save and release on savings account', fun
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '-200.00',
@@ -130,6 +132,7 @@ test('monthly budget pocket row tracks save and release on savings account', fun
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '200.00',
@@ -148,6 +151,7 @@ test('monthly budget pocket row tracks save and release on savings account', fun
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Withdrawal,
         'date' => '2026-03-15',
         'booked_at' => '2026-03-15',
         'amount' => '-150.00',
@@ -164,6 +168,7 @@ test('monthly budget pocket row tracks save and release on savings account', fun
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Withdrawal,
         'date' => '2026-03-15',
         'booked_at' => '2026-03-15',
         'amount' => '150.00',
@@ -181,6 +186,7 @@ test('monthly budget pocket row tracks save and release on savings account', fun
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['monthly_plan'] === '500.00')
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['saved'] === '200.00')
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['released'] === '150.00')
+        ->where('pocket_rows', fn ($rows) => ! array_key_exists('linked_expenses', collect($rows)->firstWhere('pocket_id', $pocket->id)))
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['progress_percent'] === 40)
         ->where('pocket_rows', fn ($rows) => ! array_key_exists('balance', collect($rows)->firstWhere('pocket_id', $pocket->id)))
         ->where('pocket_rows', fn ($rows) => ! array_key_exists('balance_cumulative', collect($rows)->firstWhere('pocket_id', $pocket->id)))
@@ -229,6 +235,7 @@ test('monthly budget pocket progress uses saved vs plan not cumulative target', 
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-02-10',
         'booked_at' => '2026-02-10',
         'amount' => '-3000.00',
@@ -245,6 +252,7 @@ test('monthly budget pocket progress uses saved vs plan not cumulative target', 
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-02-10',
         'booked_at' => '2026-02-10',
         'amount' => '3000.00',
@@ -263,6 +271,7 @@ test('monthly budget pocket progress uses saved vs plan not cumulative target', 
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '-250.00',
@@ -279,6 +288,7 @@ test('monthly budget pocket progress uses saved vs plan not cumulative target', 
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '250.00',
@@ -350,6 +360,7 @@ test('monthly budget summary includes pocket saved as expense and released as in
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '-200.00',
@@ -366,6 +377,7 @@ test('monthly budget summary includes pocket saved as expense and released as in
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
         'date' => '2026-03-10',
         'booked_at' => '2026-03-10',
         'amount' => '200.00',
@@ -384,6 +396,7 @@ test('monthly budget summary includes pocket saved as expense and released as in
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Withdrawal,
         'date' => '2026-03-15',
         'booked_at' => '2026-03-15',
         'amount' => '-150.00',
@@ -400,6 +413,7 @@ test('monthly budget summary includes pocket saved as expense and released as in
         'currency_id' => $plnId,
         'category_id' => null,
         'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Withdrawal,
         'date' => '2026-03-15',
         'booked_at' => '2026-03-15',
         'amount' => '150.00',
@@ -512,5 +526,80 @@ test('monthly budget shows pocket plan without target when monthly contribution 
     $response->assertInertia(fn ($page) => $page
         ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['monthly_plan'] === '500.00')
         ->where('summary.plan.expense', fn ($expense) => bccomp((string) $expense, '500.00', 2) >= 0)
+    );
+});
+
+test('monthly budget pocket row tracks checking to checking deposit', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    ensureUserCategories($user);
+
+    $pocket = Pocket::factory()->create([
+        'user_id' => $user->id,
+        'monthly_contribution' => '500.00',
+    ]);
+
+    $checkingA = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'ROR A',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $checkingB = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'ROR B',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $transferId = 'checking-deposit-transfer-uuid';
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $checkingA->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
+        'date' => '2026-03-10',
+        'booked_at' => '2026-03-10',
+        'amount' => '-175.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Earmark on checking',
+        'normalized_description' => 'earmark on checking',
+        'dedupe_hash' => md5('checking-deposit-out', true),
+        'transfer_id' => $transferId,
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $checkingB->id,
+        'currency_id' => $plnId,
+        'category_id' => null,
+        'pocket_id' => $pocket->id,
+        'pocket_movement' => PocketMovement::Deposit,
+        'date' => '2026-03-10',
+        'booked_at' => '2026-03-10',
+        'amount' => '175.00',
+        'type' => TransactionType::Transfer,
+        'description' => 'Earmark on checking',
+        'normalized_description' => 'earmark on checking',
+        'dedupe_hash' => md5('checking-deposit-in', true),
+        'transfer_id' => $transferId,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('budget.monthly', ['year' => 2026, 'month' => 3], absolute: false));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('pocket_rows', fn ($rows) => collect($rows)->firstWhere('pocket_id', $pocket->id)['saved'] === '175.00')
+        ->where('pocket_rows', fn ($rows) => ! array_key_exists('linked_expenses', collect($rows)->firstWhere('pocket_id', $pocket->id)))
     );
 });

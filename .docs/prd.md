@@ -14,7 +14,7 @@
 - **Saldo:** `current_balance` aktualizowane przy zmianach transakcji; komenda `accounts:recalculate-balance` jako safety net.
 - **Lista transakcji:** filtry, sort i podsumowanie po dacie okresu (`booked_at`; UI kolumny: `COALESCE(booked_at, date)`); sumy wpływów/wydatków **bez** wewnętrznych transferów (`transfer_id` pusty).
 - **Kategorie i szacunki (wave 2):** każda transakcja P&L (`income` / `expense` / `adjustment`) ma `category_id`; transfer wewnętrzny ma `category_id = null`; szacunki roczne (kanoniczne) + opcjonalne nadpisania miesięczne; widok miesięczny (plan vs fakty P&L + sekcja celów) i roczny (plan vs fakty bez transferów) — §3.1a, FR-C1–C7, FR-P*, FR-UX1.
-- **Kieszenie oszczędnościowe (wave 2 UX):** koperta oszczędnościowa z **walutą** (`currency_id`, MVP: tylko PLN w UI); opcjonalna kwota docelowa, tryb planowania; śledzenie przez transfery na kontach `Savings` w tej samej walucie (flow A) + opcjonalne powiązanie wydatku — §3.1a, FR-P1–P5.
+- **Kieszenie oszczędnościowe (wave 2 UX):** koperta oszczędnościowa z **walutą** (`currency_id`, MVP: tylko PLN w UI); opcjonalna kwota docelowa, tryb planowania; śledzenie przez opcjonalną kieszeń i ruch (`pocket_movement`: Odłożenie/Wypłata) na transferze wewnętrznym — §3.1a, FR-P1–P3, FR-P5.
 - **Poza zakresem:** §3.2 — nie implementuj bez rozszerzenia tego dokumentu.
 
 ---
@@ -38,7 +38,7 @@
 - **Kategoria:** wpis w katalogu użytkownika (`income` \| `expense`) z kolejnością wyświetlania, ikoną (Lucide) i kolorem (paleta hex); etykieta przepływów **zewnętrznych** P&L — wymagana na `income`, `expense`, `adjustment`; **brak** na transferze wewnętrznym (`category_id = null`).
 - **Szacunek roczny:** planowana kwota na rok kalendarzowy per kategoria (przychód lub wydatek); można przekroczyć — to nie jest twardy limit.
 - **Szacunek miesięczny:** opcjonalne, jawne nadpisanie planu na dany miesiąc; niezależne od rocznego (brak nadpisania = plan `0` w widoku miesięcznym). Prognoza roczna nadal może używać `szacunek_roczny ÷ 12` dla zamkniętych miesięcy bez nadpisania.
-- **Kieszeń (pocket, EN: envelope):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L** i **bez roku kalendarzowego** (jak katalog kategorii, nie jak wiersz budżetu P&L). Każda kieszeń ma **walutę** (`currency_id`) — kwoty docelowe, saldo i planowanie są w tej walucie (MVP: tylko PLN w UI; pole w DB jak przy koncie). Opcjonalna **kwota docelowa** (`target_amount`); przy kwocie — wzajemnie wykluczające się planowanie: **składka miesięczna** (deklaracja użytkownika) **lub** **data docelowa** (termin; system liczy rekomendowaną składkę). Wykonanie: skumulowane saldo z transferów na kontach `Savings` **w walucie kieszeni** (flow A: odkładanie → wypłata na ROR → wydatek na ROR z opcjonalnym powiązaniem kieszeni). Ręczna archiwizacja ukrywa kieszeń z domyślnych list i sekcji budżetu.
+- **Kieszeń (pocket, EN: envelope):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L** i **bez roku kalendarzowego** (jak katalog kategorii, nie jak wiersz budżetu P&L). Każda kieszeń ma **walutę** (`currency_id`) — kwoty docelowe, saldo i planowanie są w tej walucie (MVP: tylko PLN w UI; pole w DB jak przy koncie). Opcjonalna **kwota docelowa** (`target_amount`); przy kwocie — wzajemnie wykluczające się planowanie: **składka miesięczna** (deklaracja użytkownika) **lub** **data docelowa** (termin; system liczy rekomendowaną składkę). Wykonanie: skumulowane saldo z transferów wewnętrznych z przypisaną kieszenią i ruchem (`pocket_movement`: **Odłożenie** / **Wypłata**) w walucie kieszeni — każda para transferu liczona raz per `transfer_id`. Kategoria P&L i kieszeń są **wzajemnie wykluczające** (XOR): P&L ma `category_id`, transfer ma opcjonalnie `pocket_id` + `pocket_movement`.
 - **Widok budżetu miesięczny:** plan vs wykonanie per kategoria P&L w miesiącu + sekcja **Kieszenie** (plan / odłożono / wypłacono / saldo per kieszeń).
 - **Widok budżetu roczny:** szacunek roczny vs wykonanie per kategoria P&L w roku; bez agregacji transferów wewnętrznych; edycja planów P&L na tym ekranie (FR-UX1).
 
@@ -77,12 +77,12 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 
 1. CRUD kieszeni (FR-P1)
 2. Planowanie kieszeni: kwota docelowa + tryb planowania (FR-P2)
-3. Wymagana kieszeń na transferze z udziałem konta `Savings` (FR-P3)
+3. Opcjonalna kieszeń i ruch na transferze wewnętrznym (FR-P3)
 4. Widok kieszeni w budżecie miesięcznym zamiast agregatu transferów (FR-P5)
 5. Plany P&L tylko na ekranach budżetu — kategorie bez pól szacunków (FR-UX1)
 6. Kategoria P&L tylko na przepływach zewnętrznych — transfer bez `category_id`, bez kategorii „Oszczędności” (spec: `.docs/superpowers/specs/2026-06-04-transfer-category-decoupling-design.md`)
 
-**Should w rozszerzeniu wave 2 UX:** opcjonalna kieszeń na wydatku/przychodzie (FR-P4).
+**Should w rozszerzeniu wave 2 UX:** (brak — FR-P4 usunięte; kieszeń wyłącznie na transferze, XOR z kategorią P&L).
 
 ### 3.2 Poza zakresem (Out of scope)
 
@@ -134,8 +134,7 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 | `category_estimate_annual_saved`, `category_estimate_monthly_saved` | Szacunki | FR-C3, FR-C4 |
 | `budget_view_monthly`, `budget_view_yearly` | Widoki budżetu | FR-C5, FR-C6 |
 | `pocket_created`, `pocket_updated`, `pocket_deleted` | Kieszenie | FR-P1 |
-| `pocket_archived`, `pocket_unarchived` | Archiwizacja kieszeni | FR-P1 |
-| `pocket_assigned_transfer`, `pocket_assigned_transaction` | Przypisanie kieszeni | FR-P3, FR-P4 |
+| `pocket_assigned_transfer` | Przypisanie kieszeni do transferu | FR-P3 |
 | `category_memory_hit`, `category_memory_miss` | Pamięć kategorii (import) | FR-C7 |
 
 Kanał: log `telemetry` (daily, JSON line) — patrz §8.
@@ -364,7 +363,7 @@ Usunięcie konta nie usuwa transakcji; blokuje ich edycję i usuwanie.
 | **Domena** | Transactions |
 
 **Zachowanie**
-Dodawanie, edycja, usuwanie na aktywnym koncie; wpływ na `current_balance`. Od wave 2: wymagane pole `category_id` (FR-C2). Od rozszerzenia wave 2 UX: opcjonalne `pocket_id` na przychodzie/wydatku (FR-P4).
+Dodawanie, edycja, usuwanie na aktywnym koncie; wpływ na `current_balance`. Od wave 2: wymagane pole `category_id` (FR-C2). Transakcja P&L **nie** może mieć `pocket_id` (XOR z kategorią).
 
 **Kryteria akceptacji**
 1. Given aktywne konto When dodanie z `date`, opcjonalnie `booked_at` (default = `date`), kwota, opis, opcjonalnie `subject`, **kategoria** Then wpis na liście, saldo zaktualizowane (ujemna zmniejsza, dodatnia zwiększa).
@@ -415,22 +414,23 @@ Lista z filtrem konta i dat (`booked_at`), sort, paginacja, suma wpływów i wyd
 | **Domena** | Transactions |
 
 **Zachowanie**
-Jedna akcja UI → 2 transakcje, wspólna data, przeciwne kwoty, wspólny `transfer_id`. **Bez** `category_id` na obu nogach (`null`). Od rozszerzenia wave 2 UX: gdy uczestniczy konto `Savings`, wymagany ten sam `pocket_id` na obu nogach (FR-P3); transfer ROR↔ROR bez `pocket_id`.
+Jedna akcja UI → 2 transakcje, wspólna data, przeciwne kwoty, wspólny `transfer_id`. **Bez** `category_id` na obu nogach (`null`). Opcjonalnie: ten sam `pocket_id` na obu nogach z wymaganym `pocket_movement` (`deposit` \| `withdrawal`); dozwolone na dowolnym transferze (ROR↔ROR, ROR↔Savings, Cash↔ROR). Gdy `pocket_id` ustawione — waluta kieszeni musi pasować do waluty transferu.
 
 **Kryteria akceptacji**
 1. Given dwa różne konta When transfer kwoty X w dacie D Then na źródle `-X`, na celu `+X`, salda obu kont zaktualizowane.
 2. Given transfer When zapis Then obie nogi mają `category_id = null`.
-3. Given transfer z kontem `Savings` When brak `pocket_id` Then 422.
-4. Given transfer ROR↔ROR When `pocket_id` ustawione Then 422.
-5. Given transfer When `category_id` ustawione Then 422.
-6. Given transfer z `Savings` When zapis Then obie nogi mają ten sam `pocket_id`.
-7. Given rozłączenie transferu When unlink Then typ przywrócony ze znaku kwoty i przypisana kategoria fallback (pierwsza pasującego typu wg `sort_order`).
+3. Given transfer bez `pocket_id` When zapis Then 201; obie nogi mają `pocket_id = null` i `pocket_movement = null`.
+4. Given transfer z `pocket_id` When brak `pocket_movement` Then 422.
+5. Given transfer ROR↔ROR z `pocket_id` i `pocket_movement = deposit` When zapis Then 201; metryka kieszeni +X (raz per `transfer_id`).
+6. Given transfer When `category_id` ustawione Then 422.
+7. Given transfer z `pocket_id` When zapis Then obie nogi mają ten sam `pocket_id` i `pocket_movement`.
+8. Given rozłączenie transferu When unlink Then typ przywrócony ze znaku kwoty, przypisana kategoria fallback, `pocket_id` i `pocket_movement` = null.
 
 **Reguły**
 - To samo konto jako źródło i cel — zabronione.
 - Usunięte konto — blokada.
 - Formularz: kwota dodatnia; system zapisuje znaki na transakcjach.
-- Pole celu: widoczne/wymagane, gdy źródło lub cel ma `type = Savings`; ukryte/wyłączone dla ROR↔ROR.
+- Formularz transferu: opcjonalna kieszeń + wybór ruchu (Odłożenie/Wypłata); smart default w UI (Savings → deposit/withdrawal), API akceptuje oba ruchy.
 - Formularz transferu: **bez** pickera kategorii.
 
 **Zdarzenia:** `transfer_created`, `transfer_failed_validation`, `pocket_assigned_transfer`
@@ -645,14 +645,15 @@ Użytkownik zarządza katalogiem kategorii P&L (etykiety transakcji zewnętrznyc
 | **Domena** | Transactions |
 
 **Zachowanie**
-Ręczne dodanie/edycja przychodu/wydatku/korekty oraz wiersz importu (przed połączeniem jako transfer) wymagają `category_id` należącego do użytkownika. Typ kategorii musi pasować do typu ekonomicznego transakcji (`income` / `expense` ze znaku kwoty / `TransactionType`). **Transfer:** obie nogi mają `category_id = null` — brak kategorii P&L. `adjustment`: kategoria wymagana. Matcher importu (FR-I6): po połączeniu pary jako transfer — `category_id = null` na obu nogach.
+Ręczne dodanie/edycja przychodu/wydatku/korekty oraz wiersz importu (przed połączeniem jako transfer) wymagają `category_id` należącego do użytkownika. Typ kategorii musi pasować do typu ekonomicznego transakcji (`income` / `expense` ze znaku kwoty / `TransactionType`). **Transfer:** obie nogi mają `category_id = null` — brak kategorii P&L. **P&L:** `pocket_id` zabronione (XOR z kategorią). `adjustment`: kategoria wymagana. Matcher importu (FR-I6): po połączeniu pary jako transfer — `category_id = null` na obu nogach.
 
 **Kryteria akceptacji**
 1. Given tworzenie transakcji P&L When brak kategorii Then 422.
 2. Given wydatek When kategoria przychodowa Then 422.
 3. Given transfer When zapis Then obie nogi mają `category_id = null`.
 4. Given transfer When `category_id` ustawione Then 422.
-5. Given matcher połączył parę When link Then `category_id = null` na obu nogach.
+5. Given transakcja P&L When `pocket_id` ustawione Then 422.
+6. Given matcher połączył parę When link Then `category_id = null` na obu nogach.
 
 **Reguły**
 - Pre-release: migracja przypisuje kategorię wszystkim istniejącym transakcjom P&L; transfery — `category_id = null`; po release brak trwałego stanu „bez kategorii” na P&L.
@@ -710,21 +711,21 @@ Użytkownik może nadpisać plan na konkretny miesiąc. Gdy brak nadpisania, wid
 | **Domena** | Budgets |
 
 **Zachowanie**
-Dla wybranego miesiąca i roku kalendarzowego: tabela kategorii P&L (sekcje przychody / wydatki) z kolumnami: szacunek miesiąca (edytowalny), wykonanie, różnica. Okres i agregacja fakty: `COALESCE(booked_at, date)` w granicach miesiąca. Fakty kategorii P&L: **bez** wierszy z `transfer_id` (jak podsumowanie FR-T2). **Sekcja „Cele”:** jeden wiersz per aktywny (niezarchiwizowany) cel — **Plan** (tylko do odczytu): `monthly_contribution` przy `planning_mode = monthly`, w przeciwnym razie rekomendowana składka z `by_date` (obliczana ze skumulowanego salda i `target_date`); brak planu — „—”. Kolumny miesięczne: **odłożono**, **wypłacono**, **saldo** (metryki z nóg transferu w miesiącu); opcjonalnie wskazówka postępu `{saldo_skumulowane} / {target_amount}`. Zastępuje wave-2 sekcję agregatu „Transfery i oszczędności”.
+Dla wybranego miesiąca i roku kalendarzowego: tabela kategorii P&L (sekcje przychody / wydatki) z kolumnami: szacunek miesiąca (edytowalny), wykonanie, różnica. Okres i agregacja fakty: `COALESCE(booked_at, date)` w granicach miesiąca. Fakty kategorii P&L: **bez** wierszy z `transfer_id` (jak podsumowanie FR-T2). **Sekcja „Kieszenie”:** jeden wiersz per kieszeń użytkownika (bez filtra archiwum) — **Plan** (tylko do odczytu): `monthly_contribution` przy `planning_mode = monthly`, w przeciwnym razie rekomendowana składka z `by_date`; brak planu — „—”. Kolumny miesięczne: **odłożono**, **wypłacono** (z `pocket_movement` = deposit/withdrawal, liczone raz per `transfer_id` w miesiącu); opcjonalnie wskazówka postępu odłożono vs plan. Zastępuje wave-2 sekcję agregatu „Transfery i oszczędności”. Sekcja ukryta **tylko** gdy użytkownik nie ma żadnej kieszeni.
 
 **Kryteria akceptacji**
 1. Given wydatek w kategorii Jedzenie w marcu When widok marzec Then wykonanie w Jedzeniu.
 2. Given transfer wewnętrzny When tabela kategorii Then transfer nie wliczony do wykonania wydatków kategorii.
-3. Given cel Wakacje, plan 200, transfer ROR→Savings 200 z `pocket_id` When sekcja celów Then odłożono 200, saldo 200.
-4. Given wypłata Savings→ROR 150 z tym samym celem When sekcja celów Then wypłacono 150, saldo 50 (przy braku innych ruchów w miesiącu).
+3. Given kieszeń Wakacje, plan 200, transfer z `pocket_id` i `pocket_movement = deposit` 200 When sekcja kieszeni Then odłożono 200.
+4. Given wypłata z `pocket_movement = withdrawal` 150 z tą samą kieszenią When sekcja kieszeni Then wypłacono 150.
+5. Given transfer ROR↔ROR z `pocket_movement = deposit` When sekcja kieszeni Then odłożono kwotę transferu (raz per para).
 
 **Reguły**
 - `adjustment` w wykonaniu kategorii — wg znaku kwoty (zgodnie z FR-T2).
-- Metryki celów **używają** nóg transferu (`transfer_id` ustawione) na kontach `Savings` **w walucie celu**.
-- Kwoty w sekcji celów wyświetlane z symbolem waluty celu (np. `1 500,00 zł`).
-- Kolumna **Plan** celów — tylko do odczytu; źródło: pola celu (FR-P2), nie szacunki per rok.
-- Cele zarchiwizowane domyślnie wykluczone z sekcji.
-- Miękka wskazówka: suma planów P&L vs roczne (bez celów) — jak FR-C4.
+- Metryki kieszeni z `pocket_movement` (deposit → odłożono, withdrawal → wypłacono); **bez** metryki powiązanych wydatków (`linked_expenses`).
+- Kwoty w sekcji kieszeni wyświetlane z symbolem waluty kieszeni (np. `1 500,00 zł`).
+- Kolumna **Plan** kieszeni — tylko do odczytu; źródło: pola kieszeni (FR-P2), nie szacunki per rok.
+- Miękka wskazówka: suma planów P&L vs roczne (bez kieszeni) — jak FR-C4.
 
 **Zdarzenia:** `budget_view_monthly`
 
@@ -798,22 +799,22 @@ Lista transakcji wyświetla nazwę kategorii (transakcje P&L); transfer wewnętr
 | **Domena** | Pockets |
 
 **Zachowanie**
-Użytkownik zarządza kopertami oszczędnościowymi jak katalogiem kategorii: lista z ikoną i kolorem, drag reorder (`sort_order`), osobne ekrany tworzenia/edycji (`/pockets/create`, `/pockets/{id}/edit`). Pola: nazwa, ikona, kolor, **waluta** (`currency_id`; MVP: tylko PLN w UI, domyślnie PLN); opcjonalna kwota docelowa; przy kwocie — tryb planowania (`monthly` \| `by_date`) z jednym edytowalnym parametrem (składka **lub** data docelowa). Filtry listy: aktywne (domyślnie) / zarchiwizowane / wszystkie. Ręczna archiwizacja (`is_archived`). Usunięcie celu z powiązanymi transakcjami — zablokowane (v1). Cel **osobny od kategorii P&L** — bez `type` income/expense. Kwoty na liście i w formularzach wyświetlane **z symbolem waluty celu**.
+Użytkownik zarządza kopertami oszczędnościowymi jak katalogiem kategorii: lista z ikoną i kolorem, drag reorder (`sort_order`), osobne ekrany tworzenia/edycji (`/pockets/create`, `/pockets/{id}/edit`). Pola: nazwa, ikona, kolor, **waluta** (`currency_id`; MVP: tylko PLN w UI, domyślnie PLN); opcjonalna kwota docelowa; przy kwocie — tryb planowania (`monthly` \| `by_date`) z jednym edytowalnym parametrem (składka **lub** data docelowa). **Bez** filtrów aktywne/zarchiwizowane i **bez** archiwizacji w UI. Usunięcie kieszeni z historią: wyczyść `pocket_id` i `pocket_movement` na powiązanych transferach, potem usuń wiersz kieszeni. Kieszeń **osobna od kategorii P&L** — bez `type` income/expense. Kwoty na liście i w formularzach wyświetlane **z symbolem waluty kieszeni**.
 
 **Kryteria akceptacji**
-1. Given zalogowany When dodanie celu z nazwą, ikoną, kolorem i walutą PLN Then cel na liście `/pockets` z kwotami sformatowanymi z „zł”.
-2. Given cel z transakcjami z `pocket_id` When usunięcie Then błąd walidacji, cel pozostaje.
-3. Given dwa cele When zmiana `sort_order` (reorder) Then kolejność na liście i w budżecie miesięcznym zgodna z `sort_order`.
-4. Given cel When archiwizacja Then ukryty z domyślnej listy i sekcji celów w budżecie miesięcznym.
+1. Given zalogowany When dodanie kieszeni z nazwą, ikoną, kolorem i walutą PLN Then kieszeń na liście `/pockets` z kwotami sformatowanymi z „zł”.
+2. Given kieszeń z transferami z `pocket_id` When usunięcie Then 200; transfery mają `pocket_id = null` i `pocket_movement = null`; wiersz kieszeni usunięty.
+3. Given dwie kieszenie When zmiana `sort_order` (reorder) Then kolejność na liście i w budżecie miesięcznym zgodna z `sort_order`.
+4. Given kieszeń When lista `/pockets` Then brak zakładek filtra archiwum; wszystkie kieszenie widoczne.
 
 **Reguły**
 - Izolacja per `user_id`.
-- Empty state z CTA przy braku celów.
+- Empty state z CTA przy braku kieszeni.
 - **Bez** selektora roku i szacunków rocznych/miesięcznych per rok na `/pockets`.
 - `currency_id` ustawiane przy tworzeniu; **nie** edytowalne na update (jak konto).
 - Spec implementacji: `.docs/superpowers/specs/2026-06-05-goals-currency-design.md`.
 
-**Zdarzenia:** `pocket_created`, `pocket_updated`, `pocket_deleted`, `pocket_archived`, `pocket_unarchived`
+**Zdarzenia:** `pocket_created`, `pocket_updated`, `pocket_deleted`
 
 ---
 
@@ -837,7 +838,7 @@ Opcjonalna **kwota docelowa** (`target_amount`); `null` = koperta bez limitu (ty
 
 **Reguły**
 - Kwoty ≥ 0; skala decimal jak w reszcie aplikacji.
-- Saldo skumulowane: suma nóg transferu na kontach `Savings` **w walucie kieszeni** (`account.currency_id = pocket.currency_id`; `saved_total − released_total`), bez filtra roku.
+- Saldo skumulowane: suma `pocket_movement = deposit` minus `pocket_movement = withdrawal` na transferach z `pocket_id` w walucie kieszeni (`transactions.currency_id = pocket.currency_id`), każda para liczona raz per `transfer_id`, plus `initial_balance`.
 - Formuły projekcji — spec `2026-06-04-goals-target-model-design.md` (§ Metrics).
 
 **Zdarzenia:** (brak osobnych zdarzeń zapisu planu — pola w `pocket_created` / `pocket_updated`)
@@ -852,44 +853,22 @@ Opcjonalna **kwota docelowa** (`target_amount`); `null` = koperta bez limitu (ty
 | **Domena** | Transfers |
 
 **Zachowanie**
-Transfer, w którym **co najmniej jedna noga** dotyczy konta `type = Savings`, wymaga `pocket_id` należącego do użytkownika na **obu** nogach (ta sama wartość). Waluta celu musi być **zgodna** z walutą konta `Savings` (i co za tym idzie obu kont transferu). Transfer ROR↔ROR (bez udziału `Savings`) **nie** może mieć `pocket_id`. Obie nogi transferu mają `category_id = null`; śledzenie oszczędności odbywa się wyłącznie przez `pocket_id`.
+Transfer wewnętrzny może opcjonalnie mieć `pocket_id` należący do użytkownika na **obu** nogach (ta sama wartość) wraz z wymaganym `pocket_movement` (`deposit` \| `withdrawal`). Dozwolone na dowolnym transferze (ROR↔ROR, ROR↔Savings, Cash↔ROR). Waluta kieszeni musi być **zgodna** z walutą transferu. Obie nogi transferu mają `category_id = null`; śledzenie oszczędności odbywa się wyłącznie przez `pocket_id` + `pocket_movement`.
 
 **Kryteria akceptacji**
-1. Given transfer ROR→Savings When brak `pocket_id` Then 422.
-2. Given transfer Savings→ROR When zapis Then obie nogi mają ten sam `pocket_id`.
-3. Given transfer ROR↔ROR When `pocket_id` ustawione Then 422.
+1. Given transfer bez `pocket_id` When zapis Then 201; `pocket_movement = null`.
+2. Given transfer z `pocket_id` When brak `pocket_movement` Then 422.
+3. Given transfer ROR↔ROR z `pocket_id` i `pocket_movement = deposit` When zapis Then 201; saldo kieszeni +kwota (raz per para).
 4. Given `pocket_id` innego użytkownika When zapis Then 422.
-5. Given cel w PLN i transfer na konto Savings w PLN When `pocket_id` ustawione Then 201.
-6. Given cel w walucie X ≠ waluta konta Savings When zapis transferu Then 422.
+5. Given kieszeń w PLN i transfer w PLN When `pocket_id` + movement ustawione Then 201.
+6. Given kieszeń w walucie X ≠ waluta transferu When zapis Then 422.
+7. Given edycja powiązanego transferu When zmiana kieszeni/ruchu Then obie nogi zaktualizowane.
 
 **Reguły**
-- Formularz: pole celu widoczne/wymagane tylko gdy źródło lub cel ma `type = Savings`.
-- Matcher importu (FR-I6): po połączeniu transferu z udziałem `Savings` użytkownik uzupełnia cel ręcznie (auto-przypisanie celu — poza zakresem v1).
+- Formularz: opcjonalna kieszeń + ruch; smart default w UI przy Savings (nie wymuszane przez API).
+- Matcher importu (FR-I6): po połączeniu transferu kieszenie pozostają null (ręczne przypisanie po imporcie).
 
 **Zdarzenia:** `pocket_assigned_transfer`
-
----
-
-### FR-P4 — Opcjonalny cel na wydatku
-
-| Pole | Wartość |
-|------|---------|
-| **Priorytet** | Should |
-| **Domena** | Transactions |
-
-**Zachowanie**
-Przy tworzeniu/edycji przychodu, wydatku (i opcjonalnie korekty) użytkownik może opcjonalnie wybrać cel z listy swoich celów — np. wydatek na ROR po wypłacie z oszczędności powiązany z kopertą „Wakacje”. Kategoria P&L pozostaje wymagana osobno (np. cel „Wakacje”, kategoria „Rozrywka”). Gdy `pocket_id` ustawione — waluta transakcji musi być zgodna z walutą celu.
-
-**Kryteria akceptacji**
-1. Given wydatek na ROR When zapis bez celu Then sukces (`pocket_id` null).
-2. Given wydatek When wybór celu użytkownika Then `pocket_id` zapisane; widoczne w metryce powiązanych wydatków (FR-C5).
-3. Given cel innego użytkownika When zapis Then 422.
-4. Given cel w PLN When wydatek w innej walucie niż cel Then 422.
-
-**Reguły**
-- `pocket_id` opcjonalne; brak wymogu na transferach bez `Savings` (FR-P3).
-
-**Zdarzenia:** `pocket_assigned_transaction`
 
 ---
 
@@ -971,9 +950,9 @@ Po dodaniu: uzupełnij **Indeks identyfikatorów FR** i tabelę zdarzeń w §3.4
 
 **Język UI:** polski. Architektura pod przyszłe i18n (formatowanie dat/kwot), bez pełnego i18n w MVP.
 
-**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista; dodaj/edytuj w modalu) · Transakcje (lista; dodaj/edytuj P&L w modalu, **transfer bez kategorii** z opcjonalnym/wymaganym celem FR-P3/G4, baner kandydatów FR-I6; **kategoria** wymagana w formularzach P&L od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny z sekcją celów + edycja planów P&L; widok roczny z edycją szacunków rocznych P&L) · **Kategorie** (CRUD, kolejność — **bez** szacunków, FR-UX1) · **Cele** (lista z filtrem aktywne/zarchiwizowane, reorder, pasek postępu przy `target_amount`, create/edit z ikoną, kolorem i planowaniem — **bez** selektora roku i szacunków rocznych).
+**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista; dodaj/edytuj w modalu) · Transakcje (lista; dodaj/edytuj P&L w modalu **bez** pola kieszeni, **transfer bez kategorii** z opcjonalną kieszenią i ruchem FR-P3, baner kandydatów FR-I6; **kategoria** wymagana w formularzach P&L od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny z sekcją kieszeni + edycja planów P&L; widok roczny z edycją szacunków rocznych P&L) · **Kategorie** (CRUD, kolejność — **bez** szacunków, FR-UX1) · **Kieszenie** (katalog kopert: reorder, create/edit z ikoną, kolorem i planowaniem — **bez** archiwizacji i filtrów).
 
-**Nawigacja (sidebar):** Konta · Transakcje (Import jako akcja/modal, baner kandydatów z licznikiem) · **Budżet** (przełącznik miesięczny / roczny) · **Kategorie** (katalog P&L) · **Cele** (koperty oszczędnościowe). Ustawienia (`/settings/*`) — profil, hasło, wygląd; **kategorie nie przenoszą się do Ustawień**.
+**Nawigacja (sidebar):** Konta · Transakcje (Import jako akcja/modal, baner kandydatów z licznikiem) · **Budżet** (przełącznik miesięczny / roczny) · **Kategorie** (katalog P&L) · **Kieszenie** (jeden link do katalogu kopert). Ustawienia (`/settings/*`) — profil, hasło, wygląd; **kategorie nie przenoszą się do Ustawień**.
 
 **Formaty:** data **DD-MM-YYYY**; kwota w UI — PL (przecinek), tolerancja kropki; import — patrz FR-I1.
 
@@ -1031,7 +1010,7 @@ Auth · Konta + saldo + `adjustment` + rekalkulacja · Transakcje (`date`, `book
 
 Kategorie (FR-C1, FR-C2) · Szacunki roczne i miesięczne P&L (FR-C3, FR-C4) · Widoki budżetu miesięczny i roczny (FR-C5, FR-C6) · Pamięć kategorii przy imporcie (FR-C7) · Opcjonalnie filtr kategorii na liście (FR-C8).
 
-**Rozszerzenie wave 2 UX (cele + IA budżetu):** Cele (FR-P1, FR-P2 — model koperty z kwotą docelową, spec `2026-06-04-goals-target-model-design.md`; waluta celu, spec `2026-06-05-goals-currency-design.md`) · Cel wymagany na transferze z `Savings` (FR-P3) · Sekcja celów w budżecie miesięcznym (FR-P5) · Plany P&L tylko na budżecie, kategorie bez szacunków (FR-UX1) · Opcjonalnie cel na wydatku (FR-P4) · Transfer bez kategorii P&L, usunięcie kategorii „Oszczędności” (spec 2026-06-04).
+**Rozszerzenie wave 2 UX (kieszenie + IA budżetu):** Kieszenie (FR-P1, FR-P2 — model koperty z kwotą docelową, spec `2026-06-04-goals-target-model-design.md`; waluta kieszeni, spec `2026-06-05-goals-currency-design.md`) · Opcjonalna kieszeń i ruch na transferze (FR-P3; spec `2026-08-26-transaction-scope-pocket-catalog-design.md`) · Sekcja kieszeni w budżecie miesięcznym (FR-P5) · Plany P&L tylko na budżecie, kategorie bez szacunków (FR-UX1) · Transfer bez kategorii P&L, usunięcie kategorii „Oszczędności” (spec 2026-06-04).
 
 ### Po wave 2 (kierunek, bez zobowiązania)
 
@@ -1054,7 +1033,7 @@ AI kategorii, mapowanie kategorii z banku, wykresy, eksport, roczne podsumowanie
 | 9 | Błędy 500 zamiast produktowych | 422 + `message_key` (np. Cash) | FR-I4 |
 | 10 | Złe kategorie po imporcie | Pamięć + edycja; fallback pierwsza wg typu | FR-C7 |
 | 11 | Rozjazd sumy miesięcznych vs rocznej | Miękka informacja, bez blokady | FR-C4 |
-| 12 | Brak celu na transferze oszczędnościowym | Walidacja 422 (FR-P3); pole wymagane w UI | FR-P3 |
+| 12 | Brak ruchu przy kieszeni na transferze | Walidacja 422 (FR-P3); pole ruchu wymagane gdy kieszeń ustawiona | FR-P3 |
 
 ---
 
@@ -1102,6 +1081,5 @@ AI kategorii, mapowanie kategorii z banku, wykresy, eksport, roczne podsumowanie
 | FR-P1 | CRUD kieszeni | Must | §6.9 |
 | FR-P2 | Kwota docelowa i planowanie kieszeni | Must | §6.9 |
 | FR-P3 | Przypisanie kieszeni do transferu | Must | §6.9 |
-| FR-P4 | Opcjonalna kieszeń na wydatku | Should | §6.9 |
 | FR-P5 | Widok kieszeni w budżecie miesięcznym | Must | §6.9 |
 | FR-UX1 | Plany P&L tylko na budżecie | Must | §6.10 |
