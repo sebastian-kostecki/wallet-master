@@ -24,18 +24,24 @@ class AccountController extends Controller
         $this->authorizeResource(Account::class, 'account');
     }
 
-    public function index(): Response
+    public function index(AccountFormOptions $options): Response
     {
         $accounts = AccountResource::collection(
             Account::query()
                 ->whereBelongsTo(auth()->user())
                 ->with(['currency:id,code,symbol,precision'])
                 ->orderBy('name')
-                ->get(['id', 'currency_id', 'name', 'current_balance', 'bank', 'type'])
+                ->get(['id', 'currency_id', 'name', 'current_balance', 'opening_balance', 'bank', 'type'])
         )->resolve();
+
+        $currencies = Currency::query()
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'symbol', 'precision']);
 
         return Inertia::render('accounts/Index', [
             'accounts' => $accounts,
+            'currencies' => $currencies,
+            ...$options->toArray(),
         ]);
     }
 

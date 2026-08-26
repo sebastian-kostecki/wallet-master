@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\AccountType;
+use App\Enums\Bank;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\User;
@@ -61,11 +63,19 @@ test('users see only their own accounts', function () {
         ->where('locale', app()->getLocale())
         ->has('accounts', 2)
         ->where('accounts.0.id', $cashAccount->id)
+        ->where('accounts.0.opening_balance', '100.00')
         ->where('accounts.0.bank_icon_url', null)
         ->where('accounts.0.type_label_key', 'accounts.enums.accountType.checking')
         ->where('accounts.1.id', $mBankAccount->id)
+        ->where('accounts.1.opening_balance', '50.00')
         ->where('accounts.1.bank_icon_url', asset('icons/banks/mbank.jpeg'))
         ->where('accounts.1.type_label_key', 'accounts.enums.accountType.checking')
+        ->has('banks')
+        ->has('accountTypes')
+        ->has('currencies')
+        ->where('banks.0.value', Bank::BnpParibas->value)
+        ->where('accountTypes.0.value', AccountType::Checking->value)
+        ->where('currencies.0.code', 'PLN')
     );
 
     expect($cashAccount->fresh())->not->toBeNull();
