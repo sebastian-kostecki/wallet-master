@@ -4,14 +4,27 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Concerns;
 
+use App\Enums\PocketMovement;
 use App\Models\Account;
 use App\Models\Pocket;
+use App\Models\Transaction;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 trait ValidatesPocketId
 {
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    protected function prohibitedPocketRules(): array
+    {
+        return [
+            'pocket_id' => ['prohibited'],
+            'pocket_movement' => ['prohibited'],
+        ];
+    }
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -65,6 +78,62 @@ trait ValidatesPocketId
                 },
             ],
         ];
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    protected function optionalPocketIdRulesForTransferLeg(): array
+    {
+        return [
+            'pocket_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('pockets', 'id')->where(
+                    fn ($query) => $query->where('user_id', $this->user()->id),
+                ),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    protected function pocketMovementRules(): array
+    {
+        return [
+            'pocket_movement' => [
+                Rule::requiredIf(fn () => $this->filled('pocket_id')),
+                Rule::prohibitedIf(fn () => ! $this->filled('pocket_id')),
+                Rule::enum(PocketMovement::class),
+            ],
+        ];
+    }
+
+    protected function validateLinkedTransferPocketCurrency(Validator $validator, Transaction $transaction): void
+    {
+        $validator->after(function (Validator $validator) use ($transaction): void {
+            $pocketId = $this->input('pocket_id');
+
+            if (! is_numeric($pocketId)) {
+                return;
+            }
+
+            $sibling = Transaction::query()
+                ->where('transfer_id', $transaction->transfer_id)
+                ->where('id', '!=', $transaction->id)
+                ->first();
+
+            if ($sibling === null) {
+                return;
+            }
+
+            $accountIds = [(int) $transaction->account_id, (int) $sibling->account_id];
+
+            if (! $this->pocketCurrencyMatchesAccounts((int) $pocketId, $accountIds)) {
+                $validator->errors()->add('pocket_id', 'Pocket currency must match the savings account currency.');
+            }
+        });
     }
 
     protected function validateOptionalPocketCurrency(Validator $validator): void

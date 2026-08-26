@@ -43,14 +43,13 @@ final class StoreTransactionRequest extends FormRequest
             'description' => ['required', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
             ...$this->categoryIdRules(),
-            ...$this->optionalPocketIdRules(),
+            ...$this->prohibitedPocketRules(),
         ];
     }
 
     public function withValidator(Validator $validator): void
     {
         $this->validateCategoryMatchesAmount($validator);
-        $this->validateOptionalPocketCurrency($validator);
     }
 
     /**
@@ -62,7 +61,6 @@ final class StoreTransactionRequest extends FormRequest
      *   description: string,
      *   subject?: ?string,
      *   category_id: int,
-     *   pocket_id?: ?int,
      * }
      */
     public function validated($key = null, $default = null): array

@@ -48,6 +48,7 @@ final class TransactionResource extends JsonResource
                     : null,
             ),
             'pocket_id' => $this->pocket_id,
+            'pocket_movement' => $this->pocket_movement?->value,
             'pocket' => $this->whenLoaded(
                 'pocket',
                 fn () => $this->pocket !== null

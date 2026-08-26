@@ -2,7 +2,7 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
-use App\Enums\TransactionType;
+use App\Enums\PocketMovement;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\Pocket;
@@ -15,7 +15,7 @@ beforeEach(function () {
     $this->seed(CurrencySeeder::class);
 });
 
-test('expense can optionally reference a pocket', function () {
+test('expense rejects pocket_id', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     $categoryId = defaultCategoryId($user);
@@ -38,41 +38,10 @@ test('expense can optionally reference a pocket', function () {
         'description' => 'Hotel deposit',
         'category_id' => $categoryId,
         'pocket_id' => $pocket->id,
-    ])->assertSessionHasNoErrors();
-
-    $transaction = Transaction::query()->where('user_id', $user->id)->first();
-    expect($transaction)->not->toBeNull();
-    expect($transaction->pocket_id)->toBe($pocket->id);
-});
-
-test('pocket_id must belong to user', function () {
-    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
-    $user = User::factory()->create();
-    $other = User::factory()->create();
-    $categoryId = defaultCategoryId($user);
-    $otherPocket = Pocket::factory()->create(['user_id' => $other->id]);
-
-    $account = Account::query()->create([
-        'user_id' => $user->id,
-        'currency_id' => $plnId,
-        'name' => 'Cash',
-        'bank' => Bank::Cash,
-        'type' => AccountType::Checking,
-        'opening_balance' => 100,
-        'current_balance' => 100,
-    ]);
-
-    $this->actingAs($user)->post(route('transactions.store'), [
-        'account_id' => $account->id,
-        'date' => '01-03-2026',
-        'amount' => '-25.00',
-        'description' => 'Hotel deposit',
-        'category_id' => $categoryId,
-        'pocket_id' => $otherPocket->id,
     ])->assertSessionHasErrors('pocket_id');
 });
 
-test('user can update transaction pocket_id', function () {
+test('expense update rejects pocket_id', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     $categoryId = defaultCategoryId($user);
@@ -96,7 +65,7 @@ test('user can update transaction pocket_id', function () {
         'date' => '2026-03-01',
         'booked_at' => '2026-03-01',
         'amount' => '-10.00',
-        'type' => TransactionType::Expense,
+        'type' => 'expense',
         'description' => 'Coffee',
         'normalized_description' => 'coffee',
         'dedupe_hash' => md5('update-pocket', true),
@@ -109,9 +78,7 @@ test('user can update transaction pocket_id', function () {
         'description' => 'Coffee',
         'category_id' => $categoryId,
         'pocket_id' => $pocket->id,
-    ])->assertSessionHasNoErrors();
-
-    expect($transaction->fresh()->pocket_id)->toBe($pocket->id);
+    ])->assertSessionHasErrors('pocket_id');
 });
 
 test('transaction index includes pockets list', function () {
@@ -127,4 +94,129 @@ test('transaction index includes pockets list', function () {
         ->where('pockets.0.id', $pocket->id)
         ->where('pockets.0.name', 'Wakacje')
     );
+});
+
+test('linked transfer update writes pocket and movement on both legs', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $pocket = Pocket::factory()->create(['user_id' => $user->id]);
+
+    $from = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'From',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 100,
+        'current_balance' => 100,
+    ]);
+
+    $to = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'To',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this->actingAs($user)->post(route('transfers.store'), [
+        'from_account_id' => $from->id,
+        'to_account_id' => $to->id,
+        'date' => '01-03-2026',
+        'amount' => '50',
+    ])->assertSessionHasNoErrors();
+
+    $transferId = Transaction::query()
+        ->where('user_id', $user->id)
+        ->whereNotNull('transfer_id')
+        ->value('transfer_id');
+
+    expect($transferId)->not->toBeNull();
+
+    $withdraw = Transaction::query()
+        ->where('transfer_id', $transferId)
+        ->where('amount', '<', 0)
+        ->first();
+
+    expect($withdraw)->not->toBeNull();
+
+    $this->actingAs($user)->patch(route('transactions.update', $withdraw), [
+        'account_id' => $from->id,
+        'date' => '01-03-2026',
+        'amount' => '-50.00',
+        'description' => $withdraw->description,
+        'pocket_id' => $pocket->id,
+        'pocket_movement' => 'withdrawal',
+    ])->assertSessionHasNoErrors();
+
+    $legs = Transaction::query()->where('transfer_id', $transferId)->get();
+
+    expect($legs)->toHaveCount(2);
+    foreach ($legs as $leg) {
+        expect($leg->pocket_id)->toBe($pocket->id);
+        expect($leg->pocket_movement)->toBe(PocketMovement::Withdrawal);
+    }
+});
+
+test('linked transfer update clearing pocket nulls both legs', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+    $pocket = Pocket::factory()->create(['user_id' => $user->id]);
+
+    $from = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'From',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 100,
+        'current_balance' => 100,
+    ]);
+
+    $to = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'To',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 0,
+        'current_balance' => 0,
+    ]);
+
+    $this->actingAs($user)->post(route('transfers.store'), [
+        'from_account_id' => $from->id,
+        'to_account_id' => $to->id,
+        'date' => '01-03-2026',
+        'amount' => '50',
+        'pocket_id' => $pocket->id,
+        'pocket_movement' => 'deposit',
+    ])->assertSessionHasNoErrors();
+
+    $transferId = Transaction::query()
+        ->where('user_id', $user->id)
+        ->whereNotNull('transfer_id')
+        ->value('transfer_id');
+
+    $withdraw = Transaction::query()
+        ->where('transfer_id', $transferId)
+        ->where('amount', '<', 0)
+        ->first();
+
+    $this->actingAs($user)->patch(route('transactions.update', $withdraw), [
+        'account_id' => $from->id,
+        'date' => '01-03-2026',
+        'amount' => '-50.00',
+        'description' => $withdraw->description,
+        'pocket_id' => null,
+    ])->assertSessionHasNoErrors();
+
+    $legs = Transaction::query()->where('transfer_id', $transferId)->get();
+
+    expect($legs)->toHaveCount(2);
+    foreach ($legs as $leg) {
+        expect($leg->pocket_id)->toBeNull();
+        expect($leg->pocket_movement)->toBeNull();
+    }
 });
