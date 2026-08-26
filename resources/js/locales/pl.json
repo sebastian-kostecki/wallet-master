@@ -4,19 +4,31 @@
             "created": "Konto zostało dodane.",
             "updated": "Konto zostało zaktualizowane."
         },
+        "tabs": {
+            "accounts": "Rachunki",
+            "wallets": "Portfele"
+        },
         "index": {
             "title": "Konta",
             "description": "Salda i typy kont rozliczeniowych i oszczędnościowych.",
-            "addAccount": "Dodaj konto",
+            "addAccount": "Dodaj rachunek",
+            "addWallet": "Dodaj portfel",
             "view": {
                 "toggleAria": "Przełącz widok listy kont",
                 "grid": "Siatka",
                 "list": "Lista"
             },
             "empty": {
-                "heading": "Brak kont",
-                "message": "Nie masz jeszcze żadnych kont.",
-                "cta": "Dodaj pierwsze konto"
+                "accounts": {
+                    "heading": "Brak rachunków",
+                    "message": "Nie masz jeszcze żadnych rachunków bankowych.",
+                    "cta": "Dodaj rachunek"
+                },
+                "wallets": {
+                    "heading": "Brak portfeli",
+                    "message": "Nie masz jeszcze żadnych portfeli gotówkowych.",
+                    "cta": "Dodaj portfel"
+                }
             }
         },
         "edit": {

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import AccountCard from '@/components/accounts/AccountCard.vue';
 import AccountRow from '@/components/accounts/AccountRow.vue';
-import AccountsSummaryCard from '@/components/accounts/AccountsSummaryCard.vue';
 import AccountsViewToggle from '@/components/accounts/AccountsViewToggle.vue';
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
 import { Button, buttonVariants } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { accountKindFromUrl, isWalletAccount } from '@/lib/accountKind';
 import { cn } from '@/lib/utils';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { PiggyBank, Wallet } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -37,6 +37,12 @@ const props = defineProps<{
 }>();
 
 const { t } = useI18n();
+const page = usePage();
+const kind = computed(() => accountKindFromUrl(page.url));
+
+const visibleAccounts = computed(() => {
+    return props.accounts.filter((account) => (kind.value === 'wallets' ? isWalletAccount(account) : !isWalletAccount(account)));
+});
 
 const money = new Intl.NumberFormat('pl-PL', {
     minimumFractionDigits: 2,
@@ -107,31 +113,33 @@ function openDeleteDialog(accountId: number) {
     <AppLayout>
         <template #headerActions>
             <Button as-child>
-                <Link :href="route('accounts.create')">{{ t('accounts.index.addAccount') }}</Link>
+                <Link :href="route('accounts.create', { kind })">{{
+                    t(kind === 'wallets' ? 'accounts.index.addWallet' : 'accounts.index.addAccount')
+                }}</Link>
             </Button>
         </template>
 
         <div class="flex flex-col gap-6">
-            <AccountsSummaryCard :accounts="accounts" />
-
             <section
-                v-if="accounts.length === 0"
+                v-if="visibleAccounts.length === 0"
                 role="region"
                 aria-labelledby="accounts-empty-heading"
                 class="rounded-xl border border-sidebar-border/70 p-8 text-center dark:border-sidebar-border"
             >
-                <h2 id="accounts-empty-heading" class="text-lg font-semibold">{{ t('accounts.index.empty.heading') }}</h2>
-                <p class="mt-2 text-sm text-muted-foreground">{{ t('accounts.index.empty.message') }}</p>
-                <Link :href="route('accounts.create')" :class="cn(buttonVariants({}), 'mt-4')">{{ t('accounts.index.empty.cta') }}</Link>
+                <h2 id="accounts-empty-heading" class="text-lg font-semibold">{{ t(`accounts.index.empty.${kind}.heading`) }}</h2>
+                <p class="mt-2 text-sm text-muted-foreground">{{ t(`accounts.index.empty.${kind}.message`) }}</p>
+                <Link :href="route('accounts.create', { kind })" :class="cn(buttonVariants({}), 'mt-4')">{{
+                    t(`accounts.index.empty.${kind}.cta`)
+                }}</Link>
             </section>
 
             <div v-else class="flex items-center justify-end">
                 <AccountsViewToggle :model-value="viewMode" @update:model-value="setViewMode" />
             </div>
 
-            <div v-if="accounts.length > 0 && viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div v-if="visibleAccounts.length > 0 && viewMode === 'grid'" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <AccountCard
-                    v-for="account in accounts"
+                    v-for="account in visibleAccounts"
                     :key="account.id"
                     :account="account"
                     :format-money="formatMoney"
@@ -144,9 +152,9 @@ function openDeleteDialog(accountId: number) {
                 />
             </div>
 
-            <div v-else-if="accounts.length > 0" class="flex flex-col gap-2">
+            <div v-else-if="visibleAccounts.length > 0" class="flex flex-col gap-2">
                 <AccountRow
-                    v-for="account in accounts"
+                    v-for="account in visibleAccounts"
                     :key="account.id"
                     :account="account"
                     :format-money="formatMoney"

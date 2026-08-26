@@ -4,19 +4,31 @@
             "created": "Account created.",
             "updated": "Account updated."
         },
+        "tabs": {
+            "accounts": "Bank accounts",
+            "wallets": "Wallets"
+        },
         "index": {
             "title": "Accounts",
             "description": "Balances and types of your checking and savings accounts.",
-            "addAccount": "Add account",
+            "addAccount": "Add bank account",
+            "addWallet": "Add wallet",
             "view": {
                 "toggleAria": "Toggle accounts view",
                 "grid": "Grid",
                 "list": "List"
             },
             "empty": {
-                "heading": "No accounts yet",
-                "message": "You don't have any accounts yet.",
-                "cta": "Add your first account"
+                "accounts": {
+                    "heading": "No bank accounts yet",
+                    "message": "You don't have any bank accounts yet.",
+                    "cta": "Add bank account"
+                },
+                "wallets": {
+                    "heading": "No wallets yet",
+                    "message": "You don't have any cash wallets yet.",
+                    "cta": "Add wallet"
+                }
             }
         },
         "edit": {
