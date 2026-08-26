@@ -1,0 +1,36 @@
+import { pageNodes, pageTabGroups } from '@/lib/pageRegistry';
+import { describe, expect, it } from 'vitest';
+
+describe('pageRegistry', () => {
+    it('points every parent at an existing node', () => {
+        for (const [nodeId, node] of Object.entries(pageNodes)) {
+            if (node.parent) {
+                expect(Object.keys(pageNodes), `parent of "${nodeId}"`).toContain(node.parent);
+            }
+        }
+    });
+
+    it('never maps one route name to two nodes', () => {
+        const owners = new Map<string, string>();
+
+        for (const [nodeId, node] of Object.entries(pageNodes)) {
+            for (const routeName of node.matchRoutes ?? [nodeId]) {
+                expect(owners.has(routeName), `"${routeName}" is claimed by both "${owners.get(routeName)}" and "${nodeId}"`).toBe(false);
+                owners.set(routeName, nodeId);
+            }
+        }
+    });
+
+    it('points every tabGroup at a group whose defaultKey is one of its tabs', () => {
+        for (const [nodeId, node] of Object.entries(pageNodes)) {
+            if (!node.tabGroup) {
+                continue;
+            }
+
+            const group = pageTabGroups[node.tabGroup];
+
+            expect(group, `tabGroup "${node.tabGroup}" used by "${nodeId}"`).toBeDefined();
+            expect(group.tabs.map((tab) => tab.key)).toContain(group.defaultKey);
+        }
+    });
+});
