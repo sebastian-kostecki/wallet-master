@@ -205,11 +205,11 @@ const hasError = computed(() => errorMessage.value.trim() !== '');
 
 <template>
     <div
-        class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end"
+        class="flex flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end"
         role="search"
         :aria-label="t('transactions.index.a11y.filters')"
     >
-        <div class="grid gap-2 sm:flex sm:items-center">
+        <div class="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
             <div class="min-w-56 sm:min-w-64">
                 <DropdownSelect
                     id="account_id"

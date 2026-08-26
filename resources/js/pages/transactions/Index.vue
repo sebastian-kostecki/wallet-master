@@ -399,7 +399,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                             <ChevronDown class="ml-1 h-4 w-4" aria-hidden="true" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" class="w-56">
+                    <DropdownMenuContent align="end" class="w-56 rounded-2xl">
                         <DropdownMenuItem @select="openCreateDialog">
                             <Plus />
                             {{ t('transactions.index.addTransaction') }}
@@ -435,8 +435,10 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
             />
 
             <div class="grid gap-4 md:grid-cols-2">
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.income') }}</p>
+                <div class="rounded-2xl border border-transparent bg-card p-6">
+                    <p class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                        {{ t('transactions.index.summary.income') }}
+                    </p>
                     <div class="mt-2">
                         <Skeleton v-if="isLoading" class="h-8 w-40" />
                         <p v-else class="text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
@@ -445,11 +447,13 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.expense') }}</p>
+                <div class="rounded-2xl border border-transparent bg-card p-6">
+                    <p class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                        {{ t('transactions.index.summary.expense') }}
+                    </p>
                     <div class="mt-2">
                         <Skeleton v-if="isLoading" class="h-8 w-40" />
-                        <p v-else class="text-2xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+                        <p v-else class="text-2xl font-semibold tabular-nums text-red-600 dark:text-red-400">
                             -{{ summaryExpense }} {{ summaryCurrencySymbol }}
                         </p>
                     </div>

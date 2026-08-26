@@ -235,8 +235,8 @@ function applyPresetPreviousYear() {
                         :disabled="isClearDisabled"
                         :class="
                             cn(
-                                'inline-flex h-7 w-7 items-center justify-center rounded',
-                                isClearDisabled ? 'cursor-not-allowed opacity-40' : 'hover:bg-muted',
+                                'inline-flex h-7 w-7 items-center justify-center rounded-xl',
+                                isClearDisabled ? 'cursor-not-allowed opacity-40' : 'hover:bg-foreground/[0.06]',
                             )
                         "
                         :aria-label="t('transactions.index.filters.a11y.clearDateRange')"
@@ -249,30 +249,42 @@ function applyPresetPreviousYear() {
             </Button>
         </PopoverTrigger>
 
-        <PopoverContent class="p-3" align="start">
+        <PopoverContent class="rounded-2xl p-3" align="start">
             <div class="flex w-full flex-col gap-3 sm:flex-row">
                 <div class="flex flex-wrap gap-2 sm:w-40 sm:flex-col">
-                    <button type="button" class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted" @click="applyPresetThisMonth">
+                    <button
+                        type="button"
+                        class="w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-foreground/[0.06]"
+                        @click="applyPresetThisMonth"
+                    >
                         {{ t('transactions.index.filters.presets.thisMonth') }}
                     </button>
                     <button
                         type="button"
-                        class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
+                        class="w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-foreground/[0.06]"
                         @click="applyPresetPreviousMonth"
                     >
                         {{ t('transactions.index.filters.presets.previousMonth') }}
                     </button>
-                    <button type="button" class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted" @click="applyPresetThisYear">
+                    <button
+                        type="button"
+                        class="w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-foreground/[0.06]"
+                        @click="applyPresetThisYear"
+                    >
                         {{ t('transactions.index.filters.presets.thisYear') }}
                     </button>
                     <button
                         type="button"
-                        class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
+                        class="w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-foreground/[0.06]"
                         @click="applyPresetPreviousYear"
                     >
                         {{ t('transactions.index.filters.presets.previousYear') }}
                     </button>
-                    <button type="button" class="w-full rounded-md border px-3 py-2 text-left text-sm hover:bg-muted" @click="applyPresetLast7Days">
+                    <button
+                        type="button"
+                        class="w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-foreground/[0.06]"
+                        @click="applyPresetLast7Days"
+                    >
                         {{ t('transactions.index.filters.presets.last7Days') }}
                     </button>
                 </div>
