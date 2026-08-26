@@ -391,7 +391,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                         <ChevronDown class="ml-1 h-4 w-4" aria-hidden="true" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" class="w-56">
+                <DropdownMenuContent align="end" class="w-56 rounded-2xl">
                     <DropdownMenuItem @select="openCreateDialog">
                         <Plus />
                         {{ t('transactions.index.addTransaction') }}
