@@ -2,17 +2,17 @@
 import AccountCard from '@/components/accounts/AccountCard.vue';
 import AccountRow from '@/components/accounts/AccountRow.vue';
 import AccountsViewToggle from '@/components/accounts/AccountsViewToggle.vue';
+import AccountFormDialog from '@/components/accounts/modals/AccountFormDialog.vue';
 import AdjustAccountBalanceDialog from '@/components/accounts/modals/AdjustAccountBalanceDialog.vue';
 import DeleteAccountDialog from '@/components/accounts/modals/DeleteAccountDialog.vue';
 import { Button, buttonVariants } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { accountKindFromUrl, isWalletAccount } from '@/lib/accountKind';
 import { cn } from '@/lib/utils';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 import { PiggyBank, Wallet } from 'lucide-vue-next';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { route } from 'ziggy-js';
 
 type Currency = {
     id: number;
@@ -25,6 +25,8 @@ type Account = {
     id: number;
     name: string;
     current_balance: string;
+    opening_balance: string;
+    currency_id: number;
     bank: string;
     bank_icon_url: string | null;
     type: string;
@@ -34,6 +36,25 @@ type Account = {
 
 const props = defineProps<{
     accounts: Account[];
+    currencies: Array<{
+        id: number;
+        code: string;
+        name: string;
+        symbol: string | null;
+        precision: number;
+    }>;
+    banks: Array<{
+        value: string;
+        label_key: string;
+        icon_url?: string | null;
+        icon_name?: string | null;
+    }>;
+    accountTypes: Array<{
+        value: string;
+        label_key: string;
+        icon_url?: string | null;
+        icon_name?: string | null;
+    }>;
 }>();
 
 const { t } = useI18n();
@@ -69,8 +90,21 @@ function resolveAccountTypeIcon(type: string) {
     return accountTypeIcon.value[type as keyof typeof accountTypeIcon.value] ?? Wallet;
 }
 
-function goToEditAccount(accountId: number) {
-    router.visit(route('accounts.edit', accountId));
+const formDialogOpen = ref(false);
+const formDialogMode = ref<'create' | 'edit'>('create');
+const editingAccountId = ref<number | null>(null);
+const editingAccount = computed(() => props.accounts.find((account) => account.id === editingAccountId.value) ?? null);
+
+function openCreateDialog() {
+    formDialogMode.value = 'create';
+    editingAccountId.value = null;
+    formDialogOpen.value = true;
+}
+
+function openEditDialog(accountId: number) {
+    formDialogMode.value = 'edit';
+    editingAccountId.value = accountId;
+    formDialogOpen.value = true;
 }
 
 type AccountsViewMode = 'grid' | 'list';
@@ -112,11 +146,7 @@ function openDeleteDialog(accountId: number) {
 <template>
     <AppLayout>
         <template #headerActions>
-            <Button as-child>
-                <Link :href="route('accounts.create', { kind })">{{
-                    t(kind === 'wallets' ? 'accounts.index.addWallet' : 'accounts.index.addAccount')
-                }}</Link>
-            </Button>
+            <Button @click="openCreateDialog">{{ t(kind === 'wallets' ? 'accounts.index.addWallet' : 'accounts.index.addAccount') }}</Button>
         </template>
 
         <div class="flex flex-col gap-6">
@@ -128,9 +158,7 @@ function openDeleteDialog(accountId: number) {
             >
                 <h2 id="accounts-empty-heading" class="text-lg font-semibold">{{ t(`accounts.index.empty.${kind}.heading`) }}</h2>
                 <p class="mt-2 text-sm text-muted-foreground">{{ t(`accounts.index.empty.${kind}.message`) }}</p>
-                <Link :href="route('accounts.create', { kind })" :class="cn(buttonVariants({}), 'mt-4')">{{
-                    t(`accounts.index.empty.${kind}.cta`)
-                }}</Link>
+                <Button :class="cn(buttonVariants({}), 'mt-4')" @click="openCreateDialog">{{ t(`accounts.index.empty.${kind}.cta`) }}</Button>
             </section>
 
             <div v-else class="flex items-center justify-end">
@@ -147,7 +175,7 @@ function openDeleteDialog(accountId: number) {
                     :delete-disabled="deleteProcessing"
                     :adjust-disabled="adjustProcessing"
                     @delete="openDeleteDialog"
-                    @edit="goToEditAccount"
+                    @edit="openEditDialog"
                     @adjust-balance="openAdjustBalance"
                 />
             </div>
@@ -162,11 +190,21 @@ function openDeleteDialog(accountId: number) {
                     :delete-disabled="deleteProcessing"
                     :adjust-disabled="adjustProcessing"
                     @delete="openDeleteDialog"
-                    @edit="goToEditAccount"
+                    @edit="openEditDialog"
                     @adjust-balance="openAdjustBalance"
                 />
             </div>
         </div>
+
+        <AccountFormDialog
+            v-model:open="formDialogOpen"
+            :mode="formDialogMode"
+            :kind="kind"
+            :account="editingAccount"
+            :currencies="currencies"
+            :banks="banks"
+            :account-types="accountTypes"
+        />
 
         <AdjustAccountBalanceDialog
             v-model:open="adjustDialogOpen"
