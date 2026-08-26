@@ -322,8 +322,14 @@
                 "noActions": "Brak akcji"
             },
             "empty": {
-                "filtered": "Brak transakcji dla wybranych filtrów.",
-                "firstUse": "Nie masz jeszcze żadnych transakcji.",
+                "filtered": {
+                    "heading": "Brak wyników",
+                    "message": "Brak transakcji dla wybranych filtrów."
+                },
+                "firstUse": {
+                    "heading": "Brak transakcji",
+                    "message": "Nie masz jeszcze żadnych transakcji."
+                },
                 "import": "Zaimportuj plik"
             },
             "pagination": {

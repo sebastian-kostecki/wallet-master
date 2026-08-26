@@ -456,8 +456,8 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                 </div>
             </div>
 
-            <div class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border" :aria-busy="isLoading ? 'true' : 'false'">
-                <div v-if="isLoading" class="p-6">
+            <div :aria-busy="isLoading ? 'true' : 'false'">
+                <div v-if="isLoading" class="overflow-hidden rounded-2xl border border-transparent bg-card p-5">
                     <div class="grid gap-3">
                         <Skeleton class="h-10 w-full" />
                         <Skeleton class="h-10 w-full" />
@@ -482,100 +482,122 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                     }"
                 >
                     <template #empty>
-                        <div v-if="isFilteredEmpty" class="p-8 text-center">
-                            <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.filtered') }}</p>
-                            <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                        <section
+                            v-if="isFilteredEmpty"
+                            role="region"
+                            aria-labelledby="transactions-empty-heading"
+                            class="flex flex-col items-center py-16 text-center"
+                        >
+                            <h2 id="transactions-empty-heading" class="text-2xl font-medium tracking-tight">
+                                {{ t('transactions.index.empty.filtered.heading') }}
+                            </h2>
+                            <p class="mt-2 max-w-sm text-sm text-muted-foreground">
+                                {{ t('transactions.index.empty.filtered.message') }}
+                            </p>
+                            <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                                 <Button type="button" @click="openCreateDialog">{{ t('transactions.index.addTransaction') }}</Button>
-                                <Button variant="secondary" @click="clearFilters">{{ t('transactions.index.filters.clear') }}</Button>
+                                <Button variant="ghost" type="button" @click="clearFilters">{{ t('transactions.index.filters.clear') }}</Button>
                             </div>
-                        </div>
+                        </section>
 
-                        <div v-else class="p-8 text-center">
-                            <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.firstUse') }}</p>
-                            <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                        <section
+                            v-else
+                            role="region"
+                            aria-labelledby="transactions-empty-heading"
+                            class="flex flex-col items-center py-16 text-center"
+                        >
+                            <h2 id="transactions-empty-heading" class="text-2xl font-medium tracking-tight">
+                                {{ t('transactions.index.empty.firstUse.heading') }}
+                            </h2>
+                            <p class="mt-2 max-w-sm text-sm text-muted-foreground">
+                                {{ t('transactions.index.empty.firstUse.message') }}
+                            </p>
+                            <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                                 <Button type="button" @click="openCreateDialog">{{ t('transactions.index.addTransaction') }}</Button>
-                                <Button v-if="hasImportRoute" variant="secondary" as-child>
+                                <Button v-if="hasImportRoute" variant="ghost" as-child>
                                     <Link :href="route('imports.index')">{{ t('transactions.index.empty.import') }}</Link>
                                 </Button>
                             </div>
-                        </div>
+                        </section>
                     </template>
 
-                    <div class="hidden md:block">
-                        <table class="w-full table-fixed text-sm">
-                            <caption class="sr-only">
-                                {{
-                                    t('transactions.index.a11y.tableCaption')
-                                }}
-                            </caption>
-                            <thead
-                                class="border-b border-border/50 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60"
-                            >
-                                <tr>
-                                    <th class="w-36 px-3 py-2" scope="col" :aria-sort="ariaSortFor('date')">
-                                        <button
-                                            class="inline-flex items-center gap-2 hover:text-foreground"
-                                            type="button"
-                                            :aria-label="sortButtonAriaLabel('date')"
-                                            @click="setSort('date')"
-                                        >
-                                            {{ t('transactions.index.table.date') }}
-                                            <component
-                                                :is="(filters.sort ?? 'date') === 'date' ? directionIcon() : ArrowUpDown"
-                                                class="h-4 w-4"
-                                                aria-hidden="true"
-                                            />
-                                        </button>
-                                    </th>
-                                    <th class="px-3 py-2" scope="col">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="w-56 px-3 py-2 xl:w-64 2xl:w-72" scope="col">{{ t('transactions.index.table.category') }}</th>
-                                    <th class="w-64 px-3 py-2" scope="col">{{ t('transactions.index.table.account') }}</th>
-                                    <th class="w-44 px-3 py-2" scope="col" :aria-sort="ariaSortFor('amount')">
-                                        <button
-                                            class="inline-flex items-center gap-2 hover:text-foreground"
-                                            type="button"
-                                            :aria-label="sortButtonAriaLabel('amount')"
-                                            @click="setSort('amount')"
-                                        >
-                                            {{ t('transactions.index.table.amount') }}
-                                            <component
-                                                :is="(filters.sort ?? 'date') === 'amount' ? directionIcon() : ArrowUpDown"
-                                                class="h-4 w-4"
-                                                aria-hidden="true"
-                                            />
-                                        </button>
-                                    </th>
-                                    <th class="w-28 px-3 py-2 text-right" scope="col">{{ t('transactions.index.table.actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <TransactionRow
-                                    v-for="tx in transactions.data"
-                                    :key="tx.id"
-                                    :transaction="tx"
-                                    variant="desktop"
-                                    :delete-processing="deleteProcessing"
-                                    :format-amount="formatAmount"
-                                    :format-currency-symbol="formatCurrencySymbol"
-                                    @edit="openEditDialog"
-                                    @delete="openDeleteDialog"
-                                />
-                            </tbody>
-                        </table>
-                    </div>
+                    <div class="overflow-hidden rounded-2xl border border-transparent bg-card">
+                        <div class="hidden md:block">
+                            <table class="w-full table-fixed text-sm">
+                                <caption class="sr-only">
+                                    {{
+                                        t('transactions.index.a11y.tableCaption')
+                                    }}
+                                </caption>
+                                <thead
+                                    class="border-b border-border/50 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60"
+                                >
+                                    <tr>
+                                        <th class="w-36 px-3 py-2" scope="col" :aria-sort="ariaSortFor('date')">
+                                            <button
+                                                class="inline-flex items-center gap-2 hover:text-foreground"
+                                                type="button"
+                                                :aria-label="sortButtonAriaLabel('date')"
+                                                @click="setSort('date')"
+                                            >
+                                                {{ t('transactions.index.table.date') }}
+                                                <component
+                                                    :is="(filters.sort ?? 'date') === 'date' ? directionIcon() : ArrowUpDown"
+                                                    class="h-4 w-4"
+                                                    aria-hidden="true"
+                                                />
+                                            </button>
+                                        </th>
+                                        <th class="px-3 py-2" scope="col">{{ t('transactions.index.table.description') }}</th>
+                                        <th class="w-56 px-3 py-2 xl:w-64 2xl:w-72" scope="col">{{ t('transactions.index.table.category') }}</th>
+                                        <th class="w-64 px-3 py-2" scope="col">{{ t('transactions.index.table.account') }}</th>
+                                        <th class="w-44 px-3 py-2" scope="col" :aria-sort="ariaSortFor('amount')">
+                                            <button
+                                                class="inline-flex items-center gap-2 hover:text-foreground"
+                                                type="button"
+                                                :aria-label="sortButtonAriaLabel('amount')"
+                                                @click="setSort('amount')"
+                                            >
+                                                {{ t('transactions.index.table.amount') }}
+                                                <component
+                                                    :is="(filters.sort ?? 'date') === 'amount' ? directionIcon() : ArrowUpDown"
+                                                    class="h-4 w-4"
+                                                    aria-hidden="true"
+                                                />
+                                            </button>
+                                        </th>
+                                        <th class="w-28 px-3 py-2 text-right" scope="col">{{ t('transactions.index.table.actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <TransactionRow
+                                        v-for="tx in transactions.data"
+                                        :key="tx.id"
+                                        :transaction="tx"
+                                        variant="desktop"
+                                        :delete-processing="deleteProcessing"
+                                        :format-amount="formatAmount"
+                                        :format-currency-symbol="formatCurrencySymbol"
+                                        @edit="openEditDialog"
+                                        @delete="openDeleteDialog"
+                                    />
+                                </tbody>
+                            </table>
+                        </div>
 
-                    <div class="md:hidden">
-                        <TransactionRow
-                            v-for="tx in transactions.data"
-                            :key="tx.id"
-                            :transaction="tx"
-                            variant="mobile"
-                            :delete-processing="deleteProcessing"
-                            :format-amount="formatAmount"
-                            :format-currency-symbol="formatCurrencySymbol"
-                            @edit="openEditDialog"
-                            @delete="openDeleteDialog"
-                        />
+                        <div class="md:hidden">
+                            <TransactionRow
+                                v-for="tx in transactions.data"
+                                :key="tx.id"
+                                :transaction="tx"
+                                variant="mobile"
+                                :delete-processing="deleteProcessing"
+                                :format-amount="formatAmount"
+                                :format-currency-symbol="formatCurrencySymbol"
+                                @edit="openEditDialog"
+                                @delete="openDeleteDialog"
+                            />
+                        </div>
                     </div>
                 </TablePage>
             </div>

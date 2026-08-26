@@ -322,8 +322,14 @@
                 "noActions": "No actions"
             },
             "empty": {
-                "filtered": "No transactions match your filters.",
-                "firstUse": "You don't have any transactions yet.",
+                "filtered": {
+                    "heading": "No results",
+                    "message": "No transactions match your filters."
+                },
+                "firstUse": {
+                    "heading": "No transactions",
+                    "message": "You don't have any transactions yet."
+                },
                 "import": "Import file"
             },
             "pagination": {
