@@ -84,7 +84,7 @@ function submit() {
 </script>
 
 <template>
-    <Dialog :open="open" @update:open="(value) => emit('update:open', value)">
+    <Dialog :open="open" @update:open="(value) => !(form.processing && !value) && emit('update:open', value)">
         <DialogContent v-if="accountId !== null">
             <DialogHeader>
                 <DialogTitle>{{ t('accounts.adjust.title') }}</DialogTitle>
@@ -114,7 +114,7 @@ function submit() {
                     </template>
                 </FormField>
 
-                <div class="flex items-start gap-3 rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
+                <div class="flex items-start gap-3 rounded-xl border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
                     <Checkbox
                         :id="checkboxId"
                         :checked="adjustmentConfirmed"

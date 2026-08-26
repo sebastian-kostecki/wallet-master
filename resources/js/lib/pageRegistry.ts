@@ -81,8 +81,6 @@ export const pageNodes: Record<string, PageNode> = {
     dashboard: { titleKey: 'dashboard.title', descriptionKey: 'dashboard.description' },
 
     accounts: { titleKey: 'accounts.index.title', matchRoutes: ['accounts.index'], tabGroup: 'accounts' },
-    'accounts.create': { titleKey: 'accounts.create.title', parent: 'accounts' },
-    'accounts.edit': { titleKey: 'accounts.edit.title', parent: 'accounts' },
 
     transactions: {
         titleKey: 'transactions.index.title',

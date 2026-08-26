@@ -39,6 +39,7 @@ test('user can set current balance and adjustment is audited', function () {
         ]);
 
     $response->assertSessionHasNoErrors();
+    $response->assertRedirect(route('accounts.index', ['kind' => 'wallets'], absolute: false));
 
     $account->refresh();
     expect($account->current_balance)->toBe('999.99');

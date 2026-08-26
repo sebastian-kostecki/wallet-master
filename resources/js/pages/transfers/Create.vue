@@ -127,7 +127,7 @@ function submit() {
                         <p class="text-muted-foreground">{{ t('transfers.create.empty') }}</p>
                         <div class="mt-4">
                             <Button as-child>
-                                <Link :href="route('accounts.create')">{{ t('accounts.index.addAccount') }}</Link>
+                                <Link :href="route('accounts.index')">{{ t('accounts.index.addAccount') }}</Link>
                             </Button>
                         </div>
                     </div>

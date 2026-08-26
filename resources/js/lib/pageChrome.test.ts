@@ -57,24 +57,28 @@ describe('resolvePageChrome', () => {
     });
 
     it('links every ancestor and leaves only the leaf unlinked', () => {
-        const chrome = resolvePageChrome(at('accounts.create'), {}, deps);
+        const chrome = resolvePageChrome(at('transactions.create'), {}, deps);
 
         expect(chrome.crumbs).toEqual([
-            { title: 'accounts.index.title', href: '/accounts.index' },
-            { title: 'accounts.create.title', href: null },
+            { title: 'transactions.index.title', href: '/transactions.index' },
+            { title: 'transactions.create.title', href: null },
         ]);
     });
 
     it('lets a detail page override the leaf, the title and the document title', () => {
-        const chrome = resolvePageChrome(at('accounts.edit', { account: '12' }), { title: 'mBank ROR', description: 'accounts.edit.title' }, deps);
+        const chrome = resolvePageChrome(
+            at('transactions.edit', { transaction: '12' }),
+            { title: 'Lunch', description: 'transactions.edit.title' },
+            deps,
+        );
 
         expect(chrome.crumbs).toEqual([
-            { title: 'accounts.index.title', href: '/accounts.index' },
-            { title: 'mBank ROR', href: null },
+            { title: 'transactions.index.title', href: '/transactions.index' },
+            { title: 'Lunch', href: null },
         ]);
-        expect(chrome.title).toBe('mBank ROR');
-        expect(chrome.description).toBe('accounts.edit.title');
-        expect(chrome.documentTitle).toBe('mBank ROR');
+        expect(chrome.title).toBe('Lunch');
+        expect(chrome.description).toBe('transactions.edit.title');
+        expect(chrome.documentTitle).toBe('Lunch');
     });
 
     it('falls back to the default tab when no filter is present', () => {

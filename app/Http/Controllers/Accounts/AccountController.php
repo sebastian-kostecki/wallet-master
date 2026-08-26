@@ -14,6 +14,7 @@ use App\Models\Account;
 use App\Models\Currency;
 use App\Telemetry\Event;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,31 +25,37 @@ class AccountController extends Controller
         $this->authorizeResource(Account::class, 'account');
     }
 
-    public function index(): Response
+    public function index(AccountFormOptions $options): Response
     {
         $accounts = AccountResource::collection(
             Account::query()
                 ->whereBelongsTo(auth()->user())
                 ->with(['currency:id,code,symbol,precision'])
                 ->orderBy('name')
-                ->get(['id', 'currency_id', 'name', 'current_balance', 'bank', 'type'])
+                ->get(['id', 'currency_id', 'name', 'current_balance', 'opening_balance', 'bank', 'type'])
         )->resolve();
 
-        return Inertia::render('accounts/Index', [
-            'accounts' => $accounts,
-        ]);
-    }
-
-    public function create(AccountFormOptions $options): Response
-    {
         $currencies = Currency::query()
             ->orderBy('code')
             ->get(['id', 'code', 'name', 'symbol', 'precision']);
 
-        return Inertia::render('accounts/Create', [
+        return Inertia::render('accounts/Index', [
+            'accounts' => $accounts,
             'currencies' => $currencies,
             ...$options->toArray(),
         ]);
+    }
+
+    public function create(Request $request): RedirectResponse
+    {
+        $kind = $request->query('kind');
+
+        return to_route(
+            'accounts.index',
+            is_string($kind) && in_array($kind, ['accounts', 'wallets'], true)
+                ? ['kind' => $kind]
+                : [],
+        );
     }
 
     public function store(StoreAccountRequest $request, StoreAccount $storeAccount): RedirectResponse
@@ -61,14 +68,9 @@ class AccountController extends Controller
         ]);
     }
 
-    public function edit(Account $account, AccountFormOptions $options): Response
+    public function edit(Account $account): RedirectResponse
     {
-        $account->loadMissing(['currency:id,code,symbol,precision']);
-
-        return Inertia::render('accounts/Edit', [
-            'account' => (new AccountResource($account))->resolve(),
-            ...$options->toArray(),
-        ]);
+        return to_route('accounts.index', $this->accountsIndexQuery($account));
     }
 
     public function update(UpdateAccountRequest $request, Account $account, UpdateAccountDetails $updater): RedirectResponse

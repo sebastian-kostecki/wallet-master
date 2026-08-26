@@ -37,7 +37,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <div class="list-row-hover rounded-xl border border-sidebar-border/70 p-3 dark:border-sidebar-border">
+    <div class="list-row-hover px-3 py-2.5 hover:bg-foreground/[0.03]">
         <div class="flex items-center gap-3">
             <div class="shrink-0">
                 <img

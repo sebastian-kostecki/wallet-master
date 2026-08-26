@@ -20,6 +20,9 @@ defineProps<{
                     <template #actions>
                         <slot name="headerActions" />
                     </template>
+                    <template v-if="$slots.headerTabsTrailing" #tabsTrailing>
+                        <slot name="headerTabsTrailing" />
+                    </template>
                 </PageHeader>
                 <slot />
             </div>

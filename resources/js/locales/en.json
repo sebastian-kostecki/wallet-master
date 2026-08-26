@@ -33,21 +33,13 @@
         },
         "edit": {
             "title": "Edit account",
-            "description": "Update account details or opening balance.",
-            "back": "Back",
-            "deleteAction": "Delete account",
-            "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference.",
-            "dangerZone": {
-                "title": "Danger zone",
-                "description": "This action is irreversible. Transactions will remain in history as read-only."
-            }
+            "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference."
         },
         "create": {
             "title": "Add bank account",
             "titleWallet": "Add wallet",
             "description": "Add a bank account and opening balance.",
             "descriptionWallet": "Add a cash wallet and opening balance.",
-            "back": "Back",
             "fields": {
                 "name": {
                     "label": "Name",
