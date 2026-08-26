@@ -33,4 +33,22 @@ describe('pageRegistry', () => {
             expect(group.tabs.map((tab) => tab.key)).toContain(group.defaultKey);
         }
     });
+
+    it('registers accounts tabs with kind query params', () => {
+        const group = pageTabGroups.accounts;
+
+        expect(pageNodes.accounts.tabGroup).toBe('accounts');
+        expect(group.defaultKey).toBe('accounts');
+        expect(group.tabs.map((tab) => tab.key)).toEqual(['accounts', 'wallets']);
+        expect(group.tabs[0]).toMatchObject({
+            route: 'accounts.index',
+            params: { kind: 'accounts' },
+            labelKey: 'accounts.tabs.accounts',
+        });
+        expect(group.tabs[1]).toMatchObject({
+            route: 'accounts.index',
+            params: { kind: 'wallets' },
+            labelKey: 'accounts.tabs.wallets',
+        });
+    });
 });

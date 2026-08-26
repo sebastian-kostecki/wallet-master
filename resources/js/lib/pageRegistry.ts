@@ -43,6 +43,13 @@ export const pageTabGroups: Record<string, PageTabGroup> = {
             { key: 'all', labelKey: 'pockets.filters.all', route: 'pockets.index', params: { filter: 'all' } },
         ],
     },
+    accounts: {
+        defaultKey: 'accounts',
+        tabs: [
+            { key: 'accounts', labelKey: 'accounts.tabs.accounts', route: 'accounts.index', params: { kind: 'accounts' } },
+            { key: 'wallets', labelKey: 'accounts.tabs.wallets', route: 'accounts.index', params: { kind: 'wallets' } },
+        ],
+    },
     budget: {
         defaultKey: 'monthly',
         tabs: [
@@ -73,7 +80,7 @@ export const pageTabGroups: Record<string, PageTabGroup> = {
 export const pageNodes: Record<string, PageNode> = {
     dashboard: { titleKey: 'dashboard.title', descriptionKey: 'dashboard.description' },
 
-    accounts: { titleKey: 'accounts.index.title', matchRoutes: ['accounts.index'] },
+    accounts: { titleKey: 'accounts.index.title', matchRoutes: ['accounts.index'], tabGroup: 'accounts' },
     'accounts.create': { titleKey: 'accounts.create.title', parent: 'accounts' },
     'accounts.edit': { titleKey: 'accounts.edit.title', parent: 'accounts' },
 

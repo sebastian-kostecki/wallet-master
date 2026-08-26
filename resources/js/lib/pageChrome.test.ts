@@ -26,12 +26,34 @@ describe('resolvePageChrome', () => {
     });
 
     it('renders a root page as a single unlinked crumb', () => {
+        const chrome = resolvePageChrome(at('dashboard'), {}, deps);
+
+        expect(chrome.crumbs).toEqual([{ title: 'dashboard.title', href: null }]);
+        expect(chrome.title).toBe('dashboard.title');
+        expect(chrome.documentTitle).toBe('dashboard.title');
+        expect(chrome.tabs).toEqual([]);
+    });
+
+    it('falls back to the Rachunki tab when kind is missing', () => {
         const chrome = resolvePageChrome(at('accounts.index'), {}, deps);
 
-        expect(chrome.crumbs).toEqual([{ title: 'accounts.index.title', href: null }]);
+        expect(chrome.crumbs).toEqual([
+            { title: 'accounts.index.title', href: '/accounts.index' },
+            { title: 'accounts.tabs.accounts', href: null },
+        ]);
         expect(chrome.title).toBe('accounts.index.title');
-        expect(chrome.documentTitle).toBe('accounts.index.title');
-        expect(chrome.tabs).toEqual([]);
+        expect(chrome.documentTitle).toBe('accounts.index.title · accounts.tabs.accounts');
+        expect(chrome.tabs).toHaveLength(2);
+        expect(chrome.tabs.find((tab) => tab.isActive)?.key).toBe('accounts');
+        expect(chrome.tabs.find((tab) => tab.key === 'wallets')?.href).toBe('/accounts.index?kind=wallets');
+    });
+
+    it('activates Portfele when kind=wallets', () => {
+        const chrome = resolvePageChrome(at('accounts.index', { kind: 'wallets' }), {}, deps);
+
+        expect(chrome.title).toBe('accounts.index.title');
+        expect(chrome.documentTitle).toBe('accounts.index.title · accounts.tabs.wallets');
+        expect(chrome.tabs.find((tab) => tab.isActive)?.key).toBe('wallets');
     });
 
     it('links every ancestor and leaves only the leaf unlinked', () => {
