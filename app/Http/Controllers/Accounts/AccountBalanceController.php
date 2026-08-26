@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Accounts;
 
 use App\Actions\Accounts\AdjustAccountBalance;
+use App\Enums\Bank;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Accounts\AdjustAccountBalanceRequest;
 use App\Models\Account;
@@ -20,6 +21,8 @@ final class AccountBalanceController extends Controller
 
         $adjustBalance->handle($request->user(), $account, (string) $validated['new_balance']);
 
-        return to_route('accounts.edit', $account);
+        return to_route('accounts.index', [
+            'kind' => $account->bank === Bank::Cash ? 'wallets' : 'accounts',
+        ]);
     }
 }
