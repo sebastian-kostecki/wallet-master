@@ -20,6 +20,7 @@ class TransactionFactory extends Factory
     {
         return [
             'pocket_id' => null,
+            'pocket_movement' => null,
         ];
     }
 

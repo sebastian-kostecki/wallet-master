@@ -35,7 +35,6 @@ final class PocketFactory extends Factory
             'planning_mode' => null,
             'monthly_contribution' => null,
             'target_date' => null,
-            'is_archived' => false,
         ];
     }
 

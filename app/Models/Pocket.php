@@ -27,7 +27,6 @@ use Illuminate\Support\Facades\Schema;
  * @property PocketPlanningMode|null $planning_mode
  * @property string|null $monthly_contribution
  * @property Carbon|null $target_date
- * @property bool $is_archived
  * @property Currency $currency
  */
 final class Pocket extends Model
@@ -50,7 +49,6 @@ final class Pocket extends Model
         'planning_mode',
         'monthly_contribution',
         'target_date',
-        'is_archived',
         'created_at',
         'updated_at',
     ];
@@ -69,7 +67,6 @@ final class Pocket extends Model
             'planning_mode' => PocketPlanningMode::class,
             'monthly_contribution' => 'decimal:2',
             'target_date' => 'date',
-            'is_archived' => 'boolean',
         ];
     }
 

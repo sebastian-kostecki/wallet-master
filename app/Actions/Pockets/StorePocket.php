@@ -31,7 +31,6 @@ final class StorePocket
             'planning_mode' => $validated['planning_mode'] ?? null,
             'monthly_contribution' => $validated['monthly_contribution'] ?? null,
             'target_date' => $validated['target_date'] ?? null,
-            'is_archived' => false,
         ]);
 
         Event::record('pocket_created', ['pocket_id' => $pocket->id], $user->id);

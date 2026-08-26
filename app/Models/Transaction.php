@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\PocketMovement;
 use App\Enums\TransactionType;
 use App\Enums\TransferMatchStatus;
 use Database\Factories\TransactionFactory;
@@ -20,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int $category_id
  * @property int|null $pocket_id
+ * @property PocketMovement|null $pocket_movement
  * @property int|null $import_id
  * @property string|null $raw_statement_description
  * @property string|null $import_fingerprint
@@ -41,6 +43,7 @@ final class Transaction extends Model
         'currency_id',
         'category_id',
         'pocket_id',
+        'pocket_movement',
         'import_id',
         'date',
         'booked_at',
@@ -78,6 +81,7 @@ final class Transaction extends Model
             'currency_id' => 'integer',
             'category_id' => 'integer',
             'pocket_id' => 'integer',
+            'pocket_movement' => PocketMovement::class,
             'user_id' => 'integer',
         ];
     }
