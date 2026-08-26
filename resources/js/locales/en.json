@@ -351,37 +351,16 @@
         },
         "create": {
             "title": "Add transaction",
-            "description": "Record income or an expense.",
-            "back": "Back",
-            "hints": {
-                "title": "Tips",
-                "type": "Choose “Income” or “Expense”. This affects the amount sign.",
-                "amount": "You can enter decimals. For expenses we'll store the amount as negative.",
-                "description": "A clear description makes it easier to find the transaction later."
-            }
+            "description": "Record income or an expense."
         },
         "edit": {
             "title": "Edit transaction",
-            "description": "Update an existing transaction.",
-            "back": "Back",
-            "deleteAction": "Delete transaction",
-            "dangerZone": {
-                "title": "Warning",
-                "description": "This action cannot be undone."
-            },
             "transfer": {
                 "bannerTitle": "Linked transfer",
                 "bannerDescription": "Amount and account are locked. Unlink the transfer first to change them.",
                 "unlinkAction": "Unlink transfer",
                 "accountHint": "Account is locked while the transfer is linked. Use “Unlink transfer” to change it.",
                 "amountHint": "Amount is locked while the transfer is linked. Use “Unlink transfer” to change it."
-            },
-            "hints": {
-                "title": "Info",
-                "scope": "You're editing an existing transaction — changes will be reflected in history.",
-                "amount": "Double-check the amount sign (+/−). It affects the account balance.",
-                "amountTransfer": "Amount is locked while the transfer is linked. Use “Unlink transfer” to change it.",
-                "save": "After saving, you'll be taken back to the transactions list."
             },
             "statement": {
                 "title": "Statement data",

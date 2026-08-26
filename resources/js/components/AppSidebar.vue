@@ -4,9 +4,10 @@ import NavUser from '@/components/NavUser.vue';
 import SidebarThemeToggle from '@/components/SidebarThemeToggle.vue';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from '@/components/ui/sidebar';
+import { requestOpenCreateTransaction } from '@/composables/useTransactionFormDialog';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { ArrowLeftRight, LayoutGrid, PanelLeftClose, PanelLeftOpen, PieChart, Plus, Tags, Target, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -52,7 +53,8 @@ const mainNavItems = computed<NavItem[]>(() => [
     },
 ]);
 
-const createTransactionHref = computed(() => route('transactions.create'));
+const page = usePage();
+const isTransactionsIndex = computed(() => page.component === 'transactions/Index');
 </script>
 
 <template>
@@ -92,8 +94,19 @@ const createTransactionHref = computed(() => route('transactions.create'));
         </SidebarContent>
 
         <div class="px-3 pb-2 pt-1">
-            <Button as-child :size="isCollapsed ? 'icon' : 'default'" class="w-full group-data-[collapsible=icon]:size-8">
-                <Link :href="createTransactionHref" :title="t('nav.addTransaction')">
+            <Button
+                v-if="isTransactionsIndex"
+                type="button"
+                :size="isCollapsed ? 'icon' : 'default'"
+                class="w-full group-data-[collapsible=icon]:size-8"
+                :title="t('nav.addTransaction')"
+                @click="requestOpenCreateTransaction()"
+            >
+                <Plus class="size-4 shrink-0" :stroke-width="1.7" />
+                <span class="group-data-[collapsible=icon]:hidden">{{ t('nav.addTransaction') }}</span>
+            </Button>
+            <Button v-else as-child :size="isCollapsed ? 'icon' : 'default'" class="w-full group-data-[collapsible=icon]:size-8">
+                <Link :href="route('transactions.create')" :title="t('nav.addTransaction')">
                     <Plus class="size-4 shrink-0" :stroke-width="1.7" />
                     <span class="group-data-[collapsible=icon]:hidden">{{ t('nav.addTransaction') }}</span>
                 </Link>

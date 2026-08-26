@@ -16,10 +16,8 @@ use App\Http\Resources\Accounts\AccountResource;
 use App\Http\Resources\Categories\CategoryResource;
 use App\Http\Resources\Imports\ImportFailedRowResource;
 use App\Http\Resources\Pockets\PocketResource;
-use App\Http\Resources\Transactions\TransactionEditResource;
 use App\Http\Resources\Transactions\TransactionResource;
 use App\Http\Resources\Transfers\TransferCandidatePairResource;
-use App\Models\Account;
 use App\Models\Transaction;
 use App\Support\Transactions\TransactionsIndexQuery;
 use Illuminate\Http\RedirectResponse;
@@ -39,9 +37,11 @@ final class TransactionController extends Controller
         TransactionIndexRequest $request,
         ListTransactions $listTransactions,
         ListCategories $listCategories,
+        ListPockets $listPockets,
     ): Response {
         $listTransactions->handle($request);
         $listCategories->handle($request->user());
+        $listPockets->handle($request->user());
 
         TransactionsIndexQuery::remember($request);
 
@@ -49,6 +49,7 @@ final class TransactionController extends Controller
             'filters' => $listTransactions->getFilters(),
             'accounts' => AccountResource::collection($listTransactions->getAccounts())->resolve(),
             'categories' => CategoryResource::collection($listCategories->getCategories())->resolve(),
+            'pockets' => PocketResource::collection($listPockets->getPockets())->resolve(),
             'transactions' => TransactionResource::collection($listTransactions->getTransactionPaginator()),
             'summary' => $listTransactions->getSummary(),
             'unresolved_import_failed_rows' => ImportFailedRowResource::collection(
@@ -60,16 +61,11 @@ final class TransactionController extends Controller
         ]);
     }
 
-    public function create(Request $request, ListCategories $listCategories, ListPockets $listPockets): Response
+    public function create(): RedirectResponse
     {
-        $accounts = Account::queryForUser($request->user())->get();
-        $listCategories->handle($request->user());
-        $listPockets->handle($request->user());
-
-        return Inertia::render('transactions/Create', [
-            'accounts' => AccountResource::collection($accounts)->resolve(),
-            'categories' => CategoryResource::collection($listCategories->getCategories())->resolve(),
-            'pockets' => PocketResource::collection($listPockets->getPockets())->resolve(),
+        return to_route('transactions.index', [
+            ...TransactionsIndexQuery::params(),
+            'new' => 1,
         ]);
     }
 
@@ -86,19 +82,9 @@ final class TransactionController extends Controller
         ]);
     }
 
-    public function edit(Transaction $transaction, Request $request, ListCategories $listCategories, ListPockets $listPockets): Response
+    public function edit(Request $request, Transaction $transaction): RedirectResponse
     {
-        $transaction->loadMissing(['account:id,name', 'currency:id,code,symbol,precision']);
-        $accounts = Account::queryForUser($request->user())->get();
-        $listCategories->handle($request->user());
-        $listPockets->handle($request->user());
-
-        return Inertia::render('transactions/Edit', [
-            'transaction' => new TransactionEditResource($transaction)->resolve(),
-            'accounts' => AccountResource::collection($accounts)->resolve(),
-            'categories' => CategoryResource::collection($listCategories->getCategories())->resolve(),
-            'pockets' => PocketResource::collection($listPockets->getPockets())->resolve(),
-        ]);
+        return TransactionsIndexQuery::redirect($request);
     }
 
     /**

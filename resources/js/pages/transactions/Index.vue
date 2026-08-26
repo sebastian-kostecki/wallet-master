@@ -4,12 +4,14 @@ import ImportDialog from '@/components/import/ImportDialog.vue';
 import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
 import TablePage from '@/components/page/TablePage.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
+import TransactionFormDialog from '@/components/transactions/modals/TransactionFormDialog.vue';
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
 import TransferCandidatesBanner, { type TransferCandidatePair } from '@/components/transfers/TransferCandidatesBanner.vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTransactionFormDialog } from '@/composables/useTransactionFormDialog';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { track } from '@/lib/telemetry';
@@ -31,7 +33,7 @@ import {
     Upload,
     Wallet,
 } from 'lucide-vue-next';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
 
@@ -58,6 +60,7 @@ type Category = {
     id: number;
     name: string;
     type: string;
+    sort_order: number;
     icon: string;
     color: string;
 };
@@ -73,6 +76,7 @@ type TransactionCategory = {
 
 type Transaction = {
     id: number;
+    account_id: number;
     date: string; // YYYY-MM-DD
     booked_at: string; // YYYY-MM-DD
     date_relative: string;
@@ -146,6 +150,7 @@ type Filters = {
 const props = defineProps<{
     accounts: Account[];
     categories: Category[];
+    pockets: { id: number; name: string }[];
     filters: Filters;
     transactions: Paginator<Transaction>;
     summary: {
@@ -430,6 +435,74 @@ function openDeleteDialog(transactionId: number) {
     deleteDialogOpen.value = true;
 }
 
+const { createRequested } = useTransactionFormDialog();
+
+const formDialogOpen = ref(false);
+const formDialogMode = ref<'create' | 'edit'>('create');
+const formResetKey = ref(0);
+const editingTransactionId = ref<number | null>(null);
+
+const editingTransaction = computed(() => props.transactions.data.find((tx) => tx.id === editingTransactionId.value) ?? null);
+
+function openCreateDialog(): void {
+    const alreadyOpenCreate = formDialogOpen.value && formDialogMode.value === 'create';
+
+    formDialogMode.value = 'create';
+    editingTransactionId.value = null;
+
+    if (alreadyOpenCreate) {
+        formResetKey.value++;
+    }
+
+    formDialogOpen.value = true;
+}
+
+function openEditDialog(tx: Transaction): void {
+    formDialogMode.value = 'edit';
+    editingTransactionId.value = tx.id;
+    formDialogOpen.value = true;
+}
+
+function consumeNewQuery(): void {
+    const [path, query = ''] = page.url.split('?');
+    const params = new URLSearchParams(query);
+
+    if (params.get('new') !== '1') {
+        return;
+    }
+
+    openCreateDialog();
+    params.delete('new');
+    const next = params.toString() === '' ? path : `${path}?${params.toString()}`;
+    router.replace(next, { preserveState: true, preserveScroll: true });
+}
+
+watch(createRequested, (requested) => {
+    if (!requested) {
+        return;
+    }
+
+    openCreateDialog();
+    createRequested.value = false;
+});
+
+watch(editingTransaction, (tx) => {
+    if (formDialogOpen.value && formDialogMode.value === 'edit' && tx === null) {
+        formDialogOpen.value = false;
+    }
+});
+
+onMounted(() => {
+    consumeNewQuery();
+});
+
+watch(
+    () => page.url,
+    () => {
+        consumeNewQuery();
+    },
+);
+
 function ariaSortFor(column: 'date' | 'amount'): 'ascending' | 'descending' | 'none' {
     const currentSort = props.filters.sort ?? 'date';
     if (currentSort !== column) {
@@ -478,11 +551,9 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-56">
-                        <DropdownMenuItem as-child>
-                            <Link :href="route('transactions.create') + currentSearch">
-                                <Plus />
-                                {{ t('transactions.index.addTransaction') }}
-                            </Link>
+                        <DropdownMenuItem @select="openCreateDialog">
+                            <Plus />
+                            {{ t('transactions.index.addTransaction') }}
                         </DropdownMenuItem>
                         <DropdownMenuItem as-child>
                             <Link :href="route('transfers.create') + currentSearch">
@@ -565,9 +636,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                         <div v-if="isFilteredEmpty" class="p-8 text-center">
                             <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.filtered') }}</p>
                             <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                                <Button as-child>
-                                    <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
-                                </Button>
+                                <Button type="button" @click="openCreateDialog">{{ t('transactions.index.addTransaction') }}</Button>
                                 <Button variant="secondary" @click="clearFilters">{{ t('transactions.index.filters.clear') }}</Button>
                             </div>
                         </div>
@@ -575,9 +644,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                         <div v-else class="p-8 text-center">
                             <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.firstUse') }}</p>
                             <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                                <Button as-child>
-                                    <Link :href="route('transactions.create')">{{ t('transactions.index.addTransaction') }}</Link>
-                                </Button>
+                                <Button type="button" @click="openCreateDialog">{{ t('transactions.index.addTransaction') }}</Button>
                                 <Button v-if="hasImportRoute" variant="secondary" as-child>
                                     <Link :href="route('imports.index')">{{ t('transactions.index.empty.import') }}</Link>
                                 </Button>
@@ -823,13 +890,14 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                             <div class="inline-flex w-full items-center justify-end gap-1">
                                                 <Tooltip>
                                                     <TooltipTrigger>
-                                                        <Button variant="ghost" size="icon" as-child>
-                                                            <Link
-                                                                :href="route('transactions.edit', tx.id) + currentSearch"
-                                                                :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
-                                                            >
-                                                                <Pencil class="h-4 w-4" aria-hidden="true" />
-                                                            </Link>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            type="button"
+                                                            :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
+                                                            @click="openEditDialog(tx)"
+                                                        >
+                                                            <Pencil class="h-4 w-4" aria-hidden="true" />
                                                         </Button>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
@@ -982,13 +1050,14 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                                 <div class="inline-flex items-center gap-1">
                                                     <Tooltip>
                                                         <TooltipTrigger>
-                                                            <Button variant="ghost" size="icon" as-child>
-                                                                <Link
-                                                                    :href="route('transactions.edit', tx.id) + currentSearch"
-                                                                    :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
-                                                                >
-                                                                    <Pencil class="h-4 w-4" aria-hidden="true" />
-                                                                </Link>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                type="button"
+                                                                :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
+                                                                @click="openEditDialog(tx)"
+                                                            >
+                                                                <Pencil class="h-4 w-4" aria-hidden="true" />
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
@@ -1031,6 +1100,17 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
             :preselected-account-id="filters.account_id ?? null"
             :disabled="isLoading"
             :current-search="currentSearch"
+        />
+
+        <TransactionFormDialog
+            v-model:open="formDialogOpen"
+            :mode="formDialogMode"
+            :form-reset-key="formResetKey"
+            :transaction="editingTransaction"
+            :accounts="accounts"
+            :categories="categories"
+            :pockets="pockets"
+            :account-id-filter="filters.account_id"
         />
 
         <DeleteTransactionDialog

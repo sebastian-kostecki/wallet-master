@@ -87,8 +87,6 @@ export const pageNodes: Record<string, PageNode> = {
         descriptionKey: 'transactions.index.description',
         matchRoutes: ['transactions.index'],
     },
-    'transactions.create': { titleKey: 'transactions.create.title', parent: 'transactions' },
-    'transactions.edit': { titleKey: 'transactions.edit.title', parent: 'transactions' },
     'transfers.create': { titleKey: 'transfers.create.title', parent: 'transactions' },
 
     categories: { titleKey: 'categories.index.title', matchRoutes: ['categories.index'] },
