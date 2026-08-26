@@ -109,6 +109,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Empty state + CTA
   - [x] Jedna kolumna daty okresu (`booked_at ?? date`) + tooltip surowego opisu wyciągu importu **[plan §1, PRD FR-T2, branch 2026-06]**
   - [x] Badge „Korekta" dla transakcji typu `adjustment` **[plan §3]**
+  - [x] Lista OpenShip: karta wierszy, empty na podłodze, pager **[plan 2026-08-26-transactions-index-openship]**
 - [x] Dodanie transakcji:
   - [x] Pola: data (DD-MM-YYYY), kwota (decimal), opis, subject (opcjonalny)
   - [x] Pole `booked_at` (DD-MM-YYYY) z domyślną wartością równą `date` (Create/Edit) **[plan §1]**
