@@ -39,6 +39,7 @@ type Transaction = {
     transfer_id: string | null;
     category_id: number | null;
     pocket_id: number | null;
+    pocket_movement: 'deposit' | 'withdrawal' | null;
 };
 
 const props = defineProps<{
@@ -68,6 +69,7 @@ const form = useForm<{
     account_id: number | null;
     category_id: number | null;
     pocket_id: number | null;
+    pocket_movement: 'deposit' | 'withdrawal' | null;
     date: string;
     booked_at: string;
     amount: string;
@@ -77,6 +79,7 @@ const form = useForm<{
     account_id: null,
     category_id: null,
     pocket_id: null,
+    pocket_movement: null,
     date: '',
     booked_at: '',
     amount: '0,00',
@@ -182,6 +185,7 @@ function resetForm(): void {
         form.account_id = props.transaction.account_id;
         form.category_id = props.transaction.category_id;
         form.pocket_id = props.transaction.pocket_id;
+        form.pocket_movement = props.transaction.pocket_movement;
         form.date = isoToDdMmYyyy(props.transaction.date);
         form.booked_at = props.transaction.booked_at === props.transaction.date ? '' : isoToDdMmYyyy(props.transaction.booked_at);
         form.amount = displayAmount(String(props.transaction.amount));
@@ -196,6 +200,7 @@ function resetForm(): void {
     form.account_id = defaultAccountId();
     form.category_id = firstCategoryId(filterCategoriesByType(props.categories, 'expense'));
     form.pocket_id = null;
+    form.pocket_movement = null;
     form.date = todayDdMmYyyy();
     form.booked_at = '';
     form.amount = '0,00';
@@ -244,6 +249,25 @@ watch(transactionKind, (kind) => {
     }
 });
 
+watch(
+    () => form.pocket_id,
+    (pocketId) => {
+        if (!isLinkedTransfer.value) {
+            return;
+        }
+
+        if (pocketId === null) {
+            form.pocket_movement = null;
+
+            return;
+        }
+
+        if (form.pocket_movement === null) {
+            form.pocket_movement = 'deposit';
+        }
+    },
+);
+
 function onOpenChange(value: boolean): void {
     if (form.processing && !value) {
         return;
@@ -276,6 +300,21 @@ function submit(): void {
     if ((form.booked_at ?? '').trim() === '') {
         form.booked_at = form.date;
     }
+
+    form.transform((data) => {
+        const payload = { ...data };
+
+        if (isLinkedTransfer.value) {
+            if (payload.pocket_id === null) {
+                payload.pocket_movement = null;
+            }
+        } else {
+            delete payload.pocket_id;
+            delete payload.pocket_movement;
+        }
+
+        return payload;
+    });
 
     const visit = {
         preserveScroll: true,
@@ -406,7 +445,7 @@ function submit(): void {
                     </template>
                 </FormField>
 
-                <FormField for-id="category_id" :label="t('transactions.fields.category')" :error="form.errors.category_id">
+                <FormField v-if="!isLinkedTransfer" for-id="category_id" :label="t('transactions.fields.category')" :error="form.errors.category_id">
                     <template #default="{ errorId, hasError }">
                         <DropdownSelect
                             id="category_id"
@@ -440,7 +479,7 @@ function submit(): void {
                     </template>
                 </FormField>
 
-                <FormField for-id="pocket_id" :label="t('transactions.fields.pocket')" :error="form.errors.pocket_id">
+                <FormField v-if="isLinkedTransfer" for-id="pocket_id" :label="t('transfers.form.pocket')" :error="form.errors.pocket_id">
                     <template #default="{ errorId, hasError }">
                         <DropdownSelect
                             id="pocket_id"
@@ -448,10 +487,47 @@ function submit(): void {
                             :aria-describedby="hasError ? errorId : undefined"
                             :model-value="form.pocket_id"
                             :options="pocketOptions"
-                            :placeholder="t('transactions.fields.pocket')"
+                            :placeholder="t('transfers.form.pocketPlaceholder')"
                             :disabled="form.processing || pocketOptions.length <= 1"
                             @update:model-value="(value) => (form.pocket_id = value)"
                         />
+                    </template>
+                </FormField>
+
+                <FormField
+                    v-if="isLinkedTransfer && form.pocket_id !== null"
+                    for-id="pocket_movement"
+                    :label="t('transfers.form.pocketMovement')"
+                    :error="form.errors.pocket_movement"
+                    :hint="t('transfers.form.pocketMovementHint')"
+                >
+                    <template #default="{ errorId, hintId, hasError, hasHint }">
+                        <div
+                            class="grid grid-cols-2 gap-1 rounded-xl border border-input bg-muted/30 p-1"
+                            role="group"
+                            :aria-describedby="[hasError ? errorId : undefined, hasHint ? hintId : undefined].filter(Boolean).join(' ') || undefined"
+                        >
+                            <Button
+                                type="button"
+                                :variant="form.pocket_movement === 'deposit' ? 'secondary' : 'ghost'"
+                                class="h-9 justify-center rounded-lg"
+                                :aria-pressed="form.pocket_movement === 'deposit'"
+                                :disabled="form.processing"
+                                @click="form.pocket_movement = 'deposit'"
+                            >
+                                {{ t('transfers.form.pocketMovementDeposit') }}
+                            </Button>
+                            <Button
+                                type="button"
+                                :variant="form.pocket_movement === 'withdrawal' ? 'secondary' : 'ghost'"
+                                class="h-9 justify-center rounded-lg"
+                                :aria-pressed="form.pocket_movement === 'withdrawal'"
+                                :disabled="form.processing"
+                                @click="form.pocket_movement = 'withdrawal'"
+                            >
+                                {{ t('transfers.form.pocketMovementWithdrawal') }}
+                            </Button>
+                        </div>
                     </template>
                 </FormField>
 
