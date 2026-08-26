@@ -14,6 +14,7 @@ use App\Models\Account;
 use App\Models\Currency;
 use App\Telemetry\Event;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,16 +46,16 @@ class AccountController extends Controller
         ]);
     }
 
-    public function create(AccountFormOptions $options): Response
+    public function create(Request $request): RedirectResponse
     {
-        $currencies = Currency::query()
-            ->orderBy('code')
-            ->get(['id', 'code', 'name', 'symbol', 'precision']);
+        $kind = $request->query('kind');
 
-        return Inertia::render('accounts/Create', [
-            'currencies' => $currencies,
-            ...$options->toArray(),
-        ]);
+        return to_route(
+            'accounts.index',
+            is_string($kind) && in_array($kind, ['accounts', 'wallets'], true)
+                ? ['kind' => $kind]
+                : [],
+        );
     }
 
     public function store(StoreAccountRequest $request, StoreAccount $storeAccount): RedirectResponse
@@ -67,14 +68,9 @@ class AccountController extends Controller
         ]);
     }
 
-    public function edit(Account $account, AccountFormOptions $options): Response
+    public function edit(Account $account): RedirectResponse
     {
-        $account->loadMissing(['currency:id,code,symbol,precision']);
-
-        return Inertia::render('accounts/Edit', [
-            'account' => (new AccountResource($account))->resolve(),
-            ...$options->toArray(),
-        ]);
+        return to_route('accounts.index', $this->accountsIndexQuery($account));
     }
 
     public function update(UpdateAccountRequest $request, Account $account, UpdateAccountDetails $updater): RedirectResponse
