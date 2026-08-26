@@ -31,10 +31,6 @@ final class PocketPolicy
 
     public function delete(User $user, Pocket $pocket): bool
     {
-        if ($pocket->user_id !== $user->id) {
-            return false;
-        }
-
-        return ! $pocket->hasLinkedTransactions();
+        return $pocket->user_id === $user->id;
     }
 }
