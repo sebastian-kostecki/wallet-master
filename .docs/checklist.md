@@ -70,6 +70,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 3) Konta — API/CRUD + UI
 - [x] Lista kont (z walutą i bieżącym saldem).
+- [x] Lista `/konta` w tabach **Rachunki** (`bank !== cash`) / **Portfele** (`bank === cash`); query `kind`; empty state per tab **[plan 2026-08-26-accounts-wallets-tabs]**
+- [x] Podsumowanie PLN (w tym oszczędności) na dashboardzie zamiast na `/konta` **[plan 2026-08-26-accounts-wallets-tabs]**
 - [x] Dodanie konta:
   - [x] Walidacje: nazwa wymagana; saldo początkowe liczba; waluta wybieralna, ale na MVP dostępna tylko PLN.
   - [x] Walidacje: `bank` i `type` wymagane i ograniczone do listy (enum).
