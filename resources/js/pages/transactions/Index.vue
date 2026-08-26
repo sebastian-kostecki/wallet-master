@@ -383,42 +383,43 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
 <template>
     <AppLayout>
         <template #headerActions>
-            <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                    <Button class="sm:shrink-0">
-                        <Plus class="h-4 w-4" aria-hidden="true" />
-                        {{ t('transactions.index.actionsMenu.label') }}
-                        <ChevronDown class="ml-1 h-4 w-4" aria-hidden="true" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" class="w-56 rounded-2xl">
-                    <DropdownMenuItem @select="openCreateDialog">
-                        <Plus />
-                        {{ t('transactions.index.addTransaction') }}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem as-child>
-                        <Link :href="route('transfers.create') + currentSearch">
-                            <ArrowRightLeft />
-                            {{ t('transactions.index.addTransfer') }}
-                        </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem @select="importDialogOpen = true">
-                        <Upload />
-                        {{ t('imports.cta') }}
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                <TransactionsIndexHeaderFilters
+                    :accounts="accounts"
+                    :categories="categories"
+                    :filters="filters"
+                    :server-errors="serverErrors"
+                    :is-loading="isLoading"
+                />
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <Button class="sm:shrink-0">
+                            <Plus class="h-4 w-4" aria-hidden="true" />
+                            {{ t('transactions.index.actionsMenu.label') }}
+                            <ChevronDown class="ml-1 h-4 w-4" aria-hidden="true" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" class="w-56 rounded-2xl">
+                        <DropdownMenuItem @select="openCreateDialog">
+                            <Plus />
+                            {{ t('transactions.index.addTransaction') }}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem as-child>
+                            <Link :href="route('transfers.create') + currentSearch">
+                                <ArrowRightLeft />
+                                {{ t('transactions.index.addTransfer') }}
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @select="importDialogOpen = true">
+                            <Upload />
+                            {{ t('imports.cta') }}
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </template>
 
         <div class="flex flex-col gap-6">
-            <TransactionsIndexHeaderFilters
-                :accounts="accounts"
-                :categories="categories"
-                :filters="filters"
-                :server-errors="serverErrors"
-                :is-loading="isLoading"
-            />
-
             <ImportFailedRowsBanner
                 v-if="(unresolved_import_failed_rows ?? []).length > 0"
                 :rows="unresolved_import_failed_rows ?? []"
