@@ -39,9 +39,11 @@ final class TransactionController extends Controller
         TransactionIndexRequest $request,
         ListTransactions $listTransactions,
         ListCategories $listCategories,
+        ListPockets $listPockets,
     ): Response {
         $listTransactions->handle($request);
         $listCategories->handle($request->user());
+        $listPockets->handle($request->user());
 
         TransactionsIndexQuery::remember($request);
 
@@ -49,6 +51,7 @@ final class TransactionController extends Controller
             'filters' => $listTransactions->getFilters(),
             'accounts' => AccountResource::collection($listTransactions->getAccounts())->resolve(),
             'categories' => CategoryResource::collection($listCategories->getCategories())->resolve(),
+            'pockets' => PocketResource::collection($listPockets->getPockets())->resolve(),
             'transactions' => TransactionResource::collection($listTransactions->getTransactionPaginator()),
             'summary' => $listTransactions->getSummary(),
             'unresolved_import_failed_rows' => ImportFailedRowResource::collection(

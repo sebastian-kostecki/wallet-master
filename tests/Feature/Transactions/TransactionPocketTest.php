@@ -114,15 +114,15 @@ test('user can update transaction pocket_id', function () {
     expect($transaction->fresh()->pocket_id)->toBe($pocket->id);
 });
 
-test('transaction create page includes pockets list', function () {
+test('transaction index includes pockets list', function () {
     $user = User::factory()->create();
     $pocket = Pocket::factory()->create(['user_id' => $user->id, 'name' => 'Wakacje']);
 
-    $response = $this->actingAs($user)->get(route('transactions.create'));
+    $response = $this->actingAs($user)->get(route('transactions.index'));
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('transactions/Create', false)
+        ->component('transactions/Index', false)
         ->has('pockets', 1)
         ->where('pockets.0.id', $pocket->id)
         ->where('pockets.0.name', 'Wakacje')
