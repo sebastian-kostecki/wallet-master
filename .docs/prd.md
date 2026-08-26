@@ -39,7 +39,7 @@
 - **Szacunek roczny:** planowana kwota na rok kalendarzowy per kategoria (przychód lub wydatek); można przekroczyć — to nie jest twardy limit.
 - **Szacunek miesięczny:** opcjonalne, jawne nadpisanie planu na dany miesiąc; niezależne od rocznego (brak nadpisania = plan `0` w widoku miesięcznym). Prognoza roczna nadal może używać `szacunek_roczny ÷ 12` dla zamkniętych miesięcy bez nadpisania.
 - **Kieszeń (pocket, EN: envelope):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L** i **bez roku kalendarzowego** (jak katalog kategorii, nie jak wiersz budżetu P&L). Każda kieszeń ma **walutę** (`currency_id`) — kwoty docelowe, saldo i planowanie są w tej walucie (MVP: tylko PLN w UI; pole w DB jak przy koncie). Opcjonalna **kwota docelowa** (`target_amount`); przy kwocie — wzajemnie wykluczające się planowanie: **składka miesięczna** (deklaracja użytkownika) **lub** **data docelowa** (termin; system liczy rekomendowaną składkę). Wykonanie: skumulowane saldo z transferów wewnętrznych z przypisaną kieszenią i ruchem (`pocket_movement`: **Odłożenie** / **Wypłata**) w walucie kieszeni — każda para transferu liczona raz per `transfer_id`. Kategoria P&L i kieszeń są **wzajemnie wykluczające** (XOR): P&L ma `category_id`, transfer ma opcjonalnie `pocket_id` + `pocket_movement`.
-- **Widok budżetu miesięczny:** plan vs wykonanie per kategoria P&L w miesiącu + sekcja **Kieszenie** (plan / odłożono / wypłacono / saldo per kieszeń).
+- **Widok budżetu miesięczny:** plan vs wykonanie per kategoria P&L w miesiącu + sekcja **Kieszenie** (plan / odłożono / wypłacono per kieszeń; bez kolumny salda miesięcznego).
 - **Widok budżetu roczny:** szacunek roczny vs wykonanie per kategoria P&L w roku; bez agregacji transferów wewnętrznych; edycja planów P&L na tym ekranie (FR-UX1).
 
 ---
@@ -157,9 +157,9 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 
 **D — Usunięcie konta:** Usuń konto → znika z listy (soft delete) → transakcje w historii, **nieedytowalne**.
 
-**E — Budżet, kategorie i cele:** Rejestracja (kategorie startowe) → utwórz cel oszczędnościowy (np. Wakacje) → ustaw plany P&L na widoku budżetu rocznym → widok miesięczny (plan vs fakty P&L + sekcja celów: odłożono / wypłacono / saldo) → transfer ROR→Savings z przypisanym celem → korekta kategorii na transakcjach / import → widok roczny (podsumowanie roku P&L bez transferów). *Alt:* brak szacunku — tylko kolumna wykonania; przekroczenie planu — dozwolone, bez blokady.
+**E — Budżet, kategorie i kieszenie:** Rejestracja (kategorie startowe) → utwórz kieszeń (np. Wakacje) → ustaw plany P&L na widoku budżetu rocznym → widok miesięczny (plan vs fakty P&L + sekcja kieszeni: plan / odłożono / wypłacono) → transfer wewnętrzny z opcjonalną kieszenią i ruchem Odłożenie/Wypłata (FR-P3) → korekta kategorii na transakcjach P&L / import → widok roczny (podsumowanie roku P&L bez transferów). *Alt:* brak szacunku — tylko kolumna wykonania; przekroczenie planu — dozwolone, bez blokady.
 
-**F — Flow A (cel oszczędnościowy):** Cel „Wakacje” z kwotą docelową i składką 200 PLN/mies. → co miesiąc transfer ROR→Savings z celem → przed wyjazdem transfer Savings→ROR z tym samym celem → wydatki na ROR (kategoria np. Rozrywka, opcjonalnie ten sam cel).
+**F — Flow A (kieszeń oszczędnościowa):** Kieszeń „Wakacje” z kwotą docelową i składką 200 PLN/mies. → co miesiąc transfer wewnętrzny z kieszenią i `pocket_movement = deposit` → przed wyjazdem transfer z tą samą kieszenią i `pocket_movement = withdrawal` → wydatki na ROR (kategoria np. Rozrywka; **bez** kieszeni — XOR z kategorią P&L).
 
 ---
 
@@ -880,15 +880,16 @@ Transfer wewnętrzny może opcjonalnie mieć `pocket_id` należący do użytkown
 | **Domena** | Budgets |
 
 **Zachowanie**
-Widok budżetu miesięcznego (FR-C5) zawiera sekcję **Cele** z metrykami per cel (plan, odłożono, wypłacono, saldo). Zastępuje pojedynczą sekcję agregatu „Transfery i oszczędności” z wave 2. Link „Zarządzaj celami” → `/pockets`.
+Widok budżetu miesięcznego (FR-C5) zawiera sekcję **Kieszenie**: jeden wiersz per kieszeń użytkownika (wszystkie kieszenie, bez filtra archiwum) z kolumnami **Plan** (tylko do odczytu, z FR-P2), **odłożono** i **wypłacono** (z `pocket_movement` = deposit/withdrawal, liczone raz per `transfer_id` w miesiącu). Zastępuje pojedynczą sekcję agregatu „Transfery i oszczędności” z wave 2. Link „Zarządzaj kieszeniami” → `/pockets`.
 
 **Kryteria akceptacji**
-1. Given dwa cele z transferami w miesiącu When widok miesięczny Then osobne wiersze z poprawnymi sumami per cel.
-2. Given brak celów When widok miesięczny Then sekcja celów pusta lub ukryta z CTA do utworzenia celu.
+1. Given dwie kieszenie z transferami w miesiącu When widok miesięczny Then osobne wiersze z poprawnymi sumami odłożono/wypłacono per kieszeń.
+2. Given brak kieszeni When widok miesięczny Then sekcja kieszeni ukryta z CTA do utworzenia kieszeni.
+3. Given transfer ROR↔ROR z `pocket_movement = deposit` When sekcja kieszeni Then odłożono kwotę transferu (raz per para).
 
 **Reguły**
-- Definicje metryk — jak w §5 (Pocket) i FR-C5.
-- Planowanie oszczędności — wyłącznie przez cele; kategorie P&L nie obejmują transferów wewnętrznych.
+- Definicje metryk — jak w FR-C5: plan z pól kieszeni; odłożono/wypłacono z `pocket_movement`; **bez** metryki powiązanych wydatków (`linked_expenses`).
+- Planowanie oszczędności — wyłącznie przez kieszenie (FR-P2); kategorie P&L nie obejmują transferów wewnętrznych.
 
 **Zdarzenia:** `budget_view_monthly`
 
