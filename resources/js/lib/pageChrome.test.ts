@@ -57,28 +57,24 @@ describe('resolvePageChrome', () => {
     });
 
     it('links every ancestor and leaves only the leaf unlinked', () => {
-        const chrome = resolvePageChrome(at('transactions.create'), {}, deps);
+        const chrome = resolvePageChrome(at('transfers.create'), {}, deps);
 
         expect(chrome.crumbs).toEqual([
             { title: 'transactions.index.title', href: '/transactions.index' },
-            { title: 'transactions.create.title', href: null },
+            { title: 'transfers.create.title', href: null },
         ]);
     });
 
     it('lets a detail page override the leaf, the title and the document title', () => {
-        const chrome = resolvePageChrome(
-            at('transactions.edit', { transaction: '12' }),
-            { title: 'Lunch', description: 'transactions.edit.title' },
-            deps,
-        );
+        const chrome = resolvePageChrome(at('pockets.edit', { pocket: '12' }), { title: 'Wakacje', description: 'pockets.edit.title' }, deps);
 
         expect(chrome.crumbs).toEqual([
-            { title: 'transactions.index.title', href: '/transactions.index' },
-            { title: 'Lunch', href: null },
+            { title: 'pockets.index.title', href: '/pockets.index' },
+            { title: 'Wakacje', href: null },
         ]);
-        expect(chrome.title).toBe('Lunch');
-        expect(chrome.description).toBe('transactions.edit.title');
-        expect(chrome.documentTitle).toBe('Lunch');
+        expect(chrome.title).toBe('Wakacje');
+        expect(chrome.description).toBe('pockets.edit.title');
+        expect(chrome.documentTitle).toBe('Wakacje');
     });
 
     it('falls back to the default tab when no filter is present', () => {

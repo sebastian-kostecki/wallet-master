@@ -351,37 +351,16 @@
         },
         "create": {
             "title": "Dodaj transakcję",
-            "description": "Zapisz przychód lub wydatek.",
-            "back": "Wróć",
-            "hints": {
-                "title": "Wskazówki",
-                "type": "Wybierz „Przychód” lub „Wydatek”. To wpływa na znak kwoty.",
-                "amount": "Kwota może być wpisana z przecinkiem. Dla wydatku zostanie zapisana jako ujemna.",
-                "description": "Opis pomaga szybciej znaleźć transakcję w historii."
-            }
+            "description": "Zapisz przychód lub wydatek."
         },
         "edit": {
             "title": "Edytuj transakcję",
-            "description": "Zmień istniejącą transakcję.",
-            "back": "Wróć",
-            "deleteAction": "Usuń transakcję",
-            "dangerZone": {
-                "title": "Uwaga",
-                "description": "Ta operacja jest nieodwracalna."
-            },
             "transfer": {
                 "bannerTitle": "Połączony transfer",
                 "bannerDescription": "Kwoty i konta są zablokowane. Aby je zmienić, najpierw rozłącz transfer.",
                 "unlinkAction": "Rozłącz transfer",
                 "accountHint": "Konto jest zablokowane, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby je zmienić.",
                 "amountHint": "Kwota jest zablokowana, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby ją zmienić."
-            },
-            "hints": {
-                "title": "Informacje",
-                "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
-                "amount": "Sprawdź znak kwoty (plus/minus). To wpływa na saldo konta.",
-                "amountTransfer": "Kwota jest zablokowana, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby ją zmienić.",
-                "save": "Po zapisaniu wrócisz do listy transakcji."
             },
             "statement": {
                 "title": "Dane z wyciągu",
