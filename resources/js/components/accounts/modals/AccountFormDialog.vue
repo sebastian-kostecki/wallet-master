@@ -159,11 +159,16 @@ function submit(): void {
     };
 
     if (props.mode === 'edit' && props.account) {
-        form.patch(route('accounts.update', props.account.id), visit);
+        form.transform((data) => ({
+            name: data.name,
+            bank: data.bank,
+            type: data.type,
+            opening_balance: data.opening_balance,
+        })).patch(route('accounts.update', props.account.id), visit);
         return;
     }
 
-    form.post(route('accounts.store'), visit);
+    form.transform((data) => data).post(route('accounts.store'), visit);
 }
 </script>
 
