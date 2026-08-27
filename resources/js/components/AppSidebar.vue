@@ -8,7 +8,7 @@ import { requestOpenCreateTransaction } from '@/composables/useTransactionFormDi
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { ArrowLeftRight, LayoutGrid, PanelLeftClose, PanelLeftOpen, PieChart, Plus, Tags, Wallet } from 'lucide-vue-next';
+import { ArrowLeftRight, LayoutGrid, PanelLeftClose, PanelLeftOpen, PieChart, Plus, Settings, Target, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
@@ -42,10 +42,14 @@ const mainNavItems = computed<NavItem[]>(() => [
         icon: PieChart,
     },
     {
-        title: t('categories.index.title'),
+        title: t('nav.pockets'),
+        href: route('pockets.index'),
+        icon: Target,
+    },
+    {
+        title: t('nav.settings'),
         href: route('categories.index'),
-        alsoActiveFor: [route('pockets.index')],
-        icon: Tags,
+        icon: Settings,
     },
 ]);
 

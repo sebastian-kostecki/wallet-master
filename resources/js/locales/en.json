@@ -631,10 +631,6 @@
             "updated": "Category updated.",
             "deleted": "Category deleted.",
             "estimate_saved": "Plan saved."
-        },
-        "tabs": {
-            "pnl": "Income and expenses",
-            "pockets": "Envelopes"
         }
     },
     "pockets": {

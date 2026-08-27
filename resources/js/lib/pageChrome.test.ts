@@ -77,32 +77,27 @@ describe('resolvePageChrome', () => {
         expect(chrome.documentTitle).toBe('Jan Kowalski');
     });
 
-    it('activates the pnl catalog tab on categories index', () => {
+    it('activates the categories tab on categories index under settings', () => {
         const chrome = resolvePageChrome(at('categories.index'), {}, deps);
 
         expect(chrome.crumbs).toEqual([
-            { title: 'categories.index.title', href: '/categories.index' },
-            { title: 'categories.tabs.pnl', href: null },
+            { title: 'settings.title', href: '/categories.index' },
+            { title: 'categories.index.title', href: null },
         ]);
-        expect(chrome.title).toBe('categories.index.title');
-        expect(chrome.documentTitle).toBe('categories.index.title · categories.tabs.pnl');
-        expect(chrome.tabs).toHaveLength(2);
-        expect(chrome.tabs.find((tab) => tab.isActive)?.key).toBe('pnl');
-        expect(chrome.tabs.find((tab) => tab.key === 'pockets')?.href).toBe('/pockets.index');
+        expect(chrome.title).toBe('settings.title');
+        expect(chrome.documentTitle).toBe('settings.title · categories.index.title');
+        expect(chrome.tabs).toHaveLength(1);
+        expect(chrome.tabs.find((tab) => tab.isActive)?.key).toBe('categories');
+        expect(chrome.tabs.find((tab) => tab.key === 'pockets')).toBeUndefined();
     });
 
-    it('activates the pockets catalog tab on pockets index', () => {
+    it('renders pockets index without page tabs', () => {
         const chrome = resolvePageChrome(at('pockets.index'), {}, deps);
 
-        expect(chrome.crumbs).toEqual([
-            { title: 'pockets.index.title', href: '/pockets.index' },
-            { title: 'categories.tabs.pockets', href: null },
-        ]);
+        expect(chrome.crumbs).toEqual([{ title: 'pockets.index.title', href: null }]);
         expect(chrome.title).toBe('pockets.index.title');
-        expect(chrome.documentTitle).toBe('pockets.index.title · categories.tabs.pockets');
-        expect(chrome.tabs).toHaveLength(2);
-        expect(chrome.tabs.find((tab) => tab.isActive)?.key).toBe('pockets');
-        expect(chrome.tabs.find((tab) => tab.key === 'pnl')?.href).toBe('/categories.index');
+        expect(chrome.documentTitle).toBe('pockets.index.title');
+        expect(chrome.tabs).toEqual([]);
     });
 
     it('anchors both budget routes on one node with different leaves', () => {

@@ -52,21 +52,17 @@ describe('pageRegistry', () => {
         });
     });
 
-    it('registers catalog tabs for categories and pockets routes', () => {
-        const group = pageTabGroups.catalog;
+    it('registers settingsCategories tab for categories route', () => {
+        const group = pageTabGroups.settingsCategories;
 
-        expect(pageNodes.categories.tabGroup).toBe('catalog');
-        expect(pageNodes.pockets.tabGroup).toBe('catalog');
-        expect(group.defaultKey).toBe('pnl');
-        expect(group.tabs.map((tab) => tab.key)).toEqual(['pnl', 'pockets']);
+        expect(pageNodes.categories.tabGroup).toBe('settingsCategories');
+        expect(pageNodes.pockets.tabGroup).toBeUndefined();
+        expect(group.defaultKey).toBe('categories');
+        expect(group.tabs.map((tab) => tab.key)).toEqual(['categories']);
         expect(group.tabs[0]).toMatchObject({
             route: 'categories.index',
-            labelKey: 'categories.tabs.pnl',
+            labelKey: 'categories.index.title',
         });
-        expect(group.tabs[1]).toMatchObject({
-            route: 'pockets.index',
-            labelKey: 'categories.tabs.pockets',
-        });
-        expect(pageTabGroups.pockets).toBeUndefined();
+        expect(pageTabGroups.catalog).toBeUndefined();
     });
 });

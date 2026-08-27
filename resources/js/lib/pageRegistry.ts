@@ -35,12 +35,9 @@ function budgetYear(current: Record<string, string>): number {
 }
 
 export const pageTabGroups: Record<string, PageTabGroup> = {
-    catalog: {
-        defaultKey: 'pnl',
-        tabs: [
-            { key: 'pnl', labelKey: 'categories.tabs.pnl', route: 'categories.index' },
-            { key: 'pockets', labelKey: 'categories.tabs.pockets', route: 'pockets.index' },
-        ],
+    settingsCategories: {
+        defaultKey: 'categories',
+        tabs: [{ key: 'categories', labelKey: 'categories.index.title', route: 'categories.index' }],
     },
     accounts: {
         defaultKey: 'accounts',
@@ -88,9 +85,14 @@ export const pageNodes: Record<string, PageNode> = {
     },
     'transfers.create': { titleKey: 'transfers.create.title', parent: 'transactions' },
 
-    categories: { titleKey: 'categories.index.title', matchRoutes: ['categories.index'], tabGroup: 'catalog' },
+    categories: {
+        titleKey: 'settings.title',
+        descriptionKey: 'categories.index.description',
+        matchRoutes: ['categories.index'],
+        tabGroup: 'settingsCategories',
+    },
 
-    pockets: { titleKey: 'pockets.index.title', matchRoutes: ['pockets.index'], tabGroup: 'catalog' },
+    pockets: { titleKey: 'pockets.index.title', matchRoutes: ['pockets.index'] },
 
     budget: { titleKey: 'budget.nav', matchRoutes: ['budget.monthly', 'budget.yearly'], tabGroup: 'budget' },
 

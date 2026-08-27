@@ -636,10 +636,6 @@
             "updated": "Kategoria została zaktualizowana.",
             "deleted": "Kategoria została usunięta.",
             "estimate_saved": "Plan został zapisany."
-        },
-        "tabs": {
-            "pnl": "Przychody i wydatki",
-            "pockets": "Kieszenie"
         }
     },
     "pockets": {
