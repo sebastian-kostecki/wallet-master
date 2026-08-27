@@ -12,7 +12,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <div class="space-y-1 tabular-nums">
+    <div class="space-y-1 text-right tabular-nums">
         <div>
             <span class="text-xs text-muted-foreground">+ {{ t('budget.monthly.saved') }}</span>
             <span class="ml-1">{{ formatMoney(saved, currency) }}</span>

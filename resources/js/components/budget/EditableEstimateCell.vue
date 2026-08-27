@@ -80,8 +80,8 @@ function onInputKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-    <div v-if="!isEditing" class="flex items-center gap-1">
-        <span class="w-28 shrink-0 text-left tabular-nums">{{ formatMoney(plan, currency) }}</span>
+    <div v-if="!isEditing" class="flex items-center justify-end gap-1">
+        <span class="w-28 shrink-0 text-right tabular-nums">{{ formatMoney(plan, currency) }}</span>
         <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="editLabel" @click="emit('start-edit')">
             <Pencil class="h-4 w-4 text-muted-foreground" :stroke-width="1.7" />
         </Button>
@@ -97,13 +97,13 @@ function onInputKeydown(event: KeyboardEvent) {
             <ArrowRightLeft class="h-4 w-4 text-muted-foreground" :stroke-width="1.7" />
         </Button>
     </div>
-    <div v-else class="flex items-center gap-1">
+    <div v-else class="flex items-center justify-end gap-1">
         <Input
             :id="inputId"
             v-model="draft"
             type="text"
             inputmode="decimal"
-            class="h-8 w-28 rounded-xl tabular-nums"
+            class="h-8 w-28 rounded-xl text-right tabular-nums"
             :placeholder="placeholder"
             :aria-invalid="error !== null"
             @keydown="onInputKeydown"

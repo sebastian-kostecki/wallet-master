@@ -374,7 +374,7 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
                 </div>
             </div>
         </td>
-        <td class="whitespace-nowrap px-3 py-2.5 tabular-nums">
+        <td class="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">
             <span :class="['font-medium', amountClass(tx)]">
                 {{ toNumber(tx.amount) >= 0 ? '+' : '-' }}{{ formatAmount(Math.abs(toNumber(tx.amount))) }}
                 {{ formatCurrencySymbol(tx.account) }}

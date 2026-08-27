@@ -73,8 +73,8 @@ function onInputKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-    <div v-if="!isEditing" class="flex gap-1" :class="monthlyTemplate ? 'items-start' : 'items-center'">
-        <div class="w-28 shrink-0 text-left">
+    <div v-if="!isEditing" class="flex justify-end gap-1" :class="monthlyTemplate ? 'items-start' : 'items-center'">
+        <div class="w-28 shrink-0 text-right">
             <div class="tabular-nums">{{ formatMoney(annualPlan, currency) }}</div>
             <div
                 v-if="monthlyTemplate"
@@ -89,13 +89,13 @@ function onInputKeydown(event: KeyboardEvent) {
             <Pencil class="h-4 w-4 text-muted-foreground" :stroke-width="1.7" />
         </Button>
     </div>
-    <div v-else class="flex items-center gap-1">
+    <div v-else class="flex items-center justify-end gap-1">
         <Input
             :id="`${inputIdPrefix}-annual`"
             v-model="annualDraft"
             type="text"
             inputmode="decimal"
-            class="h-8 w-28 rounded-xl tabular-nums"
+            class="h-8 w-28 rounded-xl text-right tabular-nums"
             :placeholder="annualPlaceholder"
             :aria-invalid="error !== null"
             @keydown="onInputKeydown"
@@ -105,7 +105,7 @@ function onInputKeydown(event: KeyboardEvent) {
             v-model="monthlyDraft"
             type="text"
             inputmode="decimal"
-            class="h-8 w-28 rounded-xl tabular-nums"
+            class="h-8 w-28 rounded-xl text-right tabular-nums"
             :placeholder="monthlyPlaceholder"
             :aria-invalid="error !== null"
             @keydown="onInputKeydown"

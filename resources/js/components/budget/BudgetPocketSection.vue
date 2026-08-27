@@ -43,9 +43,9 @@ const { t } = useI18n();
                 <thead>
                     <tr class="border-b border-border/50 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                         <th class="py-2 pr-4">{{ t('pockets.index.fields.name') }}</th>
-                        <th class="py-2 pr-4">{{ t('budget.monthly.plan') }}</th>
-                        <th class="py-2 pr-4">{{ t('budget.monthly.movement') }}</th>
-                        <th class="py-2">{{ t('budget.columns.progress') }}</th>
+                        <th class="py-2 pr-4 text-right">{{ t('budget.monthly.plan') }}</th>
+                        <th class="py-2 pr-4 text-right">{{ t('budget.monthly.movement') }}</th>
+                        <th class="py-2 text-right">{{ t('budget.columns.progress') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -53,13 +53,13 @@ const { t } = useI18n();
                         <td class="py-2 pr-4">
                             <PocketBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                         </td>
-                        <td class="py-2 pr-4 tabular-nums">
+                        <td class="py-2 pr-4 text-right tabular-nums">
                             {{ formatMoney(row.monthly_plan, row.currency) }}
                         </td>
-                        <td class="py-2 pr-4">
+                        <td class="py-2 pr-4 text-right">
                             <BudgetPocketMovementCell :saved="row.saved" :released="row.released" :currency="row.currency" />
                         </td>
-                        <td class="py-2">
+                        <td class="py-2 text-right">
                             <BudgetProgressCell :percent="row.progress_percent" category-type="expense" />
                         </td>
                     </tr>

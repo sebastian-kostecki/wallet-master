@@ -64,10 +64,10 @@ function planForRow(row: BudgetRow): string | null {
                 <thead>
                     <tr class="border-b border-border/50 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                         <th class="py-2 pr-4">{{ t('categories.index.fields.name') }}</th>
-                        <th class="py-2 pr-4">{{ variant === 'monthly' ? t('budget.monthly.plan') : t('budget.yearly.plan') }}</th>
-                        <th v-if="variant === 'yearly'" class="py-2 pr-4">{{ t('budget.columns.forecast') }}</th>
-                        <th class="py-2 pr-4">{{ variant === 'monthly' ? t('budget.monthly.actual') : t('budget.yearly.actual') }}</th>
-                        <th class="py-2">{{ t('budget.columns.progress') }}</th>
+                        <th class="py-2 pr-4 text-right">{{ variant === 'monthly' ? t('budget.monthly.plan') : t('budget.yearly.plan') }}</th>
+                        <th v-if="variant === 'yearly'" class="py-2 pr-4 text-right">{{ t('budget.columns.forecast') }}</th>
+                        <th class="py-2 pr-4 text-right">{{ variant === 'monthly' ? t('budget.monthly.actual') : t('budget.yearly.actual') }}</th>
+                        <th class="py-2 text-right">{{ t('budget.columns.progress') }}</th>
                     </tr>
                 </thead>
                 <tbody v-for="group in groups" :key="group.key">
@@ -84,7 +84,7 @@ function planForRow(row: BudgetRow): string | null {
                         <td class="py-2 pr-4">
                             <CategoryBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                         </td>
-                        <td class="py-2 pr-4">
+                        <td class="py-2 pr-4 text-right">
                             <YearlyPlanEditCell
                                 v-if="variant === 'yearly'"
                                 :annual-plan="row.annual_plan ?? null"
@@ -122,11 +122,11 @@ function planForRow(row: BudgetRow): string | null {
                                 @save="(raw) => emit('save', row, raw)"
                             />
                         </td>
-                        <td v-if="variant === 'yearly'" class="py-2 pr-4 tabular-nums text-muted-foreground">
+                        <td v-if="variant === 'yearly'" class="py-2 pr-4 text-right tabular-nums text-muted-foreground">
                             {{ formatMoney(row.forecast ?? null, currency) }}
                         </td>
-                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(row.actual, currency) }}</td>
-                        <td class="py-2">
+                        <td class="py-2 pr-4 text-right tabular-nums">{{ formatMoney(row.actual, currency) }}</td>
+                        <td class="py-2 text-right">
                             <BudgetProgressCell :percent="row.progress_percent" :category-type="group.key" />
                         </td>
                     </tr>
