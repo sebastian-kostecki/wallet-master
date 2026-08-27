@@ -3,6 +3,7 @@ import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import DatePickerInput from '@/components/forms/DatePickerInput.vue';
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
 import FormField from '@/components/forms/FormField.vue';
+import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import UnlinkTransferDialog from '@/components/transfers/UnlinkTransferDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -42,13 +43,20 @@ type Transaction = {
     pocket_movement: 'deposit' | 'withdrawal' | null;
 };
 
+type PocketOption = {
+    id: number;
+    name: string;
+    icon: string;
+    color: string;
+};
+
 const props = defineProps<{
     open: boolean;
     mode: 'create' | 'edit';
     transaction: Transaction | null;
     accounts: Account[];
     categories: CategoryOption[];
-    pockets: { id: number; name: string }[];
+    pockets: PocketOption[];
     accountIdFilter: number | null;
     formResetKey?: number;
 }>();
@@ -90,6 +98,7 @@ const form = useForm<{
 const accountOptions = computed<DropdownOption<number>[]>(() => props.accounts.map((a) => ({ value: a.id, label: a.name })));
 const accountsById = computed(() => new Map(props.accounts.map((a) => [a.id, a])));
 const categoriesById = computed(() => categoriesByIdMap(props.categories));
+const pocketsById = computed(() => new Map(props.pockets.map((pocket) => [pocket.id, pocket])));
 
 const editType = computed<'income' | 'expense'>(() => (props.transaction?.type === 'income' ? 'income' : 'expense'));
 
@@ -490,7 +499,26 @@ function submit(): void {
                             :placeholder="t('transfers.form.pocketPlaceholder')"
                             :disabled="form.processing || pocketOptions.length <= 1"
                             @update:model-value="(value) => (form.pocket_id = value)"
-                        />
+                        >
+                            <template #trigger-leading>
+                                <PocketBadge
+                                    v-if="form.pocket_id !== null && pocketsById.get(form.pocket_id)"
+                                    :icon="pocketsById.get(form.pocket_id)!.icon"
+                                    :color="pocketsById.get(form.pocket_id)!.color"
+                                    size="sm"
+                                    :show-name="false"
+                                />
+                            </template>
+                            <template #option-leading="{ option }">
+                                <PocketBadge
+                                    v-if="option.value !== null && pocketsById.get(option.value)"
+                                    :icon="pocketsById.get(option.value)!.icon"
+                                    :color="pocketsById.get(option.value)!.color"
+                                    size="sm"
+                                    :show-name="false"
+                                />
+                            </template>
+                        </DropdownSelect>
                     </template>
                 </FormField>
 

@@ -136,7 +136,7 @@ type Filters = {
 const props = defineProps<{
     accounts: Account[];
     categories: Category[];
-    pockets: { id: number; name: string }[];
+    pockets: { id: number; name: string; icon: string; color: string }[];
     filters: Filters;
     transactions: Paginator<Transaction>;
     summary: {

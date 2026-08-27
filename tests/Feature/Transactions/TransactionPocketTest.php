@@ -93,6 +93,8 @@ test('transaction index includes pockets list', function () {
         ->has('pockets', 1)
         ->where('pockets.0.id', $pocket->id)
         ->where('pockets.0.name', 'Wakacje')
+        ->where('pockets.0.icon', $pocket->icon)
+        ->where('pockets.0.color', $pocket->color)
     );
 });
 
