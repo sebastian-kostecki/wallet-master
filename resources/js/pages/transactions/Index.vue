@@ -6,6 +6,7 @@ import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTran
 import TransactionFormDialog from '@/components/transactions/modals/TransactionFormDialog.vue';
 import TransactionRow from '@/components/transactions/TransactionRow.vue';
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
+import TransferFormDialog from '@/components/transfers/modals/TransferFormDialog.vue';
 import TransferCandidatesBanner, { type TransferCandidatePair } from '@/components/transfers/TransferCandidatesBanner.vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -27,6 +28,7 @@ type Account = {
     type_label_key: string;
     bank_icon_url: string | null;
     bank?: string;
+    is_deleted?: boolean;
     currency?: {
         symbol: string | null;
     } | null;
@@ -292,9 +294,26 @@ const formDialogMode = ref<'create' | 'edit'>('create');
 const formResetKey = ref(0);
 const editingTransactionId = ref<number | null>(null);
 
+const transferDialogOpen = ref(false);
+const transferFormResetKey = ref(0);
+
+function openTransferDialog(): void {
+    const alreadyOpen = transferDialogOpen.value;
+
+    formDialogOpen.value = false;
+
+    if (alreadyOpen) {
+        transferFormResetKey.value++;
+    }
+
+    transferDialogOpen.value = true;
+}
+
 const editingTransaction = computed(() => props.transactions.data.find((tx) => tx.id === editingTransactionId.value) ?? null);
 
 function openCreateDialog(): void {
+    transferDialogOpen.value = false;
+
     const alreadyOpenCreate = formDialogOpen.value && formDialogMode.value === 'create';
 
     formDialogMode.value = 'create';
@@ -308,20 +327,30 @@ function openCreateDialog(): void {
 }
 
 function openEditDialog(tx: Transaction): void {
+    transferDialogOpen.value = false;
+
     formDialogMode.value = 'edit';
     editingTransactionId.value = tx.id;
     formDialogOpen.value = true;
 }
 
-function consumeNewQuery(): void {
+function consumeCreateQuery(): void {
     const [path, query = ''] = page.url.split('?');
     const params = new URLSearchParams(query);
+    const wantsTransfer = params.get('transfer') === '1';
+    const wantsNew = params.get('new') === '1';
 
-    if (params.get('new') !== '1') {
+    if (!wantsTransfer && !wantsNew) {
         return;
     }
 
-    openCreateDialog();
+    if (wantsTransfer) {
+        openTransferDialog();
+    } else {
+        openCreateDialog();
+    }
+
+    params.delete('transfer');
     params.delete('new');
     const next = params.toString() === '' ? path : `${path}?${params.toString()}`;
     router.replace(next, { preserveState: true, preserveScroll: true });
@@ -343,13 +372,13 @@ watch(editingTransaction, (tx) => {
 });
 
 onMounted(() => {
-    consumeNewQuery();
+    consumeCreateQuery();
 });
 
 watch(
     () => page.url,
     () => {
-        consumeNewQuery();
+        consumeCreateQuery();
     },
 );
 
@@ -405,11 +434,9 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                             <Plus />
                             {{ t('transactions.index.addTransaction') }}
                         </DropdownMenuItem>
-                        <DropdownMenuItem as-child>
-                            <Link :href="route('transfers.create') + currentSearch">
-                                <ArrowRightLeft />
-                                {{ t('transactions.index.addTransfer') }}
-                            </Link>
+                        <DropdownMenuItem @select="openTransferDialog">
+                            <ArrowRightLeft />
+                            {{ t('transactions.index.addTransfer') }}
                         </DropdownMenuItem>
                         <DropdownMenuItem @select="importDialogOpen = true">
                             <Upload />
@@ -623,6 +650,14 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
             :transaction="editingTransaction"
             :accounts="accounts"
             :categories="categories"
+            :pockets="pockets"
+            :account-id-filter="filters.account_id"
+        />
+
+        <TransferFormDialog
+            v-model:open="transferDialogOpen"
+            :form-reset-key="transferFormResetKey"
+            :accounts="accounts"
             :pockets="pockets"
             :account-id-filter="filters.account_id"
         />
