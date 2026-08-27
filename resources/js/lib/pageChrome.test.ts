@@ -57,11 +57,11 @@ describe('resolvePageChrome', () => {
     });
 
     it('links every ancestor and leaves only the leaf unlinked', () => {
-        const chrome = resolvePageChrome(at('transfers.create'), {}, deps);
+        const chrome = resolvePageChrome(at('profile.edit'), {}, deps);
 
         expect(chrome.crumbs).toEqual([
-            { title: 'transactions.index.title', href: '/transactions.index' },
-            { title: 'transfers.create.title', href: null },
+            { title: 'settings.title', href: '/profile.edit' },
+            { title: 'settings.nav.profile', href: null },
         ]);
     });
 

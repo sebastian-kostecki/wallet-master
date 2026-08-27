@@ -65,4 +65,8 @@ describe('pageRegistry', () => {
         });
         expect(pageTabGroups.catalog).toBeUndefined();
     });
+
+    it('does not register transfer create as a page', () => {
+        expect(pageNodes['transfers.create']).toBeUndefined();
+    });
 });
