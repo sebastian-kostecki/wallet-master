@@ -444,6 +444,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Migracje: `pockets` (legacy `goals`), `transactions.pocket_id`
 - [x] CRUD kieszeni (backend + `pockets/Index.vue` + modal `PocketFormDialog`)
 - [x] Dodanie i edycja kieszeni z listy `/kieszenie` (modal; GET create/edit → redirect na index) **[plan 2026-08-26-pockets-modals]**
+- [x] Lista OpenShip: jedna karta, kompaktowe wiersze, `PocketRow` **[plan 2026-08-27-pockets-index-openship]**
 - [x] ~~Kieszeń wymagana na transferze z/do konta `Savings`; opcjonalna na wydatku~~ → zastąpione spec `2026-08-26-transaction-scope-pocket-catalog-design.md` (XOR kategoria/kieszeń; opcjonalna kieszeń + `pocket_movement` na transferze)
 - [x] Budżet miesięczny: sekcja per-kieszeń (`pocket_rows`)
 - [x] Plany P&L tylko na budżecie — `categories/Index.vue` bez pól szacunków

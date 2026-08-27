@@ -685,6 +685,7 @@
             "title": "Kieszenie",
             "description": "Kieszenie oszczędnościowe z planem miesięcznym.",
             "add": "Dodaj kieszeń",
+            "dragHandle": "Przeciągnij, aby zmienić kolejność",
             "listTitle": "Twoje kieszenie",
             "empty": "Brak kieszeni.",
             "fields": {

@@ -680,6 +680,7 @@
             "title": "Envelopes",
             "description": "Savings envelopes with a monthly plan.",
             "add": "Add envelope",
+            "dragHandle": "Drag to reorder",
             "listTitle": "Your envelopes",
             "empty": "No envelopes yet.",
             "fields": {

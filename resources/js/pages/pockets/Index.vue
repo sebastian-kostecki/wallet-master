@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import PocketFormDialog from '@/components/pockets/modals/PocketFormDialog.vue';
-import PocketBadge from '@/components/pockets/PocketBadge.vue';
-import PocketProgressBar from '@/components/pockets/PocketProgressBar.vue';
+import PocketRow, { type PocketRowPocket } from '@/components/pockets/PocketRow.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { formatMoney } from '@/lib/formatMoney';
 import { router } from '@inertiajs/vue3';
-import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { Plus } from 'lucide-vue-next';
 import type { SortableEvent } from 'sortablejs';
 import { ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
@@ -79,9 +77,9 @@ function openCreateDialog(): void {
     formOpen.value = true;
 }
 
-function openEditDialog(pocket: Pocket): void {
+function openEditDialog(pocket: PocketRowPocket): void {
     formMode.value = 'edit';
-    editingPocket.value = pocket;
+    editingPocket.value = pocket as Pocket;
     formOpen.value = true;
 }
 
@@ -99,7 +97,7 @@ function onReorderEnd(event: SortableEvent): void {
     );
 }
 
-function deletePocket(pocket: Pocket): void {
+function deletePocket(pocket: PocketRowPocket): void {
     if (!window.confirm(t('pockets.index.deleteConfirm', { name: pocket.name }))) {
         return;
     }
@@ -112,85 +110,29 @@ function deletePocket(pocket: Pocket): void {
     <AppLayout>
         <template #headerActions>
             <Button type="button" @click="openCreateDialog">
-                <Plus class="h-4 w-4" aria-hidden="true" />
+                <Plus class="size-4" :stroke-width="1.7" aria-hidden="true" />
                 {{ t('pockets.index.add') }}
             </Button>
         </template>
 
-        <div class="flex flex-col gap-6">
-            <section class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                <h2 class="border-b border-sidebar-border/70 px-4 py-3 text-lg font-semibold dark:border-sidebar-border">
-                    {{ t('pockets.index.listTitle') }}
-                </h2>
+        <div class="overflow-hidden rounded-2xl border border-transparent bg-card">
+            <p v-if="list.length === 0" class="px-3 py-4 text-sm text-muted-foreground">
+                {{ t('pockets.index.empty') }}
+            </p>
 
-                <p v-if="list.length === 0" class="px-4 py-6 text-sm text-muted-foreground">
-                    {{ t('pockets.index.empty') }}
-                </p>
-
-                <VueDraggable
-                    v-else
-                    v-model="list"
-                    tag="ul"
-                    class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
-                    handle=".drag-handle"
-                    filter=".no-drag"
-                    :animation="150"
-                    ghost-class="opacity-50"
-                    chosen-class="bg-muted/30"
-                    @end="onReorderEnd"
-                >
-                    <li
-                        v-for="pocket in list"
-                        :key="pocket.id"
-                        class="list-row-hover flex flex-col gap-3 px-4 py-3 text-sm lg:flex-row lg:items-center lg:justify-between"
-                    >
-                        <div class="flex min-w-0 flex-1 items-start gap-2">
-                            <button
-                                type="button"
-                                class="drag-handle mt-1 shrink-0 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
-                                :aria-label="t('categories.index.dragHandle')"
-                            >
-                                <GripVertical class="h-4 w-4" />
-                            </button>
-
-                            <div class="min-w-0 flex-1 space-y-2">
-                                <PocketBadge :name="pocket.name" :icon="pocket.icon" :color="pocket.color" />
-                                <PocketProgressBar
-                                    :percent="pocket.progress_percent"
-                                    :balance="pocket.balance"
-                                    :target-amount="pocket.target_amount"
-                                    :currency="pocket.currency"
-                                />
-                            </div>
-                        </div>
-
-                        <div class="no-drag flex flex-wrap items-center gap-2 lg:justify-end">
-                            <span class="text-sm font-medium tabular-nums">{{ formatMoney(pocket.balance, pocket.currency) }}</span>
-
-                            <span
-                                v-if="pocket.is_completed"
-                                class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-                            >
-                                {{ t('pockets.status.completed') }}
-                            </span>
-                            <span
-                                v-if="pocket.is_overdue"
-                                class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-                            >
-                                {{ t('pockets.status.overdue') }}
-                            </span>
-
-                            <Button variant="ghost" size="icon" type="button" :aria-label="t('actions.edit')" @click="openEditDialog(pocket)">
-                                <Pencil class="h-4 w-4 text-muted-foreground" />
-                            </Button>
-
-                            <Button variant="ghost" size="icon" type="button" :aria-label="t('pockets.index.delete')" @click="deletePocket(pocket)">
-                                <Trash2 class="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                        </div>
-                    </li>
-                </VueDraggable>
-            </section>
+            <VueDraggable
+                v-else
+                v-model="list"
+                tag="ul"
+                handle=".drag-handle"
+                filter=".no-drag"
+                :animation="150"
+                ghost-class="opacity-50"
+                chosen-class="bg-muted/30"
+                @end="onReorderEnd"
+            >
+                <PocketRow v-for="pocket in list" :key="pocket.id" :pocket="pocket" @edit="openEditDialog" @delete="deletePocket" />
+            </VueDraggable>
         </div>
 
         <PocketFormDialog v-model:open="formOpen" :mode="formMode" :pocket="editingPocket" :icons="icons" :colors="colors" :currencies="currencies" />
