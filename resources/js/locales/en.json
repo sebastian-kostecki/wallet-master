@@ -216,33 +216,19 @@
         }
     },
     "dashboard": {
-        "headTitle": "Dashboard",
-        "title": "Welcome to Ogarniam Portfel",
-        "description": "Start with accounts, history imports, or a manual transaction. This screen will grow with your data.",
-        "quickActions": {
-            "accounts": {
-                "title": "Add account",
-                "description": "Set up an account and opening balance.",
-                "cta": "Go to accounts"
-            },
-            "transactions": {
-                "title": "Add transaction",
-                "description": "Record income, expense, or transfer.",
-                "cta": "Go to transactions"
-            },
-            "pockets": {
-                "title": "Plan an envelope",
-                "description": "Give your savings a clear direction.",
-                "cta": "Go to envelopes"
-            }
+        "title": "Dashboard",
+        "budget": {
+            "title": "Budget",
+            "open": "Open budget"
         },
-        "preview": {
-            "title": "A cleaner money overview",
-            "items": {
-                "imports": "Imports organize history",
-                "budget": "Budget shows plan and actuals",
-                "pockets": "Envelopes show savings progress"
-            }
+        "recent": {
+            "title": "Recent",
+            "open": "All transactions",
+            "empty": "No transactions yet."
+        },
+        "chart": {
+            "plan": "Plan",
+            "actual": "Actual"
         }
     },
     "advancedSection": {

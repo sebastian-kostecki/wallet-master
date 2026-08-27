@@ -74,7 +74,7 @@ export const pageTabGroups: Record<string, PageTabGroup> = {
 };
 
 export const pageNodes: Record<string, PageNode> = {
-    dashboard: { titleKey: 'dashboard.title', descriptionKey: 'dashboard.description' },
+    dashboard: { titleKey: 'dashboard.title' },
 
     accounts: { titleKey: 'accounts.index.title', matchRoutes: ['accounts.index'], tabGroup: 'accounts' },
 
