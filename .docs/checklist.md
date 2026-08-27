@@ -133,11 +133,12 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 ---
 
 ### 5) Transfer — jedna akcja → 2 transakcje
-- [~] UI “Transfer”:
+- [x] UI “Transfer”:
   - [x] Konto źródłowe != konto docelowe
   - [x] Użytkownik wpisuje kwotę dodatnią, system zapisuje `-X` i `+X` (walidacja wejścia)
   - [x] Data wspólna
   - [x] Opis (wspólny) + subject (opcjonalny)
+  - [x] Dodanie z listy `/transakcje` (modal; GET create → index?transfer=1) **[plan 2026-08-27-transfers-modals]**
 - [x] Backend:
   - [x] Utworzyć 2 transakcje w jednej transakcji DB
   - [x] Ustawić `transfer_id` (wspólny identyfikator)

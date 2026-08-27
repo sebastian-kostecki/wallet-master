@@ -9,7 +9,6 @@ use App\Models\Pocket;
 use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
-use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
@@ -272,21 +271,4 @@ test('transfer rejects pocket when pocket currency does not match savings accoun
         'pocket_id' => $pocket->id,
         'pocket_movement' => 'deposit',
     ])->assertSessionHasErrors('pocket_id');
-});
-
-test('transfer create page includes pockets list', function () {
-    $user = User::factory()->create();
-    $pocket = Pocket::factory()->create(['user_id' => $user->id, 'name' => 'Wakacje']);
-
-    $response = $this->actingAs($user)->get(route('transfers.create'));
-
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('transfers/Create', false)
-        ->has('pockets', 1)
-        ->where('pockets.0.id', $pocket->id)
-        ->where('pockets.0.name', 'Wakacje')
-        ->missing('categories')
-        ->missing('default_category_id')
-    );
 });

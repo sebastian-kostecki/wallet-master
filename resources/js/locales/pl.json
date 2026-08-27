@@ -429,7 +429,6 @@
             "pocketMovementDeposit": "Odłożenie",
             "pocketMovementWithdrawal": "Wypłata",
             "pocketMovementHint": "Odłożenie zwiększa saldo kieszeni. Wypłata zmniejsza — gdy ściągasz odłożone pieniądze, żeby je wydać.",
-            "hint": "Zapiszemy wydatek na koncie źródłowym i przychód na koncie docelowym.",
             "sameAccountError": "Wybierz inne konto docelowe niż źródłowe.",
             "deletedNotice": "To konto jest usunięte — transfer jest zablokowany.",
             "deletedSuffix": "usunięte",

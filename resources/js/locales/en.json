@@ -427,7 +427,6 @@
             "pocketMovementDeposit": "Set aside",
             "pocketMovementWithdrawal": "Take out",
             "pocketMovementHint": "Set aside increases the envelope balance. Take out decreases it — when you withdraw saved money to spend it.",
-            "hint": "We'll save an expense on the source account and an income on the destination account.",
             "sameAccountError": "Choose a different destination account than the source account.",
             "deletedNotice": "This account is deleted — transfers are blocked.",
             "deletedSuffix": "deleted",
