@@ -39,7 +39,7 @@ type Transaction = {
 
 const props = defineProps<{
     period: { year: number; month: number };
-    balances: { total_pln: string; savings_pln: string };
+    balances: { total_pln: string; savings_pln: string; deposits_pln: string };
     cashflow: { income: string; expense: string };
     budget_summary: BudgetSummary;
     currency: CurrencyDisplay;
@@ -70,9 +70,15 @@ const periodLabel = computed(() => {
         </template>
 
         <div class="flex flex-col gap-6">
-            <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <DashboardKpiCard :label="t('accounts.summary.totalPln')" :value="formatMoney(balances.total_pln, currency)" />
                 <DashboardKpiCard :label="t('accounts.summary.savingsPln')" :value="formatMoney(balances.savings_pln, currency)" />
+                <Link
+                    :href="route('accounts.index', { kind: 'deposits' })"
+                    class="block rounded-2xl transition-colors duration-150 hover:border-border/40 hover:bg-foreground/[0.02]"
+                >
+                    <DashboardKpiCard :label="t('accounts.summary.depositsPln')" :value="formatMoney(balances.deposits_pln, currency)" />
+                </Link>
                 <DashboardKpiCard :label="t('budget.summary.income')" :value="formatMoney(cashflow.income, currency)" tone="income" />
                 <DashboardKpiCard :label="t('budget.summary.expense')" :value="formatMoney(cashflow.expense, currency)" tone="expense" />
             </section>

@@ -6,7 +6,10 @@ namespace App\Actions\Dashboard;
 
 use App\Actions\Budgets\ListMonthlyBudget;
 use App\Enums\AccountType;
+use App\Enums\DepositStatus;
 use App\Models\Account;
+use App\Models\Currency;
+use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Budgets\BudgetCurrency;
@@ -21,10 +24,11 @@ final class ShowDashboard
 
     private int $month;
 
-    /** @var array{total_pln: string, savings_pln: string} */
+    /** @var array{total_pln: string, savings_pln: string, deposits_pln: string} */
     private array $balances = [
         'total_pln' => '0.00',
         'savings_pln' => '0.00',
+        'deposits_pln' => '0.00',
     ];
 
     /** @var array{income: string, expense: string} */
@@ -78,9 +82,17 @@ final class ShowDashboard
             }
         }
 
+        $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+        $depositsSum = Deposit::query()
+            ->whereBelongsTo($user)
+            ->where('status', DepositStatus::Active)
+            ->where('currency_id', $plnId)
+            ->sum('principal');
+
         $this->balances = [
             'total_pln' => $total,
             'savings_pln' => $savings,
+            'deposits_pln' => TransactionDedupe::amountToDecimalString((string) $depositsSum),
         ];
     }
 
@@ -133,7 +145,7 @@ final class ShowDashboard
     }
 
     /**
-     * @return array{total_pln: string, savings_pln: string}
+     * @return array{total_pln: string, savings_pln: string, deposits_pln: string}
      */
     public function getBalances(): array
     {

@@ -2,10 +2,12 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\DepositStatus;
 use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Currency;
+use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Support\Transactions\TransactionDedupe;
@@ -108,7 +110,41 @@ test('dashboard includes only the authenticated user balances and omits accounts
             ->where('period.month', 8)
             ->where('balances.total_pln', '50.00')
             ->where('balances.savings_pln', '40.00')
+            ->where('balances.deposits_pln', '0.00')
             ->where('currency.code', 'PLN')
+        );
+});
+
+test('dashboard deposits_pln sums active PLN deposits only', function () {
+    $user = User::factory()->create();
+    $account = dashboardAccount($user, [
+        'current_balance' => 50,
+        'opening_balance' => 50,
+    ]);
+
+    Deposit::factory()->create([
+        'user_id' => $user->id,
+        'source_account_id' => $account->id,
+        'currency_id' => dashboardPlnId(),
+        'principal' => '1000.00',
+        'status' => DepositStatus::Active,
+    ]);
+
+    Deposit::factory()->create([
+        'user_id' => $user->id,
+        'source_account_id' => $account->id,
+        'currency_id' => dashboardPlnId(),
+        'principal' => '500.00',
+        'status' => DepositStatus::Closed,
+        'closed_at' => '2026-08-01',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('dashboard', absolute: false))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('balances.total_pln', '50.00')
+            ->where('balances.deposits_pln', '1000.00')
         );
 });
 
