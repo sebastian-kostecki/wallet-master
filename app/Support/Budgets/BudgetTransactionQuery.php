@@ -6,6 +6,7 @@ namespace App\Support\Budgets;
 
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\Transactions\BudgetExclusion;
 use Illuminate\Database\Eloquent\Builder;
 
 final class BudgetTransactionQuery
@@ -41,7 +42,7 @@ final class BudgetTransactionQuery
      */
     public static function excludeTransfers(Builder $query): void
     {
-        $query->whereNull('transfer_id');
+        BudgetExclusion::apply($query);
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Models\Account;
 use App\Models\ImportFailedRow;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\Transactions\BudgetExclusion;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -73,9 +74,10 @@ final class ListTransactions
         $summaryQuery = Transaction::query()->whereBelongsTo($request->user());
         $this->applyFilters($summaryQuery, $request->getFilters());
 
+        BudgetExclusion::apply($summaryQuery);
+
         /** @var object{total_income: string|int|float, total_expense: string|int|float}|null $summary */
         $summary = $summaryQuery
-            ->whereNull('transfer_id')
             ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as total_income')
             ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END), 0) as total_expense')
             ->first();
@@ -139,7 +141,7 @@ final class ListTransactions
     private function baseQuery(User $user): Builder
     {
         return Transaction::query()
-            ->with(['account.currency', 'currency', 'category', 'pocket'])
+            ->with(['account.currency', 'currency', 'category', 'pocket', 'depositMovement'])
             ->whereBelongsTo($user);
     }
 
