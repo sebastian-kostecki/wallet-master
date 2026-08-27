@@ -101,24 +101,8 @@ function saveYearlyPlan(
             <BudgetSummaryCard :summary="summary" :currency="currency" variant="yearly" />
 
             <BudgetCategorySection
-                :title="t('budget.sections.income')"
-                category-type="income"
-                :rows="incomeRows"
-                :currency="currency"
-                variant="yearly"
-                :editing-category-id="editingCategoryId"
-                :plan-placeholder="t('budget.yearly.planPlaceholder')"
-                :monthly-plan-placeholder="t('budget.yearly.monthlyPlanPlaceholder')"
-                :monthly-plan-label="t('budget.yearly.monthlyPlanLabel')"
-                @start-edit="startEdit"
-                @cancel="cancelEdit"
-                @save-yearly="saveYearlyPlan"
-            />
-
-            <BudgetCategorySection
-                :title="t('budget.sections.expense')"
-                category-type="expense"
-                :rows="expenseRows"
+                :income-rows="incomeRows"
+                :expense-rows="expenseRows"
                 :currency="currency"
                 variant="yearly"
                 :editing-category-id="editingCategoryId"

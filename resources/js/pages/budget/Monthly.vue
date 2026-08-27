@@ -111,24 +111,8 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
             <BudgetSummaryCard :summary="summary" :currency="currency" variant="monthly" />
 
             <BudgetCategorySection
-                :title="t('budget.sections.income')"
-                category-type="income"
-                :rows="incomeRows"
-                :currency="currency"
-                variant="monthly"
-                :editing-category-id="editingCategoryId"
-                :editing-mode="editingMode"
-                :plan-placeholder="t('budget.monthly.planPlaceholder')"
-                @start-edit="startEdit"
-                @start-align="startAlign"
-                @cancel="cancelEdit"
-                @save="saveMonthlyEstimate"
-            />
-
-            <BudgetCategorySection
-                :title="t('budget.sections.expense')"
-                category-type="expense"
-                :rows="expenseRows"
+                :income-rows="incomeRows"
+                :expense-rows="expenseRows"
                 :currency="currency"
                 variant="monthly"
                 :editing-category-id="editingCategoryId"

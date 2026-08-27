@@ -5,6 +5,7 @@ import EditableEstimateCell from '@/components/budget/EditableEstimateCell.vue';
 import YearlyPlanEditCell from '@/components/budget/YearlyPlanEditCell.vue';
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type BudgetRow = {
@@ -22,9 +23,8 @@ type BudgetRow = {
 };
 
 const props = defineProps<{
-    title: string;
-    categoryType: 'income' | 'expense';
-    rows: BudgetRow[];
+    incomeRows: BudgetRow[];
+    expenseRows: BudgetRow[];
     currency: CurrencyDisplay;
     variant: 'monthly' | 'yearly';
     editingCategoryId: number | null;
@@ -44,28 +44,43 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
+const columnCount = computed(() => (props.variant === 'yearly' ? 5 : 4));
+
+const groups = computed(() => [
+    { key: 'income' as const, rows: props.incomeRows },
+    { key: 'expense' as const, rows: props.expenseRows },
+]);
+
 function planForRow(row: BudgetRow): string | null {
     return props.variant === 'monthly' ? (row.monthly_plan ?? null) : (row.annual_plan ?? null);
 }
 </script>
 
 <template>
-    <section class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
-        <h2 class="mb-3 text-lg font-semibold">{{ title }}</h2>
+    <section class="rounded-2xl border border-transparent bg-card p-5 sm:p-6">
         <div class="overflow-x-auto">
             <table class="budget-table text-sm">
                 <BudgetTableColgroup layout="category" :period="variant" />
                 <thead>
-                    <tr class="border-b text-left text-muted-foreground">
+                    <tr class="border-b border-border/50 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                         <th class="py-2 pr-4">{{ t('categories.index.fields.name') }}</th>
                         <th class="py-2 pr-4">{{ variant === 'monthly' ? t('budget.monthly.plan') : t('budget.yearly.plan') }}</th>
-                        <th v-if="variant === 'yearly'" class="py-2 pr-4 text-muted-foreground">{{ t('budget.columns.forecast') }}</th>
+                        <th v-if="variant === 'yearly'" class="py-2 pr-4">{{ t('budget.columns.forecast') }}</th>
                         <th class="py-2 pr-4">{{ variant === 'monthly' ? t('budget.monthly.actual') : t('budget.yearly.actual') }}</th>
                         <th class="py-2">{{ t('budget.columns.progress') }}</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr v-for="row in rows" :key="row.category_id" class="list-row-hover border-b border-sidebar-border/40">
+                <tbody v-for="group in groups" :key="group.key">
+                    <tr>
+                        <th
+                            :colspan="columnCount"
+                            scope="colgroup"
+                            class="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60"
+                        >
+                            {{ t(`budget.sections.${group.key}`) }}
+                        </th>
+                    </tr>
+                    <tr v-for="row in group.rows" :key="row.category_id" class="list-row-hover border-b border-border/50 hover:bg-foreground/[0.03]">
                         <td class="py-2 pr-4">
                             <CategoryBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                         </td>
@@ -112,7 +127,7 @@ function planForRow(row: BudgetRow): string | null {
                         </td>
                         <td class="py-2 pr-4 tabular-nums">{{ formatMoney(row.actual, currency) }}</td>
                         <td class="py-2">
-                            <BudgetProgressCell :percent="row.progress_percent" :category-type="categoryType" />
+                            <BudgetProgressCell :percent="row.progress_percent" :category-type="group.key" />
                         </td>
                     </tr>
                 </tbody>
