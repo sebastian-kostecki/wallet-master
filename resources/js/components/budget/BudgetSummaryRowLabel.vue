@@ -12,30 +12,30 @@ const config = computed(() => {
         return {
             icon: 'arrow-up-right',
             color: '#10b981',
-            tileClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400',
+            tileClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
         };
     }
 
     if (props.variant === 'expense') {
         return {
             icon: 'arrow-down-left',
-            color: '#e11d48',
-            tileClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400',
+            color: '#dc2626',
+            tileClass: 'bg-red-500/10 text-red-600 dark:text-red-400',
         };
     }
 
     return {
         icon: 'scale',
-        color: '#6366f1',
-        tileClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400',
+        color: '#71717a',
+        tileClass: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400',
     };
 });
 </script>
 
 <template>
     <span class="inline-flex min-w-0 items-center gap-2">
-        <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md" :class="config.tileClass" aria-hidden="true">
-            <Icon :name="config.icon" class="h-4 w-4" :color="config.color" />
+        <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" :class="config.tileClass" aria-hidden="true">
+            <Icon :name="config.icon" class="h-4 w-4" :color="config.color" :stroke-width="1.7" />
         </span>
         <span class="font-medium">{{ label }}</span>
     </span>
