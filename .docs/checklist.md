@@ -421,6 +421,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Zestaw startowy kategorii (`EnsureUserCategories`) przy rejestracji
 - [x] CRUD kategorii (backend + `categories/Index.vue`)
 - [x] Dodanie i edycja kategorii z listy `/kategorie` (modal; GET create/edit → redirect na index) **[plan 2026-08-26-categories-modals]**
+- [x] Lista OpenShip: jedna karta, sekcje Przychody/Wydatki, kompaktowe wiersze **[plan 2026-08-27-categories-index-openship]**
 - [x] Szacunki roczne i miesięczne (API + UI na kategoriach / budżecie miesięcznym)
 - [x] `category_id` wymagane na transakcji, transferze i imporcie
 - [x] Pamięć kategorii w DescriptionMemory + przypisanie przy imporcie
@@ -499,7 +500,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] XOR: kategoria P&L vs kieszeń na transferze (`category_id` ↔ `pocket_id` + `pocket_movement`)
 - [x] Opcjonalna kieszeń na dowolnym transferze (ROR↔ROR, Savings, Cash); wymagany `pocket_movement` gdy kieszeń ustawiona
 - [x] Metryki kieszeni z `pocket_movement` (deposit/withdrawal), liczone raz per `transfer_id`; bez `linked_expenses`
-- [x] Katalog kieszeni: jeden link w sidebarze; bez filtrów aktywne/zarchiwizowane
+- [x] Katalog kieszeni: osobny link w sidebarze (`nav.pockets`); kategorie pod „Ustawienia” w sidebarze (tab „Kategorie”)
 - [x] Usunięcie kieszeni czyści `pocket_id` i `pocket_movement` na powiązanych transferach
 - [x] PRD delta (FR-P3, FR-C5, FR-P1; usunięte FR-P4) + testy `MonthlyBudgetTest`
 
