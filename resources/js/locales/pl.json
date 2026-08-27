@@ -733,6 +733,10 @@
             "monthly": "Miesięczny",
             "yearly": "Roczny"
         },
+        "period": {
+            "previous": "Poprzedni okres",
+            "next": "Następny okres"
+        },
         "sections": {
             "expense": "Wydatki",
             "income": "Przychody"

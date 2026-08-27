@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import BudgetCategorySection from '@/components/budget/BudgetCategorySection.vue';
+import BudgetPeriodNav from '@/components/budget/BudgetPeriodNav.vue';
 import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type CurrencyDisplay } from '@/lib/formatMoney';
 import { router } from '@inertiajs/vue3';
@@ -93,15 +93,11 @@ function saveYearlyPlan(
 
 <template>
     <AppLayout>
-        <div class="budget-page flex flex-col gap-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
-                    <Button variant="outline" @click="router.get(route('budget.yearly', { year: year - 1 }))">←</Button>
-                    <span class="text-sm font-medium">{{ year }}</span>
-                    <Button variant="outline" @click="router.get(route('budget.yearly', { year: year + 1 }))">→</Button>
-                </div>
-            </div>
+        <template #headerActions>
+            <BudgetPeriodNav :year="year" variant="yearly" />
+        </template>
 
+        <div class="budget-page flex flex-col gap-6">
             <BudgetSummaryCard :summary="summary" :currency="currency" variant="yearly" />
 
             <BudgetCategorySection

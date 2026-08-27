@@ -728,6 +728,10 @@
             "monthly": "Monthly",
             "yearly": "Yearly"
         },
+        "period": {
+            "previous": "Previous period",
+            "next": "Next period"
+        },
         "sections": {
             "expense": "Expenses",
             "income": "Income"

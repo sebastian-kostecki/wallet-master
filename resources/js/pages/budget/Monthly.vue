@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import BudgetCategorySection from '@/components/budget/BudgetCategorySection.vue';
+import BudgetPeriodNav from '@/components/budget/BudgetPeriodNav.vue';
 import BudgetPocketSection from '@/components/budget/BudgetPocketSection.vue';
 import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type CurrencyDisplay } from '@/lib/formatMoney';
 import { router } from '@inertiajs/vue3';
@@ -55,20 +55,6 @@ const editingMode = ref<'plan' | 'align' | null>(null);
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
 
-function changePeriod(delta: number) {
-    let m = props.month + delta;
-    let y = props.year;
-    if (m < 1) {
-        m = 12;
-        y -= 1;
-    }
-    if (m > 12) {
-        m = 1;
-        y += 1;
-    }
-    router.get(route('budget.monthly', { year: y, month: m }));
-}
-
 function startEdit(categoryId: number) {
     editingCategoryId.value = categoryId;
     editingMode.value = 'plan';
@@ -117,15 +103,11 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
 
 <template>
     <AppLayout>
-        <div class="budget-page flex flex-col gap-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
-                    <Button variant="outline" @click="changePeriod(-1)">←</Button>
-                    <span class="text-sm font-medium">{{ month }}/{{ year }}</span>
-                    <Button variant="outline" @click="changePeriod(1)">→</Button>
-                </div>
-            </div>
+        <template #headerActions>
+            <BudgetPeriodNav :year="year" :month="month" variant="monthly" />
+        </template>
 
+        <div class="budget-page flex flex-col gap-6">
             <BudgetSummaryCard :summary="summary" :currency="currency" variant="monthly" />
 
             <BudgetCategorySection
