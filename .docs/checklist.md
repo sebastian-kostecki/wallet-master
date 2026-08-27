@@ -514,3 +514,11 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] 8 ostatnich transakcji
 - [x] Usunięcie kart skrótów i `AccountsSummaryCard` z dashboardu
 
+### 21) Lokaty **[plan 2026-08-27-deposits]**
+
+- [x] Tab Lokaty na `/konta?kind=deposits`
+- [x] Encje `deposits` / `deposit_movements`; kapitał poza P&L; odsetki w P&L
+- [x] Ręczne otwarcie, zamknięcie (± odsetki), przypisanie transakcji
+- [x] Kafelek dashboardu Lokaty (PLN)
+- [ ] Auto-klasyfikacja importu CSV (poza v1)
+

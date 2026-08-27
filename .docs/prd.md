@@ -12,7 +12,7 @@
 - **Import:** konto → upload CSV/XLSX → auto-mapowanie adaptera banku → auto-commit **bez podglądu**; `draft` to stan techniczny między uploadem a kolejką.
 - **Dedupe (import):** klucz `date + amount + normalized_description` na koncie; pominięcie duplikatu przy imporcie; ręczne dodanie identycznej transakcji — dozwolone (`dedupe_hash` z sufiksem UUID).
 - **Saldo:** `current_balance` aktualizowane przy zmianach transakcji; komenda `accounts:recalculate-balance` jako safety net.
-- **Lista transakcji:** filtry, sort i podsumowanie po dacie okresu (`booked_at`; UI kolumny: `COALESCE(booked_at, date)`); sumy wpływów/wydatków **bez** wewnętrznych transferów (`transfer_id` pusty).
+- **Lista transakcji:** filtry, sort i podsumowanie po dacie okresu (`booked_at`; UI kolumny: `COALESCE(booked_at, date)`); sumy wpływów/wydatków **bez** wewnętrznych transferów (`transfer_id` pusty) **i bez kapitału lokat** (`deposit_movements.kind` ∈ `open`, `close_principal`); odsetki lokaty (`kind=interest`) wliczane jak zwykły przychód.
 - **Kategorie i szacunki (wave 2):** każda transakcja P&L (`income` / `expense` / `adjustment`) ma `category_id`; transfer wewnętrzny ma `category_id = null`; szacunki roczne (kanoniczne) + opcjonalne nadpisania miesięczne; widok miesięczny (plan vs fakty P&L + sekcja celów) i roczny (plan vs fakty bez transferów) — §3.1a, FR-C1–C7, FR-P*, FR-UX1.
 - **Kieszenie oszczędnościowe (wave 2 UX):** koperta oszczędnościowa z **walutą** (`currency_id`, MVP: tylko PLN w UI); opcjonalna kwota docelowa, tryb planowania; śledzenie przez opcjonalną kieszeń i ruch (`pocket_movement`: Odłożenie/Wypłata) na transferze wewnętrznym — §3.1a, FR-P1–P3, FR-P5.
 - **Poza zakresem:** §3.2 — nie implementuj bez rozszerzenia tego dokumentu.
@@ -41,6 +41,7 @@
 - **Kieszeń (pocket, EN: envelope):** koperta oszczędnościowa użytkownika (np. „Wakacje”), **osobna od kategorii P&L** i **bez roku kalendarzowego** (jak katalog kategorii, nie jak wiersz budżetu P&L). Każda kieszeń ma **walutę** (`currency_id`) — kwoty docelowe, saldo i planowanie są w tej walucie (MVP: tylko PLN w UI; pole w DB jak przy koncie). Opcjonalna **kwota docelowa** (`target_amount`); przy kwocie — wzajemnie wykluczające się planowanie: **składka miesięczna** (deklaracja użytkownika) **lub** **data docelowa** (termin; system liczy rekomendowaną składkę). Wykonanie: skumulowane saldo z transferów wewnętrznych z przypisaną kieszenią i ruchem (`pocket_movement`: **Odłożenie** / **Wypłata**) w walucie kieszeni — każda para transferu liczona raz per `transfer_id`. Kategoria P&L i kieszeń są **wzajemnie wykluczające** (XOR): P&L ma `category_id`, transfer ma opcjonalnie `pocket_id` + `pocket_movement`.
 - **Widok budżetu miesięczny:** plan vs wykonanie per kategoria P&L w miesiącu + sekcja **Kieszenie** (plan / odłożono / wypłacono per kieszeń; bez kolumny salda miesięcznego).
 - **Widok budżetu roczny:** szacunek roczny vs wykonanie per kategoria P&L w roku; bez agregacji transferów wewnętrznych; edycja planów P&L na tym ekranie (FR-UX1).
+- **Lokata (deposit):** jednorazowa lokata terminowa (nie konto). Kapitał schodzi z rachunku bankowego jedną transakcją (`deposit_movements.kind=open`), wraca jako `close_principal`; odsetki to osobny przychód (`kind=interest`) z kategorią.
 
 ---
 
@@ -83,6 +84,10 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 6. Kategoria P&L tylko na przepływach zewnętrznych — transfer bez `category_id`, bez kategorii „Oszczędności” (spec: `.docs/superpowers/specs/2026-06-04-transfer-category-decoupling-design.md`)
 
 **Should w rozszerzeniu wave 2 UX:** (brak — FR-P4 usunięte; kieszeń wyłącznie na transferze, XOR z kategorią P&L).
+
+### 3.1b Lokaty (Should / plan)
+
+1. Lokaty terminowe — trzecia zakładka Konta, kapitał poza P&L, odsetki w P&L, ręczne otwarcie/zamknięcie i przypisanie transakcji (FR-D1)
 
 ### 3.2 Poza zakresem (Out of scope)
 
@@ -136,6 +141,10 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 | `pocket_created`, `pocket_updated`, `pocket_deleted` | Kieszenie | FR-P1 |
 | `pocket_assigned_transfer` | Przypisanie kieszeni do transferu | FR-P3 |
 | `category_memory_hit`, `category_memory_miss` | Pamięć kategorii (import) | FR-C7 |
+| `deposit_created` | Ręczne otwarcie lokaty | FR-D1 |
+| `deposit_closed` | Zamknięcie lokaty | FR-D1 |
+| `deposit_updated` | Edycja metadanych lokaty | FR-D1 |
+| `deposit_transaction_assigned` | Przypisanie transakcji do lokaty | FR-D1 |
 
 Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 
@@ -165,7 +174,7 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 
 ## 5. Model domeny
 
-**Relacje:** User 1—N Accounts, Transactions, Imports, Categories, Pockets · Account 1—N Transactions · Category 1—N Transactions · Pocket 1—N Transactions (opcjonalnie) · Pocket N—1 Currency · Transfer = 2 Transactions, ten sam `transfer_id` · Category 1—N CategoryAnnualEstimate, CategoryMonthlyEstimate.
+**Relacje:** User 1—N Accounts, Transactions, Imports, Categories, Pockets, Deposits · Account 1—N Transactions · Category 1—N Transactions · Pocket 1—N Transactions (opcjonalnie) · Pocket N—1 Currency · Deposit 1—N DepositMovements · DepositMovement 1—1 Transaction · Transfer = 2 Transactions, ten sam `transfer_id` · Category 1—N CategoryAnnualEstimate, CategoryMonthlyEstimate.
 
 ### Account
 
@@ -193,6 +202,32 @@ Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 | `import_id`, `raw_statement_description` | Metadane importu |
 | `category_id` | FK → Category; **wymagane** na `income` / `expense` / `adjustment`; **`null` na transferze** (`type = transfer` lub `transfer_id` ustawione) |
 | `pocket_id` | FK → Pocket (nullable); wymagane na obu nogach transferu, gdy uczestniczy konto `Savings`; opcjonalne na przychodzie/wydatku/korekcie |
+| `deposit_movement` | Relacja opcjonalna 1—1 → DepositMovement (przez `transaction_id`); kapitał lokaty (`open`, `close_principal`) ma `category_id = null`; odsetki (`interest`) — normalny przychód z kategorią |
+
+### Deposit
+
+| Pole | Opis |
+|------|------|
+| `user_id` | Właściciel |
+| `currency_id` | Waluta (MVP: tylko PLN w UI) |
+| `source_account_id` | FK → Account użyte przy otwarciu; domyślne konto zwrotu przy zamknięciu |
+| `name` | Nazwa (nullable; fallback w Resource) |
+| `principal` | Kwota zamrożona po otwarciu (decimal) |
+| `opened_at`, `matures_at` | Data otwarcia; opcjonalna data zapadalności |
+| `status` | `active`, `closed` |
+| `closed_at` | Data zamknięcia (nullable) |
+
+Jedna lokata = jedno założenie; zamknięcie zawsze 100% kapitału. Nie jest `Account` ani kieszenią.
+
+### DepositMovement
+
+| Pole | Opis |
+|------|------|
+| `deposit_id` | FK → Deposit |
+| `transaction_id` | FK → Transaction (**unique**) |
+| `kind` | `open`, `close_principal`, `interest` |
+
+Unikalna para `(deposit_id, kind)` — co najwyżej jeden ruch każdego typu na lokatę.
 
 ### Category
 
@@ -645,7 +680,7 @@ Użytkownik zarządza katalogiem kategorii P&L (etykiety transakcji zewnętrznyc
 | **Domena** | Transactions |
 
 **Zachowanie**
-Ręczne dodanie/edycja przychodu/wydatku/korekty oraz wiersz importu (przed połączeniem jako transfer) wymagają `category_id` należącego do użytkownika. Typ kategorii musi pasować do typu ekonomicznego transakcji (`income` / `expense` ze znaku kwoty / `TransactionType`). **Transfer:** obie nogi mają `category_id = null` — brak kategorii P&L. **P&L:** `pocket_id` zabronione (XOR z kategorią). `adjustment`: kategoria wymagana. Matcher importu (FR-I6): po połączeniu pary jako transfer — `category_id = null` na obu nogach.
+Ręczne dodanie/edycja przychodu/wydatku/korekty oraz wiersz importu (przed połączeniem jako transfer) wymagają `category_id` należącego do użytkownika. Typ kategorii musi pasować do typu ekonomicznego transakcji (`income` / `expense` ze znaku kwoty / `TransactionType`). **Transfer:** obie nogi mają `category_id = null` — brak kategorii P&L. **Kapitał lokaty:** transakcje powiązane z `deposit_movements.kind` ∈ `open`, `close_principal` mają `category_id = null` (jak transfer); **odsetki** (`kind=interest`) pozostają przychodem P&L z wymaganą kategorią. **P&L:** `pocket_id` zabronione (XOR z kategorią). `adjustment`: kategoria wymagana. Matcher importu (FR-I6): po połączeniu pary jako transfer — `category_id = null` na obu nogach.
 
 **Kryteria akceptacji**
 1. Given tworzenie transakcji P&L When brak kategorii Then 422.
@@ -786,6 +821,36 @@ Lista transakcji wyświetla nazwę kategorii (transakcje P&L); transfer wewnętr
 1. Given lista When wiersz transakcji P&L Then widoczna nazwa kategorii.
 2. Given lista When wiersz transferu Then brak kategorii; opcjonalnie widoczny cel.
 3. Given filtr kategorii When zastosowanie Then tylko pasujące wiersze P&L (bez transferów).
+
+---
+
+### 6.8 Lokaty (deposits)
+
+### FR-D1 — Lokaty (term deposits)
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Should |
+| **Domena** | Deposits |
+
+**Zachowanie**
+Użytkownik śledzi **lokaty terminowe** jako kapitał zaparkowany poza P&L: trzecia zakładka **Lokaty** na `/konta?kind=deposits` (obok Rachunki / Portfele). Otwarcie to **jedna** transakcja wydatek `−principal` na aktywnym koncie bankowym (`bank !== cash`); zwrot kapitału to przychód `+principal`; odsetki — osobny przychód z kategorią. Wszystkie nogi mają `transfer_id = null` (nie transfer). Kapitał (`open`, `close_principal`) wykluczony z podsumowania listy transakcji, budżetu P&L, cashflow dashboardu i puli matchera transferów; odsetki (`interest`) wliczane do P&L. v1: ręczne otwarcie, zamknięcie (± odsetki), edycja nazwy/`matures_at`, przypisanie istniejącej transakcji (open / close_principal / interest). **Bez** auto-klasyfikacji CSV. Konto `Cash` jako źródło/cel — 422. Dashboard: piąty KPI sumy aktywnych lokat PLN.
+
+**Kryteria akceptacji**
+1. Given otwarcie lokaty When zapis Then transakcja `−principal` z `category_id = null`, movement `open`, saldo konta źródłowego zmniejszone; podsumowanie listy i budżet **nie** wliczają tej kwoty.
+2. Given zamknięcie z odsetkami When zapis Then `+principal` (`close_principal`, bez kategorii) i opcjonalnie `+interest` z kategorią przychodu; lokata `closed`.
+3. Given odsetki lokaty When widok P&L / summary Then kwota odsetek **wliczona** jak zwykły przychód.
+4. Given konto `Cash` When otwarcie lub zamknięcie lokaty Then 422.
+5. Given przypisanie close When kwota transakcji ≠ `principal` aktywnej lokaty (ta sama waluta) Then 422.
+6. Given przypisanie open When kwota ≥ 0 Then 422.
+
+**Reguły**
+- Jedna lokata = jedno założenie; `principal` zamrożony po otwarciu; zamknięcie zawsze 100%; brak delete w v1.
+- Assign: transakcja bez `transfer_id`, bez istniejącego `deposit_movement`, nie `adjustment`, konto bankowe nieusunięte; co najwyżej jeden movement `interest` na lokatę.
+- Import CSV: wiersze lokaty pozostają P&L do ręcznego przypisania (brak klasyfikatora w v1).
+- Izolacja per `user_id`; write routes `/lokaty`; index na `accounts.index?kind=deposits`.
+
+**Zdarzenia:** `deposit_created`, `deposit_closed`, `deposit_updated`, `deposit_transaction_assigned`
 
 ---
 
@@ -951,7 +1016,7 @@ Po dodaniu: uzupełnij **Indeks identyfikatorów FR** i tabelę zdarzeń w §3.4
 
 **Język UI:** polski. Architektura pod przyszłe i18n (formatowanie dat/kwot), bez pełnego i18n w MVP.
 
-**Ekrany:** Auth (login, rejestracja, reset) · Konta (lista; dodaj/edytuj w modalu) · Transakcje (lista; dodaj/edytuj P&L i dodaj transfer w modalach **bez** pola kieszeni na P&L, **transfer bez kategorii** z opcjonalną kieszenią i ruchem FR-P3, baner kandydatów FR-I6; **kategoria** wymagana w formularzach P&L od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny z sekcją kieszeni + edycja planów P&L; widok roczny z edycją szacunków rocznych P&L) · **Kategorie** (katalog: zakładka **Przychody i wydatki** — lista + dodaj/edytuj w modalu, kolejność, **bez** szacunków, FR-UX1; zakładka **Kieszenie** — katalog kopert: lista + dodaj/edytuj w modalu, reorder, ikona/kolor i planowanie — **bez** archiwizacji i filtrów).
+**Ekrany:** Auth (login, rejestracja, reset) · Konta (zakładki **Rachunki** / **Portfele** / **Lokaty**; dodaj/edytuj konto w modalu; lokaty — lista + modals otwarcia/zamknięcia/edycji, FR-D1) · Transakcje (lista; dodaj/edytuj P&L i dodaj transfer w modalach **bez** pola kieszeni na P&L, **transfer bez kategorii** z opcjonalną kieszenią i ruchem FR-P3, baner kandydatów FR-I6; **kategoria** wymagana w formularzach P&L od wave 2) · Import (modal z transakcji: konto, upload, status, podsumowanie) · **Budżet** (widok miesięczny z sekcją kieszeni + edycja planów P&L; widok roczny z edycją szacunków rocznych P&L) · **Kategorie** (katalog: zakładka **Przychody i wydatki** — lista + dodaj/edytuj w modalu, kolejność, **bez** szacunków, FR-UX1; zakładka **Kieszenie** — katalog kopert: lista + dodaj/edytuj w modalu, reorder, ikona/kolor i planowanie — **bez** archiwizacji i filtrów).
 
 **Nawigacja (sidebar):** Konta · Transakcje (Import jako akcja/modal, baner kandydatów z licznikiem) · **Budżet** (przełącznik miesięczny / roczny) · **Kategorie** (jeden link; aktywny na `categories.*` i `pockets.*`; zakładki **Przychody i wydatki** / **Kieszenie**). Ustawienia (`/settings/*`) — profil, hasło, wygląd; **kategorie nie przenoszą się do Ustawień**.
 
@@ -1083,4 +1148,5 @@ AI kategorii, mapowanie kategorii z banku, wykresy, eksport, roczne podsumowanie
 | FR-P2 | Kwota docelowa i planowanie kieszeni | Must | §6.9 |
 | FR-P3 | Przypisanie kieszeni do transferu | Must | §6.9 |
 | FR-P5 | Widok kieszeni w budżecie miesięcznym | Must | §6.9 |
+| FR-D1 | Lokaty (term deposits) | Should | §6.8 |
 | FR-UX1 | Plany P&L tylko na budżecie | Must | §6.10 |
