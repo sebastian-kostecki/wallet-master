@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -132,6 +133,14 @@ final class Transaction extends Model
     public function import(): BelongsTo
     {
         return $this->belongsTo(Import::class);
+    }
+
+    /**
+     * @return HasOne<DepositMovement, $this>
+     */
+    public function depositMovement(): HasOne
+    {
+        return $this->hasOne(DepositMovement::class);
     }
 
     /**
