@@ -122,8 +122,30 @@
             "closed": "Zamknięta"
         },
         "fallbackName": "Lokata",
+        "badge": {
+            "capital": "Lokata",
+            "interest": "Odsetki lokaty"
+        },
         "actions": {
-            "close": "Zamknij lokatę"
+            "close": "Zamknij lokatę",
+            "assign": "Przypisz do lokaty"
+        },
+        "assign": {
+            "title": "Przypisz do lokaty",
+            "description": "Powiąż transakcję z otwarciem, zamknięciem kapitału lub odsetkami lokaty.",
+            "kind": {
+                "label": "Rodzaj",
+                "placeholder": "Wybierz rodzaj"
+            },
+            "deposit": {
+                "label": "Lokata",
+                "placeholder": "Wybierz lokatę"
+            },
+            "kinds": {
+                "open": "Otwarcie lokaty",
+                "close_principal": "Zwrot kapitału",
+                "interest": "Odsetki"
+            }
         },
         "form": {
             "createTitle": "Dodaj lokatę",

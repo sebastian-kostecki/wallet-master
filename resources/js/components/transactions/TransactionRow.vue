@@ -2,7 +2,7 @@
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil, PiggyBank, Scale, Trash2, Wallet } from 'lucide-vue-next';
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Landmark, Pencil, PiggyBank, Scale, Trash2, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -46,6 +46,8 @@ type Transaction = {
     pocket: { id: number; name: string } | null;
     account: Account | null;
     currency: { id: number; code: string; symbol: string | null; precision: number } | null;
+    deposit_movement: { kind: 'open' | 'close_principal' | 'interest'; deposit_id: number } | null;
+    deposit_assignable: boolean;
 };
 
 const props = defineProps<{
@@ -59,6 +61,7 @@ const props = defineProps<{
 defineEmits<{
     edit: [transaction: Transaction];
     delete: [transactionId: number];
+    assign: [transaction: Transaction];
 }>();
 
 const { t, locale } = useI18n();
@@ -199,6 +202,22 @@ function transactionIcon(row: Transaction) {
 const adjustmentBadgeClass =
     'inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400';
 
+const depositCapitalBadgeClass =
+    'inline-flex items-center rounded-full border border-border/50 bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground';
+
+const depositInterestBadgeClass =
+    'inline-flex items-center rounded-full border border-border/40 bg-muted/60 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground';
+
+function isCapitalDepositMovement(row: Transaction): boolean {
+    const kind = row.deposit_movement?.kind;
+
+    return kind === 'open' || kind === 'close_principal';
+}
+
+function isInterestDepositMovement(row: Transaction): boolean {
+    return row.deposit_movement?.kind === 'interest';
+}
+
 function amountClass(row: Transaction): string {
     return toNumber(row.amount) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
 }
@@ -336,8 +355,12 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
                     {{ tx.pocket.name }}
                 </span>
             </div>
-            <div v-else-if="tx.category" class="min-w-0 max-w-full">
+            <div v-else-if="isCapitalDepositMovement(tx)" class="min-w-0 max-w-full">
+                <span :class="depositCapitalBadgeClass">{{ t('deposits.badge.capital') }}</span>
+            </div>
+            <div v-else-if="tx.category" class="flex min-w-0 max-w-full flex-col gap-1">
                 <CategoryBadge :name="tx.category.name" :icon="tx.category.icon" :color="tx.category.color" size="md" />
+                <span v-if="isInterestDepositMovement(tx)" :class="depositInterestBadgeClass">{{ t('deposits.badge.interest') }}</span>
             </div>
             <span v-else class="text-sm text-muted-foreground">—</span>
         </td>
@@ -384,6 +407,17 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
         <td class="px-3 py-2.5 text-right">
             <TooltipProvider v-if="tx.account" :delay-duration="0">
                 <div class="inline-flex w-full items-center justify-end gap-1">
+                    <Tooltip v-if="tx.deposit_assignable">
+                        <TooltipTrigger>
+                            <Button variant="ghost" size="icon" type="button" :aria-label="t('deposits.actions.assign')" @click="$emit('assign', tx)">
+                                <Landmark class="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{{ t('deposits.actions.assign') }}</p>
+                        </TooltipContent>
+                    </Tooltip>
+
                     <Tooltip>
                         <TooltipTrigger>
                             <Button
@@ -495,8 +529,12 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
                 <p class="mt-0.5 text-xs text-muted-foreground">
                     {{ tx.date_relative || operationDateRelative(displayDateIso) }}
                 </p>
-                <div v-if="tx.category" class="mt-1">
+                <div v-if="isCapitalDepositMovement(tx)" class="mt-1">
+                    <span :class="depositCapitalBadgeClass">{{ t('deposits.badge.capital') }}</span>
+                </div>
+                <div v-else-if="tx.category" class="mt-1 flex flex-col gap-1">
                     <CategoryBadge :name="tx.category.name" :icon="tx.category.icon" :color="tx.category.color" size="sm" />
+                    <span v-if="isInterestDepositMovement(tx)" :class="depositInterestBadgeClass">{{ t('deposits.badge.interest') }}</span>
                 </div>
                 <p class="mt-1 text-xs text-muted-foreground">
                     {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
@@ -529,6 +567,23 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
                 <div class="mt-2">
                     <TooltipProvider v-if="tx.account" :delay-duration="0">
                         <div class="inline-flex items-center gap-1">
+                            <Tooltip v-if="tx.deposit_assignable">
+                                <TooltipTrigger>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        type="button"
+                                        :aria-label="t('deposits.actions.assign')"
+                                        @click="$emit('assign', tx)"
+                                    >
+                                        <Landmark class="h-4 w-4" aria-hidden="true" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{{ t('deposits.actions.assign') }}</p>
+                                </TooltipContent>
+                            </Tooltip>
+
                             <Tooltip>
                                 <TooltipTrigger>
                                     <Button

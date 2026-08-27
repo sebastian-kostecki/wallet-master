@@ -122,8 +122,30 @@
             "closed": "Closed"
         },
         "fallbackName": "Deposit",
+        "badge": {
+            "capital": "Deposit",
+            "interest": "Deposit interest"
+        },
         "actions": {
-            "close": "Close deposit"
+            "close": "Close deposit",
+            "assign": "Assign to deposit"
+        },
+        "assign": {
+            "title": "Assign to deposit",
+            "description": "Link this transaction to opening, closing principal, or deposit interest.",
+            "kind": {
+                "label": "Kind",
+                "placeholder": "Select kind"
+            },
+            "deposit": {
+                "label": "Deposit",
+                "placeholder": "Select deposit"
+            },
+            "kinds": {
+                "open": "Open deposit",
+                "close_principal": "Return principal",
+                "interest": "Interest"
+            }
         },
         "form": {
             "createTitle": "Add deposit",
