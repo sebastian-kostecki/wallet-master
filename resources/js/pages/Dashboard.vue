@@ -1,57 +1,86 @@
 <script setup lang="ts">
-import AccountsSummaryCard from '@/components/accounts/AccountsSummaryCard.vue';
+import DashboardBudgetCard from '@/components/dashboard/DashboardBudgetCard.vue';
+import DashboardKpiCard from '@/components/dashboard/DashboardKpiCard.vue';
+import DashboardRecentCard from '@/components/dashboard/DashboardRecentCard.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { formatMoney, type CurrencyDisplay } from '@/lib/formatMoney';
 import { Link } from '@inertiajs/vue3';
-import { ArrowLeftRight, Target, Wallet } from 'lucide-vue-next';
+import { Plus } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
 
-type Currency = {
-    code: string;
+type SummarySection = {
+    income: string;
+    expense: string;
+    balance: string;
 };
 
-type Account = {
-    type: string;
-    current_balance: string;
-    currency: Currency;
+type BudgetSummary = {
+    plan: SummarySection;
+    execution: SummarySection;
+    progress: {
+        income_percent: number | null;
+        expense_percent: number | null;
+    };
 };
 
-defineProps<{
-    accounts: Account[];
+type Transaction = {
+    id: number;
+    booked_at: string;
+    date: string;
+    date_relative: string;
+    description: string;
+    amount: string | number;
+    category: { name: string; icon: string; color: string } | null;
+    currency: { symbol: string | null; precision: number } | null;
+};
+
+const props = defineProps<{
+    period: { year: number; month: number };
+    balances: { total_pln: string; savings_pln: string };
+    cashflow: { income: string; expense: string };
+    budget_summary: BudgetSummary;
+    currency: CurrencyDisplay;
+    recent_transactions: Transaction[];
 }>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
-const quickActions = computed(() => [
-    { key: 'accounts', href: route('accounts.index'), icon: Wallet },
-    { key: 'transactions', href: route('transactions.index'), icon: ArrowLeftRight },
-    { key: 'pockets', href: route('pockets.index'), icon: Target },
-]);
+const periodLabel = computed(() => {
+    const date = new Date(props.period.year, props.period.month - 1, 1);
+
+    return date.toLocaleDateString(locale.value === 'en' ? 'en-GB' : 'pl-PL', {
+        month: 'long',
+        year: 'numeric',
+    });
+});
 </script>
 
 <template>
-    <AppLayout>
-        <div class="flex h-full flex-1 flex-col gap-6">
-            <section class="grid gap-4 md:grid-cols-3">
-                <article
-                    v-for="action in quickActions"
-                    :key="action.key"
-                    class="rounded-2xl border border-transparent bg-card p-6 transition-colors hover:border-border"
-                >
-                    <div class="mb-4 flex size-11 items-center justify-center rounded-xl bg-foreground/[0.06] text-foreground">
-                        <component :is="action.icon" class="size-5" :stroke-width="1.7" />
-                    </div>
-                    <h2 class="text-lg font-semibold tracking-tight">{{ t(`dashboard.quickActions.${action.key}.title`) }}</h2>
-                    <p class="mt-2 text-sm leading-relaxed text-muted-foreground">{{ t(`dashboard.quickActions.${action.key}.description`) }}</p>
-                    <Button class="mt-5 w-full" variant="outline" as-child>
-                        <Link :href="action.href">{{ t(`dashboard.quickActions.${action.key}.cta`) }}</Link>
-                    </Button>
-                </article>
+    <AppLayout :description="periodLabel">
+        <template #headerActions>
+            <Button as-child>
+                <Link :href="route('transactions.create')">
+                    <Plus class="size-4" :stroke-width="1.7" />
+                    {{ t('transactions.index.addTransaction') }}
+                </Link>
+            </Button>
+        </template>
+
+        <div class="flex flex-col gap-6">
+            <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <DashboardKpiCard :label="t('accounts.summary.totalPln')" :value="formatMoney(balances.total_pln, currency)" />
+                <DashboardKpiCard :label="t('accounts.summary.savingsPln')" :value="formatMoney(balances.savings_pln, currency)" />
+                <DashboardKpiCard :label="t('budget.summary.income')" :value="formatMoney(cashflow.income, currency)" tone="income" />
+                <DashboardKpiCard :label="t('budget.summary.expense')" :value="formatMoney(cashflow.expense, currency)" tone="expense" />
             </section>
 
-            <AccountsSummaryCard :accounts="accounts" />
+            <section class="grid gap-6 lg:grid-cols-2">
+                <DashboardBudgetCard :summary="budget_summary" :currency="currency" :year="period.year" :month="period.month" />
+                <DashboardRecentCard :transactions="recent_transactions" />
+            </section>
         </div>
     </AppLayout>
 </template>
