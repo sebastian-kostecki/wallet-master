@@ -203,13 +203,13 @@ function submit(): void {
     form.amount = normalizeAmount(form.amount);
 
     form.transform((data) => {
-        const payload = { ...data };
+        if (data.pocket_id === null) {
+            const { pocket_movement, ...payload } = data;
 
-        if (payload.pocket_id === null) {
-            delete payload.pocket_movement;
+            return payload;
         }
 
-        return payload;
+        return data;
     });
 
     form.post(route('transfers.store') + transactionsIndexSearch.value, {

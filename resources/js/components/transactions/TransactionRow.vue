@@ -42,6 +42,7 @@ type Transaction = {
     category_id: number | null;
     category: TransactionCategory | null;
     pocket_id: number | null;
+    pocket_movement: 'deposit' | 'withdrawal' | null;
     pocket: { id: number; name: string } | null;
     account: Account | null;
     currency: { id: number; code: string; symbol: string | null; precision: number } | null;

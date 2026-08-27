@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import type { ChromeTab } from '@/lib/pageChrome';
 import { Link } from '@inertiajs/vue3';
-import { useSlots } from 'vue';
+import { useSlots, type Slots } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 defineProps<{
     tabs: ChromeTab[];
 }>();
 
-const slots = useSlots();
+const slots: Slots = useSlots();
 const { t } = useI18n();
 </script>
 

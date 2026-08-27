@@ -353,7 +353,7 @@ function consumeCreateQuery(): void {
     params.delete('transfer');
     params.delete('new');
     const next = params.toString() === '' ? path : `${path}?${params.toString()}`;
-    router.replace(next, { preserveState: true, preserveScroll: true });
+    router.replace({ url: next, preserveState: true, preserveScroll: true });
 }
 
 watch(createRequested, (requested) => {

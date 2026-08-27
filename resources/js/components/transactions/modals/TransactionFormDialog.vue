@@ -311,16 +311,15 @@ function submit(): void {
     }
 
     form.transform((data) => {
-        const payload = { ...data };
-
         if (isLinkedTransfer.value) {
-            if (payload.pocket_id === null) {
-                payload.pocket_movement = null;
+            if (data.pocket_id === null) {
+                return { ...data, pocket_movement: null };
             }
-        } else {
-            delete payload.pocket_id;
-            delete payload.pocket_movement;
+
+            return data;
         }
+
+        const { pocket_id, pocket_movement, ...payload } = data;
 
         return payload;
     });
