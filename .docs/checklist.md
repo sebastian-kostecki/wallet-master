@@ -426,6 +426,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] `category_id` wymagane na transakcji, transferze i imporcie
 - [x] Pamięć kategorii w DescriptionMemory + przypisanie przy imporcie
 - [x] Widoki budżetu: `budget/Monthly.vue`, `budget/Yearly.vue`
+- [x] Chrome OpenShip: okres w nagłówku, karta podsumowania osobno od P&L, kieszenie osobną kartą **[plan 2026-08-27-budget-openship]**
 - [x] Formularze transakcji/transferu — wybór kategorii
 - [x] Filtr i kolumna kategorii na liście transakcji (FR-C8)
 - [x] Nawigacja: „Budżet” w sidebarze
