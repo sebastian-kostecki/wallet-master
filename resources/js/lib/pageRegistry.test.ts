@@ -39,7 +39,7 @@ describe('pageRegistry', () => {
 
         expect(pageNodes.accounts.tabGroup).toBe('accounts');
         expect(group.defaultKey).toBe('accounts');
-        expect(group.tabs.map((tab) => tab.key)).toEqual(['accounts', 'wallets']);
+        expect(group.tabs.map((tab) => tab.key)).toEqual(['accounts', 'wallets', 'deposits']);
         expect(group.tabs[0]).toMatchObject({
             route: 'accounts.index',
             params: { kind: 'accounts' },
@@ -49,6 +49,11 @@ describe('pageRegistry', () => {
             route: 'accounts.index',
             params: { kind: 'wallets' },
             labelKey: 'accounts.tabs.wallets',
+        });
+        expect(group.tabs[2]).toMatchObject({
+            route: 'accounts.index',
+            params: { kind: 'deposits' },
+            labelKey: 'accounts.tabs.deposits',
         });
     });
 

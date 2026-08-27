@@ -44,6 +44,7 @@ export const pageTabGroups: Record<string, PageTabGroup> = {
         tabs: [
             { key: 'accounts', labelKey: 'accounts.tabs.accounts', route: 'accounts.index', params: { kind: 'accounts' } },
             { key: 'wallets', labelKey: 'accounts.tabs.wallets', route: 'accounts.index', params: { kind: 'wallets' } },
+            { key: 'deposits', labelKey: 'accounts.tabs.deposits', route: 'accounts.index', params: { kind: 'deposits' } },
         ],
     },
     budget: {

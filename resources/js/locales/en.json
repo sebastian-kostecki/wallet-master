@@ -6,13 +6,15 @@
         },
         "tabs": {
             "accounts": "Bank accounts",
-            "wallets": "Wallets"
+            "wallets": "Wallets",
+            "deposits": "Deposits"
         },
         "index": {
             "title": "Accounts",
             "description": "Balances and types of your checking and savings accounts.",
             "addAccount": "Add bank account",
             "addWallet": "Add wallet",
+            "addDeposit": "Add deposit",
             "view": {
                 "toggleAria": "Toggle accounts view",
                 "grid": "Grid",
@@ -28,6 +30,11 @@
                     "heading": "No wallets yet",
                     "message": "You don't have any cash wallets yet.",
                     "cta": "Add wallet"
+                },
+                "deposits": {
+                    "heading": "No deposits yet",
+                    "message": "You don't have any term deposits yet.",
+                    "cta": "Add deposit"
                 }
             }
         },
@@ -101,6 +108,68 @@
                 "mbank": "mBank",
                 "cash": "Cash"
             }
+        }
+    },
+    "deposits": {
+        "toast": {
+            "created": "Deposit created.",
+            "updated": "Deposit updated.",
+            "closed": "Deposit closed.",
+            "assigned": "Transaction assigned to deposit."
+        },
+        "status": {
+            "active": "Active",
+            "closed": "Closed"
+        },
+        "fallbackName": "Deposit",
+        "actions": {
+            "close": "Close deposit"
+        },
+        "form": {
+            "createTitle": "Add deposit",
+            "createDescription": "Record a term deposit and move principal from the source account.",
+            "editTitle": "Edit deposit",
+            "closeTitle": "Close deposit",
+            "closeDescription": "Move principal (and any interest) to the destination account.",
+            "name": {
+                "label": "Name",
+                "placeholder": "e.g. 3M deposit"
+            },
+            "principal": {
+                "label": "Principal",
+                "placeholder": "e.g. 1000.00"
+            },
+            "source": {
+                "label": "Source account",
+                "placeholder": "Select account"
+            },
+            "opened": {
+                "label": "Opened on"
+            },
+            "matures": {
+                "label": "Maturity date"
+            },
+            "destination": {
+                "label": "Destination account",
+                "placeholder": "Select account"
+            },
+            "interest": {
+                "label": "Interest",
+                "placeholder": "e.g. 0.00"
+            },
+            "category": {
+                "label": "Interest category",
+                "placeholder": "Select category"
+            },
+            "closedAt": {
+                "label": "Closed on"
+            }
+        },
+        "card": {
+            "principal": "Principal",
+            "opened": "Opened",
+            "matures": "Matures",
+            "closed": "Closed"
         }
     },
     "actions": {

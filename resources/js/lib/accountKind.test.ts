@@ -1,4 +1,4 @@
-import { accountKindFromUrl, defaultBankForKind, isWalletAccount } from '@/lib/accountKind';
+import { accountKindFromUrl, accountsPageKindFromUrl, defaultBankForKind, isWalletAccount } from '@/lib/accountKind';
 import { describe, expect, it } from 'vitest';
 
 describe('accountKindFromUrl', () => {
@@ -10,6 +10,26 @@ describe('accountKindFromUrl', () => {
 
     it('returns wallets only for kind=wallets', () => {
         expect(accountKindFromUrl('/konta?kind=wallets')).toBe('wallets');
+    });
+
+    it('stays accounts for kind=deposits so account forms keep bank prefill', () => {
+        expect(accountKindFromUrl('/konta?kind=deposits')).toBe('accounts');
+    });
+});
+
+describe('accountsPageKindFromUrl', () => {
+    it('defaults to accounts when kind is missing or invalid', () => {
+        expect(accountsPageKindFromUrl('/konta')).toBe('accounts');
+        expect(accountsPageKindFromUrl('/konta?kind=accounts')).toBe('accounts');
+        expect(accountsPageKindFromUrl('/konta?kind=nope')).toBe('accounts');
+    });
+
+    it('returns wallets only for kind=wallets', () => {
+        expect(accountsPageKindFromUrl('/konta?kind=wallets')).toBe('wallets');
+    });
+
+    it('returns deposits only for kind=deposits', () => {
+        expect(accountsPageKindFromUrl('/konta?kind=deposits')).toBe('deposits');
     });
 });
 

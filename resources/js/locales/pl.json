@@ -6,13 +6,15 @@
         },
         "tabs": {
             "accounts": "Rachunki",
-            "wallets": "Portfele"
+            "wallets": "Portfele",
+            "deposits": "Lokaty"
         },
         "index": {
             "title": "Konta",
             "description": "Salda i typy kont rozliczeniowych i oszczędnościowych.",
             "addAccount": "Dodaj rachunek",
             "addWallet": "Dodaj portfel",
+            "addDeposit": "Dodaj lokatę",
             "view": {
                 "toggleAria": "Przełącz widok listy kont",
                 "grid": "Siatka",
@@ -28,6 +30,11 @@
                     "heading": "Brak portfeli",
                     "message": "Nie masz jeszcze żadnych portfeli gotówkowych.",
                     "cta": "Dodaj portfel"
+                },
+                "deposits": {
+                    "heading": "Brak lokat",
+                    "message": "Nie masz jeszcze żadnych lokat terminowych.",
+                    "cta": "Dodaj lokatę"
                 }
             }
         },
@@ -101,6 +108,68 @@
                 "mbank": "mBank",
                 "cash": "Gotówka"
             }
+        }
+    },
+    "deposits": {
+        "toast": {
+            "created": "Lokata została dodana.",
+            "updated": "Lokata została zaktualizowana.",
+            "closed": "Lokata została zamknięta.",
+            "assigned": "Transakcja przypisana do lokaty."
+        },
+        "status": {
+            "active": "Aktywna",
+            "closed": "Zamknięta"
+        },
+        "fallbackName": "Lokata",
+        "actions": {
+            "close": "Zamknij lokatę"
+        },
+        "form": {
+            "createTitle": "Dodaj lokatę",
+            "createDescription": "Zapisz lokatę terminową i przenieś kapitał z rachunku źródłowego.",
+            "editTitle": "Edytuj lokatę",
+            "closeTitle": "Zamknij lokatę",
+            "closeDescription": "Przenieś kapitał (i ewentualnie odsetki) na rachunek docelowy.",
+            "name": {
+                "label": "Nazwa",
+                "placeholder": "np. Lokata 3M"
+            },
+            "principal": {
+                "label": "Kapitał",
+                "placeholder": "np. 1000,00"
+            },
+            "source": {
+                "label": "Rachunek źródłowy",
+                "placeholder": "Wybierz rachunek"
+            },
+            "opened": {
+                "label": "Data otwarcia"
+            },
+            "matures": {
+                "label": "Data zapadalności"
+            },
+            "destination": {
+                "label": "Rachunek docelowy",
+                "placeholder": "Wybierz rachunek"
+            },
+            "interest": {
+                "label": "Odsetki",
+                "placeholder": "np. 0,00"
+            },
+            "category": {
+                "label": "Kategoria odsetek",
+                "placeholder": "Wybierz kategorię"
+            },
+            "closedAt": {
+                "label": "Data zamknięcia"
+            }
+        },
+        "card": {
+            "principal": "Kapitał",
+            "opened": "Otwarta",
+            "matures": "Zapada",
+            "closed": "Zamknięta"
         }
     },
     "actions": {

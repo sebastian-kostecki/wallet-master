@@ -43,9 +43,17 @@ describe('resolvePageChrome', () => {
         ]);
         expect(chrome.title).toBe('accounts.index.title');
         expect(chrome.documentTitle).toBe('accounts.index.title · accounts.tabs.accounts');
-        expect(chrome.tabs).toHaveLength(2);
+        expect(chrome.tabs).toHaveLength(3);
         expect(chrome.tabs.find((tab) => tab.isActive)?.key).toBe('accounts');
         expect(chrome.tabs.find((tab) => tab.key === 'wallets')?.href).toBe('/accounts.index?kind=wallets');
+    });
+
+    it('activates Lokaty when kind=deposits', () => {
+        const chrome = resolvePageChrome(at('accounts.index', { kind: 'deposits' }), {}, deps);
+
+        expect(chrome.title).toBe('accounts.index.title');
+        expect(chrome.documentTitle).toBe('accounts.index.title · accounts.tabs.deposits');
+        expect(chrome.tabs.find((tab) => tab.isActive)?.key).toBe('deposits');
     });
 
     it('activates Portfele when kind=wallets', () => {
