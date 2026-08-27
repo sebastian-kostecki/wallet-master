@@ -43,6 +43,7 @@ final class ShowDashboard
 
     public function handle(User $user): void
     {
+        $this->recentTransactions = new Collection;
         $now = now();
         $this->year = (int) $now->year;
         $this->month = (int) $now->month;
