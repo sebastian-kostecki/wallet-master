@@ -507,3 +507,10 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Usunięcie kieszeni czyści `pocket_id` i `pocket_movement` na powiązanych transferach
 - [x] PRD delta (FR-P3, FR-C5, FR-P1; usunięte FR-P4) + testy `MonthlyBudgetTest`
 
+### 20) Dashboard — przegląd operatora **[plan 2026-08-27-dashboard-operator-overview]**
+
+- [x] `/panel`: 4 kafelki (suma PLN, oszczędności, wpływy, wydatki miesiąca)
+- [x] Snapshot budżetu bieżącego miesiąca (plan vs wykonanie + słupki CSS)
+- [x] 8 ostatnich transakcji
+- [x] Usunięcie kart skrótów i `AccountsSummaryCard` z dashboardu
+
