@@ -1,8 +1,8 @@
 # Deposits (lokaty) — design spec
 
-**Status:** Approved in brainstorming (2026-06-11)  
-**Next step:** Implementation plan (`.docs/superpowers/plans/`)  
-**Related:** `.docs/prd.md` (new FR scope — extend PRD when implementing), `2026-06-04-transfer-category-decoupling-design.md` (out-of-scope note on lokaty)
+**Status:** Superseded (2026-08-27) by `.docs/superpowers/specs/2026-08-27-deposits-design.md`  
+**Do not implement from this document.** The June draft assumed a sidebar item and CSV auto-classification; v1 is a third `/konta` tab, close-with-interest, and manual assign only.  
+**Related:** `.docs/prd.md`, `2026-06-04-transfer-category-decoupling-design.md`
 
 ## Summary
 
