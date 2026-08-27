@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Accounts;
 
 use App\Actions\Accounts\StoreAccount;
 use App\Actions\Accounts\UpdateAccountDetails;
+use App\Actions\Deposits\ListDeposits;
 use App\Data\Accounts\AccountFormOptions;
 use App\Enums\Bank;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Resources\Accounts\AccountResource;
+use App\Http\Resources\Categories\CategoryResource;
+use App\Http\Resources\Deposits\DepositResource;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Telemetry\Event;
@@ -25,8 +28,25 @@ class AccountController extends Controller
         $this->authorizeResource(Account::class, 'account');
     }
 
-    public function index(AccountFormOptions $options): Response
+    public function index(Request $request, AccountFormOptions $options, ListDeposits $listDeposits): Response
     {
+        $currencies = Currency::query()
+            ->orderBy('code')
+            ->get(['id', 'code', 'name', 'symbol', 'precision']);
+
+        if ($request->query('kind') === 'deposits') {
+            $listDeposits->handle($request->user());
+
+            return Inertia::render('accounts/Index', [
+                'accounts' => [],
+                'deposits' => DepositResource::collection($listDeposits->getDeposits())->resolve(),
+                'bank_accounts' => AccountResource::collection($listDeposits->getBankAccounts())->resolve(),
+                'income_categories' => CategoryResource::collection($listDeposits->getIncomeCategories())->resolve(),
+                'currencies' => $currencies,
+                ...$options->toArray(),
+            ]);
+        }
+
         $accounts = AccountResource::collection(
             Account::query()
                 ->whereBelongsTo(auth()->user())
@@ -35,12 +55,11 @@ class AccountController extends Controller
                 ->get(['id', 'currency_id', 'name', 'current_balance', 'opening_balance', 'bank', 'type'])
         )->resolve();
 
-        $currencies = Currency::query()
-            ->orderBy('code')
-            ->get(['id', 'code', 'name', 'symbol', 'precision']);
-
         return Inertia::render('accounts/Index', [
             'accounts' => $accounts,
+            'deposits' => [],
+            'bank_accounts' => [],
+            'income_categories' => [],
             'currencies' => $currencies,
             ...$options->toArray(),
         ]);
@@ -52,7 +71,7 @@ class AccountController extends Controller
 
         return to_route(
             'accounts.index',
-            is_string($kind) && in_array($kind, ['accounts', 'wallets'], true)
+            is_string($kind) && in_array($kind, ['accounts', 'wallets', 'deposits'], true)
                 ? ['kind' => $kind]
                 : [],
         );
