@@ -1,4 +1,4 @@
-import { accountKindFromUrl, accountsPageKindFromUrl, defaultBankForKind, isWalletAccount } from '@/lib/accountKind';
+import { accountKindFromUrl, accountsPageKindFromUrl, accountsViewModeStorageKey, defaultBankForKind, isWalletAccount } from '@/lib/accountKind';
 import { describe, expect, it } from 'vitest';
 
 describe('accountKindFromUrl', () => {
@@ -30,6 +30,17 @@ describe('accountsPageKindFromUrl', () => {
 
     it('returns deposits only for kind=deposits', () => {
         expect(accountsPageKindFromUrl('/konta?kind=deposits')).toBe('deposits');
+    });
+});
+
+describe('accountsViewModeStorageKey', () => {
+    it('uses deposits key only for the deposits tab', () => {
+        expect(accountsViewModeStorageKey('deposits')).toBe('deposits.viewMode');
+    });
+
+    it('uses accounts key for accounts and wallets tabs', () => {
+        expect(accountsViewModeStorageKey('accounts')).toBe('accounts.viewMode');
+        expect(accountsViewModeStorageKey('wallets')).toBe('accounts.viewMode');
     });
 });
 

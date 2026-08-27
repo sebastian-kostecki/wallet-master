@@ -8,6 +8,10 @@ export function accountKindFromUrl(url: string): AccountKind {
     return kind === 'wallets' ? 'wallets' : 'accounts';
 }
 
+export function accountsViewModeStorageKey(pageKind: AccountsPageKind): string {
+    return pageKind === 'deposits' ? 'deposits.viewMode' : 'accounts.viewMode';
+}
+
 export function accountsPageKindFromUrl(url: string): AccountsPageKind {
     const kind = new URLSearchParams(url.split('?')[1] ?? '').get('kind');
 

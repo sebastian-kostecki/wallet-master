@@ -11,11 +11,11 @@ import CloseDepositDialog from '@/components/deposits/modals/CloseDepositDialog.
 import DepositFormDialog from '@/components/deposits/modals/DepositFormDialog.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { accountKindFromUrl, accountsPageKindFromUrl, isWalletAccount } from '@/lib/accountKind';
+import { accountKindFromUrl, accountsPageKindFromUrl, accountsViewModeStorageKey, isWalletAccount, type AccountsPageKind } from '@/lib/accountKind';
 import type { CategoryOption } from '@/lib/categories';
 import { usePage } from '@inertiajs/vue3';
 import { PiggyBank, Wallet } from 'lucide-vue-next';
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 type Currency = {
@@ -143,20 +143,30 @@ function resolveAccountTypeIcon(type: string) {
 }
 
 type ViewMode = 'grid' | 'list';
+
+function readViewMode(kind: AccountsPageKind): ViewMode {
+    const saved = localStorage.getItem(accountsViewModeStorageKey(kind));
+
+    if (saved === 'grid' || saved === 'list') {
+        return saved;
+    }
+
+    return 'grid';
+}
+
 const viewMode = ref<ViewMode>('grid');
 
-onMounted(() => {
-    const storageKey = pageKind.value === 'deposits' ? 'deposits.viewMode' : 'accounts.viewMode';
-    const saved = localStorage.getItem(storageKey);
-    if (saved === 'grid' || saved === 'list') {
-        viewMode.value = saved;
-    }
-});
+watch(
+    pageKind,
+    (kind) => {
+        viewMode.value = readViewMode(kind);
+    },
+    { immediate: true },
+);
 
 function setViewMode(mode: ViewMode) {
     viewMode.value = mode;
-    const storageKey = pageKind.value === 'deposits' ? 'deposits.viewMode' : 'accounts.viewMode';
-    localStorage.setItem(storageKey, mode);
+    localStorage.setItem(accountsViewModeStorageKey(pageKind.value), mode);
 }
 
 const formDialogOpen = ref(false);
