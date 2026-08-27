@@ -86,7 +86,7 @@ function onInputKeydown(event: KeyboardEvent) {
             </div>
         </div>
         <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="editLabel" @click="emit('start-edit')">
-            <Pencil class="h-4 w-4 text-muted-foreground" />
+            <Pencil class="h-4 w-4 text-muted-foreground" :stroke-width="1.7" />
         </Button>
     </div>
     <div v-else class="flex items-center gap-1">
@@ -95,7 +95,7 @@ function onInputKeydown(event: KeyboardEvent) {
             v-model="annualDraft"
             type="text"
             inputmode="decimal"
-            class="h-8 w-28 tabular-nums"
+            class="h-8 w-28 rounded-xl tabular-nums"
             :placeholder="annualPlaceholder"
             :aria-invalid="error !== null"
             @keydown="onInputKeydown"
@@ -105,16 +105,16 @@ function onInputKeydown(event: KeyboardEvent) {
             v-model="monthlyDraft"
             type="text"
             inputmode="decimal"
-            class="h-8 w-28 tabular-nums"
+            class="h-8 w-28 rounded-xl tabular-nums"
             :placeholder="monthlyPlaceholder"
             :aria-invalid="error !== null"
             @keydown="onInputKeydown"
         />
         <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="saveLabel" @click="onSave">
-            <Check class="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <Check class="h-4 w-4 text-emerald-600 dark:text-emerald-400" :stroke-width="1.7" />
         </Button>
         <Button type="button" variant="ghost" size="icon" class="h-8 w-8 shrink-0" :aria-label="cancelLabel" @click="onCancel">
-            <X class="h-4 w-4 text-muted-foreground" />
+            <X class="h-4 w-4 text-muted-foreground" :stroke-width="1.7" />
         </Button>
     </div>
 </template>

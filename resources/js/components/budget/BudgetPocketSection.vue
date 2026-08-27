@@ -28,10 +28,12 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <section v-if="rows.length > 0" class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+    <section v-if="rows.length > 0" class="rounded-2xl border border-transparent bg-card p-5 sm:p-6">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-lg font-semibold">{{ t('budget.monthly.pockets_section') }}</h2>
-            <Button variant="link" class="h-auto p-0" as-child>
+            <h2 class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                {{ t('budget.monthly.pockets_section') }}
+            </h2>
+            <Button variant="ghost" class="h-auto px-2 py-1 text-xs text-muted-foreground" as-child>
                 <Link :href="route('pockets.index')">{{ t('budget.monthly.manage_pockets') }}</Link>
             </Button>
         </div>
@@ -39,7 +41,7 @@ const { t } = useI18n();
             <table class="budget-table text-sm">
                 <BudgetTableColgroup layout="pocket" period="monthly" />
                 <thead>
-                    <tr class="border-b text-left text-muted-foreground">
+                    <tr class="border-b border-border/50 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                         <th class="py-2 pr-4">{{ t('pockets.index.fields.name') }}</th>
                         <th class="py-2 pr-4">{{ t('budget.monthly.plan') }}</th>
                         <th class="py-2 pr-4">{{ t('budget.monthly.movement') }}</th>
@@ -47,7 +49,7 @@ const { t } = useI18n();
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="row in rows" :key="row.pocket_id" class="list-row-hover border-b border-sidebar-border/40">
+                    <tr v-for="row in rows" :key="row.pocket_id" class="list-row-hover border-b border-border/50 hover:bg-foreground/[0.03]">
                         <td class="py-2 pr-4">
                             <PocketBadge :name="row.name" :icon="row.icon" :color="row.color" size="md" />
                         </td>
