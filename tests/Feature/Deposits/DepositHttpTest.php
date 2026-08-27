@@ -150,3 +150,26 @@ test('other user 403 on close', function () {
         ])
         ->assertForbidden();
 });
+
+test('update rejects matures_at before opened_at', function () {
+    $user = User::factory()->create();
+    $account = depositHttpBankAccount($user);
+
+    $deposit = app(CreateDeposit::class)->handle($user, [
+        'source_account_id' => $account->id,
+        'principal' => '1000.00',
+        'opened_at' => '01-08-2026',
+        'matures_at' => '01-11-2026',
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('accounts.index', ['kind' => 'deposits'], absolute: false))
+        ->patch(route('deposits.update', $deposit, absolute: false), [
+            'name' => '3M',
+            'matures_at' => '31-07-2026',
+        ])
+        ->assertRedirect()
+        ->assertSessionHasErrors('matures_at');
+
+    expect($deposit->fresh()->matures_at?->toDateString())->toBe('2026-11-01');
+});

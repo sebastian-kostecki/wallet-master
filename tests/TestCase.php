@@ -15,7 +15,16 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         Transaction::creating(function (Transaction $transaction): void {
-            if ($transaction->category_id !== null || $transaction->user_id === null) {
+            if ($transaction->user_id === null) {
+                return;
+            }
+
+            if ($transaction->category_id !== null) {
+                return;
+            }
+
+            // Callers that pass category_id => null (transfers, deposit capital) opted out.
+            if (array_key_exists('category_id', $transaction->getAttributes())) {
                 return;
             }
 

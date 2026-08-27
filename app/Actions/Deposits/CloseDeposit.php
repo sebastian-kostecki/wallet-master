@@ -93,30 +93,20 @@ final class CloseDeposit
                 $normalizedPrincipalDescription,
             );
 
-            $principalTransaction = Transaction::withoutEvents(function () use (
-                $user,
-                $destination,
-                $closedAt,
-                $principal,
-                $principalDescription,
-                $normalizedPrincipalDescription,
-                $principalDedupeHash,
-            ): Transaction {
-                return Transaction::query()->create([
-                    'user_id' => $user->id,
-                    'account_id' => $destination->id,
-                    'currency_id' => $destination->currency_id,
-                    'date' => $closedAt,
-                    'booked_at' => $closedAt,
-                    'amount' => $principal,
-                    'type' => TransactionType::Income,
-                    'description' => $principalDescription,
-                    'subject' => null,
-                    'normalized_description' => $normalizedPrincipalDescription,
-                    'dedupe_hash' => $principalDedupeHash,
-                    'category_id' => null,
-                ]);
-            });
+            $principalTransaction = Transaction::query()->create([
+                'user_id' => $user->id,
+                'account_id' => $destination->id,
+                'currency_id' => $destination->currency_id,
+                'date' => $closedAt,
+                'booked_at' => $closedAt,
+                'amount' => $principal,
+                'type' => TransactionType::Income,
+                'description' => $principalDescription,
+                'subject' => null,
+                'normalized_description' => $normalizedPrincipalDescription,
+                'dedupe_hash' => $principalDedupeHash,
+                'category_id' => null,
+            ]);
 
             DepositMovement::query()->create([
                 'deposit_id' => $deposit->id,

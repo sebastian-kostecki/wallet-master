@@ -86,22 +86,20 @@ final class CreateDeposit
                 'closed_at' => null,
             ]);
 
-            $transaction = Transaction::withoutEvents(function () use ($user, $account, $openedAt, $amount, $transactionType, $description, $normalizedDescription, $dedupeHash): Transaction {
-                return Transaction::query()->create([
-                    'user_id' => $user->id,
-                    'account_id' => $account->id,
-                    'currency_id' => $account->currency_id,
-                    'date' => $openedAt,
-                    'booked_at' => $openedAt,
-                    'amount' => $amount,
-                    'type' => $transactionType,
-                    'description' => $description,
-                    'subject' => null,
-                    'normalized_description' => $normalizedDescription,
-                    'dedupe_hash' => $dedupeHash,
-                    'category_id' => null,
-                ]);
-            });
+            $transaction = Transaction::query()->create([
+                'user_id' => $user->id,
+                'account_id' => $account->id,
+                'currency_id' => $account->currency_id,
+                'date' => $openedAt,
+                'booked_at' => $openedAt,
+                'amount' => $amount,
+                'type' => $transactionType,
+                'description' => $description,
+                'subject' => null,
+                'normalized_description' => $normalizedDescription,
+                'dedupe_hash' => $dedupeHash,
+                'category_id' => null,
+            ]);
 
             DepositMovement::query()->create([
                 'deposit_id' => $deposit->id,

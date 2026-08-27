@@ -62,6 +62,7 @@ test('index with kind=deposits lists deposits and not the other users', function
         ->where('deposits.0.id', $depositA->id)
         ->where('deposits.0.name', 'Lokata A')
         ->where('deposits.0.principal', '1000.00')
+        ->where('deposits.0.source_account_id', $accountA->id)
         ->has('bank_accounts', 1)
         ->where('bank_accounts.0.id', $accountA->id)
         ->has('income_categories', 1)
