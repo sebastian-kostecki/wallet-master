@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -7,15 +8,16 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::get(route_path('dashboard'), function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get(route_path('dashboard'), DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 require __DIR__.'/imports.php';
 require __DIR__.'/categories.php';
 require __DIR__.'/pockets.php';
 require __DIR__.'/budgets.php';
 require __DIR__.'/accounts.php';
+require __DIR__.'/deposits.php';
 require __DIR__.'/transactions.php';
 require __DIR__.'/transfers.php';
 require __DIR__.'/settings.php';

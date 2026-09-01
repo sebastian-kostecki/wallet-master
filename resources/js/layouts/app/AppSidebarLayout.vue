@@ -2,29 +2,30 @@
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
-import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
 import AppToaster from '@/components/notifications/AppToaster.vue';
-import type { BreadcrumbItemType } from '@/types';
+import PageHeader from '@/components/page/PageHeader.vue';
 
-interface Props {
-    breadcrumbs?: BreadcrumbItemType[];
-}
-
-withDefaults(defineProps<Props>(), {
-    breadcrumbs: () => [],
-});
+defineProps<{
+    title?: string;
+    description?: string;
+}>();
 </script>
 
 <template>
     <AppShell variant="sidebar">
         <AppSidebar />
         <AppContent variant="sidebar">
-            <AppSidebarHeader :breadcrumbs="breadcrumbs">
-                <template #actions>
-                    <slot name="headerActions" />
-                </template>
-            </AppSidebarHeader>
-            <slot />
+            <div class="mx-auto w-full max-w-[1600px] px-4 pb-8 pt-6 sm:px-6">
+                <PageHeader :title="title" :description="description">
+                    <template #actions>
+                        <slot name="headerActions" />
+                    </template>
+                    <template v-if="$slots.headerTabsTrailing" #tabsTrailing>
+                        <slot name="headerTabsTrailing" />
+                    </template>
+                </PageHeader>
+                <slot />
+            </div>
         </AppContent>
     </AppShell>
     <AppToaster />

@@ -6,6 +6,7 @@ namespace App\Support\Backup;
 
 use App\Exceptions\DomainException;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Backup\BackupDestination\Backup;
 use Spatie\Backup\BackupDestination\BackupDestination;
@@ -180,7 +181,7 @@ final class RestoreDatabaseFromArchive
 
     private function ensureLocalArchivePath(Filesystem $disk, string $path): string
     {
-        if (method_exists($disk, 'path')) {
+        if ($disk instanceof FilesystemAdapter) {
             $localPath = $disk->path($path);
 
             if (is_file($localPath)) {

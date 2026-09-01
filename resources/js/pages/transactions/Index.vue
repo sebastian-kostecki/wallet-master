@@ -1,38 +1,25 @@
 <script setup lang="ts">
-import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import DepositCandidatesBanner, { type DepositCandidate } from '@/components/deposits/DepositCandidatesBanner.vue';
+import AssignDepositDialog from '@/components/deposits/modals/AssignDepositDialog.vue';
 import ImportDialog from '@/components/import/ImportDialog.vue';
 import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
-import PaginationBar from '@/components/pagination/PaginationBar.vue';
+import TablePage from '@/components/page/TablePage.vue';
 import DeleteTransactionDialog from '@/components/transactions/modals/DeleteTransactionDialog.vue';
+import TransactionFormDialog from '@/components/transactions/modals/TransactionFormDialog.vue';
+import TransactionRow from '@/components/transactions/TransactionRow.vue';
 import TransactionsIndexHeaderFilters from '@/components/transactions/TransactionsIndexHeaderFilters.vue';
+import TransferFormDialog from '@/components/transfers/modals/TransferFormDialog.vue';
 import TransferCandidatesBanner, { type TransferCandidatePair } from '@/components/transfers/TransferCandidatesBanner.vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTransactionFormDialog } from '@/composables/useTransactionFormDialog';
 import { useTransactionsIndexSearch } from '@/composables/useTransactionsIndexSearch';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { track } from '@/lib/telemetry';
-import { cn } from '@/lib/utils';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import {
-    ArrowDown,
-    ArrowDownLeft,
-    ArrowRightLeft,
-    ArrowUp,
-    ArrowUpDown,
-    ArrowUpRight,
-    ChevronDown,
-    Pencil,
-    PiggyBank,
-    Plus,
-    Scale,
-    Trash2,
-    Upload,
-    Wallet,
-} from 'lucide-vue-next';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { ArrowDown, ArrowRightLeft, ArrowUp, ArrowUpDown, ChevronDown, Plus, Upload } from 'lucide-vue-next';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
 
@@ -43,6 +30,7 @@ type Account = {
     type_label_key: string;
     bank_icon_url: string | null;
     bank?: string;
+    is_deleted?: boolean;
     currency?: {
         symbol: string | null;
     } | null;
@@ -59,6 +47,7 @@ type Category = {
     id: number;
     name: string;
     type: string;
+    sort_order: number;
     icon: string;
     color: string;
 };
@@ -74,6 +63,7 @@ type TransactionCategory = {
 
 type Transaction = {
     id: number;
+    account_id: number;
     date: string; // YYYY-MM-DD
     booked_at: string; // YYYY-MM-DD
     date_relative: string;
@@ -86,9 +76,13 @@ type Transaction = {
     category_id: number | null;
     category: TransactionCategory | null;
     pocket_id: number | null;
-    pocket: { id: number; name: string } | null;
+    pocket_movement: 'deposit' | 'withdrawal' | null;
+    pocket: { id: number; name: string; icon: string; color: string } | null;
     account: Account | null;
     currency: Currency | null;
+    deposit_movement: { kind: 'open' | 'close_principal' | 'interest'; deposit_id: number } | null;
+    deposit_assignable: boolean;
+    deposit_candidate: { kind: 'open' | 'close_principal' } | null;
 };
 
 type PaginatorLink = {
@@ -142,11 +136,13 @@ type Filters = {
     sort: 'date' | 'amount' | string;
     direction: 'asc' | 'desc' | string;
     per_page?: number;
+    deposit_candidates?: boolean;
 };
 
 const props = defineProps<{
     accounts: Account[];
     categories: Category[];
+    pockets: { id: number; name: string; icon: string; color: string }[];
     filters: Filters;
     transactions: Paginator<Transaction>;
     summary: {
@@ -155,17 +151,18 @@ const props = defineProps<{
     };
     unresolved_import_failed_rows?: ImportFailedRow[];
     pending_transfer_candidates?: TransferCandidatePair[];
+    pending_deposit_candidates?: DepositCandidate[];
+    assignable_deposits?: {
+        id: number;
+        name: string | null;
+        principal: string;
+        status: 'active' | 'closed';
+        currency_id: number;
+    }[];
 }>();
 
 const page = usePage<{ errors?: Record<string, string> }>();
 const { t, locale } = useI18n();
-
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-    {
-        title: t('transactions.index.title'),
-        href: route('transactions.index'),
-    },
-]);
 
 const money = computed(() => {
     const resolvedLocale = locale.value === 'pl' ? 'pl-PL' : 'en-US';
@@ -192,119 +189,6 @@ function formatCurrencySymbol(account: Account | null): string {
     return account?.currency?.symbol ?? t('currency.defaultSymbol');
 }
 
-function normalizeDateIso(input: string): string {
-    const trimmed = input.trim();
-    const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
-
-    return match?.[1] ?? trimmed;
-}
-
-function formatDateIsoToDots(input: string): string {
-    const iso = normalizeDateIso(input);
-    const parts = iso.split('-');
-    if (parts.length !== 3) {
-        return input;
-    }
-
-    const [yyyy, mm, dd] = parts;
-    if (!yyyy || !mm || !dd) {
-        return input;
-    }
-
-    return `${dd}.${mm}.${yyyy}`;
-}
-
-function transactionDisplayDateIso(tx: Transaction): string {
-    const booked = normalizeDateIso(tx.booked_at ?? '');
-    if (booked !== '') {
-        return booked;
-    }
-
-    return normalizeDateIso(tx.date);
-}
-
-/** Relative label for the displayed date (`booked_at ?? date`), aligned with UI locale */
-function operationDateRelative(dateIso: string): string {
-    const iso = normalizeDateIso(dateIso);
-    const parts = iso.split('-');
-    if (parts.length !== 3) {
-        return '';
-    }
-
-    const y = Number(parts[0]);
-    const m = Number(parts[1]);
-    const d = Number(parts[2]);
-    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
-        return '';
-    }
-
-    const target = new Date(y, m - 1, d);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    target.setHours(0, 0, 0, 0);
-    const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
-
-    const lng = locale.value === 'pl' ? 'pl' : 'en';
-    const rtf = new Intl.RelativeTimeFormat(lng, { numeric: 'auto' });
-
-    return rtf.format(diffDays, 'day');
-}
-
-type TransactionIconVariant = 'internal' | 'expense' | 'income' | 'adjustment';
-
-function transactionVariant(tx: Transaction): TransactionIconVariant {
-    if (tx.type === 'adjustment') {
-        return 'adjustment';
-    }
-
-    if (tx.transfer_id) {
-        return 'internal';
-    }
-
-    return tx.type === 'expense' ? 'expense' : 'income';
-}
-
-function transactionIcon(tx: Transaction) {
-    const variant = transactionVariant(tx);
-
-    if (variant === 'internal') {
-        return {
-            component: ArrowRightLeft,
-            containerClass: 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400',
-        } as const;
-    }
-
-    if (variant === 'adjustment') {
-        return {
-            component: Scale,
-            containerClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400',
-        } as const;
-    }
-
-    if (variant === 'expense') {
-        return {
-            component: ArrowDownLeft,
-            containerClass: 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400',
-        } as const;
-    }
-
-    return {
-        component: ArrowUpRight,
-        containerClass: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400',
-    } as const;
-}
-
-const accountTypeIcons = computed(() => {
-    return {
-        checking: Wallet,
-        savings: PiggyBank,
-    } as const;
-});
-
-function resolveAccountTypeIcon(type: string) {
-    return accountTypeIcons.value[type as keyof typeof accountTypeIcons.value] ?? Wallet;
-}
-
 const { currentSearch, transactionsIndexSearch } = useTransactionsIndexSearch();
 
 const hasImportRoute = computed(() => {
@@ -328,6 +212,35 @@ function clearFilters() {
     router.get(route('transactions.index'), { sort: 'date', direction: 'desc' }, { preserveScroll: true, replace: true });
 }
 
+function indexQuery(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+        account_id: props.filters.account_id ?? undefined,
+        category_id: props.filters.category_id ?? undefined,
+        from: props.filters.from ?? undefined,
+        to: props.filters.to ?? undefined,
+        sort: props.filters.sort ?? 'date',
+        direction: props.filters.direction ?? 'desc',
+        per_page: props.filters.per_page ?? undefined,
+        deposit_candidates: props.filters.deposit_candidates ? 1 : undefined,
+        ...overrides,
+    };
+}
+
+function toggleDepositCandidatesFilter() {
+    router.get(
+        route('transactions.index'),
+        indexQuery({
+            deposit_candidates: props.filters.deposit_candidates ? undefined : 1,
+            page: undefined,
+        }),
+        {
+            preserveScroll: true,
+            replace: true,
+            preserveState: 'errors',
+        },
+    );
+}
+
 function setSort(sort: 'date' | 'amount') {
     const currentSort = props.filters.sort ?? 'date';
     const currentDirection = props.filters.direction ?? (currentSort === 'date' ? 'desc' : 'asc');
@@ -339,14 +252,10 @@ function setSort(sort: 'date' | 'amount') {
 
     router.get(
         route('transactions.index'),
-        {
-            account_id: props.filters.account_id ?? undefined,
-            category_id: props.filters.category_id ?? undefined,
-            from: props.filters.from ?? undefined,
-            to: props.filters.to ?? undefined,
+        indexQuery({
             sort,
             direction: nextDirection,
-        },
+        }),
         {
             preserveScroll: true,
             replace: true,
@@ -360,9 +269,14 @@ const hasActiveFilters = computed(() => {
         props.filters.account_id !== null ||
             props.filters.category_id !== null ||
             (props.filters.from ?? '').trim() !== '' ||
-            (props.filters.to ?? '').trim() !== '',
+            (props.filters.to ?? '').trim() !== '' ||
+            props.filters.deposit_candidates === true,
     );
 });
+
+const pendingDepositCandidateCount = computed(() => (props.pending_deposit_candidates ?? []).length);
+
+const showDepositCandidatesFilter = computed(() => pendingDepositCandidateCount.value > 0 || props.filters.deposit_candidates === true);
 
 const transactionTotal = computed(() => {
     const paginator = props.transactions as FlattenedPaginator<Transaction> | ResourcePaginator<Transaction>;
@@ -407,27 +321,6 @@ const serverErrors = computed<Record<string, string>>(() => page.props.errors ??
 
 const importDialogOpen = ref(false);
 
-function hasRawStatementDescription(tx: Transaction): boolean {
-    return (tx.raw_statement_description ?? '').trim() !== '';
-}
-
-function truncateText(input: string | null | undefined, maxLength: number): { text: string; isTruncated: boolean } {
-    const value = (input ?? '').trim();
-    if (value === '') {
-        return { text: '—', isTruncated: false };
-    }
-
-    if (value.length <= maxLength) {
-        return { text: value, isTruncated: false };
-    }
-
-    const slice = value.slice(0, Math.max(0, maxLength));
-    const lastSpace = slice.lastIndexOf(' ');
-    const trimmed = (lastSpace >= Math.floor(maxLength * 0.6) ? slice.slice(0, lastSpace) : slice).trimEnd();
-
-    return { text: `${trimmed}…`, isTruncated: true };
-}
-
 const deletingTransactionId = ref<number | null>(null);
 const deleteDialogOpen = ref(false);
 const deleteProcessing = ref(false);
@@ -437,6 +330,110 @@ function openDeleteDialog(transactionId: number) {
     deletingTransactionId.value = transactionId;
     deleteDialogOpen.value = true;
 }
+
+const { createRequested } = useTransactionFormDialog();
+
+const formDialogOpen = ref(false);
+const formDialogMode = ref<'create' | 'edit'>('create');
+const formResetKey = ref(0);
+const editingTransactionId = ref<number | null>(null);
+
+const transferDialogOpen = ref(false);
+const transferFormResetKey = ref(0);
+
+const assignDialogOpen = ref(false);
+const assigningTransactionId = ref<number | null>(null);
+const assigningTransaction = computed(() => props.transactions.data.find((tx) => tx.id === assigningTransactionId.value) ?? null);
+
+function openAssignDialog(tx: Transaction): void {
+    assigningTransactionId.value = tx.id;
+    assignDialogOpen.value = true;
+}
+
+function openTransferDialog(): void {
+    const alreadyOpen = transferDialogOpen.value;
+
+    formDialogOpen.value = false;
+
+    if (alreadyOpen) {
+        transferFormResetKey.value++;
+    }
+
+    transferDialogOpen.value = true;
+}
+
+const editingTransaction = computed(() => props.transactions.data.find((tx) => tx.id === editingTransactionId.value) ?? null);
+
+function openCreateDialog(): void {
+    transferDialogOpen.value = false;
+
+    const alreadyOpenCreate = formDialogOpen.value && formDialogMode.value === 'create';
+
+    formDialogMode.value = 'create';
+    editingTransactionId.value = null;
+
+    if (alreadyOpenCreate) {
+        formResetKey.value++;
+    }
+
+    formDialogOpen.value = true;
+}
+
+function openEditDialog(tx: Transaction): void {
+    transferDialogOpen.value = false;
+
+    formDialogMode.value = 'edit';
+    editingTransactionId.value = tx.id;
+    formDialogOpen.value = true;
+}
+
+function consumeCreateQuery(): void {
+    const [path, query = ''] = page.url.split('?');
+    const params = new URLSearchParams(query);
+    const wantsTransfer = params.get('transfer') === '1';
+    const wantsNew = params.get('new') === '1';
+
+    if (!wantsTransfer && !wantsNew) {
+        return;
+    }
+
+    if (wantsTransfer) {
+        openTransferDialog();
+    } else {
+        openCreateDialog();
+    }
+
+    params.delete('transfer');
+    params.delete('new');
+    const next = params.toString() === '' ? path : `${path}?${params.toString()}`;
+    router.replace({ url: next, preserveState: true, preserveScroll: true });
+}
+
+watch(createRequested, (requested) => {
+    if (!requested) {
+        return;
+    }
+
+    openCreateDialog();
+    createRequested.value = false;
+});
+
+watch(editingTransaction, (tx) => {
+    if (formDialogOpen.value && formDialogMode.value === 'edit' && tx === null) {
+        formDialogOpen.value = false;
+    }
+});
+
+onMounted(() => {
+    consumeCreateQuery();
+});
+
+watch(
+    () => page.url,
+    () => {
+        consumeCreateQuery();
+    },
+);
 
 function ariaSortFor(column: 'date' | 'amount'): 'ascending' | 'descending' | 'none' {
     const currentSort = props.filters.sort ?? 'date';
@@ -467,9 +464,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('transactions.index.title')" />
-
+    <AppLayout>
         <template #headerActions>
             <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <TransactionsIndexHeaderFilters
@@ -487,18 +482,14 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                             <ChevronDown class="ml-1 h-4 w-4" aria-hidden="true" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" class="w-56">
-                        <DropdownMenuItem as-child>
-                            <Link :href="route('transactions.create') + currentSearch">
-                                <Plus />
-                                {{ t('transactions.index.addTransaction') }}
-                            </Link>
+                    <DropdownMenuContent align="end" class="w-56 rounded-2xl">
+                        <DropdownMenuItem @select="openCreateDialog">
+                            <Plus />
+                            {{ t('transactions.index.addTransaction') }}
                         </DropdownMenuItem>
-                        <DropdownMenuItem as-child>
-                            <Link :href="route('transfers.create') + currentSearch">
-                                <ArrowRightLeft />
-                                {{ t('transactions.index.addTransfer') }}
-                            </Link>
+                        <DropdownMenuItem @select="openTransferDialog">
+                            <ArrowRightLeft />
+                            {{ t('transactions.index.addTransfer') }}
                         </DropdownMenuItem>
                         <DropdownMenuItem @select="importDialogOpen = true">
                             <Upload />
@@ -509,7 +500,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
             </div>
         </template>
 
-        <div class="flex flex-col gap-6 p-4">
+        <div class="flex flex-col gap-6">
             <ImportFailedRowsBanner
                 v-if="(unresolved_import_failed_rows ?? []).length > 0"
                 :rows="unresolved_import_failed_rows ?? []"
@@ -524,9 +515,33 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                 :account-filter-id="filters.account_id"
             />
 
+            <DepositCandidatesBanner
+                v-if="(pending_deposit_candidates ?? []).length > 0"
+                :candidates="pending_deposit_candidates ?? []"
+                :account-filter-id="filters.account_id"
+            />
+
+            <div v-if="showDepositCandidatesFilter" class="flex flex-wrap items-center gap-2">
+                <Button
+                    type="button"
+                    size="sm"
+                    :variant="filters.deposit_candidates ? 'default' : 'outline'"
+                    class="rounded-full"
+                    @click="toggleDepositCandidatesFilter"
+                >
+                    {{
+                        t('deposits.candidates.filter', {
+                            count: pendingDepositCandidateCount,
+                        })
+                    }}
+                </Button>
+            </div>
+
             <div class="grid gap-4 md:grid-cols-2">
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.income') }}</p>
+                <div class="rounded-2xl border border-transparent bg-card p-6">
+                    <p class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                        {{ t('transactions.index.summary.income') }}
+                    </p>
                     <div class="mt-2">
                         <Skeleton v-if="isLoading" class="h-8 w-40" />
                         <p v-else class="text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
@@ -535,19 +550,21 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <p class="text-xs text-muted-foreground">{{ t('transactions.index.summary.expense') }}</p>
+                <div class="rounded-2xl border border-transparent bg-card p-6">
+                    <p class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                        {{ t('transactions.index.summary.expense') }}
+                    </p>
                     <div class="mt-2">
                         <Skeleton v-if="isLoading" class="h-8 w-40" />
-                        <p v-else class="text-2xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+                        <p v-else class="text-2xl font-semibold tabular-nums text-red-600 dark:text-red-400">
                             -{{ summaryExpense }} {{ summaryCurrencySymbol }}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border" :aria-busy="isLoading ? 'true' : 'false'">
-                <div v-if="isLoading" class="p-6">
+            <div :aria-busy="isLoading ? 'true' : 'false'">
+                <div v-if="isLoading" class="overflow-hidden rounded-2xl border border-transparent bg-card p-5">
                     <div class="grid gap-3">
                         <Skeleton class="h-10 w-full" />
                         <Skeleton class="h-10 w-full" />
@@ -557,481 +574,128 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                     </div>
                 </div>
 
-                <div v-else-if="isFilteredEmpty" class="p-8 text-center">
-                    <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.filtered') }}</p>
-                    <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                        <Button as-child>
-                            <Link :href="route('transactions.create') + currentSearch">{{ t('transactions.index.addTransaction') }}</Link>
-                        </Button>
-                        <Button variant="secondary" @click="clearFilters">{{ t('transactions.index.filters.clear') }}</Button>
-                    </div>
-                </div>
+                <TablePage v-else :is-empty="isFilteredEmpty || isFirstUseEmpty" :paginator="transactions" :query="indexQuery()">
+                    <template #empty>
+                        <section
+                            v-if="isFilteredEmpty"
+                            role="region"
+                            aria-labelledby="transactions-empty-heading"
+                            class="flex flex-col items-center py-16 text-center"
+                        >
+                            <h2 id="transactions-empty-heading" class="text-2xl font-medium tracking-tight">
+                                {{ t('transactions.index.empty.filtered.heading') }}
+                            </h2>
+                            <p class="mt-2 max-w-sm text-sm text-muted-foreground">
+                                {{ t('transactions.index.empty.filtered.message') }}
+                            </p>
+                            <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                                <Button type="button" @click="openCreateDialog">{{ t('transactions.index.addTransaction') }}</Button>
+                                <Button variant="ghost" type="button" @click="clearFilters">{{ t('transactions.index.filters.clear') }}</Button>
+                            </div>
+                        </section>
 
-                <div v-else-if="isFirstUseEmpty" class="p-8 text-center">
-                    <p class="text-sm text-muted-foreground">{{ t('transactions.index.empty.firstUse') }}</p>
-                    <div class="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
-                        <Button as-child>
-                            <Link :href="route('transactions.create')">{{ t('transactions.index.addTransaction') }}</Link>
-                        </Button>
-                        <Button v-if="hasImportRoute" variant="secondary" as-child>
-                            <Link :href="route('imports.index')">{{ t('transactions.index.empty.import') }}</Link>
-                        </Button>
-                    </div>
-                </div>
+                        <section
+                            v-else
+                            role="region"
+                            aria-labelledby="transactions-empty-heading"
+                            class="flex flex-col items-center py-16 text-center"
+                        >
+                            <h2 id="transactions-empty-heading" class="text-2xl font-medium tracking-tight">
+                                {{ t('transactions.index.empty.firstUse.heading') }}
+                            </h2>
+                            <p class="mt-2 max-w-sm text-sm text-muted-foreground">
+                                {{ t('transactions.index.empty.firstUse.message') }}
+                            </p>
+                            <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                                <Button type="button" @click="openCreateDialog">{{ t('transactions.index.addTransaction') }}</Button>
+                                <Button v-if="hasImportRoute" variant="ghost" as-child>
+                                    <Link :href="route('imports.index')">{{ t('transactions.index.empty.import') }}</Link>
+                                </Button>
+                            </div>
+                        </section>
+                    </template>
 
-                <div v-else>
-                    <div class="hidden md:block">
-                        <table class="w-full table-fixed text-sm">
-                            <caption class="sr-only">
-                                {{
-                                    t('transactions.index.a11y.tableCaption')
-                                }}
-                            </caption>
-                            <thead class="border-b border-sidebar-border/70 text-left text-xs text-muted-foreground dark:border-sidebar-border">
-                                <tr>
-                                    <th class="w-36 px-6 py-3" scope="col" :aria-sort="ariaSortFor('date')">
-                                        <button
-                                            class="inline-flex items-center gap-2 hover:text-foreground"
-                                            type="button"
-                                            :aria-label="sortButtonAriaLabel('date')"
-                                            @click="setSort('date')"
-                                        >
-                                            {{ t('transactions.index.table.date') }}
-                                            <component
-                                                :is="(filters.sort ?? 'date') === 'date' ? directionIcon() : ArrowUpDown"
-                                                class="h-4 w-4"
-                                                aria-hidden="true"
-                                            />
-                                        </button>
-                                    </th>
-                                    <th class="px-6 py-3" scope="col">{{ t('transactions.index.table.description') }}</th>
-                                    <th class="w-56 px-6 py-3 xl:w-64 2xl:w-72" scope="col">{{ t('transactions.index.table.category') }}</th>
-                                    <th class="w-64 px-6 py-3" scope="col">{{ t('transactions.index.table.account') }}</th>
-                                    <th class="w-44 px-6 py-3" scope="col" :aria-sort="ariaSortFor('amount')">
-                                        <button
-                                            class="inline-flex items-center gap-2 hover:text-foreground"
-                                            type="button"
-                                            :aria-label="sortButtonAriaLabel('amount')"
-                                            @click="setSort('amount')"
-                                        >
-                                            {{ t('transactions.index.table.amount') }}
-                                            <component
-                                                :is="(filters.sort ?? 'date') === 'amount' ? directionIcon() : ArrowUpDown"
-                                                class="h-4 w-4"
-                                                aria-hidden="true"
-                                            />
-                                        </button>
-                                    </th>
-                                    <th class="w-28 px-6 py-3 text-right" scope="col">{{ t('transactions.index.table.actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="tx in transactions.data"
-                                    :key="tx.id"
-                                    class="list-row-hover border-b border-sidebar-border/50 last:border-b-0 dark:border-sidebar-border"
+                    <div class="overflow-hidden rounded-2xl border border-transparent bg-card">
+                        <div class="hidden md:block">
+                            <table class="w-full table-fixed text-sm">
+                                <caption class="sr-only">
+                                    {{
+                                        t('transactions.index.a11y.tableCaption')
+                                    }}
+                                </caption>
+                                <thead
+                                    class="border-b border-border/50 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60"
                                 >
-                                    <td class="whitespace-nowrap px-6 py-4 tabular-nums">
-                                        <div class="text-sm font-medium text-foreground">
-                                            {{ formatDateIsoToDots(transactionDisplayDateIso(tx)) }}
-                                        </div>
-                                        <div class="mt-0.5 text-xs text-muted-foreground">
-                                            {{ tx.date_relative || operationDateRelative(transactionDisplayDateIso(tx)) }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <TooltipProvider v-if="hasRawStatementDescription(tx)" :delay-duration="0">
-                                            <Tooltip>
-                                                <TooltipTrigger as-child>
-                                                    <div
-                                                        class="flex min-w-0 cursor-pointer items-center gap-3"
-                                                        :aria-label="t('transactions.index.a11y.showStatementDescription')"
-                                                    >
-                                                        <div
-                                                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                                                            :class="transactionIcon(tx).containerClass"
-                                                            aria-hidden="true"
-                                                        >
-                                                            <component :is="transactionIcon(tx).component" class="h-4 w-4" />
-                                                        </div>
-
-                                                        <div class="w-full min-w-0">
-                                                            <div v-if="tx.type === 'adjustment'" class="mb-1">
-                                                                <span
-                                                                    class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400"
-                                                                >
-                                                                    {{ t('transactions.index.badges.adjustment') }}
-                                                                </span>
-                                                            </div>
-                                                            <p class="truncate text-sm font-medium text-foreground">
-                                                                {{ truncateText(tx.subject, 80).text }}
-                                                            </p>
-                                                            <p class="mt-0.5 truncate text-xs text-muted-foreground">
-                                                                {{ truncateText(tx.description, 120).text }}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <div class="space-y-3">
-                                                        <div>
-                                                            <p class="text-xs font-medium text-muted-foreground">
-                                                                {{ t('transactions.edit.statement.title') }}
-                                                            </p>
-                                                            <p class="mt-1 max-w-md whitespace-pre-wrap break-words">
-                                                                {{ tx.raw_statement_description }}
-                                                            </p>
-                                                        </div>
-                                                        <div v-if="truncateText(tx.subject, 80).isTruncated && (tx.subject ?? '').trim() !== ''">
-                                                            <p class="text-xs font-medium text-muted-foreground">
-                                                                {{ t('transactions.index.table.subject') }}
-                                                            </p>
-                                                            <p class="mt-1 max-w-md break-words">{{ tx.subject }}</p>
-                                                        </div>
-                                                        <div v-if="truncateText(tx.description, 120).isTruncated">
-                                                            <p class="text-xs font-medium text-muted-foreground">
-                                                                {{ t('transactions.index.table.description') }}
-                                                            </p>
-                                                            <p class="mt-1 max-w-md break-words">{{ tx.description }}</p>
-                                                        </div>
-                                                    </div>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-
-                                        <div v-else class="flex min-w-0 items-center gap-3">
-                                            <div
-                                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                                                :class="transactionIcon(tx).containerClass"
-                                                aria-hidden="true"
+                                    <tr>
+                                        <th class="w-36 px-3 py-2" scope="col" :aria-sort="ariaSortFor('date')">
+                                            <button
+                                                class="inline-flex items-center gap-2 hover:text-foreground"
+                                                type="button"
+                                                :aria-label="sortButtonAriaLabel('date')"
+                                                @click="setSort('date')"
                                             >
-                                                <component :is="transactionIcon(tx).component" class="h-4 w-4" />
-                                            </div>
-
-                                            <div class="w-full min-w-0">
-                                                <div v-if="tx.type === 'adjustment'" class="mb-1">
-                                                    <span
-                                                        class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400"
-                                                    >
-                                                        {{ t('transactions.index.badges.adjustment') }}
-                                                    </span>
-                                                </div>
-                                                <TooltipProvider :delay-duration="0">
-                                                    <Tooltip v-if="truncateText(tx.subject, 80).isTruncated">
-                                                        <TooltipTrigger as-child>
-                                                            <p class="truncate text-sm font-medium text-foreground" :title="tx.subject ?? undefined">
-                                                                {{ truncateText(tx.subject, 80).text }}
-                                                            </p>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p class="max-w-sm break-words">{{ tx.subject }}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                    <p v-else class="truncate text-sm font-medium text-foreground" :title="tx.subject ?? undefined">
-                                                        {{ truncateText(tx.subject, 80).text }}
-                                                    </p>
-                                                </TooltipProvider>
-
-                                                <TooltipProvider :delay-duration="0">
-                                                    <Tooltip v-if="truncateText(tx.description, 120).isTruncated">
-                                                        <TooltipTrigger as-child>
-                                                            <p class="mt-0.5 truncate text-xs text-muted-foreground" :title="tx.description">
-                                                                {{ truncateText(tx.description, 120).text }}
-                                                            </p>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p class="max-w-sm break-words">{{ tx.description }}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                    <p v-else class="mt-0.5 truncate text-xs text-muted-foreground" :title="tx.description">
-                                                        {{ truncateText(tx.description, 120).text }}
-                                                    </p>
-                                                </TooltipProvider>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="overflow-hidden px-6 py-4">
-                                        <div v-if="tx.transfer_id" class="flex flex-col gap-0.5">
-                                            <span class="text-sm text-muted-foreground">
-                                                {{ t('transactions.index.table.transfer') }}
-                                            </span>
-                                            <span v-if="tx.pocket" class="text-xs text-muted-foreground">
-                                                {{ tx.pocket.name }}
-                                            </span>
-                                        </div>
-                                        <div v-else-if="tx.category" class="min-w-0 max-w-full">
-                                            <CategoryBadge :name="tx.category.name" :icon="tx.category.icon" :color="tx.category.color" size="md" />
-                                        </div>
-                                        <span v-else class="text-sm text-muted-foreground">—</span>
-                                    </td>
-                                    <td class="overflow-hidden px-6 py-4">
-                                        <div class="flex min-w-0 items-center gap-2">
-                                            <div class="shrink-0">
-                                                <img
-                                                    v-if="tx.account?.bank_icon_url"
-                                                    :src="tx.account.bank_icon_url"
-                                                    :alt="tx.account.name"
-                                                    class="h-9 w-9 rounded-lg object-contain"
-                                                    loading="lazy"
-                                                />
+                                                {{ t('transactions.index.table.date') }}
                                                 <component
-                                                    v-else-if="tx.account"
-                                                    :is="resolveAccountTypeIcon(tx.account.type)"
-                                                    class="h-9 w-9 text-muted-foreground"
+                                                    :is="(filters.sort ?? 'date') === 'date' ? directionIcon() : ArrowUpDown"
+                                                    class="h-4 w-4"
                                                     aria-hidden="true"
                                                 />
-                                                <div v-else class="h-9 w-9 rounded-lg bg-muted" aria-hidden="true" />
-                                            </div>
-
-                                            <div class="min-w-0">
-                                                <div class="flex items-center gap-2">
-                                                    <p class="truncate text-sm font-medium">
-                                                        {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
-                                                    </p>
-                                                    <span v-if="!tx.account" class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                                                        {{ t('transactions.index.readOnly.badge') }}
-                                                    </span>
-                                                </div>
-                                                <p v-if="tx.account" class="mt-0.5 truncate text-xs text-muted-foreground">
-                                                    {{ t(tx.account.type_label_key) }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="whitespace-nowrap px-6 py-4 tabular-nums">
-                                        <span
-                                            :class="
-                                                cn(
-                                                    'font-medium',
-                                                    toNumber(tx.amount) >= 0
-                                                        ? 'text-emerald-600 dark:text-emerald-400'
-                                                        : 'text-rose-600 dark:text-rose-400',
-                                                )
-                                            "
-                                        >
-                                            {{ toNumber(tx.amount) >= 0 ? '+' : '-' }}{{ formatAmount(Math.abs(toNumber(tx.amount))) }}
-                                            {{ formatCurrencySymbol(tx.account) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <TooltipProvider v-if="tx.account" :delay-duration="0">
-                                            <div class="inline-flex w-full items-center justify-end gap-1">
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        <Button variant="ghost" size="icon" as-child>
-                                                            <Link
-                                                                :href="route('transactions.edit', tx.id) + currentSearch"
-                                                                :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
-                                                            >
-                                                                <Pencil class="h-4 w-4" aria-hidden="true" />
-                                                            </Link>
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{{ t('actions.edit') }}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            type="button"
-                                                            :disabled="deleteProcessing"
-                                                            :aria-label="t('transactions.delete.iconLabel', { description: tx.description })"
-                                                            @click="openDeleteDialog(tx.id)"
-                                                        >
-                                                            <Trash2 class="h-4 w-4" aria-hidden="true" />
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{{ t('transactions.delete.action') }}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </div>
-                                        </TooltipProvider>
-                                        <span v-else class="text-xs text-muted-foreground">{{ t('transactions.index.readOnly.noActions') }}</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="md:hidden">
-                        <div class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border">
-                            <div v-for="tx in transactions.data" :key="tx.id" class="list-row-hover p-4">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <div v-if="tx.type === 'adjustment'" class="mb-1">
-                                            <span
-                                                class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400"
+                                            </button>
+                                        </th>
+                                        <th class="px-3 py-2" scope="col">{{ t('transactions.index.table.description') }}</th>
+                                        <th class="w-56 px-3 py-2 xl:w-64 2xl:w-72" scope="col">{{ t('transactions.index.table.category') }}</th>
+                                        <th class="w-64 px-3 py-2" scope="col">{{ t('transactions.index.table.account') }}</th>
+                                        <th class="w-44 px-3 py-2 text-right" scope="col" :aria-sort="ariaSortFor('amount')">
+                                            <button
+                                                class="inline-flex w-full items-center justify-end gap-2 hover:text-foreground"
+                                                type="button"
+                                                :aria-label="sortButtonAriaLabel('amount')"
+                                                @click="setSort('amount')"
                                             >
-                                                {{ t('transactions.index.badges.adjustment') }}
-                                            </span>
-                                        </div>
+                                                {{ t('transactions.index.table.amount') }}
+                                                <component
+                                                    :is="(filters.sort ?? 'date') === 'amount' ? directionIcon() : ArrowUpDown"
+                                                    class="h-4 w-4"
+                                                    aria-hidden="true"
+                                                />
+                                            </button>
+                                        </th>
+                                        <th class="w-28 px-3 py-2 text-right" scope="col">{{ t('transactions.index.table.actions') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <TransactionRow
+                                        v-for="tx in transactions.data"
+                                        :key="tx.id"
+                                        :transaction="tx"
+                                        variant="desktop"
+                                        :delete-processing="deleteProcessing"
+                                        :format-amount="formatAmount"
+                                        :format-currency-symbol="formatCurrencySymbol"
+                                        @edit="openEditDialog"
+                                        @delete="openDeleteDialog"
+                                        @assign="openAssignDialog"
+                                    />
+                                </tbody>
+                            </table>
+                        </div>
 
-                                        <TooltipProvider v-if="hasRawStatementDescription(tx)" :delay-duration="0">
-                                            <Tooltip>
-                                                <TooltipTrigger as-child>
-                                                    <div class="cursor-pointer" :aria-label="t('transactions.index.a11y.showStatementDescription')">
-                                                        <p class="text-sm font-medium">
-                                                            {{ truncateText(tx.description, 90).text }}
-                                                        </p>
-                                                        <p v-if="(tx.subject ?? '').trim() !== ''" class="mt-1 text-xs text-muted-foreground">
-                                                            {{ truncateText(tx.subject, 70).text }}
-                                                        </p>
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <div class="space-y-3">
-                                                        <div>
-                                                            <p class="text-xs font-medium text-muted-foreground">
-                                                                {{ t('transactions.edit.statement.title') }}
-                                                            </p>
-                                                            <p class="mt-1 max-w-md whitespace-pre-wrap break-words">
-                                                                {{ tx.raw_statement_description }}
-                                                            </p>
-                                                        </div>
-                                                        <div v-if="truncateText(tx.subject, 70).isTruncated && (tx.subject ?? '').trim() !== ''">
-                                                            <p class="text-xs font-medium text-muted-foreground">
-                                                                {{ t('transactions.index.table.subject') }}
-                                                            </p>
-                                                            <p class="mt-1 max-w-md break-words">{{ tx.subject }}</p>
-                                                        </div>
-                                                        <div v-if="truncateText(tx.description, 90).isTruncated">
-                                                            <p class="text-xs font-medium text-muted-foreground">
-                                                                {{ t('transactions.index.table.description') }}
-                                                            </p>
-                                                            <p class="mt-1 max-w-md break-words">{{ tx.description }}</p>
-                                                        </div>
-                                                    </div>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-
-                                        <template v-else>
-                                            <TooltipProvider :delay-duration="0">
-                                                <Tooltip v-if="truncateText(tx.description, 90).isTruncated">
-                                                    <TooltipTrigger as-child>
-                                                        <p class="text-sm font-medium" :title="tx.description">
-                                                            {{ truncateText(tx.description, 90).text }}
-                                                        </p>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p class="max-w-sm break-words">{{ tx.description }}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                                <p v-else class="text-sm font-medium" :title="tx.description">
-                                                    {{ truncateText(tx.description, 90).text }}
-                                                </p>
-                                            </TooltipProvider>
-                                        </template>
-
-                                        <p class="mt-1 text-xs tabular-nums text-muted-foreground">
-                                            {{ formatDateIsoToDots(transactionDisplayDateIso(tx)) }}
-                                        </p>
-                                        <p class="mt-0.5 text-xs text-muted-foreground">
-                                            {{ tx.date_relative || operationDateRelative(transactionDisplayDateIso(tx)) }}
-                                        </p>
-                                        <div v-if="tx.category" class="mt-1">
-                                            <CategoryBadge :name="tx.category.name" :icon="tx.category.icon" :color="tx.category.color" size="sm" />
-                                        </div>
-                                        <p class="mt-1 text-xs text-muted-foreground">
-                                            {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}
-                                            <span v-if="!tx.account" class="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                                                {{ t('transactions.index.readOnly.badge') }}
-                                            </span>
-                                        </p>
-
-                                        <TooltipProvider v-if="!hasRawStatementDescription(tx) && tx.subject" :delay-duration="0">
-                                            <Tooltip v-if="truncateText(tx.subject, 70).isTruncated">
-                                                <TooltipTrigger as-child>
-                                                    <p class="mt-1 text-xs text-muted-foreground" :title="tx.subject ?? undefined">
-                                                        {{ truncateText(tx.subject, 70).text }}
-                                                    </p>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p class="max-w-sm break-words">{{ tx.subject }}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                            <p v-else class="mt-1 text-xs text-muted-foreground" :title="tx.subject ?? undefined">
-                                                {{ truncateText(tx.subject, 70).text }}
-                                            </p>
-                                        </TooltipProvider>
-                                    </div>
-                                    <div class="shrink-0 text-right">
-                                        <p
-                                            class="text-sm font-semibold tabular-nums"
-                                            :class="
-                                                toNumber(tx.amount) >= 0
-                                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                                    : 'text-rose-600 dark:text-rose-400'
-                                            "
-                                        >
-                                            {{ toNumber(tx.amount) >= 0 ? '+' : '-' }}{{ formatAmount(Math.abs(toNumber(tx.amount))) }}
-                                            {{ formatCurrencySymbol(tx.account) }}
-                                        </p>
-                                        <div class="mt-2">
-                                            <TooltipProvider v-if="tx.account" :delay-duration="0">
-                                                <div class="inline-flex items-center gap-1">
-                                                    <Tooltip>
-                                                        <TooltipTrigger>
-                                                            <Button variant="ghost" size="icon" as-child>
-                                                                <Link
-                                                                    :href="route('transactions.edit', tx.id) + currentSearch"
-                                                                    :aria-label="t('transactions.index.a11y.edit', { description: tx.description })"
-                                                                >
-                                                                    <Pencil class="h-4 w-4" aria-hidden="true" />
-                                                                </Link>
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>{{ t('actions.edit') }}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-
-                                                    <Tooltip>
-                                                        <TooltipTrigger>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                type="button"
-                                                                :disabled="deleteProcessing"
-                                                                :aria-label="t('transactions.delete.iconLabel', { description: tx.description })"
-                                                                @click="openDeleteDialog(tx.id)"
-                                                            >
-                                                                <Trash2 class="h-4 w-4" aria-hidden="true" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p>{{ t('transactions.delete.action') }}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </div>
-                                            </TooltipProvider>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="md:hidden">
+                            <TransactionRow
+                                v-for="tx in transactions.data"
+                                :key="tx.id"
+                                :transaction="tx"
+                                variant="mobile"
+                                :delete-processing="deleteProcessing"
+                                :format-amount="formatAmount"
+                                :format-currency-symbol="formatCurrencySymbol"
+                                @edit="openEditDialog"
+                                @delete="openDeleteDialog"
+                                @assign="openAssignDialog"
+                            />
                         </div>
                     </div>
-
-                    <div class="border-t border-sidebar-border/70 p-4 dark:border-sidebar-border">
-                        <PaginationBar
-                            :paginator="transactions"
-                            :query="{
-                                account_id: filters.account_id ?? undefined,
-                                category_id: filters.category_id ?? undefined,
-                                from: filters.from ?? undefined,
-                                to: filters.to ?? undefined,
-                                sort: filters.sort ?? 'date',
-                                direction: filters.direction ?? 'desc',
-                                per_page: filters.per_page ?? undefined,
-                            }"
-                        />
-                    </div>
-                </div>
+                </TablePage>
             </div>
         </div>
 
@@ -1041,6 +705,25 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
             :preselected-account-id="filters.account_id ?? null"
             :disabled="isLoading"
             :current-search="currentSearch"
+        />
+
+        <TransactionFormDialog
+            v-model:open="formDialogOpen"
+            :mode="formDialogMode"
+            :form-reset-key="formResetKey"
+            :transaction="editingTransaction"
+            :accounts="accounts"
+            :categories="categories"
+            :pockets="pockets"
+            :account-id-filter="filters.account_id"
+        />
+
+        <TransferFormDialog
+            v-model:open="transferDialogOpen"
+            :form-reset-key="transferFormResetKey"
+            :accounts="accounts"
+            :pockets="pockets"
+            :account-id-filter="filters.account_id"
         />
 
         <DeleteTransactionDialog
@@ -1053,5 +736,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
             @processing="(value: any) => (deleteProcessing = value)"
             @success="deletingTransactionId = null"
         />
+
+        <AssignDepositDialog v-model:open="assignDialogOpen" :transaction="assigningTransaction" :assignable-deposits="assignable_deposits ?? []" />
     </AppLayout>
 </template>

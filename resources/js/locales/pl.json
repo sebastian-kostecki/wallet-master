@@ -4,33 +4,49 @@
             "created": "Konto zostało dodane.",
             "updated": "Konto zostało zaktualizowane."
         },
+        "tabs": {
+            "accounts": "Rachunki",
+            "wallets": "Portfele",
+            "deposits": "Lokaty"
+        },
         "index": {
             "title": "Konta",
-            "addAccount": "Dodaj konto",
+            "description": "Salda i typy kont rozliczeniowych i oszczędnościowych.",
+            "addAccount": "Dodaj rachunek",
+            "addWallet": "Dodaj portfel",
+            "addDeposit": "Dodaj lokatę",
             "view": {
                 "toggleAria": "Przełącz widok listy kont",
                 "grid": "Siatka",
                 "list": "Lista"
             },
             "empty": {
-                "heading": "Brak kont",
-                "message": "Nie masz jeszcze żadnych kont.",
-                "cta": "Dodaj pierwsze konto"
+                "accounts": {
+                    "heading": "Brak rachunków",
+                    "message": "Nie masz jeszcze żadnych rachunków bankowych.",
+                    "cta": "Dodaj rachunek"
+                },
+                "wallets": {
+                    "heading": "Brak portfeli",
+                    "message": "Nie masz jeszcze żadnych portfeli gotówkowych.",
+                    "cta": "Dodaj portfel"
+                },
+                "deposits": {
+                    "heading": "Brak lokat",
+                    "message": "Nie masz jeszcze żadnych lokat terminowych.",
+                    "cta": "Dodaj lokatę"
+                }
             }
         },
         "edit": {
             "title": "Edytuj konto",
-            "back": "Wróć",
-            "deleteAction": "Usuń konto",
-            "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę.",
-            "dangerZone": {
-                "title": "Uwaga",
-                "description": "Ta operacja jest nieodwracalna. Transakcje pozostaną w historii jako tylko do odczytu."
-            }
+            "openingBalanceHint": "Zmiana salda początkowego przeliczy saldo bieżące o różnicę."
         },
         "create": {
-            "title": "Dodaj konto",
-            "back": "Wróć",
+            "title": "Dodaj rachunek",
+            "titleWallet": "Dodaj portfel",
+            "description": "Dodaj rachunek bankowy i saldo początkowe.",
+            "descriptionWallet": "Dodaj portfel gotówkowy i saldo początkowe.",
             "fields": {
                 "name": {
                     "label": "Nazwa",
@@ -60,6 +76,7 @@
             "description": "Suma sald wszystkich kont w PLN.",
             "totalPln": "Suma sald (PLN)",
             "savingsPln": "Oszczędności (PLN)",
+            "depositsPln": "Lokaty (PLN)",
             "countPln": "Liczba kont (PLN): {count}",
             "invalidSkipped": "Niektóre salda pominięto w sumie.",
             "addToSeeSummary": "Dodaj konto, aby zobaczyć podsumowanie."
@@ -92,6 +109,119 @@
                 "mbank": "mBank",
                 "cash": "Gotówka"
             }
+        }
+    },
+    "deposits": {
+        "toast": {
+            "created": "Lokata została dodana.",
+            "updated": "Lokata została zaktualizowana.",
+            "closed": "Lokata została zamknięta.",
+            "assigned": "Transakcja przypisana do lokaty.",
+            "candidate_confirmed": "Lokata potwierdzona.",
+            "candidate_rejected": "Transakcja oznaczona jako niebędąca lokatą."
+        },
+        "status": {
+            "active": "Aktywna",
+            "closed": "Zamknięta"
+        },
+        "fallbackName": "Lokata",
+        "badge": {
+            "capital": "Lokata",
+            "interest": "Odsetki lokaty"
+        },
+        "candidates": {
+            "bannerTitle": "{count} kandydatów lokaty do potwierdzenia",
+            "subtitle": "System dopasował transakcje, które mogą otworzyć lub zamknąć lokatę. Potwierdź lokatę lub oznacz, że to nie jest ruch lokaty.",
+            "confirm": "Potwierdź lokatę",
+            "reject": "To nie lokata",
+            "kindOpen": "Otwarcie lokaty",
+            "kindClose": "Zwrot kapitału",
+            "filter": "Kandydaci lokaty ({count})",
+            "badge": "Kandydat lokaty",
+            "depositSelect": {
+                "label": "Lokata",
+                "placeholder": "Wybierz lokatę"
+            },
+            "table": {
+                "kind": "Rodzaj",
+                "description": "Opis",
+                "amount": "Kwota",
+                "date": "Data",
+                "deposit": "Lokata",
+                "actions": "Akcje"
+            },
+            "a11y": {
+                "toggle": "Kandydaci lokaty, {count} pozycji. Rozwiń lub zwiń szczegóły.",
+                "confirm": "Potwierdź lokatę dla {description}",
+                "reject": "Oznacz jako nie lokatę dla {description}"
+            }
+        },
+        "actions": {
+            "close": "Zamknij lokatę",
+            "assign": "Przypisz do lokaty"
+        },
+        "assign": {
+            "title": "Przypisz do lokaty",
+            "description": "Powiąż transakcję z otwarciem, zamknięciem kapitału lub odsetkami lokaty.",
+            "kind": {
+                "label": "Rodzaj",
+                "placeholder": "Wybierz rodzaj"
+            },
+            "deposit": {
+                "label": "Lokata",
+                "placeholder": "Wybierz lokatę"
+            },
+            "kinds": {
+                "open": "Otwarcie lokaty",
+                "close_principal": "Zwrot kapitału",
+                "interest": "Odsetki"
+            }
+        },
+        "form": {
+            "createTitle": "Dodaj lokatę",
+            "createDescription": "Zapisz lokatę terminową i przenieś kapitał z rachunku źródłowego.",
+            "editTitle": "Edytuj lokatę",
+            "closeTitle": "Zamknij lokatę",
+            "closeDescription": "Przenieś kapitał (i ewentualnie odsetki) na rachunek docelowy.",
+            "name": {
+                "label": "Nazwa",
+                "placeholder": "np. Lokata 3M"
+            },
+            "principal": {
+                "label": "Kapitał",
+                "placeholder": "np. 1000,00"
+            },
+            "source": {
+                "label": "Rachunek źródłowy",
+                "placeholder": "Wybierz rachunek"
+            },
+            "opened": {
+                "label": "Data otwarcia"
+            },
+            "matures": {
+                "label": "Data zapadalności"
+            },
+            "destination": {
+                "label": "Rachunek docelowy",
+                "placeholder": "Wybierz rachunek"
+            },
+            "interest": {
+                "label": "Odsetki",
+                "placeholder": "np. 0,00"
+            },
+            "category": {
+                "label": "Kategoria odsetek",
+                "placeholder": "Wybierz kategorię"
+            },
+            "closedAt": {
+                "label": "Data zamknięcia"
+            }
+        },
+        "card": {
+            "principal": "Kapitał",
+            "opened": "Otwarta",
+            "matures": "Zapada",
+            "closed": "Zamknięta"
         }
     },
     "actions": {
@@ -207,33 +337,19 @@
         }
     },
     "dashboard": {
-        "headTitle": "Dashboard",
-        "title": "Dzień dobry w Ogarniam Portfel",
-        "description": "Zacznij od kont, importu historii albo ręcznego dodania transakcji. Ten ekran będzie rosnąć razem z Twoimi danymi.",
-        "quickActions": {
-            "accounts": {
-                "title": "Dodaj konto",
-                "description": "Ustaw konto i saldo początkowe.",
-                "cta": "Przejdź do kont"
-            },
-            "transactions": {
-                "title": "Dodaj transakcję",
-                "description": "Zapisz przychód, wydatek lub transfer.",
-                "cta": "Przejdź do transakcji"
-            },
-            "pockets": {
-                "title": "Zaplanuj kieszeń",
-                "description": "Nadaj kierunek odkładanym środkom.",
-                "cta": "Przejdź do kieszeni"
-            }
+        "title": "Panel",
+        "budget": {
+            "title": "Budżet",
+            "open": "Otwórz budżet"
         },
-        "preview": {
-            "title": "Podgląd porządku w finansach",
-            "items": {
-                "imports": "Importy porządkują historię",
-                "budget": "Budżet pokazuje plan i wykonanie",
-                "pockets": "Kieszenie pokazują postęp oszczędzania"
-            }
+        "recent": {
+            "title": "Ostatnie",
+            "open": "Wszystkie transakcje",
+            "empty": "Brak transakcji."
+        },
+        "chart": {
+            "plan": "Plan",
+            "actual": "Wykonanie"
         }
     },
     "advancedSection": {
@@ -248,6 +364,7 @@
         },
         "index": {
             "title": "Transakcje",
+            "description": "Przychody, wydatki i transfery na Twoich kontach.",
             "addTransaction": "Dodaj transakcję",
             "addTransfer": "Transfer",
             "actionsMenu": {
@@ -312,8 +429,14 @@
                 "noActions": "Brak akcji"
             },
             "empty": {
-                "filtered": "Brak transakcji dla wybranych filtrów.",
-                "firstUse": "Nie masz jeszcze żadnych transakcji.",
+                "filtered": {
+                    "heading": "Brak wyników",
+                    "message": "Brak transakcji dla wybranych filtrów."
+                },
+                "firstUse": {
+                    "heading": "Brak transakcji",
+                    "message": "Nie masz jeszcze żadnych transakcji."
+                },
                 "import": "Zaimportuj plik"
             },
             "pagination": {
@@ -341,35 +464,16 @@
         },
         "create": {
             "title": "Dodaj transakcję",
-            "back": "Wróć",
-            "hints": {
-                "title": "Wskazówki",
-                "type": "Wybierz „Przychód” lub „Wydatek”. To wpływa na znak kwoty.",
-                "amount": "Kwota może być wpisana z przecinkiem. Dla wydatku zostanie zapisana jako ujemna.",
-                "description": "Opis pomaga szybciej znaleźć transakcję w historii."
-            }
+            "description": "Zapisz przychód lub wydatek."
         },
         "edit": {
             "title": "Edytuj transakcję",
-            "back": "Wróć",
-            "deleteAction": "Usuń transakcję",
-            "dangerZone": {
-                "title": "Uwaga",
-                "description": "Ta operacja jest nieodwracalna."
-            },
             "transfer": {
                 "bannerTitle": "Połączony transfer",
                 "bannerDescription": "Kwoty i konta są zablokowane. Aby je zmienić, najpierw rozłącz transfer.",
                 "unlinkAction": "Rozłącz transfer",
                 "accountHint": "Konto jest zablokowane, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby je zmienić.",
                 "amountHint": "Kwota jest zablokowana, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby ją zmienić."
-            },
-            "hints": {
-                "title": "Informacje",
-                "scope": "Edytujesz istniejącą transakcję — zmiany zostaną zapisane w historii.",
-                "amount": "Sprawdź znak kwoty (plus/minus). To wpływa na saldo konta.",
-                "amountTransfer": "Kwota jest zablokowana, dopóki transfer jest połączony. Użyj „Rozłącz transfer”, aby ją zmienić.",
-                "save": "Po zapisaniu wrócisz do listy transakcji."
             },
             "statement": {
                 "title": "Dane z wyciągu",
@@ -428,7 +532,10 @@
             "descriptionOptional": "Opis (opcjonalnie)",
             "pocket": "Kieszeń oszczędnościowa",
             "pocketPlaceholder": "Wybierz kieszeń",
-            "hint": "Zapiszemy wydatek na koncie źródłowym i przychód na koncie docelowym.",
+            "pocketMovement": "Kierunek kieszeni",
+            "pocketMovementDeposit": "Odłożenie",
+            "pocketMovementWithdrawal": "Wypłata",
+            "pocketMovementHint": "Odłożenie zwiększa saldo kieszeni. Wypłata zmniejsza — gdy ściągasz odłożone pieniądze, żeby je wydać.",
             "sameAccountError": "Wybierz inne konto docelowe niż źródłowe.",
             "deletedNotice": "To konto jest usunięte — transfer jest zablokowany.",
             "deletedSuffix": "usunięte",
@@ -585,7 +692,8 @@
     },
     "categories": {
         "create": {
-            "title": "Nowa kategoria"
+            "title": "Nowa kategoria",
+            "description": "Dodaj etykietę przychodu lub wydatku."
         },
         "edit": {
             "title": "Edycja kategorii"
@@ -601,6 +709,7 @@
         },
         "index": {
             "title": "Kategorie",
+            "description": "Etykiety przychodów i wydatków w budżecie.",
             "add": "Dodaj kategorię",
             "empty": "Brak kategorii.",
             "fields": {
@@ -637,7 +746,8 @@
     },
     "pockets": {
         "create": {
-            "title": "Nowa kieszeń"
+            "title": "Nowa kieszeń",
+            "description": "Nadaj celowi oszczędnościowemu nazwę i plan."
         },
         "edit": {
             "title": "Edytuj kieszeń",
@@ -667,11 +777,6 @@
             "overdue": "Opóźniona",
             "archived": "Zarchiwizowana"
         },
-        "filters": {
-            "active": "Aktywne",
-            "archived": "Zarchiwizowane",
-            "all": "Wszystkie"
-        },
         "archive": {
             "title": "Zarchiwizować kieszeń?",
             "description": "Kieszeń zniknie z aktywnej listy i budżetu miesięcznego. Możesz ją później przywrócić z filtra zarchiwizowanych.",
@@ -684,7 +789,9 @@
         },
         "index": {
             "title": "Kieszenie",
+            "description": "Kieszenie oszczędnościowe z planem miesięcznym.",
             "add": "Dodaj kieszeń",
+            "dragHandle": "Przeciągnij, aby zmienić kolejność",
             "listTitle": "Twoje kieszenie",
             "empty": "Brak kieszeni.",
             "fields": {
@@ -705,7 +812,7 @@
     "budget": {
         "nav": "Budżet",
         "monthly": {
-            "title": "Budżet — miesięczny",
+            "description": "Plan i wykonanie w tym miesiącu.",
             "plan": "Plan",
             "actual": "Wykonanie",
             "difference": "Różnica",
@@ -719,7 +826,7 @@
             "planPlaceholder": "Nadpisanie miesięczne"
         },
         "yearly": {
-            "title": "Budżet — roczny",
+            "description": "Roczny plan i wykonanie.",
             "plan": "Plan roczny",
             "actual": "Wykonanie",
             "difference": "Różnica",
@@ -731,6 +838,10 @@
         "view": {
             "monthly": "Miesięczny",
             "yearly": "Roczny"
+        },
+        "period": {
+            "previous": "Poprzedni okres",
+            "next": "Następny okres"
         },
         "sections": {
             "expense": "Wydatki",
@@ -758,13 +869,21 @@
     "nav": {
         "platform": "Platforma",
         "dashboard": "Panel",
+        "accounts": "Rachunki i portfele",
         "pockets": "Kieszenie",
         "settings": "Ustawienia",
-        "logout": "Wyloguj się"
+        "logout": "Wyloguj się",
+        "addTransaction": "Dodaj transakcję",
+        "collapse": "Zwiń pasek boczny",
+        "expand": "Rozwiń pasek boczny",
+        "theme": {
+            "light": "Motyw: jasny (przełącz na ciemny)",
+            "dark": "Motyw: ciemny (przełącz na systemowy)",
+            "system": "Motyw: systemowy (przełącz na jasny)"
+        }
     },
     "settings": {
         "title": "Ustawienia",
-        "description": "Zarządzaj profilem i ustawieniami konta",
         "nav": {
             "profile": "Profil",
             "password": "Hasło",
@@ -831,7 +950,8 @@
         }
     },
     "a11y": {
-        "skip_to_content": "Przejdź do treści"
+        "skip_to_content": "Przejdź do treści",
+        "page_tabs": "Widoki strony"
     },
     "currency": {
         "defaultSymbol": "zł"

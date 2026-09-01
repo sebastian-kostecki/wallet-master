@@ -2,7 +2,6 @@
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
-use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Currency;
 use App\Models\Pocket;
@@ -55,40 +54,69 @@ test('pockets index only lists own pockets', function () {
     );
 });
 
-// Requires transactions.pocket_id column (Task 5).
-test('cannot delete pocket with linked transactions', function () {
+test('deleting a pocket clears pocket_id on transfers and removes the pocket', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     $pocket = Pocket::factory()->create(['user_id' => $user->id]);
-    $categoryId = defaultCategoryId($user);
 
-    $account = Account::query()->create([
+    $from = Account::query()->create([
         'user_id' => $user->id,
         'currency_id' => $plnId,
-        'name' => 'Cash',
+        'name' => 'From',
+        'bank' => Bank::Cash,
+        'type' => AccountType::Checking,
+        'opening_balance' => 100,
+        'current_balance' => 100,
+    ]);
+
+    $to = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'To',
         'bank' => Bank::Cash,
         'type' => AccountType::Checking,
         'opening_balance' => 0,
         'current_balance' => 0,
     ]);
 
-    Transaction::query()->create([
-        'user_id' => $user->id,
-        'account_id' => $account->id,
-        'currency_id' => $plnId,
-        'category_id' => $categoryId,
+    $this->actingAs($user)->post(route('transfers.store'), [
+        'from_account_id' => $from->id,
+        'to_account_id' => $to->id,
+        'date' => '01-03-2026',
+        'amount' => '50',
         'pocket_id' => $pocket->id,
-        'date' => '2026-04-10',
-        'booked_at' => '2026-04-10',
-        'amount' => '-10.00',
-        'type' => TransactionType::Expense,
-        'description' => 'Coffee',
-        'normalized_description' => 'coffee',
-        'dedupe_hash' => md5('pocket-linked', true),
-    ]);
+        'pocket_movement' => 'deposit',
+    ])->assertSessionHasNoErrors();
 
-    $this->actingAs($user)->delete(route('pockets.destroy', $pocket))->assertForbidden();
-    expect(Pocket::find($pocket->id))->not->toBeNull();
+    $transferId = Transaction::query()
+        ->where('user_id', $user->id)
+        ->whereNotNull('transfer_id')
+        ->value('transfer_id');
+
+    expect($transferId)->not->toBeNull();
+
+    $this->actingAs($user)->delete(route('pockets.destroy', $pocket))->assertRedirect();
+
+    expect(Pocket::find($pocket->id))->toBeNull();
+
+    $withdraw = Transaction::query()
+        ->where('transfer_id', $transferId)
+        ->where('amount', '<', 0)
+        ->first();
+
+    $deposit = Transaction::query()
+        ->where('transfer_id', $transferId)
+        ->where('amount', '>', 0)
+        ->first();
+
+    expect($withdraw)->not->toBeNull();
+    expect($deposit)->not->toBeNull();
+    expect($withdraw->pocket_id)->toBeNull();
+    expect($deposit->pocket_id)->toBeNull();
+    expect($withdraw->pocket_movement)->toBeNull();
+    expect($deposit->pocket_movement)->toBeNull();
+    expect($withdraw->transfer_id)->toBe($transferId);
+    expect($deposit->transfer_id)->toBe($transferId);
 });
 
 test('user can create pocket with initial balance', function () {
@@ -140,6 +168,36 @@ test('update pocket cannot change initial balance', function () {
     ])->assertSessionHasErrors('initial_balance');
 
     expect((string) $pocket->fresh()->initial_balance)->toBe('500.00');
+});
+
+test('pockets index includes form options', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('pockets.index', absolute: false))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('icons')
+            ->has('colors')
+            ->has('currencies')
+        );
+});
+
+test('pocket create redirects to index', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('pockets.create', absolute: false))
+        ->assertRedirect(route('pockets.index', absolute: false));
+});
+
+test('pocket edit redirects to index', function () {
+    $user = User::factory()->create();
+    $pocket = Pocket::factory()->create(['user_id' => $user->id]);
+
+    $this->actingAs($user)
+        ->get(route('pockets.edit', $pocket, absolute: false))
+        ->assertRedirect(route('pockets.index', absolute: false));
 });
 
 test('pockets index balance includes initial balance', function () {

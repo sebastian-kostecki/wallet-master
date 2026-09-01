@@ -1,29 +1,57 @@
 <script setup lang="ts">
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { useI18n } from 'vue-i18n';
 
 defineProps<{
     items: NavItem[];
 }>();
 
 const page = usePage<SharedData>();
-const { t } = useI18n();
+
+function pathOf(url: string): string {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        try {
+            return new URL(url).pathname;
+        } catch {
+            return url.split('?')[0];
+        }
+    }
+
+    return url.split('?')[0];
+}
+
+function pathMatches(current: string, target: string): boolean {
+    if (target === '/' || /\/dashboard\/?$/.test(target)) {
+        return current === target || /\/dashboard\/?$/.test(current);
+    }
+
+    return current === target || current.startsWith(`${target}/`);
+}
+
+function isNavItemActive(item: NavItem): boolean {
+    const current = pathOf(page.url);
+
+    if (pathMatches(current, pathOf(item.href))) {
+        return true;
+    }
+
+    return (item.alsoActiveFor ?? []).some((href) => pathMatches(current, pathOf(href)));
+}
 </script>
 
 <template>
-    <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>{{ t('nav.platform') }}</SidebarGroupLabel>
-        <SidebarMenu>
+    <SidebarGroup class="p-0">
+        <SidebarMenu class="gap-1">
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
                     as-child
-                    :is-active="item.href === page.url"
-                    class="transition-colors data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground"
+                    :is-active="isNavItemActive(item)"
+                    :tooltip="item.title"
+                    class="h-auto rounded-xl px-3 py-2.5 text-[15px] font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.04] hover:text-foreground data-[active=true]:bg-foreground/[0.07] data-[active=true]:font-medium data-[active=true]:text-foreground group-data-[collapsible=icon]:!size-9 group-data-[collapsible=icon]:!p-2 [&>svg]:!size-[18px]"
                 >
-                    <Link :href="item.href" :aria-current="item.href === page.url ? 'page' : undefined">
-                        <component :is="item.icon" v-if="item.icon" />
+                    <Link :href="item.href" :aria-current="isNavItemActive(item) ? 'page' : undefined">
+                        <component :is="item.icon" v-if="item.icon" :stroke-width="1.7" />
                         <span>{{ item.title }}</span>
                     </Link>
                 </SidebarMenuButton>

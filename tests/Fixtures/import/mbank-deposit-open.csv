@@ -1,0 +1,9 @@
+mBank S.A. Bankowość Detaliczna;
+
+#Klient;
+JAN KOWALSKI;
+
+Lista operacji;
+
+#Data operacji;#Opis operacji;#Rachunek;#Kategoria;#Kwota;
+2026-08-01;"OTWARCIE LOKATY";"eKonto 1212 ... 1234";"Lokaty i konto oszcz.";-5000,00 PLN;;

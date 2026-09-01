@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import BudgetCategorySection from '@/components/budget/BudgetCategorySection.vue';
+import BudgetPeriodNav from '@/components/budget/BudgetPeriodNav.vue';
 import BudgetPocketSection from '@/components/budget/BudgetPocketSection.vue';
 import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type CurrencyDisplay } from '@/lib/formatMoney';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -53,24 +52,8 @@ const { t } = useI18n();
 const editingCategoryId = ref<number | null>(null);
 const editingMode = ref<'plan' | 'align' | null>(null);
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('budget.monthly.title'), href: route('budget.monthly') }]);
-
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
-
-function changePeriod(delta: number) {
-    let m = props.month + delta;
-    let y = props.year;
-    if (m < 1) {
-        m = 12;
-        y -= 1;
-    }
-    if (m > 12) {
-        m = 1;
-        y += 1;
-    }
-    router.get(route('budget.monthly', { year: y, month: m }));
-}
 
 function startEdit(categoryId: number) {
     editingCategoryId.value = categoryId;
@@ -119,47 +102,17 @@ function saveMonthlyEstimate(row: { category_id: number; monthly_plan?: string |
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('budget.monthly.title')" />
+    <AppLayout>
+        <template #headerActions>
+            <BudgetPeriodNav :year="year" :month="month" variant="monthly" />
+        </template>
 
-        <div class="budget-page flex flex-col gap-6 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex gap-2">
-                    <Button variant="outline" as-child>
-                        <Link :href="route('budget.monthly', { year, month })">{{ t('budget.view.monthly') }}</Link>
-                    </Button>
-                    <Button variant="ghost" as-child>
-                        <Link :href="route('budget.yearly', { year })">{{ t('budget.view.yearly') }}</Link>
-                    </Button>
-                </div>
-                <div class="flex items-center gap-2">
-                    <Button variant="outline" @click="changePeriod(-1)">←</Button>
-                    <span class="text-sm font-medium">{{ month }}/{{ year }}</span>
-                    <Button variant="outline" @click="changePeriod(1)">→</Button>
-                </div>
-            </div>
-
+        <div class="budget-page flex flex-col gap-6">
             <BudgetSummaryCard :summary="summary" :currency="currency" variant="monthly" />
 
             <BudgetCategorySection
-                :title="t('budget.sections.income')"
-                category-type="income"
-                :rows="incomeRows"
-                :currency="currency"
-                variant="monthly"
-                :editing-category-id="editingCategoryId"
-                :editing-mode="editingMode"
-                :plan-placeholder="t('budget.monthly.planPlaceholder')"
-                @start-edit="startEdit"
-                @start-align="startAlign"
-                @cancel="cancelEdit"
-                @save="saveMonthlyEstimate"
-            />
-
-            <BudgetCategorySection
-                :title="t('budget.sections.expense')"
-                category-type="expense"
-                :rows="expenseRows"
+                :income-rows="incomeRows"
+                :expense-rows="expenseRows"
                 :currency="currency"
                 variant="monthly"
                 :editing-category-id="editingCategoryId"

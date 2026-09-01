@@ -35,18 +35,19 @@ final class CategoryController extends Controller
         $this->authorizeResource(Category::class, 'category');
     }
 
-    public function index(Request $request, ListCategories $listCategories): Response
+    public function index(Request $request, ListCategories $listCategories, CategoryFormOptions $options): Response
     {
         $listCategories->handle($request->user());
 
         return Inertia::render('categories/Index', [
             'categories' => CategoryResource::collection($listCategories->getCategories())->resolve(),
+            ...$options->toArray(),
         ]);
     }
 
-    public function create(CategoryFormOptions $options): Response
+    public function create(): RedirectResponse
     {
-        return Inertia::render('categories/Create', $options->toArray());
+        return to_route('categories.index');
     }
 
     public function store(StoreCategoryRequest $request, StoreCategory $storeCategory): RedirectResponse
@@ -59,13 +60,9 @@ final class CategoryController extends Controller
         ]);
     }
 
-    public function edit(Category $category, CategoryFormOptions $options): Response
+    public function edit(Category $category): RedirectResponse
     {
-        return Inertia::render('categories/Edit', [
-            'category' => CategoryResource::make($category)->resolve(),
-            'has_transactions' => $category->transactions()->exists(),
-            ...$options->toArray(),
-        ]);
+        return to_route('categories.index');
     }
 
     public function reorder(

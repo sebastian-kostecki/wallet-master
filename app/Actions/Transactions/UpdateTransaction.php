@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Transactions;
 
 use App\Enums\Bank;
+use App\Enums\PocketMovement;
 use App\Enums\TransactionType;
 use App\Exceptions\DomainException;
 use App\Integrations\DescriptionMemory\DescriptionMemoryRepository;
@@ -33,6 +34,7 @@ final class UpdateTransaction
      *   subject?: ?string,
      *   category_id?: int,
      *   pocket_id?: ?int,
+     *   pocket_movement?: ?string,
      * }  $validated
      *
      * @throws \Throwable
@@ -57,9 +59,19 @@ final class UpdateTransaction
             $normalizedDescription = TransactionDedupe::normalizeDescription($validated['description']);
             $dedupeHash = TransactionDedupe::dedupeHash($bookedAt, $newAmount, $normalizedDescription);
 
-            $pocketId = array_key_exists('pocket_id', $validated) && $validated['pocket_id'] !== null
-                ? (int) $validated['pocket_id']
-                : null;
+            $isTransferLeg = $transaction->transfer_id !== null && $transaction->transfer_id !== '';
+
+            if ($isTransferLeg) {
+                $pocketId = array_key_exists('pocket_id', $validated) && $validated['pocket_id'] !== null
+                    ? (int) $validated['pocket_id']
+                    : null;
+                $pocketMovement = $pocketId !== null && isset($validated['pocket_movement'])
+                    ? PocketMovement::from($validated['pocket_movement'])
+                    : null;
+            } else {
+                $pocketId = null;
+                $pocketMovement = null;
+            }
 
             $oldAmount = TransactionDedupe::amountToDecimalString((string) $transaction->amount);
             $oldAccountId = (int) $transaction->account_id;
@@ -87,11 +99,13 @@ final class UpdateTransaction
                     $transaction->category_id = $validated['category_id'];
                 }
                 $transaction->pocket_id = $pocketId;
+                $transaction->pocket_movement = $pocketMovement;
                 $transaction->save();
 
                 $account->current_balance = bcadd((string) $account->current_balance, $delta, 2);
                 $account->save();
 
+                $this->syncLinkedTransferPocket($transaction, $pocketId, $pocketMovement);
                 $this->rememberDescriptionMemoryAfterCommit($transaction, $account->bank);
 
                 return;
@@ -129,6 +143,7 @@ final class UpdateTransaction
                 $transaction->category_id = $validated['category_id'];
             }
             $transaction->pocket_id = $pocketId;
+            $transaction->pocket_movement = $pocketMovement;
             $transaction->save();
 
             $oldAccount->current_balance = bcsub((string) $oldAccount->current_balance, $oldAmount, 2);
@@ -137,6 +152,7 @@ final class UpdateTransaction
             $newAccount->current_balance = bcadd((string) $newAccount->current_balance, $newAmount, 2);
             $newAccount->save();
 
+            $this->syncLinkedTransferPocket($transaction, $pocketId, $pocketMovement);
             $this->rememberDescriptionMemoryAfterCommit($transaction, $newAccount->bank);
         });
 
@@ -144,6 +160,21 @@ final class UpdateTransaction
             'transaction_id' => $transaction->id,
             'account_id' => (int) $transaction->account_id,
         ], (int) $transaction->user_id);
+    }
+
+    private function syncLinkedTransferPocket(Transaction $transaction, ?int $pocketId, ?PocketMovement $pocketMovement): void
+    {
+        if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
+            return;
+        }
+
+        Transaction::query()
+            ->where('transfer_id', $transaction->transfer_id)
+            ->where('id', '!=', $transaction->id)
+            ->update([
+                'pocket_id' => $pocketId,
+                'pocket_movement' => $pocketMovement,
+            ]);
     }
 
     /**

@@ -2,39 +2,22 @@
 
 namespace App\Http\Controllers\Transfers;
 
-use App\Actions\Pockets\ListPockets;
 use App\Actions\Transfers\CreateTransfer;
 use App\Actions\Transfers\UnlinkTransfer;
 use App\Events\TransferCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transfers\StoreTransferRequest;
-use App\Http\Resources\Accounts\AccountResource;
-use App\Http\Resources\Pockets\PocketResource;
-use App\Models\Account;
 use App\Support\Transactions\TransactionsIndexQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 
 final class TransferController extends Controller
 {
-    public function create(Request $request, ListPockets $listPockets): Response
+    public function create(): RedirectResponse
     {
-        $accounts = AccountResource::collection(
-            Account::query()
-                ->withTrashed()
-                ->whereBelongsTo($request->user())
-                ->orderBy('name')
-                ->get(['id', 'name', 'currency_id', 'bank', 'type', 'deleted_at'])
-        )->resolve();
-
-        $listPockets->handle($request->user());
-        $pockets = $listPockets->getPockets();
-
-        return Inertia::render('transfers/Create', [
-            'accounts' => $accounts,
-            'pockets' => PocketResource::collection($pockets)->resolve(),
+        return to_route('transactions.index', [
+            ...TransactionsIndexQuery::params(),
+            'transfer' => 1,
         ]);
     }
 

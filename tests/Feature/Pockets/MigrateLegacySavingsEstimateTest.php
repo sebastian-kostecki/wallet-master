@@ -48,7 +48,6 @@ test('user with Oszczędności estimate gets default pocket with same annual amo
     expect($pocket->planning_mode?->value)->toBe('monthly');
     expect((string) $pocket->monthly_contribution)->toBe('416.66');
     expect($pocket->target_date)->toBeNull();
-    expect($pocket->is_archived)->toBeFalse();
 });
 
 test('legacy savings migration skips users who already have pockets', function () {

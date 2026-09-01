@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ConfigureInertiaSsr;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureRegistrationEnabled;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
+            ConfigureInertiaSsr::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);

@@ -6,6 +6,8 @@ namespace App\Imports\BankAdapters;
 
 use App\Enums\Bank;
 use App\Imports\ParsedImportRow;
+use App\Support\Deposits\DepositClassification;
+use App\Support\Deposits\MBankDepositRules;
 use App\Support\Imports\AmountParser;
 use App\Support\Imports\DateParser;
 use App\Support\Imports\FileEncodingNormalizer;
@@ -51,6 +53,17 @@ final class MBankImportAdapter extends AbstractBankImportAdapter
         foreach ($parsed['rows'] as $row) {
             yield $row;
         }
+    }
+
+    /**
+     * @param  array<string, string>  $row
+     * @param  array{date: string, amount: string, description: string, subject?: ?string}  $mapping
+     */
+    public function classifyDepositRow(array $row, array $mapping, ParsedImportRow $parsed): DepositClassification
+    {
+        unset($mapping);
+
+        return MBankDepositRules::classify($row, $parsed);
     }
 
     public function normalizeRow(array $row, array $mapping): ParsedImportRow

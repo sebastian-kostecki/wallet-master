@@ -1,37 +1,35 @@
 <script setup lang="ts">
-import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { route } from 'ziggy-js';
 
 const { t } = useI18n();
+const page = usePage();
 
 const sidebarNavItems = computed<NavItem[]>(() => [
     {
         title: t('settings.nav.profile'),
-        href: route('profile.edit'),
+        href: route('profile.edit', undefined, false),
     },
     {
         title: t('settings.nav.password'),
-        href: route('password.edit'),
+        href: route('password.edit', undefined, false),
     },
     {
         title: t('settings.nav.appearance'),
-        href: route('appearance'),
+        href: route('appearance', undefined, false),
     },
 ]);
 
-const currentPath = window.location.pathname;
+const currentPath = computed(() => page.url.split('?')[0]);
 </script>
 
 <template>
-    <div class="px-4 py-6">
-        <Heading :title="t('settings.title')" :description="t('settings.description')" />
-
+    <div>
         <div class="flex flex-col space-y-8 md:space-y-0 lg:flex-row lg:space-x-12 lg:space-y-0">
             <aside class="w-full max-w-xl lg:w-48">
                 <nav class="flex flex-col space-x-0 space-y-1">
@@ -39,7 +37,7 @@ const currentPath = window.location.pathname;
                         v-for="item in sidebarNavItems"
                         :key="item.href"
                         variant="ghost"
-                        :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"
+                        :class="['w-full justify-start rounded-xl', { 'bg-foreground/[0.07] text-foreground': currentPath === item.href }]"
                         as-child
                     >
                         <Link :href="item.href">

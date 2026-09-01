@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Enums\DepositMatchStatus;
 use App\Enums\TransferMatchStatus;
 use App\Models\Transaction;
 use App\Models\User;
@@ -57,6 +58,16 @@ final class TransactionPolicy
         return $this->isPendingTransferCandidate($user, $transaction);
     }
 
+    public function confirmDepositCandidate(User $user, Transaction $transaction): bool
+    {
+        return $this->isPendingDepositCandidate($user, $transaction);
+    }
+
+    public function rejectDepositCandidate(User $user, Transaction $transaction): bool
+    {
+        return $this->isPendingDepositCandidate($user, $transaction);
+    }
+
     private function isPendingTransferCandidate(User $user, Transaction $transaction): bool
     {
         if ($transaction->user_id !== $user->id) {
@@ -78,5 +89,24 @@ final class TransactionPolicy
         }
 
         return $transaction->transferCandidate?->transfer_candidate_for_id === $transaction->id;
+    }
+
+    private function isPendingDepositCandidate(User $user, Transaction $transaction): bool
+    {
+        if ($transaction->user_id !== $user->id) {
+            return false;
+        }
+
+        if ($transaction->deposit_match_status !== DepositMatchStatus::Manual) {
+            return false;
+        }
+
+        if ($transaction->deposit_candidate_kind === null) {
+            return false;
+        }
+
+        $transaction->loadMissing(['account' => fn ($q) => $q->withTrashed()]);
+
+        return ! $transaction->account?->trashed();
     }
 }

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Actions\Transactions;
 
+use App\Enums\DepositMatchStatus;
 use App\Http\Requests\Transactions\TransactionIndexRequest;
 use App\Models\Account;
 use App\Models\ImportFailedRow;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Support\Deposits\DepositClassificationIntent;
+use App\Support\Deposits\DepositCloser;
+use App\Support\Transactions\BudgetExclusion;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,6 +32,9 @@ final class ListTransactions
     /** @var Collection<int, Transaction> */
     private Collection $pendingTransferCandidates;
 
+    /** @var Collection<int, Transaction> */
+    private Collection $pendingDepositCandidates;
+
     private string|int|float $totalIncome;
 
     private string|int|float $totalExpense;
@@ -42,9 +49,12 @@ final class ListTransactions
      *   direction: string,
      *   per_page: int,
      *   page?: int,
+     *   deposit_candidates: bool,
      * }
      */
     private array $filters;
+
+    public function __construct(private DepositCloser $depositCloser) {}
 
     public function handle(TransactionIndexRequest $request): void
     {
@@ -52,6 +62,7 @@ final class ListTransactions
         $this->handleAccounts($request);
         $this->handleUnresolvedImportFailedRows($request);
         $this->handlePendingTransferCandidates($request);
+        $this->handlePendingDepositCandidates($request);
         $this->handleTransactions($request);
     }
 
@@ -73,9 +84,10 @@ final class ListTransactions
         $summaryQuery = Transaction::query()->whereBelongsTo($request->user());
         $this->applyFilters($summaryQuery, $request->getFilters());
 
+        BudgetExclusion::apply($summaryQuery);
+
         /** @var object{total_income: string|int|float, total_expense: string|int|float}|null $summary */
         $summary = $summaryQuery
-            ->whereNull('transfer_id')
             ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as total_income')
             ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END), 0) as total_expense')
             ->first();
@@ -133,19 +145,49 @@ final class ListTransactions
             ->get();
     }
 
+    private function handlePendingDepositCandidates(TransactionIndexRequest $request): void
+    {
+        $accountId = $request->getFilters()['account_id'] ?? null;
+
+        $this->pendingDepositCandidates = Transaction::query()
+            ->with(['account.currency', 'currency'])
+            ->whereBelongsTo($request->user())
+            ->pendingDepositCandidate()
+            ->when($accountId !== null, fn (Builder $query) => $query->where('account_id', $accountId))
+            ->orderByDesc('date')
+            ->orderBy('id')
+            ->get()
+            ->each(function (Transaction $candidate) use ($request): void {
+                if ($candidate->deposit_candidate_kind !== DepositClassificationIntent::ClosePrincipal->value) {
+                    return;
+                }
+
+                $principal = ltrim((string) $candidate->amount, '-');
+
+                $candidate->setRelation(
+                    'matchingDeposits',
+                    $this->depositCloser->matchingActiveDeposits(
+                        $request->user(),
+                        $principal,
+                        $candidate->currency_id,
+                    ),
+                );
+            });
+    }
+
     /**
      * @return Builder<Transaction>
      */
     private function baseQuery(User $user): Builder
     {
         return Transaction::query()
-            ->with(['account.currency', 'currency', 'category', 'pocket'])
+            ->with(['account.currency', 'currency', 'category', 'pocket', 'depositMovement'])
             ->whereBelongsTo($user);
     }
 
     /**
      * @param  Builder<Transaction>  $query
-     * @param  array{account_id: ?int, category_id: ?int, from: ?string, to: ?string}  $filters
+     * @param  array{account_id: ?int, category_id: ?int, from: ?string, to: ?string, deposit_candidates?: bool}  $filters
      */
     private function applyFilters(Builder $query, array $filters): void
     {
@@ -155,6 +197,10 @@ final class ListTransactions
 
         if (($filters['category_id'] ?? null) !== null) {
             $query->where('category_id', $filters['category_id']);
+        }
+
+        if (($filters['deposit_candidates'] ?? false) === true) {
+            $query->where('deposit_match_status', DepositMatchStatus::Manual);
         }
 
         if ($filters['from'] !== null) {
@@ -224,6 +270,7 @@ final class ListTransactions
      *   direction: string,
      *   per_page: int,
      *   page?: int,
+     *   deposit_candidates: bool,
      * }
      */
     public function getFilters(): array
@@ -261,6 +308,14 @@ final class ListTransactions
     public function getPendingTransferCandidates(): Collection
     {
         return $this->pendingTransferCandidates;
+    }
+
+    /**
+     * @return Collection<int, Transaction>
+     */
+    public function getPendingDepositCandidates(): Collection
+    {
+        return $this->pendingDepositCandidates;
     }
 
     /**

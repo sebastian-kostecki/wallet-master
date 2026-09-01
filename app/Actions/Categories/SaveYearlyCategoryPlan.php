@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 final class SaveYearlyCategoryPlan
 {
     /**
-     * @param  array{year: int, annual_amount: ?numeric-string|float|int|null, monthly_amount?: ?numeric-string|float|int|null}  $validated
+     * @param  array{year: int, annual_amount: numeric-string|float|int|null, monthly_amount?: numeric-string|float|int|null}  $validated
      */
     public function handle(Category $category, array $validated): CategoryAnnualEstimate
     {
@@ -33,7 +33,7 @@ final class SaveYearlyCategoryPlan
 
             $monthlyAmount = $validated['monthly_amount'] ?? null;
 
-            if ($monthlyAmount !== null && $monthlyAmount !== '') {
+            if ($monthlyAmount !== null) {
                 $existingMonthly = CategoryMonthlyEstimate::query()
                     ->where('category_id', $category->id)
                     ->where('year', $year)

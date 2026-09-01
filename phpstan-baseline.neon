@@ -25,18 +25,6 @@ parameters:
 			path: app/Actions/Budgets/ListMonthlyBudget.php
 
 		-
-			message: '#^Parameter \#5 \$monthlyEstimatesByMonth of static method App\\Support\\Budgets\\BudgetForecast\:\:elapsedPlansSum\(\) expects Illuminate\\Support\\Collection\<int, App\\Models\\CategoryMonthlyEstimate\>, Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\), Illuminate\\Database\\Eloquent\\Model\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Actions/Budgets/ListYearlyBudget.php
-
-		-
-			message: '#^Type object\{category_id\: int, income\: string, expense\: string\} in generic type Illuminate\\Database\\Eloquent\\Collection\<int, object\{category_id\: int, income\: string, expense\: string\}\> in PHPDoc tag @var for variable \$actuals is not subtype of template type TModel of Illuminate\\Database\\Eloquent\\Model of class Illuminate\\Database\\Eloquent\\Collection\.$#'
-			identifier: generics.notSubtype
-			count: 1
-			path: app/Actions/Budgets/ListYearlyBudget.php
-
-		-
 			message: '#^Method App\\Actions\\Categories\\SaveAnnualEstimate\:\:handle\(\) has parameter \$validated with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1

@@ -104,7 +104,7 @@ test('deleting account records account_deleted and account_deleted_with_transact
     ]);
 
     $logged = captureTelemetryLogs(function () use ($user, $account): void {
-        $this->actingAs($user)->delete(route('accounts.destroy', $account, absolute: false))->assertRedirect(route('accounts.index', absolute: false));
+        $this->actingAs($user)->delete(route('accounts.destroy', $account, absolute: false))->assertRedirect(route('accounts.index', ['kind' => 'wallets'], absolute: false));
     });
 
     assertTelemetryEvent($logged, 'account_deleted', function (array $context) use ($user, $account) {

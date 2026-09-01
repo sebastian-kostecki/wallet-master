@@ -1,0 +1,53 @@
+# Version control and local tooling
+.git
+.gitignore
+.gitattributes
+.cursor
+.docs
+.junie
+.worktrees
+.superpowers
+.idea
+.vscode
+.fleet
+.nova
+.zed
+.phpactor.json
+
+# Dev dependencies (reinstalled inside the image)
+node_modules
+vendor
+
+# Dev environment and compose
+compose.yaml
+.env
+.env.*
+!.env.example
+
+# Tests and static analysis
+tests
+phpunit.xml
+phpstan.neon
+phpstan-baseline.neon
+.phpunit.cache
+.phpunit.result.cache
+
+# Dev build artifacts
+public/hot
+public/build
+
+# Local runtime data (recreated in the image; keep bootstrap/cache for composer)
+storage/logs
+storage/pail
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+storage/app/backups
+
+# Deploy scripts (run on the host, not inside the app container)
+scripts
+
+# CI and docs (not needed at runtime)
+.github
+AGENTS.md
+README.md

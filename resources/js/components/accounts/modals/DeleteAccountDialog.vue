@@ -65,7 +65,7 @@ function destroy() {
                 <DialogDescription>{{ t('accounts.delete.description') }}</DialogDescription>
             </DialogHeader>
 
-            <div v-if="accountName" class="rounded-lg border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
+            <div v-if="accountName" class="rounded-xl border border-sidebar-border/70 p-3 text-sm dark:border-sidebar-border">
                 <p class="font-medium">{{ accountName }}</p>
                 <p v-if="currentBalance !== null" class="mt-1 text-muted-foreground">
                     {{

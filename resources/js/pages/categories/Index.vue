@@ -1,16 +1,25 @@
 <script setup lang="ts">
-import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import CategoryRow, { type CategoryRowCategory } from '@/components/categories/CategoryRow.vue';
+import CategoryFormDialog from '@/components/categories/modals/CategoryFormDialog.vue';
 import DeleteCategoryDialog from '@/components/categories/modals/DeleteCategoryDialog.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { filterCategoriesByType, type CategoryOption } from '@/lib/categories';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { router } from '@inertiajs/vue3';
+import { Plus } from 'lucide-vue-next';
 import type { SortableEvent } from 'sortablejs';
 import { computed, ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import { useI18n } from 'vue-i18n';
+
+type IconOption = {
+    value: string;
+    label_key: string;
+};
+
+type ColorOption = {
+    value: string;
+};
 
 type Category = CategoryOption & {
     type_label_key: string;
@@ -19,14 +28,16 @@ type Category = CategoryOption & {
 
 const props = defineProps<{
     categories: Category[];
+    icons: IconOption[];
+    colors: ColorOption[];
 }>();
 
 const { t } = useI18n();
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('categories.index.title'), href: route('categories.index') }]);
-
 const expenseList = ref<Category[]>([]);
 const incomeList = ref<Category[]>([]);
+
+const sectionKeys = ['income', 'expense'] as const;
 
 function syncLists(): void {
     expenseList.value = filterCategoriesByType(props.categories, 'expense') as Category[];
@@ -35,12 +46,33 @@ function syncLists(): void {
 
 watch(() => props.categories, syncLists, { deep: true, immediate: true });
 
+const formOpen = ref(false);
+const formMode = ref<'create' | 'edit'>('create');
+const editingCategory = ref<Category | null>(null);
+
 const deletingCategoryId = ref<number | null>(null);
 const deleteDialogOpen = ref(false);
 const deleteProcessing = ref(false);
 const deletingCategory = computed(() => props.categories.find((c) => c.id === deletingCategoryId.value) ?? null);
 
-function openDeleteDialog(cat: Category) {
+function openCreateDialog(): void {
+    formMode.value = 'create';
+    editingCategory.value = null;
+    formOpen.value = true;
+}
+
+function openEditDialog(cat: CategoryRowCategory): void {
+    const fullCategory = props.categories.find((c) => c.id === cat.id) ?? null;
+    if (fullCategory === null) {
+        return;
+    }
+
+    formMode.value = 'edit';
+    editingCategory.value = fullCategory;
+    formOpen.value = true;
+}
+
+function openDeleteDialog(cat: CategoryRowCategory) {
     deletingCategoryId.value = cat.id;
     deleteDialogOpen.value = true;
 }
@@ -64,29 +96,21 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('categories.index.title')" />
-
+    <AppLayout>
         <template #headerActions>
-            <Button as-child>
-                <Link :href="route('categories.create')">
-                    <Plus class="h-4 w-4" aria-hidden="true" />
-                    {{ t('categories.index.add') }}
-                </Link>
+            <Button type="button" @click="openCreateDialog">
+                <Plus class="size-4" :stroke-width="1.7" aria-hidden="true" />
+                {{ t('categories.index.add') }}
             </Button>
         </template>
 
-        <div class="flex flex-col gap-6 p-4">
-            <section
-                v-for="sectionKey in ['income', 'expense'] as const"
-                :key="sectionKey"
-                class="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-            >
-                <h2 class="border-b border-sidebar-border/70 px-4 py-3 text-lg font-semibold dark:border-sidebar-border">
+        <div class="overflow-hidden rounded-2xl border border-transparent bg-card">
+            <div v-for="sectionKey in sectionKeys" :key="sectionKey" :class="{ 'border-t border-border/50': sectionKey === 'expense' }">
+                <h2 class="px-3 pb-2 pt-4 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                     {{ t(`budget.sections.${sectionKey}`) }}
                 </h2>
 
-                <p v-if="(sectionKey === 'expense' ? expenseList : incomeList).length === 0" class="px-4 py-6 text-sm text-muted-foreground">
+                <p v-if="(sectionKey === 'expense' ? expenseList : incomeList).length === 0" class="px-3 py-4 text-sm text-muted-foreground">
                     {{ t('categories.index.empty') }}
                 </p>
 
@@ -94,7 +118,6 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                     v-else-if="sectionKey === 'expense'"
                     v-model="expenseList"
                     tag="ul"
-                    class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
                     handle=".drag-handle"
                     filter=".no-drag"
                     :animation="150"
@@ -102,55 +125,20 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                     chosen-class="bg-muted/30"
                     @end="onReorderEnd('expense', $event)"
                 >
-                    <li
+                    <CategoryRow
                         v-for="cat in expenseList"
                         :key="cat.id"
-                        class="list-row-hover flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
-                    >
-                        <div class="flex min-w-0 flex-1 items-center gap-2">
-                            <button
-                                type="button"
-                                class="drag-handle shrink-0 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
-                                :aria-label="t('categories.index.dragHandle')"
-                            >
-                                <GripVertical class="h-4 w-4" />
-                            </button>
-
-                            <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
-                                <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
-                                <span v-if="cat.is_system" class="shrink-0 text-xs font-normal text-muted-foreground">
-                                    ({{ t('categories.index.system') }})
-                                </span>
-                            </Link>
-                        </div>
-
-                        <div class="no-drag flex shrink-0 items-center gap-1">
-                            <Button variant="ghost" size="icon" as-child>
-                                <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
-                                    <Pencil class="h-4 w-4 text-muted-foreground" />
-                                </Link>
-                            </Button>
-                            <Button
-                                v-if="!cat.is_system"
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                class="no-drag"
-                                :disabled="deleteProcessing"
-                                :aria-label="t('categories.index.delete')"
-                                @click="openDeleteDialog(cat)"
-                            >
-                                <Trash2 class="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                        </div>
-                    </li>
+                        :category="cat"
+                        :delete-disabled="deleteProcessing"
+                        @edit="openEditDialog"
+                        @delete="openDeleteDialog"
+                    />
                 </VueDraggable>
 
                 <VueDraggable
                     v-else
                     v-model="incomeList"
                     tag="ul"
-                    class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border"
                     handle=".drag-handle"
                     filter=".no-drag"
                     :animation="150"
@@ -158,51 +146,19 @@ function onReorderEnd(type: 'expense' | 'income', event: SortableEvent): void {
                     chosen-class="bg-muted/30"
                     @end="onReorderEnd('income', $event)"
                 >
-                    <li
+                    <CategoryRow
                         v-for="cat in incomeList"
                         :key="cat.id"
-                        class="list-row-hover flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
-                    >
-                        <div class="flex min-w-0 flex-1 items-center gap-2">
-                            <button
-                                type="button"
-                                class="drag-handle shrink-0 cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
-                                :aria-label="t('categories.index.dragHandle')"
-                            >
-                                <GripVertical class="h-4 w-4" />
-                            </button>
-
-                            <Link :href="route('categories.edit', cat.id)" class="flex min-w-0 flex-1 items-center gap-3 hover:opacity-80">
-                                <CategoryBadge :name="cat.name" :icon="cat.icon" :color="cat.color" size="md" />
-                                <span v-if="cat.is_system" class="shrink-0 text-xs font-normal text-muted-foreground">
-                                    ({{ t('categories.index.system') }})
-                                </span>
-                            </Link>
-                        </div>
-
-                        <div class="no-drag flex shrink-0 items-center gap-1">
-                            <Button variant="ghost" size="icon" as-child>
-                                <Link :href="route('categories.edit', cat.id)" :aria-label="t('actions.edit')">
-                                    <Pencil class="h-4 w-4 text-muted-foreground" />
-                                </Link>
-                            </Button>
-                            <Button
-                                v-if="!cat.is_system"
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                class="no-drag"
-                                :disabled="deleteProcessing"
-                                :aria-label="t('categories.index.delete')"
-                                @click="openDeleteDialog(cat)"
-                            >
-                                <Trash2 class="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                        </div>
-                    </li>
+                        :category="cat"
+                        :delete-disabled="deleteProcessing"
+                        @edit="openEditDialog"
+                        @delete="openDeleteDialog"
+                    />
                 </VueDraggable>
-            </section>
+            </div>
         </div>
+
+        <CategoryFormDialog v-model:open="formOpen" :mode="formMode" :category="editingCategory" :icons="icons" :colors="colors" />
 
         <DeleteCategoryDialog
             v-model:open="deleteDialogOpen"

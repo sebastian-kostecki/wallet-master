@@ -35,5 +35,6 @@ Agent workflow: `.cursor/rules/wallet-dev-workflow.mdc`.
 
 - **Sail:** `./vendor/bin/sail up -d` · `./vendor/bin/sail artisan migrate` · `./vendor/bin/sail npm run dev` · `./vendor/bin/sail artisan test --compact`
 - **Host (without the full Docker stack):** `composer run dev` — `serve` + `queue:listen` + `pail` + `vite` (via `concurrently`)
+- **Production SSR:** `npm run build:ssr` builds client + SSR bundles · `php artisan inertia:start-ssr` starts the SSR server · `php artisan inertia:check-ssr` verifies it
 - **Tests / style:** Pest 4 + PHPUnit 12 · `./vendor/bin/sail artisan test --compact` · `vendor/bin/pint --dirty --format agent` · `npm run lint` / `npm run format` · ESLint 9 + Prettier 3 + vue-tsc
 - **Static analysis:** `./vendor/bin/phpstan analyse` (Larastan)

@@ -1,0 +1,29 @@
+---
+description: OpenShip-inspired dashboard UI for Vue/Inertia pages. Apply when editing frontend.
+globs: resources/js/**/*.vue,resources/css/**/*.css
+alwaysApply: false
+---
+
+# Wallet UI (OpenShip north star)
+
+Dashboard look: quiet chrome, lifted surfaces, almost no brand color in chrome. Stack stays Vue + Tailwind v3 + shadcn-vue + Instrument Sans.
+
+When building or restyling UI, follow skill `openship-inspired-ui` (recipes in its `reference.md`).
+
+## Hard rules
+
+- **Page is grey, cards are white.** Lift comes from contrast, not `shadow-sm`. Resting cards: `rounded-2xl`, `border-transparent` (or `border-border/40` max). Hover may add a hairline, not a drop shadow.
+- **Sidebar is a floating card**, not a full-bleed rail (`variant="inset"`, `rounded-2xl`). Nav items `rounded-xl`, icons `stroke-width="1.7"`, hover `bg-foreground/[0.06]`.
+- **Radius:** buttons/inputs `rounded-xl`; cards `rounded-2xl`; pills `rounded-full`. Round more, not less. Do not add new `rounded-md`.
+- **Primary is ink, not mint.** Light: near-black fill. Dark: white fill / black text. Color only for money and status (income/expense), never for sidebar, headers, or primary buttons.
+- **Type:** Instrument Sans. Headings `font-semibold tracking-tight`. Body `text-sm text-muted-foreground`. No Gellix, no new display font.
+- **Motion:** `transition-colors` / `duration-150`. No bounce, no gradient heroes, no aurora/grain on app pages.
+- **Primitives live in** `components/ui/`. Domain UI in `components/{domain}/`, never in `ui/`.
+
+```vue
+<!-- ❌ BAD: boxed card that fights the grey page -->
+<div class="rounded-lg border shadow-sm bg-card">
+
+<!-- ✅ GOOD: lifted surface -->
+<div class="rounded-2xl border border-transparent bg-card">
+```

@@ -14,8 +14,6 @@ final class UpdatePocket
      */
     public function handle(Pocket $pocket, array $validated): Pocket
     {
-        $wasArchived = $pocket->is_archived;
-
         $fillable = [
             'name',
             'icon',
@@ -24,7 +22,6 @@ final class UpdatePocket
             'planning_mode',
             'monthly_contribution',
             'target_date',
-            'is_archived',
             'sort_order',
         ];
 
@@ -37,14 +34,6 @@ final class UpdatePocket
         $pocket->save();
 
         Event::record('pocket_updated', ['pocket_id' => $pocket->id], $pocket->user_id);
-
-        if (array_key_exists('is_archived', $validated) && (bool) $validated['is_archived'] !== $wasArchived) {
-            Event::record(
-                (bool) $validated['is_archived'] ? 'pocket_archived' : 'pocket_unarchived',
-                ['pocket_id' => $pocket->id],
-                $pocket->user_id,
-            );
-        }
 
         return $pocket;
     }

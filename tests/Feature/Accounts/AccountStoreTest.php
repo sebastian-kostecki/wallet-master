@@ -96,3 +96,33 @@ test('account type is required', function () {
 
     $response->assertSessionHasErrors('type');
 });
+
+test('creating a cash account redirects to the wallets tab', function () {
+    $user = User::factory()->create();
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+
+    $this->actingAs($user)
+        ->post(route('accounts.store', absolute: false), [
+            'name' => 'Gotówka',
+            'bank' => 'cash',
+            'type' => 'checking',
+            'currency_id' => $plnId,
+            'opening_balance' => 0,
+        ])
+        ->assertRedirect(route('accounts.index', ['kind' => 'wallets'], absolute: false));
+});
+
+test('creating a bank account redirects to the accounts tab', function () {
+    $user = User::factory()->create();
+    $plnId = Currency::query()->where('code', 'PLN')->value('id');
+
+    $this->actingAs($user)
+        ->post(route('accounts.store', absolute: false), [
+            'name' => 'mBank',
+            'bank' => 'mbank',
+            'type' => 'checking',
+            'currency_id' => $plnId,
+            'opening_balance' => 0,
+        ])
+        ->assertRedirect(route('accounts.index', ['kind' => 'accounts'], absolute: false));
+});

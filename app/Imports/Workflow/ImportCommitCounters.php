@@ -20,5 +20,8 @@ final class ImportCommitCounters
     /** @var numeric-string */
     public string $importedAmountSum = '0.00';
 
+    /** @var numeric-string Amount already applied to account.current_balance during inline deposit handling. */
+    public string $inlineBalanceAppliedSum = '0.00';
+
     public int $rowIndex = 0;
 }

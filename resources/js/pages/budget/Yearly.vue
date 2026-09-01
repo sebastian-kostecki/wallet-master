@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import BudgetCategorySection from '@/components/budget/BudgetCategorySection.vue';
+import BudgetPeriodNav from '@/components/budget/BudgetPeriodNav.vue';
 import BudgetSummaryCard from '@/components/budget/BudgetSummaryCard.vue';
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type CurrencyDisplay } from '@/lib/formatMoney';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -39,20 +38,8 @@ const props = defineProps<{
 const { t } = useI18n();
 const editingCategoryId = ref<number | null>(null);
 
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [{ title: t('budget.yearly.title'), href: route('budget.yearly') }]);
-
 const expenseRows = computed(() => props.rows.filter((r) => r.type === 'expense'));
 const incomeRows = computed(() => props.rows.filter((r) => r.type === 'income'));
-
-const monthlyViewMonth = computed(() => {
-    const now = new Date();
-
-    if (props.year === now.getFullYear()) {
-        return now.getMonth() + 1;
-    }
-
-    return 1;
-});
 
 function startEdit(categoryId: number) {
     editingCategoryId.value = categoryId;
@@ -82,7 +69,11 @@ function saveYearlyPlan(
         return;
     }
 
-    const payload: Record<string, unknown> = {
+    const payload: {
+        year: number;
+        annual_amount: string | null;
+        monthly_amount?: string;
+    } = {
         year: props.year,
         annual_amount: annualTrimmed === '' ? null : annualNormalized,
     };
@@ -101,47 +92,17 @@ function saveYearlyPlan(
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbs">
-        <Head :title="t('budget.yearly.title')" />
+    <AppLayout>
+        <template #headerActions>
+            <BudgetPeriodNav :year="year" variant="yearly" />
+        </template>
 
-        <div class="budget-page flex flex-col gap-6 p-4">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex gap-2">
-                    <Button variant="ghost" as-child>
-                        <Link :href="route('budget.monthly', { year, month: monthlyViewMonth })">{{ t('budget.view.monthly') }}</Link>
-                    </Button>
-                    <Button variant="outline" as-child>
-                        <Link :href="route('budget.yearly', { year })">{{ t('budget.view.yearly') }}</Link>
-                    </Button>
-                </div>
-                <div class="flex items-center gap-2">
-                    <Button variant="outline" @click="router.get(route('budget.yearly', { year: year - 1 }))">←</Button>
-                    <span class="text-sm font-medium">{{ year }}</span>
-                    <Button variant="outline" @click="router.get(route('budget.yearly', { year: year + 1 }))">→</Button>
-                </div>
-            </div>
-
+        <div class="budget-page flex flex-col gap-6">
             <BudgetSummaryCard :summary="summary" :currency="currency" variant="yearly" />
 
             <BudgetCategorySection
-                :title="t('budget.sections.income')"
-                category-type="income"
-                :rows="incomeRows"
-                :currency="currency"
-                variant="yearly"
-                :editing-category-id="editingCategoryId"
-                :plan-placeholder="t('budget.yearly.planPlaceholder')"
-                :monthly-plan-placeholder="t('budget.yearly.monthlyPlanPlaceholder')"
-                :monthly-plan-label="t('budget.yearly.monthlyPlanLabel')"
-                @start-edit="startEdit"
-                @cancel="cancelEdit"
-                @save-yearly="saveYearlyPlan"
-            />
-
-            <BudgetCategorySection
-                :title="t('budget.sections.expense')"
-                category-type="expense"
-                :rows="expenseRows"
+                :income-rows="incomeRows"
+                :expense-rows="expenseRows"
                 :currency="currency"
                 variant="yearly"
                 :editing-category-id="editingCategoryId"

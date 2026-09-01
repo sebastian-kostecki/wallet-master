@@ -1,15 +1,11 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/app/AppSidebarLayout.vue';
-import type { BreadcrumbItemType } from '@/types';
 import { useI18n } from 'vue-i18n';
 
-interface Props {
-    breadcrumbs?: BreadcrumbItemType[];
-}
-
-withDefaults(defineProps<Props>(), {
-    breadcrumbs: () => [],
-});
+defineProps<{
+    title?: string;
+    description?: string;
+}>();
 
 const { t } = useI18n();
 </script>
@@ -21,9 +17,12 @@ const { t } = useI18n();
     >
         {{ t('a11y.skip_to_content') }}
     </a>
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout :title="title" :description="description">
         <template #headerActions>
             <slot name="headerActions" />
+        </template>
+        <template v-if="$slots.headerTabsTrailing" #headerTabsTrailing>
+            <slot name="headerTabsTrailing" />
         </template>
         <slot />
     </AppLayout>

@@ -40,6 +40,7 @@ final class UnlinkTransfer
                     'transfer_candidate_for_id' => null,
                     'category_id' => $fallbackCategoryId,
                     'pocket_id' => null,
+                    'pocket_movement' => null,
                 ]);
             }
 

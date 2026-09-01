@@ -7,13 +7,12 @@ use App\Models\Currency;
 use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\CurrencySeeder;
-use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     $this->seed(CurrencySeeder::class);
 });
 
-test('edit page includes account bank_icon_url', function () {
+test('edit page redirects to the index', function () {
     $plnId = Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
 
@@ -41,17 +40,8 @@ test('edit page includes account bank_icon_url', function () {
         'dedupe_hash' => md5('2026-04-20|-10.00|coffee', true),
     ]);
 
-    $response = $this
+    $this
         ->actingAs($user)
-        ->get(route('transactions.edit', $transaction, absolute: false));
-
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('transactions/Edit', false)
-        ->where('transaction.id', $transaction->id)
-        ->has('accounts', 1)
-        ->where('accounts.0.id', $account->id)
-        ->where('accounts.0.bank', 'mbank')
-        ->where('accounts.0.bank_icon_url', fn (mixed $value) => is_string($value) && str_contains($value, '/icons/banks/'))
-    );
+        ->get(route('transactions.edit', $transaction, absolute: false))
+        ->assertRedirect(route('transactions.index', absolute: false));
 });

@@ -1,5 +1,6 @@
 /.phpunit.cache
 /node_modules
+/bootstrap/ssr
 /public/build
 /public/hot
 /public/storage
@@ -22,3 +23,5 @@ yarn-error.log
 /.vscode
 /.zed
 /.worktrees
+/.superpowers
+/.superdesign/tmp

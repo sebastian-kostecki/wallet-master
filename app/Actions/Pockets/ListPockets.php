@@ -13,17 +13,13 @@ final class ListPockets
     /** @var Collection<int, Pocket> */
     private Collection $pockets;
 
-    public function handle(User $user, ?string $filter = 'active'): void
+    public function handle(User $user): void
     {
-        $query = Pocket::query()->forUser($user->id)->ordered();
-
-        match ($filter) {
-            'archived' => $query->where('is_archived', true),
-            'active' => $query->where('is_archived', false),
-            default => null,
-        };
-
-        $this->pockets = $query->with('currency')->get();
+        $this->pockets = Pocket::query()
+            ->forUser($user->id)
+            ->ordered()
+            ->with('currency')
+            ->get();
     }
 
     /**

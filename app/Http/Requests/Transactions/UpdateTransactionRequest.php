@@ -46,6 +46,10 @@ final class UpdateTransactionRequest extends FormRequest
 
         $isTransferLeg = $transaction->transfer_id !== null && $transaction->transfer_id !== '';
 
+        $pocketRules = $isTransferLeg
+            ? [...$this->optionalPocketIdRulesForTransferLeg(), ...$this->pocketMovementRules()]
+            : $this->prohibitedPocketRules();
+
         return [
             'account_id' => [
                 'required',
@@ -58,7 +62,7 @@ final class UpdateTransactionRequest extends FormRequest
             'description' => ['required', 'string', 'max:2000'],
             'subject' => ['nullable', 'string', 'max:255'],
             ...($isTransferLeg ? ['category_id' => ['prohibited']] : $this->categoryIdRules()),
-            ...$this->optionalPocketIdRules(),
+            ...$pocketRules,
         ];
     }
 
@@ -69,7 +73,8 @@ final class UpdateTransactionRequest extends FormRequest
 
         if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
             $this->validateCategoryMatchesAmount($validator);
-            $this->validateOptionalPocketCurrency($validator);
+        } else {
+            $this->validateLinkedTransferPocketCurrency($validator, $transaction);
         }
     }
 
@@ -83,6 +88,7 @@ final class UpdateTransactionRequest extends FormRequest
      *   subject?: ?string,
      *   category_id?: int,
      *   pocket_id?: ?int,
+     *   pocket_movement?: ?string,
      * }
      */
     public function validated($key = null, $default = null): array

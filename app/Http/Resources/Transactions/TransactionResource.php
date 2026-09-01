@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Transactions;
 
+use App\Enums\Bank;
+use App\Enums\DepositMatchStatus;
+use App\Enums\TransactionType;
 use App\Http\Resources\Accounts\AccountResource;
 use App\Http\Resources\Accounts\CurrencyResource;
 use App\Http\Resources\Categories\CategoryResource;
@@ -48,6 +51,7 @@ final class TransactionResource extends JsonResource
                     : null,
             ),
             'pocket_id' => $this->pocket_id,
+            'pocket_movement' => $this->pocket_movement?->value,
             'pocket' => $this->whenLoaded(
                 'pocket',
                 fn () => $this->pocket !== null
@@ -66,6 +70,43 @@ final class TransactionResource extends JsonResource
                     ? CurrencyResource::make($this->currency)->resolve($request)
                     : null,
             ),
+            'deposit_movement' => $this->whenLoaded(
+                'depositMovement',
+                fn () => $this->depositMovement !== null
+                    ? [
+                        'kind' => $this->depositMovement->kind->value,
+                        'deposit_id' => $this->depositMovement->deposit_id,
+                    ]
+                    : null,
+            ),
+            'deposit_assignable' => $this->isDepositAssignable(),
+            'deposit_candidate' => $this->when(
+                $this->deposit_match_status === DepositMatchStatus::Manual && $this->deposit_candidate_kind !== null,
+                fn () => [
+                    'kind' => $this->deposit_candidate_kind,
+                ],
+            ),
         ];
+    }
+
+    private function isDepositAssignable(): bool
+    {
+        if ($this->transfer_id !== null) {
+            return false;
+        }
+
+        if ($this->type === TransactionType::Adjustment) {
+            return false;
+        }
+
+        if ($this->relationLoaded('depositMovement') && $this->depositMovement !== null) {
+            return false;
+        }
+
+        if (! $this->relationLoaded('account') || $this->account === null) {
+            return false;
+        }
+
+        return $this->account->bank !== Bank::Cash;
     }
 }

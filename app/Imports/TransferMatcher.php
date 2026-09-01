@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Imports;
 
+use App\Enums\DepositMatchStatus;
 use App\Enums\TransactionType;
 use App\Enums\TransferMatchStatus;
 use App\Models\Import;
 use App\Models\Transaction;
+use App\Support\Transactions\BudgetExclusion;
 use App\Support\Transactions\TransactionDedupe;
 use App\Telemetry\Event;
 use Carbon\CarbonImmutable;
@@ -87,6 +89,10 @@ final class TransferMatcher
             return true;
         }
 
+        if ($transaction->deposit_match_status !== DepositMatchStatus::None) {
+            return true;
+        }
+
         return false;
     }
 
@@ -95,17 +101,20 @@ final class TransferMatcher
      */
     private function findCandidates(Transaction $transaction): Collection
     {
-        $candidates = Transaction::query()
+        $candidatesQuery = Transaction::query()
             ->where('user_id', $transaction->user_id)
             ->where('account_id', '!=', $transaction->account_id)
             ->where('currency_id', $transaction->currency_id)
-            ->whereNull('transfer_id')
             ->where('transfer_match_status', '!=', TransferMatchStatus::Rejected)
             ->whereNull('transfer_candidate_for_id')
             ->when(
                 $this->linkedTransactionIds !== [],
                 fn ($query) => $query->whereNotIn('id', $this->linkedTransactionIds),
-            )
+            );
+
+        BudgetExclusion::apply($candidatesQuery);
+
+        $candidates = $candidatesQuery
             ->orderBy('id')
             ->get();
 

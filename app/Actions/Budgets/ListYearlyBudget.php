@@ -11,6 +11,7 @@ use App\Http\Requests\Budgets\YearlyBudgetRequest;
 use App\Models\Category;
 use App\Models\CategoryAnnualEstimate;
 use App\Models\CategoryMonthlyEstimate;
+use App\Models\Transaction;
 use App\Support\Budgets\BudgetCurrency;
 use App\Support\Budgets\BudgetForecast;
 use App\Support\Budgets\BudgetPeriod;
@@ -20,7 +21,9 @@ use App\Support\Budgets\BudgetTransactionQuery;
 use App\Support\Budgets\CategoryPlanAmount;
 use App\Support\Budgets\YearlyMonthlyTemplate;
 use App\Support\Transactions\TransactionDedupe;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 final class ListYearlyBudget
 {
@@ -55,28 +58,21 @@ final class ListYearlyBudget
             ->get()
             ->keyBy('category_id');
 
-        $monthlyByCategoryAndMonth = CategoryMonthlyEstimate::query()
-            ->whereIn('category_id', $this->categories->pluck('id'))
-            ->where('year', $this->year)
-            ->get()
-            ->groupBy('category_id')
-            ->map(fn (Collection $items) => $items->keyBy('month'));
+        $monthlyByCategoryAndMonth = SupportCollection::make(
+            CategoryMonthlyEstimate::query()
+                ->whereIn('category_id', $this->categories->pluck('id'))
+                ->where('year', $this->year)
+                ->get()
+                ->groupBy('category_id'),
+        )->map(fn (Collection $items): Collection => $items->keyBy('month'));
 
         $actualsQuery = BudgetTransactionQuery::forUser($user);
         BudgetTransactionQuery::inPeriod($actualsQuery, $period);
         BudgetTransactionQuery::excludeTransfers($actualsQuery);
 
-        /** @var Collection<int, object{category_id: int, income: string, expense: string}> $actuals */
-        $actuals = $actualsQuery
-            ->select('category_id')
-            ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as income')
-            ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) as expense')
-            ->groupBy('category_id')
-            ->get()
-            ->keyBy('category_id');
+        $actuals = $this->aggregateCategoryAmounts($actualsQuery);
 
-        /** @var Collection<int, object{category_id: int, income: string, expense: string}> $forecastActuals */
-        $forecastActuals = new Collection;
+        $forecastActuals = new SupportCollection;
 
         if ($closedMonth > 0) {
             $forecastPeriod = BudgetPeriod::throughMonth($this->year, $closedMonth);
@@ -84,13 +80,7 @@ final class ListYearlyBudget
             BudgetTransactionQuery::inPeriod($forecastActualsQuery, $forecastPeriod);
             BudgetTransactionQuery::excludeTransfers($forecastActualsQuery);
 
-            $forecastActuals = $forecastActualsQuery
-                ->select('category_id')
-                ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as income')
-                ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) as expense')
-                ->groupBy('category_id')
-                ->get()
-                ->keyBy('category_id');
+            $forecastActuals = $this->aggregateCategoryAmounts($forecastActualsQuery);
         }
 
         foreach ($this->categories as $category) {
@@ -99,20 +89,21 @@ final class ListYearlyBudget
             $forecastActual = $forecastActuals->get($category->id);
             $plan = CategoryPlanAmount::annual($annual);
             $actualIncome = $actual !== null
-                ? TransactionDedupe::amountToDecimalString((string) $actual->income)
+                ? TransactionDedupe::amountToDecimalString($actual['income'])
                 : '0.00';
             $actualExpense = $actual !== null
-                ? TransactionDedupe::amountToDecimalString((string) $actual->expense)
+                ? TransactionDedupe::amountToDecimalString($actual['expense'])
                 : '0.00';
             $actualPrimary = $category->type === CategoryType::Income ? $actualIncome : $actualExpense;
             $forecastActualIncome = $forecastActual !== null
-                ? TransactionDedupe::amountToDecimalString((string) $forecastActual->income)
+                ? TransactionDedupe::amountToDecimalString($forecastActual['income'])
                 : '0.00';
             $forecastActualExpense = $forecastActual !== null
-                ? TransactionDedupe::amountToDecimalString((string) $forecastActual->expense)
+                ? TransactionDedupe::amountToDecimalString($forecastActual['expense'])
                 : '0.00';
             $forecastActualPrimary = $category->type === CategoryType::Income ? $forecastActualIncome : $forecastActualExpense;
 
+            /** @var Collection<int, CategoryMonthlyEstimate> $monthlyEstimates */
             $monthlyEstimates = $monthlyByCategoryAndMonth->get($category->id, new Collection);
             $elapsedPlansSum = BudgetForecast::elapsedPlansSum(
                 $category,
@@ -175,5 +166,31 @@ final class ListYearlyBudget
     public function getCurrency(): array
     {
         return BudgetCurrency::pln();
+    }
+
+    /**
+     * @param  Builder<Transaction>  $query
+     * @return SupportCollection<int, array{income: string, expense: string}>
+     */
+    private function aggregateCategoryAmounts(Builder $query): SupportCollection
+    {
+        return SupportCollection::make(
+            $query
+                ->select('category_id')
+                ->selectRaw('COALESCE(SUM(CASE WHEN amount >= 0 THEN amount ELSE 0 END), 0) as income')
+                ->selectRaw('COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) as expense')
+                ->groupBy('category_id')
+                ->toBase()
+                ->get(),
+        )->mapWithKeys(function (object $row): array {
+            $categoryId = (int) $row->category_id;
+
+            return [
+                $categoryId => [
+                    'income' => (string) $row->income,
+                    'expense' => (string) $row->expense,
+                ],
+            ];
+        });
     }
 }

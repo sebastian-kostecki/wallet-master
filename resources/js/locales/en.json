@@ -4,33 +4,49 @@
             "created": "Account created.",
             "updated": "Account updated."
         },
+        "tabs": {
+            "accounts": "Bank accounts",
+            "wallets": "Wallets",
+            "deposits": "Deposits"
+        },
         "index": {
             "title": "Accounts",
-            "addAccount": "Add account",
+            "description": "Balances and types of your checking and savings accounts.",
+            "addAccount": "Add bank account",
+            "addWallet": "Add wallet",
+            "addDeposit": "Add deposit",
             "view": {
                 "toggleAria": "Toggle accounts view",
                 "grid": "Grid",
                 "list": "List"
             },
             "empty": {
-                "heading": "No accounts yet",
-                "message": "You don't have any accounts yet.",
-                "cta": "Add your first account"
+                "accounts": {
+                    "heading": "No bank accounts yet",
+                    "message": "You don't have any bank accounts yet.",
+                    "cta": "Add bank account"
+                },
+                "wallets": {
+                    "heading": "No wallets yet",
+                    "message": "You don't have any cash wallets yet.",
+                    "cta": "Add wallet"
+                },
+                "deposits": {
+                    "heading": "No deposits yet",
+                    "message": "You don't have any term deposits yet.",
+                    "cta": "Add deposit"
+                }
             }
         },
         "edit": {
             "title": "Edit account",
-            "back": "Back",
-            "deleteAction": "Delete account",
-            "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference.",
-            "dangerZone": {
-                "title": "Danger zone",
-                "description": "This action is irreversible. Transactions will remain in history as read-only."
-            }
+            "openingBalanceHint": "Changing the opening balance will adjust the current balance by the difference."
         },
         "create": {
-            "title": "Add account",
-            "back": "Back",
+            "title": "Add bank account",
+            "titleWallet": "Add wallet",
+            "description": "Add a bank account and opening balance.",
+            "descriptionWallet": "Add a cash wallet and opening balance.",
             "fields": {
                 "name": {
                     "label": "Name",
@@ -60,6 +76,7 @@
             "description": "Sum of balances for all PLN accounts.",
             "totalPln": "Total balance (PLN)",
             "savingsPln": "Savings (PLN)",
+            "depositsPln": "Deposits (PLN)",
             "countPln": "Number of accounts (PLN): {count}",
             "invalidSkipped": "Some balances were skipped in the total.",
             "addToSeeSummary": "Add an account to see the summary."
@@ -92,6 +109,119 @@
                 "mbank": "mBank",
                 "cash": "Cash"
             }
+        }
+    },
+    "deposits": {
+        "toast": {
+            "created": "Deposit created.",
+            "updated": "Deposit updated.",
+            "closed": "Deposit closed.",
+            "assigned": "Transaction assigned to deposit.",
+            "candidate_confirmed": "Deposit confirmed.",
+            "candidate_rejected": "Transaction marked as not a deposit."
+        },
+        "status": {
+            "active": "Active",
+            "closed": "Closed"
+        },
+        "fallbackName": "Deposit",
+        "badge": {
+            "capital": "Deposit",
+            "interest": "Deposit interest"
+        },
+        "candidates": {
+            "bannerTitle": "{count} deposit candidates to review",
+            "subtitle": "We matched transactions that may open or close a deposit. Confirm the deposit or mark that it is not a deposit movement.",
+            "confirm": "Confirm deposit",
+            "reject": "Not a deposit",
+            "kindOpen": "Open deposit",
+            "kindClose": "Return principal",
+            "filter": "Deposit candidates ({count})",
+            "badge": "Deposit candidate",
+            "depositSelect": {
+                "label": "Deposit",
+                "placeholder": "Select deposit"
+            },
+            "table": {
+                "kind": "Kind",
+                "description": "Description",
+                "amount": "Amount",
+                "date": "Date",
+                "deposit": "Deposit",
+                "actions": "Actions"
+            },
+            "a11y": {
+                "toggle": "Deposit candidates, {count} items. Expand or collapse details.",
+                "confirm": "Confirm deposit for {description}",
+                "reject": "Mark as not a deposit for {description}"
+            }
+        },
+        "actions": {
+            "close": "Close deposit",
+            "assign": "Assign to deposit"
+        },
+        "assign": {
+            "title": "Assign to deposit",
+            "description": "Link this transaction to opening, closing principal, or deposit interest.",
+            "kind": {
+                "label": "Kind",
+                "placeholder": "Select kind"
+            },
+            "deposit": {
+                "label": "Deposit",
+                "placeholder": "Select deposit"
+            },
+            "kinds": {
+                "open": "Open deposit",
+                "close_principal": "Return principal",
+                "interest": "Interest"
+            }
+        },
+        "form": {
+            "createTitle": "Add deposit",
+            "createDescription": "Record a term deposit and move principal from the source account.",
+            "editTitle": "Edit deposit",
+            "closeTitle": "Close deposit",
+            "closeDescription": "Move principal (and any interest) to the destination account.",
+            "name": {
+                "label": "Name",
+                "placeholder": "e.g. 3M deposit"
+            },
+            "principal": {
+                "label": "Principal",
+                "placeholder": "e.g. 1000.00"
+            },
+            "source": {
+                "label": "Source account",
+                "placeholder": "Select account"
+            },
+            "opened": {
+                "label": "Opened on"
+            },
+            "matures": {
+                "label": "Maturity date"
+            },
+            "destination": {
+                "label": "Destination account",
+                "placeholder": "Select account"
+            },
+            "interest": {
+                "label": "Interest",
+                "placeholder": "e.g. 0.00"
+            },
+            "category": {
+                "label": "Interest category",
+                "placeholder": "Select category"
+            },
+            "closedAt": {
+                "label": "Closed on"
+            }
+        },
+        "card": {
+            "principal": "Principal",
+            "opened": "Opened",
+            "matures": "Matures",
+            "closed": "Closed"
         }
     },
     "actions": {
@@ -207,33 +337,19 @@
         }
     },
     "dashboard": {
-        "headTitle": "Dashboard",
-        "title": "Welcome to Ogarniam Portfel",
-        "description": "Start with accounts, history imports, or a manual transaction. This screen will grow with your data.",
-        "quickActions": {
-            "accounts": {
-                "title": "Add account",
-                "description": "Set up an account and opening balance.",
-                "cta": "Go to accounts"
-            },
-            "transactions": {
-                "title": "Add transaction",
-                "description": "Record income, expense, or transfer.",
-                "cta": "Go to transactions"
-            },
-            "pockets": {
-                "title": "Plan an envelope",
-                "description": "Give your savings a clear direction.",
-                "cta": "Go to envelopes"
-            }
+        "title": "Dashboard",
+        "budget": {
+            "title": "Budget",
+            "open": "Open budget"
         },
-        "preview": {
-            "title": "A cleaner money overview",
-            "items": {
-                "imports": "Imports organize history",
-                "budget": "Budget shows plan and actuals",
-                "pockets": "Envelopes show savings progress"
-            }
+        "recent": {
+            "title": "Recent",
+            "open": "All transactions",
+            "empty": "No transactions yet."
+        },
+        "chart": {
+            "plan": "Plan",
+            "actual": "Actual"
         }
     },
     "advancedSection": {
@@ -248,6 +364,7 @@
         },
         "index": {
             "title": "Transactions",
+            "description": "Income, expenses, and transfers across your accounts.",
             "addTransaction": "Add transaction",
             "addTransfer": "Transfer",
             "actionsMenu": {
@@ -312,8 +429,14 @@
                 "noActions": "No actions"
             },
             "empty": {
-                "filtered": "No transactions match your filters.",
-                "firstUse": "You don't have any transactions yet.",
+                "filtered": {
+                    "heading": "No results",
+                    "message": "No transactions match your filters."
+                },
+                "firstUse": {
+                    "heading": "No transactions",
+                    "message": "You don't have any transactions yet."
+                },
                 "import": "Import file"
             },
             "pagination": {
@@ -341,35 +464,16 @@
         },
         "create": {
             "title": "Add transaction",
-            "back": "Back",
-            "hints": {
-                "title": "Tips",
-                "type": "Choose “Income” or “Expense”. This affects the amount sign.",
-                "amount": "You can enter decimals. For expenses we'll store the amount as negative.",
-                "description": "A clear description makes it easier to find the transaction later."
-            }
+            "description": "Record income or an expense."
         },
         "edit": {
             "title": "Edit transaction",
-            "back": "Back",
-            "deleteAction": "Delete transaction",
-            "dangerZone": {
-                "title": "Warning",
-                "description": "This action cannot be undone."
-            },
             "transfer": {
                 "bannerTitle": "Linked transfer",
                 "bannerDescription": "Amount and account are locked. Unlink the transfer first to change them.",
                 "unlinkAction": "Unlink transfer",
                 "accountHint": "Account is locked while the transfer is linked. Use “Unlink transfer” to change it.",
                 "amountHint": "Amount is locked while the transfer is linked. Use “Unlink transfer” to change it."
-            },
-            "hints": {
-                "title": "Info",
-                "scope": "You're editing an existing transaction — changes will be reflected in history.",
-                "amount": "Double-check the amount sign (+/−). It affects the account balance.",
-                "amountTransfer": "Amount is locked while the transfer is linked. Use “Unlink transfer” to change it.",
-                "save": "After saving, you'll be taken back to the transactions list."
             },
             "statement": {
                 "title": "Statement data",
@@ -426,7 +530,10 @@
             "descriptionOptional": "Description (optional)",
             "pocket": "Savings envelope",
             "pocketPlaceholder": "Select an envelope",
-            "hint": "We'll save an expense on the source account and an income on the destination account.",
+            "pocketMovement": "Envelope direction",
+            "pocketMovementDeposit": "Set aside",
+            "pocketMovementWithdrawal": "Take out",
+            "pocketMovementHint": "Set aside increases the envelope balance. Take out decreases it — when you withdraw saved money to spend it.",
             "sameAccountError": "Choose a different destination account than the source account.",
             "deletedNotice": "This account is deleted — transfers are blocked.",
             "deletedSuffix": "deleted",
@@ -580,7 +687,8 @@
     },
     "categories": {
         "create": {
-            "title": "New category"
+            "title": "New category",
+            "description": "Add a label for income or expenses."
         },
         "edit": {
             "title": "Edit category"
@@ -596,6 +704,7 @@
         },
         "index": {
             "title": "Categories",
+            "description": "Labels for income and expenses in your budget.",
             "add": "Add category",
             "empty": "No categories yet.",
             "fields": {
@@ -632,7 +741,8 @@
     },
     "pockets": {
         "create": {
-            "title": "New envelope"
+            "title": "New envelope",
+            "description": "Give a savings goal a name and a plan."
         },
         "edit": {
             "title": "Edit envelope",
@@ -662,11 +772,6 @@
             "overdue": "Overdue",
             "archived": "Archived"
         },
-        "filters": {
-            "active": "Active",
-            "archived": "Archived",
-            "all": "All"
-        },
         "archive": {
             "title": "Archive envelope?",
             "description": "The envelope will be hidden from the active list and monthly budget. You can restore it later from the archived filter.",
@@ -679,7 +784,9 @@
         },
         "index": {
             "title": "Envelopes",
+            "description": "Savings envelopes with a monthly plan.",
             "add": "Add envelope",
+            "dragHandle": "Drag to reorder",
             "listTitle": "Your envelopes",
             "empty": "No envelopes yet.",
             "fields": {
@@ -700,7 +807,7 @@
     "budget": {
         "nav": "Budget",
         "monthly": {
-            "title": "Budget — monthly",
+            "description": "Plan versus actual for this month.",
             "plan": "Plan",
             "actual": "Actual",
             "difference": "Difference",
@@ -714,7 +821,7 @@
             "planPlaceholder": "Monthly override"
         },
         "yearly": {
-            "title": "Budget — yearly",
+            "description": "Annual plan versus actuals.",
             "plan": "Annual plan",
             "actual": "Actual",
             "difference": "Difference",
@@ -726,6 +833,10 @@
         "view": {
             "monthly": "Monthly",
             "yearly": "Yearly"
+        },
+        "period": {
+            "previous": "Previous period",
+            "next": "Next period"
         },
         "sections": {
             "expense": "Expenses",
@@ -753,13 +864,21 @@
     "nav": {
         "platform": "Platform",
         "dashboard": "Dashboard",
+        "accounts": "Accounts and wallets",
         "pockets": "Envelopes",
         "settings": "Settings",
-        "logout": "Log out"
+        "logout": "Log out",
+        "addTransaction": "Add transaction",
+        "collapse": "Collapse sidebar",
+        "expand": "Expand sidebar",
+        "theme": {
+            "light": "Theme: light (switch to dark)",
+            "dark": "Theme: dark (switch to system)",
+            "system": "Theme: system (switch to light)"
+        }
     },
     "settings": {
         "title": "Settings",
-        "description": "Manage your profile and account settings",
         "nav": {
             "profile": "Profile",
             "password": "Password",
@@ -826,7 +945,8 @@
         }
     },
     "a11y": {
-        "skip_to_content": "Skip to main content"
+        "skip_to_content": "Skip to main content",
+        "page_tabs": "Page views"
     },
     "currency": {
         "defaultSymbol": "zł"

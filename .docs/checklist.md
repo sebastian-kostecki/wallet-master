@@ -70,6 +70,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 ### 3) Konta — API/CRUD + UI
 - [x] Lista kont (z walutą i bieżącym saldem).
+- [x] Lista `/konta` w tabach **Rachunki** (`bank !== cash`) / **Portfele** (`bank === cash`); query `kind`; empty state per tab **[plan 2026-08-26-accounts-wallets-tabs]**
+- [x] Podsumowanie PLN (w tym oszczędności) na dashboardzie zamiast na `/konta` **[plan 2026-08-26-accounts-wallets-tabs]**
 - [x] Dodanie konta:
   - [x] Walidacje: nazwa wymagana; saldo początkowe liczba; waluta wybieralna, ale na MVP dostępna tylko PLN.
   - [x] Walidacje: `bank` i `type` wymagane i ograniczone do listy (enum).
@@ -77,6 +79,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Zmiana nazwy, salda początkowego.
   - [x] Zmiana `bank` i `type` + konsekwencje dla importu (bank wynika z konta) — do uwzględnienia, gdy import będzie wdrażany.
   - [x] Zdefiniować wpływ zmiany salda początkowego na `current_balance` (rekomendacja: przeliczyć różnicą). 
+- [x] Dodanie i edycja konta z listy `/konta` (modal; GET create/edit → redirect na index) **[plan 2026-08-26-accounts-modals]**
 - [x] Usuwanie konta:
   - [x] Soft delete konta.
   - [x] Zablokować edycję/usuwanie transakcji na usuniętym koncie:
@@ -106,6 +109,8 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Empty state + CTA
   - [x] Jedna kolumna daty okresu (`booked_at ?? date`) + tooltip surowego opisu wyciągu importu **[plan §1, PRD FR-T2, branch 2026-06]**
   - [x] Badge „Korekta" dla transakcji typu `adjustment` **[plan §3]**
+  - [x] Lista OpenShip: karta wierszy, empty na podłodze, pager **[plan 2026-08-26-transactions-index-openship]**
+  - [x] Chrome OpenShip: filtry w nagłówku, ciche karty podsumowania, menu Dodaj **[plan 2026-08-26-transactions-index-chrome-openship]**
 - [x] Dodanie transakcji:
   - [x] Pola: data (DD-MM-YYYY), kwota (decimal), opis, subject (opcjonalny)
   - [x] Pole `booked_at` (DD-MM-YYYY) z domyślną wartością równą `date` (Create/Edit) **[plan §1]**
@@ -114,24 +119,26 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
   - [x] Walidacje: kwota != 0 (FormRequest); konto nieusunięte
   - [x] Aktualizacja `current_balance` konta deltą kwoty
   - [x] Brak blokady duplikatów w `StoreTransactionRequest` / `UpdateTransactionRequest` — ręczne duplikaty przez `manualDedupeHash()` **[plan §2]**
+  - [x] Dodanie i edycja z listy `/transakcje` (modal; GET create → index?new=1; GET edit → index) **[plan 2026-08-26-transactions-modals]**
 - [~] Edycja transakcji:
   - [x] Zmiana pól i przeliczenie delty salda (stara kwota → nowa kwota)
   - [x] Blokada edycji dla transakcji na usuniętym koncie
   - [x] Edycja `booked_at` niezależnie od `date` (nie wpływa na saldo, tylko na okres) **[plan §1]**
-  - [x] Edycja transakcji typu `transfer` (z ustawionym `transfer_id`) — kwota/konto zablokowane; unlink w Edit **[plan §4, 2026-06-03]**
+  - [x] Edycja transakcji typu `transfer` (z ustawionym `transfer_id`) — kwota/konto zablokowane; unlink w modalu edycji **[plan §4, 2026-06-03; 2026-08-26-transactions-modals]**
 - [x] Usuwanie transakcji:
   - [x] Aktualizacja salda deltą (odwrócenie wpływu)
   - [x] Blokada usuwania dla transakcji na usuniętym koncie
-  - [x] UI: akcja usuwania (Index + Edit, dialog potwierdzenia)
+  - [x] UI: akcja usuwania (Index, dialog potwierdzenia)
 
 ---
 
 ### 5) Transfer — jedna akcja → 2 transakcje
-- [~] UI “Transfer”:
+- [x] UI “Transfer”:
   - [x] Konto źródłowe != konto docelowe
   - [x] Użytkownik wpisuje kwotę dodatnią, system zapisuje `-X` i `+X` (walidacja wejścia)
   - [x] Data wspólna
   - [x] Opis (wspólny) + subject (opcjonalny)
+  - [x] Dodanie z listy `/transakcje` (modal; GET create → index?transfer=1) **[plan 2026-08-27-transfers-modals]**
 - [x] Backend:
   - [x] Utworzyć 2 transakcje w jednej transakcji DB
   - [x] Ustawić `transfer_id` (wspólny identyfikator)
@@ -224,7 +231,7 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Akcje:
   - [x] „Potwierdź transfer" (`POST /transfers/candidates/{id}/confirm`) — ustawia wspólny `transfer_id`, `type=transfer`, `transfer_match_status='manual'`.
   - [x] „To nie transfer" (`POST /transfers/candidates/{id}/reject`) — `transfer_match_status='rejected'` na obu, czyści `transfer_candidate_for_id`.
-- [x] Akcja „Rozłącz transfer" (`POST /transfers/{transferId}/unlink`) — czyści `transfer_id` na obu nogach, przywraca `type` na podstawie znaku `amount`, status `rejected`; przycisk + dialog na `transactions/Edit`.
+- [x] Akcja „Rozłącz transfer" (`POST /transfers/{transferId}/unlink`) — czyści `transfer_id` na obu nogach, przywraca `type` na podstawie znaku `amount`, status `rejected`; przycisk + dialog w modalu edycji na liście transakcji.
 - [x] Telemetria: `transfer_auto_linked`, `transfer_manually_linked`, `transfer_unlinked`, `transfer_match_skipped_ambiguous`.
 - [x] Walidacja waluty: różne waluty → brak dopasowania (na MVP).
 
@@ -414,10 +421,13 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Migracje: `categories`, `category_*_estimates`, `transactions.category_id` + backfill
 - [x] Zestaw startowy kategorii (`EnsureUserCategories`) przy rejestracji
 - [x] CRUD kategorii (backend + `categories/Index.vue`)
+- [x] Dodanie i edycja kategorii z listy `/kategorie` (modal; GET create/edit → redirect na index) **[plan 2026-08-26-categories-modals]**
+- [x] Lista OpenShip: jedna karta, sekcje Przychody/Wydatki, kompaktowe wiersze **[plan 2026-08-27-categories-index-openship]**
 - [x] Szacunki roczne i miesięczne (API + UI na kategoriach / budżecie miesięcznym)
 - [x] `category_id` wymagane na transakcji, transferze i imporcie
 - [x] Pamięć kategorii w DescriptionMemory + przypisanie przy imporcie
 - [x] Widoki budżetu: `budget/Monthly.vue`, `budget/Yearly.vue`
+- [x] Chrome OpenShip: okres w nagłówku, karta podsumowania osobno od P&L, kieszenie osobną kartą **[plan 2026-08-27-budget-openship]**
 - [x] Formularze transakcji/transferu — wybór kategorii
 - [x] Filtr i kolumna kategorii na liście transakcji (FR-C8)
 - [x] Nawigacja: „Budżet” w sidebarze
@@ -434,8 +444,10 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 **Wave 2 UX (shipped):**
 
 - [x] Migracje: `pockets` (legacy `goals`), `transactions.pocket_id`
-- [x] CRUD kieszeni (backend + `pockets/Index.vue`, `Create.vue`, `Edit.vue`)
-- [x] Kieszeń wymagana na transferze z/do konta `Savings`; opcjonalna na wydatku
+- [x] CRUD kieszeni (backend + `pockets/Index.vue` + modal `PocketFormDialog`)
+- [x] Dodanie i edycja kieszeni z listy `/kieszenie` (modal; GET create/edit → redirect na index) **[plan 2026-08-26-pockets-modals]**
+- [x] Lista OpenShip: jedna karta, kompaktowe wiersze, `PocketRow` **[plan 2026-08-27-pockets-index-openship]**
+- [x] ~~Kieszeń wymagana na transferze z/do konta `Savings`; opcjonalna na wydatku~~ → zastąpione spec `2026-08-26-transaction-scope-pocket-catalog-design.md` (XOR kategoria/kieszeń; opcjonalna kieszeń + `pocket_movement` na transferze)
 - [x] Budżet miesięczny: sekcja per-kieszeń (`pocket_rows`)
 - [x] Plany P&L tylko na budżecie — `categories/Index.vue` bez pól szacunków
 - [x] Budżet roczny: edycja szacunków rocznych P&L inline
@@ -448,9 +460,9 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 - [x] Migracja target model; `PocketPlanningMode`, `PocketBalance`, `PocketPlanningProjection`
 - [x] CRUD backend: walidacja planowania; `PocketResource`
-- [x] `ListPockets` z filtrem; `ReorderPockets`; archiwizacja + telemetria `pocket_archived` / `pocket_unarchived`
+- [x] `ListPockets` bez filtra archiwum; `ReorderPockets`; ~~archiwizacja + telemetria `pocket_archived` / `pocket_unarchived`~~ → katalog bez archiwizacji (spec `2026-08-26-transaction-scope-pocket-catalog-design.md`)
 - [x] Trasy: `pockets` resource, `pockets.reorder`
-- [x] Frontend: reorder, progress bar, `PocketBadge`, `PocketArchiveDialog`
+- [x] Frontend: reorder, progress bar, `PocketBadge`; ~~`PocketArchiveDialog`~~ → bez archiwizacji
 - [x] Locale: `pockets.*`, `budget.monthly.pockets_section`
 
 **Waluta kieszeni:**
@@ -477,4 +489,36 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 
 - [x] Wstępna kwota przy tworzeniu kieszeni (`initial_balance`; tylko create; spec `2026-06-08-pocket-initial-balance-design.md`)
 - [x] Miesięczna kwota odkładania bez celu — widoczna w budżecie (`2026-06-10-pocket-monthly-without-target-design.md`)
+
+**Nagłówek strony, breadcrumbs i taby (`2026-08-25-page-header-tabs-design.md`):**
+
+- [x] Centralny rejestr stron (`lib/pageRegistry.ts`) — tytuł, rodzic, grupa tabów
+- [x] `PageHeader` w layoucie: breadcrumbs + `h1` + opis + akcje + `<Head>`; strony nie deklarują chrome
+- [x] `PageTabs` (nawigacja, nie ARIA tabs) — kieszenie (filtr) i budżet (miesięczny/roczny)
+- [x] `TablePage` — szkielet stron z danymi; wdrożony na indeksie transakcji
+- [x] Testy: Vitest, `pageRegistry.test.ts` + `pageChrome.test.ts`
+
+**Transaction scope + pocket catalog (`improvement/transaction-scope-pocket-catalog`, spec `2026-08-26-transaction-scope-pocket-catalog-design.md`):**
+
+- [x] XOR: kategoria P&L vs kieszeń na transferze (`category_id` ↔ `pocket_id` + `pocket_movement`)
+- [x] Opcjonalna kieszeń na dowolnym transferze (ROR↔ROR, Savings, Cash); wymagany `pocket_movement` gdy kieszeń ustawiona
+- [x] Metryki kieszeni z `pocket_movement` (deposit/withdrawal), liczone raz per `transfer_id`; bez `linked_expenses`
+- [x] Katalog kieszeni: osobny link w sidebarze (`nav.pockets`); kategorie pod „Ustawienia” w sidebarze (tab „Kategorie”)
+- [x] Usunięcie kieszeni czyści `pocket_id` i `pocket_movement` na powiązanych transferach
+- [x] PRD delta (FR-P3, FR-C5, FR-P1; usunięte FR-P4) + testy `MonthlyBudgetTest`
+
+### 20) Dashboard — przegląd operatora **[plan 2026-08-27-dashboard-operator-overview]**
+
+- [x] `/panel`: 4 kafelki (suma PLN, oszczędności, wpływy, wydatki miesiąca)
+- [x] Snapshot budżetu bieżącego miesiąca (plan vs wykonanie + słupki CSS)
+- [x] 8 ostatnich transakcji
+- [x] Usunięcie kart skrótów i `AccountsSummaryCard` z dashboardu
+
+### 21) Lokaty **[plan 2026-08-27-deposits]**
+
+- [x] Tab Lokaty na `/konta?kind=deposits`
+- [x] Encje `deposits` / `deposit_movements`; kapitał poza P&L; odsetki w P&L
+- [x] Ręczne otwarcie, zamknięcie (± odsetki), przypisanie transakcji
+- [x] Kafelek dashboardu Lokaty (PLN)
+- [x] Import lokat BNP/mBank (FR-D2) — auto open/close, kandydaci, baner + filtr; odsetki bez zmian
 

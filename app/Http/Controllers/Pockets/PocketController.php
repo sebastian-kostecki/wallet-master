@@ -28,26 +28,19 @@ final class PocketController extends Controller
         $this->authorizeResource(Pocket::class, 'pocket');
     }
 
-    public function index(Request $request, ListPockets $listPockets): Response
+    public function index(Request $request, ListPockets $listPockets, PocketFormOptions $options): Response
     {
-        $filter = $request->query('filter', 'active');
-        if (! in_array($filter, ['active', 'archived', 'all'], true)) {
-            $filter = 'active';
-        }
-
-        $listPockets->handle($request->user(), $filter);
+        $listPockets->handle($request->user());
 
         return Inertia::render('pockets/Index', [
-            'filter' => $filter,
             'pockets' => PocketResource::collection($listPockets->getPockets())->resolve(),
+            ...$options->toArray(),
         ]);
     }
 
-    public function create(): Response
+    public function create(): RedirectResponse
     {
-        return Inertia::render('pockets/Create', [
-            ...(new PocketFormOptions)->toArray(),
-        ]);
+        return to_route('pockets.index');
     }
 
     public function store(StorePocketRequest $request, StorePocket $storePocket): RedirectResponse
@@ -60,14 +53,9 @@ final class PocketController extends Controller
         ]);
     }
 
-    public function edit(Pocket $pocket): Response
+    public function edit(Pocket $pocket): RedirectResponse
     {
-        $pocket->load('currency');
-
-        return Inertia::render('pockets/Edit', [
-            'pocket' => (new PocketResource($pocket))->resolve(request()),
-            ...(new PocketFormOptions)->toArray(),
-        ]);
+        return to_route('pockets.index');
     }
 
     public function update(
@@ -75,17 +63,7 @@ final class PocketController extends Controller
         Pocket $pocket,
         UpdatePocket $updatePocket,
     ): RedirectResponse {
-        $validated = $request->validated();
-        $updatePocket->handle($pocket, $validated);
-
-        $onlyArchiveToggle = count($validated) === 1 && array_key_exists('is_archived', $validated);
-
-        if ($onlyArchiveToggle) {
-            return back()->with('toast', [
-                'type' => 'success',
-                'message_key' => 'pockets.toast.updated',
-            ]);
-        }
+        $updatePocket->handle($pocket, $request->validated());
 
         return to_route('pockets.index')->with('toast', [
             'type' => 'success',

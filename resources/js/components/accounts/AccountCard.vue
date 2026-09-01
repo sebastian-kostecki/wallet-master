@@ -37,7 +37,7 @@ defineEmits<{
 </script>
 
 <template>
-    <div class="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+    <div class="rounded-2xl border border-transparent bg-card p-4">
         <div class="flex items-start justify-between gap-3">
             <div class="flex min-w-0 items-start gap-3">
                 <div class="shrink-0">

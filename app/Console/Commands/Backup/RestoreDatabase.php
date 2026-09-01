@@ -27,7 +27,7 @@ final class RestoreDatabase extends Command
     {
         $connection = (string) ($this->option('connection') ?: config('database.default'));
         $databaseName = (string) config("database.connections.{$connection}.database", '');
-        $diskName = (string) ($this->option('disk') ?: config('backup.backup.destination.disks.0', env('BACKUP_DISK', 'backups')));
+        $diskName = (string) ($this->option('disk') ?: config('backup.backup.destination.disks.0', 'backups'));
         $backupName = (string) config('backup.backup.name');
 
         try {

@@ -1,43 +1,12 @@
 <script setup lang="ts">
 import DropdownSelect, { type DropdownOption } from '@/components/forms/DropdownSelect.vue';
+import type { Paginator, PaginatorLink } from '@/components/pagination/types';
 import { Button } from '@/components/ui/button';
 import { track } from '@/lib/telemetry';
 import { cn } from '@/lib/utils';
 import { Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-type PaginatorLink = {
-    url: string | null;
-    label: string;
-    active: boolean;
-};
-
-type ResourceLinksObject = {
-    first?: string | null;
-    last?: string | null;
-    prev?: string | null;
-    next?: string | null;
-};
-
-type SimplePaginator = {
-    links: PaginatorLink[];
-    current_page: number;
-    last_page: number;
-    per_page: number;
-};
-
-type ResourcePaginator = {
-    links?: ResourceLinksObject;
-    meta: {
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        links: PaginatorLink[];
-    };
-};
-
-type Paginator = SimplePaginator | ResourcePaginator;
 
 const props = withDefaults(
     defineProps<{
@@ -214,8 +183,10 @@ function changePerPage(next: number) {
                     @click="() => link.page !== null && trackPageChanged(link.page)"
                     :class="
                         cn(
-                            'inline-flex h-9 min-w-9 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors',
-                            link.active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                            'inline-flex h-9 min-w-9 items-center justify-center rounded-xl px-2 text-sm font-medium transition-colors',
+                            link.active
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground',
                             link.page === null ? 'pointer-events-none opacity-50' : '',
                         )
                     "

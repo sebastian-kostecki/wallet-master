@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Transfers;
 
+use App\Enums\PocketMovement;
 use App\Enums\TransactionType;
 use App\Models\Account;
 use App\Models\Transaction;
@@ -24,6 +25,7 @@ final class CreateTransfer
      *   description?: ?string,
      *   subject?: ?string,
      *   pocket_id?: int,
+     *   pocket_movement?: string,
      * } $validated
      * @return array{
      *   withdrawal: Transaction,
@@ -90,6 +92,7 @@ final class CreateTransfer
             $depositDedupeHash = md5($transferId.'|deposit', true);
 
             $pocketId = isset($validated['pocket_id']) ? (int) $validated['pocket_id'] : null;
+            $movement = isset($validated['pocket_movement']) ? PocketMovement::from($validated['pocket_movement']) : null;
 
             $withdrawal = Transaction::query()->create([
                 'user_id' => $user->id,
@@ -106,6 +109,7 @@ final class CreateTransfer
                 'transfer_id' => $transferId,
                 'category_id' => null,
                 'pocket_id' => $pocketId,
+                'pocket_movement' => $movement,
             ]);
 
             $deposit = Transaction::query()->create([
@@ -123,6 +127,7 @@ final class CreateTransfer
                 'transfer_id' => $transferId,
                 'category_id' => null,
                 'pocket_id' => $pocketId,
+                'pocket_movement' => $movement,
             ]);
 
             $from->current_balance = bcadd((string) $from->current_balance, $withdrawAmount, 2);

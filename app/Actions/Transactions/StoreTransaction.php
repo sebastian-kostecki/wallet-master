@@ -27,7 +27,6 @@ final class StoreTransaction
      *   description: string,
      *   subject?: ?string,
      *   category_id: int,
-     *   pocket_id?: ?int,
      * }  $validated
      *
      * @throws Throwable
@@ -56,10 +55,6 @@ final class StoreTransaction
             $normalizedDescription = TransactionDedupe::normalizeDescription($validated['description']);
             $dedupeHash = TransactionDedupe::manualDedupeHash($bookedAt, $amount, $normalizedDescription);
 
-            $pocketId = array_key_exists('pocket_id', $validated) && $validated['pocket_id'] !== null
-                ? (int) $validated['pocket_id']
-                : null;
-
             $transaction = Transaction::query()->create([
                 'user_id' => $user->id,
                 'account_id' => $account->id,
@@ -73,7 +68,6 @@ final class StoreTransaction
                 'normalized_description' => $normalizedDescription,
                 'dedupe_hash' => $dedupeHash,
                 'category_id' => $validated['category_id'],
-                'pocket_id' => $pocketId,
             ]);
 
             $account->current_balance = bcadd((string) $account->current_balance, $amount, 2);

@@ -16,7 +16,7 @@ beforeEach(function () {
     $this->seed(CurrencySeeder::class);
 });
 
-test('edit page exposes transfer_id for linked leg', function () {
+test('index exposes transfer_id for linked leg', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     $transferId = (string) Str::uuid();
@@ -31,7 +31,7 @@ test('edit page exposes transfer_id for linked leg', function () {
         'current_balance' => '-50.00',
     ]);
 
-    $withdrawal = Transaction::query()->create([
+    Transaction::query()->create([
         'user_id' => $user->id,
         'account_id' => $from->id,
         'currency_id' => $plnId,
@@ -48,15 +48,18 @@ test('edit page exposes transfer_id for linked leg', function () {
     ]);
 
     $this->actingAs($user)
-        ->get(route('transactions.edit', $withdrawal, absolute: false))
+        ->get(route('transactions.index', [
+            'from' => '01-04-2026',
+            'to' => '01-04-2026',
+        ], absolute: false))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('transactions/Edit', false)
-            ->where('transaction.transfer_id', $transferId)
+            ->component('transactions/Index', false)
+            ->where('transactions.data.0.transfer_id', $transferId)
         );
 });
 
-test('unlink from edit redirects back and clears transfer_id', function () {
+test('unlink from index redirects back and clears transfer_id', function () {
     $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
     $user = User::factory()->create();
     $transferId = (string) Str::uuid();
@@ -114,9 +117,9 @@ test('unlink from edit redirects back and clears transfer_id', function () {
     ]);
 
     $this->actingAs($user)
-        ->from(route('transactions.edit', $withdrawal))
+        ->from(route('transactions.index'))
         ->post(route('transfers.unlink', $transferId))
-        ->assertRedirect(route('transactions.edit', $withdrawal))
+        ->assertRedirect(route('transactions.index'))
         ->assertSessionHas('toast.message_key', 'transfers.toast.unlinked');
 
     $withdrawal->refresh();

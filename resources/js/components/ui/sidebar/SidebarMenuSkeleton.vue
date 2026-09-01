@@ -3,20 +3,24 @@ import Skeleton from '@/components/ui/skeleton/Skeleton.vue';
 import { cn } from '@/lib/utils';
 import { computed, type HTMLAttributes } from 'vue';
 
-const props = defineProps<{
-    showIcon?: boolean;
-    class?: HTMLAttributes['class'];
-}>();
+const props = withDefaults(
+    defineProps<{
+        showIcon?: boolean;
+        class?: HTMLAttributes['class'];
+        width?: string;
+    }>(),
+    {
+        width: '66%',
+    },
+);
 
-const width = computed(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
-});
+const skeletonWidth = computed(() => props.width);
 </script>
 
 <template>
     <div data-sidebar="menu-skeleton" :class="cn('flex h-8 items-center gap-2 rounded-md px-2', props.class)">
         <Skeleton v-if="showIcon" class="size-4 rounded-md" data-sidebar="menu-skeleton-icon" />
 
-        <Skeleton class="h-4 max-w-[--skeleton-width] flex-1" data-sidebar="menu-skeleton-text" :style="{ '--skeleton-width': width }" />
+        <Skeleton class="h-4 max-w-[--skeleton-width] flex-1" data-sidebar="menu-skeleton-text" :style="{ '--skeleton-width': skeletonWidth }" />
     </div>
 </template>

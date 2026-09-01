@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * @property int $id
@@ -27,7 +26,6 @@ use Illuminate\Support\Facades\Schema;
  * @property PocketPlanningMode|null $planning_mode
  * @property string|null $monthly_contribution
  * @property Carbon|null $target_date
- * @property bool $is_archived
  * @property Currency $currency
  */
 final class Pocket extends Model
@@ -50,7 +48,6 @@ final class Pocket extends Model
         'planning_mode',
         'monthly_contribution',
         'target_date',
-        'is_archived',
         'created_at',
         'updated_at',
     ];
@@ -69,7 +66,6 @@ final class Pocket extends Model
             'planning_mode' => PocketPlanningMode::class,
             'monthly_contribution' => 'decimal:2',
             'target_date' => 'date',
-            'is_archived' => 'boolean',
         ];
     }
 
@@ -97,15 +93,6 @@ final class Pocket extends Model
         return $this->hasMany(Transaction::class);
     }
 
-    public function hasLinkedTransactions(): bool
-    {
-        if (! Schema::hasColumn('transactions', 'pocket_id')) {
-            return false;
-        }
-
-        return $this->transactions()->exists();
-    }
-
     /**
      * @param  Builder<self>  $query
      * @return Builder<self>
@@ -113,15 +100,6 @@ final class Pocket extends Model
     public function scopeForUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);
-    }
-
-    /**
-     * @param  Builder<self>  $query
-     * @return Builder<self>
-     */
-    public function scopeActive(Builder $query): Builder
-    {
-        return $query->where('is_archived', false);
     }
 
     /**

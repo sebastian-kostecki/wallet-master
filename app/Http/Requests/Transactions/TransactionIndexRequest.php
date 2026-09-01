@@ -11,7 +11,7 @@ final class TransactionIndexRequest extends FormRequest
 {
     use Indexable;
 
-    /** @var array{account_id: ?int, category_id: ?int, from: ?string, to: ?string}|null */
+    /** @var array{account_id: ?int, category_id: ?int, from: ?string, to: ?string, deposit_candidates: bool}|null */
     private ?array $filters = null;
 
     public function authorize(): bool
@@ -59,11 +59,12 @@ final class TransactionIndexRequest extends FormRequest
             ],
             'from' => ['nullable', 'date_format:d-m-Y', 'before_or_equal:to'],
             'to' => ['nullable', 'date_format:d-m-Y', 'after_or_equal:from'],
+            'deposit_candidates' => ['nullable', 'boolean'],
         ];
     }
 
     /**
-     * @return array{account_id: ?int, category_id: ?int, from: ?string, to: ?string}
+     * @return array{account_id: ?int, category_id: ?int, from: ?string, to: ?string, deposit_candidates: bool}
      */
     public function getFilters(): array
     {
@@ -77,12 +78,14 @@ final class TransactionIndexRequest extends FormRequest
         $categoryId = isset($validated['category_id']) ? (int) $validated['category_id'] : null;
         $fromInput = isset($validated['from']) ? (string) $validated['from'] : null;
         $toInput = isset($validated['to']) ? (string) $validated['to'] : null;
+        $depositCandidates = filter_var($validated['deposit_candidates'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         return $this->filters = [
             'account_id' => $accountId,
             'category_id' => $categoryId,
             'from' => $fromInput,
             'to' => $toInput,
+            'deposit_candidates' => $depositCandidates,
         ];
     }
 

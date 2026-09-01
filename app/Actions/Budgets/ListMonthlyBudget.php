@@ -51,9 +51,15 @@ final class ListMonthlyBudget
 
     public function handle(MonthlyBudgetRequest $request): void
     {
-        $user = $request->user();
-        $this->year = $request->getYear();
-        $this->month = $request->getMonth();
+        $this->handleForPeriod($request->user(), $request->getYear(), $request->getMonth());
+    }
+
+    public function handleForPeriod(User $user, int $year, int $month): void
+    {
+        $this->year = $year;
+        $this->month = $month;
+        $this->rows = [];
+        $this->pocketRows = [];
 
         app(EnsureUserCategories::class)->handle($user);
 
@@ -147,7 +153,6 @@ final class ListMonthlyBudget
     {
         $pockets = Pocket::query()
             ->forUser($user->id)
-            ->active()
             ->ordered()
             ->with('currency')
             ->get();

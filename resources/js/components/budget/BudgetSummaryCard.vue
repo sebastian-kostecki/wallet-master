@@ -31,64 +31,64 @@ const { t } = useI18n();
 </script>
 
 <template>
-    <section class="rounded-xl border border-sidebar-border/70 bg-muted/30 p-4 shadow-sm dark:border-sidebar-border dark:bg-muted/20">
+    <section class="rounded-2xl border border-transparent bg-card p-5 sm:p-6">
         <div class="overflow-x-auto">
             <table class="budget-table text-sm">
                 <BudgetTableColgroup layout="summary" :period="variant" />
                 <thead>
-                    <tr class="border-b text-left text-muted-foreground">
+                    <tr class="border-b border-border/50 text-left text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                         <th class="py-2 pr-4" />
-                        <th class="py-2 pr-4">{{ t('budget.summary.plan') }}</th>
-                        <th v-if="variant === 'yearly'" class="py-2 pr-4 text-muted-foreground">{{ t('budget.summary.forecast') }}</th>
-                        <th class="py-2 pr-4">{{ t('budget.summary.execution') }}</th>
-                        <th class="py-2">{{ t('budget.columns.progress') }}</th>
+                        <th class="py-2 pr-4 text-right">{{ t('budget.summary.plan') }}</th>
+                        <th v-if="variant === 'yearly'" class="py-2 pr-4 text-right">{{ t('budget.summary.forecast') }}</th>
+                        <th class="py-2 pr-4 text-right">{{ t('budget.summary.execution') }}</th>
+                        <th class="py-2 text-right">{{ t('budget.columns.progress') }}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="border-b border-sidebar-border/40">
+                    <tr class="border-b border-border/50">
                         <th class="py-2 pr-4 text-left text-foreground">
                             <BudgetSummaryRowLabel :label="t('budget.summary.income')" variant="income" />
                         </th>
-                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.plan.income, currency) }}</td>
-                        <td v-if="variant === 'yearly' && summary.forecast" class="py-2 pr-4 tabular-nums text-muted-foreground">
+                        <td class="py-2 pr-4 text-right tabular-nums">{{ formatMoney(summary.plan.income, currency) }}</td>
+                        <td v-if="variant === 'yearly' && summary.forecast" class="py-2 pr-4 text-right tabular-nums text-muted-foreground">
                             {{ formatMoney(summary.forecast.income, currency) }}
                         </td>
-                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.execution.income, currency) }}</td>
-                        <td class="py-2">
+                        <td class="py-2 pr-4 text-right tabular-nums">{{ formatMoney(summary.execution.income, currency) }}</td>
+                        <td class="py-2 text-right">
                             <BudgetProgressCell :percent="summary.progress.income_percent" category-type="income" />
                         </td>
                     </tr>
-                    <tr class="border-b border-sidebar-border/40">
+                    <tr class="border-b border-border/50">
                         <th class="py-2 pr-4 text-left text-foreground">
                             <BudgetSummaryRowLabel :label="t('budget.summary.expense')" variant="expense" />
                         </th>
-                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.plan.expense, currency) }}</td>
-                        <td v-if="variant === 'yearly' && summary.forecast" class="py-2 pr-4 tabular-nums text-muted-foreground">
+                        <td class="py-2 pr-4 text-right tabular-nums">{{ formatMoney(summary.plan.expense, currency) }}</td>
+                        <td v-if="variant === 'yearly' && summary.forecast" class="py-2 pr-4 text-right tabular-nums text-muted-foreground">
                             {{ formatMoney(summary.forecast.expense, currency) }}
                         </td>
-                        <td class="py-2 pr-4 tabular-nums">{{ formatMoney(summary.execution.expense, currency) }}</td>
-                        <td class="py-2">
+                        <td class="py-2 pr-4 text-right tabular-nums">{{ formatMoney(summary.execution.expense, currency) }}</td>
+                        <td class="py-2 text-right">
                             <BudgetProgressCell :percent="summary.progress.expense_percent" category-type="expense" />
                         </td>
                     </tr>
-                    <tr class="border-b border-sidebar-border/40">
+                    <tr class="border-b border-border/50">
                         <th class="py-2 pr-4 text-left text-foreground">
                             <BudgetSummaryRowLabel :label="t('budget.summary.balance')" variant="balance" />
                         </th>
-                        <td class="py-2 pr-4 tabular-nums" :class="signedMoneyClass(summary.plan.balance)">
+                        <td class="py-2 pr-4 text-right tabular-nums" :class="signedMoneyClass(summary.plan.balance)">
                             {{ formatMoney(summary.plan.balance, currency) }}
                         </td>
                         <td
                             v-if="variant === 'yearly' && summary.forecast"
-                            class="py-2 pr-4 tabular-nums"
+                            class="py-2 pr-4 text-right tabular-nums"
                             :class="signedMoneyClass(summary.forecast.balance)"
                         >
                             {{ formatMoney(summary.forecast.balance, currency) }}
                         </td>
-                        <td class="py-2 pr-4 tabular-nums" :class="signedMoneyClass(summary.execution.balance)">
+                        <td class="py-2 pr-4 text-right tabular-nums" :class="signedMoneyClass(summary.execution.balance)">
                             {{ formatMoney(summary.execution.balance, currency) }}
                         </td>
-                        <td class="py-2" />
+                        <td class="py-2 text-right" />
                     </tr>
                 </tbody>
             </table>
