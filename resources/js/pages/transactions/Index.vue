@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import DepositCandidatesBanner, { type DepositCandidate } from '@/components/deposits/DepositCandidatesBanner.vue';
-import AssignDepositDialog from '@/components/deposits/modals/AssignDepositDialog.vue';
 import ImportDialog from '@/components/import/ImportDialog.vue';
 import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
 import TablePage from '@/components/page/TablePage.vue';
@@ -81,8 +80,6 @@ type Transaction = {
     account: Account | null;
     currency: Currency | null;
     deposit_movement: { kind: 'open' | 'close_principal' | 'interest'; deposit_id: number } | null;
-    deposit_assignable: boolean;
-    deposit_candidate: { kind: 'open' | 'close_principal' } | null;
 };
 
 type PaginatorLink = {
@@ -152,13 +149,6 @@ const props = defineProps<{
     unresolved_import_failed_rows?: ImportFailedRow[];
     pending_transfer_candidates?: TransferCandidatePair[];
     pending_deposit_candidates?: DepositCandidate[];
-    assignable_deposits?: {
-        id: number;
-        name: string | null;
-        principal: string;
-        status: 'active' | 'closed';
-        currency_id: number;
-    }[];
 }>();
 
 const page = usePage<{ errors?: Record<string, string> }>();
@@ -340,15 +330,6 @@ const editingTransactionId = ref<number | null>(null);
 
 const transferDialogOpen = ref(false);
 const transferFormResetKey = ref(0);
-
-const assignDialogOpen = ref(false);
-const assigningTransactionId = ref<number | null>(null);
-const assigningTransaction = computed(() => props.transactions.data.find((tx) => tx.id === assigningTransactionId.value) ?? null);
-
-function openAssignDialog(tx: Transaction): void {
-    assigningTransactionId.value = tx.id;
-    assignDialogOpen.value = true;
-}
 
 function openTransferDialog(): void {
     const alreadyOpen = transferDialogOpen.value;
@@ -674,7 +655,6 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                         :format-currency-symbol="formatCurrencySymbol"
                                         @edit="openEditDialog"
                                         @delete="openDeleteDialog"
-                                        @assign="openAssignDialog"
                                     />
                                 </tbody>
                             </table>
@@ -691,7 +671,6 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                                 :format-currency-symbol="formatCurrencySymbol"
                                 @edit="openEditDialog"
                                 @delete="openDeleteDialog"
-                                @assign="openAssignDialog"
                             />
                         </div>
                     </div>
@@ -736,7 +715,5 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
             @processing="(value: any) => (deleteProcessing = value)"
             @success="deletingTransactionId = null"
         />
-
-        <AssignDepositDialog v-model:open="assignDialogOpen" :transaction="assigningTransaction" :assignable-deposits="assignable_deposits ?? []" />
     </AppLayout>
 </template>

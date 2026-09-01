@@ -4,7 +4,7 @@ import DepositBadge from '@/components/deposits/DepositBadge.vue';
 import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Landmark, Pencil, PiggyBank, Scale, Trash2, Wallet } from 'lucide-vue-next';
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil, PiggyBank, Scale, Trash2, Wallet } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -49,8 +49,6 @@ type Transaction = {
     account: Account | null;
     currency: { id: number; code: string; symbol: string | null; precision: number } | null;
     deposit_movement: { kind: 'open' | 'close_principal' | 'interest'; deposit_id: number } | null;
-    deposit_assignable: boolean;
-    deposit_candidate: { kind: 'open' | 'close_principal' } | null;
 };
 
 const props = defineProps<{
@@ -64,7 +62,6 @@ const props = defineProps<{
 defineEmits<{
     edit: [transaction: Transaction];
     delete: [transactionId: number];
-    assign: [transaction: Transaction];
 }>();
 
 const { t, locale } = useI18n();
@@ -204,13 +201,6 @@ function transactionIcon(row: Transaction) {
 
 const adjustmentBadgeClass =
     'inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400';
-
-const depositCandidateBadgeClass =
-    'inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-violet-600 dark:text-violet-400';
-
-function isDepositCandidate(row: Transaction): boolean {
-    return row.deposit_candidate !== null && row.deposit_movement === null;
-}
 
 function isCapitalDepositMovement(row: Transaction): boolean {
     const kind = row.deposit_movement?.kind;
@@ -355,9 +345,6 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
                 <PocketBadge :name="tx.pocket.name" :icon="tx.pocket.icon" :color="tx.pocket.color" size="md" />
             </div>
             <span v-else-if="tx.transfer_id" class="text-sm text-muted-foreground">—</span>
-            <div v-else-if="isDepositCandidate(tx)" class="min-w-0 max-w-full">
-                <span :class="depositCandidateBadgeClass">{{ t('deposits.candidates.badge') }}</span>
-            </div>
             <div v-else-if="isCapitalDepositMovement(tx)" class="min-w-0 max-w-full">
                 <DepositBadge variant="capital" size="md" />
             </div>
@@ -410,17 +397,6 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
         <td class="px-3 py-2.5 text-right">
             <TooltipProvider v-if="tx.account" :delay-duration="0">
                 <div class="inline-flex w-full items-center justify-end gap-1">
-                    <Tooltip v-if="tx.deposit_assignable">
-                        <TooltipTrigger>
-                            <Button variant="ghost" size="icon" type="button" :aria-label="t('deposits.actions.assign')" @click="$emit('assign', tx)">
-                                <Landmark class="h-4 w-4" aria-hidden="true" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{{ t('deposits.actions.assign') }}</p>
-                        </TooltipContent>
-                    </Tooltip>
-
                     <Tooltip>
                         <TooltipTrigger>
                             <Button
@@ -535,9 +511,6 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
                 <div v-if="tx.transfer_id && tx.pocket" class="mt-1">
                     <PocketBadge :name="tx.pocket.name" :icon="tx.pocket.icon" :color="tx.pocket.color" size="sm" />
                 </div>
-                <div v-else-if="isDepositCandidate(tx)" class="mt-1">
-                    <span :class="depositCandidateBadgeClass">{{ t('deposits.candidates.badge') }}</span>
-                </div>
                 <div v-else-if="isCapitalDepositMovement(tx)" class="mt-1">
                     <DepositBadge variant="capital" size="sm" />
                 </div>
@@ -576,23 +549,6 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
                 <div class="mt-2">
                     <TooltipProvider v-if="tx.account" :delay-duration="0">
                         <div class="inline-flex items-center gap-1">
-                            <Tooltip v-if="tx.deposit_assignable">
-                                <TooltipTrigger>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        type="button"
-                                        :aria-label="t('deposits.actions.assign')"
-                                        @click="$emit('assign', tx)"
-                                    >
-                                        <Landmark class="h-4 w-4" aria-hidden="true" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{{ t('deposits.actions.assign') }}</p>
-                                </TooltipContent>
-                            </Tooltip>
-
                             <Tooltip>
                                 <TooltipTrigger>
                                     <Button

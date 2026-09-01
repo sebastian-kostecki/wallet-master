@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Transactions;
 
 use App\Actions\Categories\ListCategories;
-use App\Actions\Deposits\ListDeposits;
 use App\Actions\Pockets\ListPockets;
 use App\Actions\Transactions\DeleteTransaction;
 use App\Actions\Transactions\ListTransactions;
@@ -40,14 +39,12 @@ final class TransactionController extends Controller
         ListTransactions $listTransactions,
         ListCategories $listCategories,
         ListPockets $listPockets,
-        ListDeposits $listDeposits,
     ): Response {
         $user = $request->user();
 
         $listTransactions->handle($request);
         $listCategories->handle($user);
         $listPockets->handle($user);
-        $listDeposits->handle($user);
 
         TransactionsIndexQuery::remember($request);
 
@@ -67,16 +64,6 @@ final class TransactionController extends Controller
             'pending_deposit_candidates' => DepositCandidateResource::collection(
                 $listTransactions->getPendingDepositCandidates(),
             )->resolve(),
-            'assignable_deposits' => $listDeposits->getDeposits()
-                ->map(fn ($deposit) => [
-                    'id' => $deposit->id,
-                    'name' => $deposit->name,
-                    'principal' => $deposit->principal,
-                    'status' => $deposit->status->value,
-                    'currency_id' => $deposit->currency_id,
-                ])
-                ->values()
-                ->all(),
         ]);
     }
 

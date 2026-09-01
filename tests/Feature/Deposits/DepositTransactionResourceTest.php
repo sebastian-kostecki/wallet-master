@@ -79,10 +79,6 @@ test('transaction index exposes deposit movement and assignable flags', function
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('transactions/Index', false)
-        ->has('assignable_deposits', 1)
-        ->where('assignable_deposits.0.name', '3M')
-        ->where('assignable_deposits.0.principal', '1000.00')
-        ->where('assignable_deposits.0.status', 'active')
         ->where('transactions.data.0.deposit_movement.kind', 'open')
         ->where('transactions.data.0.deposit_assignable', false)
         ->where('transactions.data', fn ($rows) => collect($rows)->contains(
