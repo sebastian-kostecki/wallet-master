@@ -129,6 +129,33 @@
             "capital": "Lokata",
             "interest": "Odsetki lokaty"
         },
+        "candidates": {
+            "bannerTitle": "{count} kandydatów lokaty do potwierdzenia",
+            "subtitle": "System dopasował transakcje, które mogą otworzyć lub zamknąć lokatę. Potwierdź lokatę lub oznacz, że to nie jest ruch lokaty.",
+            "confirm": "Potwierdź lokatę",
+            "reject": "To nie lokata",
+            "kindOpen": "Otwarcie lokaty",
+            "kindClose": "Zwrot kapitału",
+            "filter": "Kandydaci lokaty ({count})",
+            "badge": "Kandydat lokaty",
+            "depositSelect": {
+                "label": "Lokata",
+                "placeholder": "Wybierz lokatę"
+            },
+            "table": {
+                "kind": "Rodzaj",
+                "description": "Opis",
+                "amount": "Kwota",
+                "date": "Data",
+                "deposit": "Lokata",
+                "actions": "Akcje"
+            },
+            "a11y": {
+                "toggle": "Kandydaci lokaty, {count} pozycji. Rozwiń lub zwiń szczegóły.",
+                "confirm": "Potwierdź lokatę dla {description}",
+                "reject": "Oznacz jako nie lokatę dla {description}"
+            }
+        },
         "actions": {
             "close": "Zamknij lokatę",
             "assign": "Przypisz do lokaty"

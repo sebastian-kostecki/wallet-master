@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import CategoryBadge from '@/components/categories/CategoryBadge.vue';
+import DepositBadge from '@/components/deposits/DepositBadge.vue';
+import PocketBadge from '@/components/pockets/PocketBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Landmark, Pencil, PiggyBank, Scale, Trash2, Wallet } from 'lucide-vue-next';
@@ -43,11 +45,12 @@ type Transaction = {
     category: TransactionCategory | null;
     pocket_id: number | null;
     pocket_movement: 'deposit' | 'withdrawal' | null;
-    pocket: { id: number; name: string } | null;
+    pocket: { id: number; name: string; icon: string; color: string } | null;
     account: Account | null;
     currency: { id: number; code: string; symbol: string | null; precision: number } | null;
     deposit_movement: { kind: 'open' | 'close_principal' | 'interest'; deposit_id: number } | null;
     deposit_assignable: boolean;
+    deposit_candidate: { kind: 'open' | 'close_principal' } | null;
 };
 
 const props = defineProps<{
@@ -202,11 +205,12 @@ function transactionIcon(row: Transaction) {
 const adjustmentBadgeClass =
     'inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400';
 
-const depositCapitalBadgeClass =
-    'inline-flex items-center rounded-full border border-border/50 bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground';
+const depositCandidateBadgeClass =
+    'inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-violet-600 dark:text-violet-400';
 
-const depositInterestBadgeClass =
-    'inline-flex items-center rounded-full border border-border/40 bg-muted/60 px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground';
+function isDepositCandidate(row: Transaction): boolean {
+    return row.deposit_candidate !== null && row.deposit_movement === null;
+}
 
 function isCapitalDepositMovement(row: Transaction): boolean {
     const kind = row.deposit_movement?.kind;
@@ -347,20 +351,19 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
             </div>
         </td>
         <td class="overflow-hidden px-3 py-2.5">
-            <div v-if="tx.transfer_id" class="flex flex-col gap-0.5">
-                <span class="text-sm text-muted-foreground">
-                    {{ t('transactions.index.table.transfer') }}
-                </span>
-                <span v-if="tx.pocket" class="text-xs text-muted-foreground">
-                    {{ tx.pocket.name }}
-                </span>
+            <div v-if="tx.transfer_id && tx.pocket" class="min-w-0 max-w-full">
+                <PocketBadge :name="tx.pocket.name" :icon="tx.pocket.icon" :color="tx.pocket.color" size="md" />
+            </div>
+            <span v-else-if="tx.transfer_id" class="text-sm text-muted-foreground">—</span>
+            <div v-else-if="isDepositCandidate(tx)" class="min-w-0 max-w-full">
+                <span :class="depositCandidateBadgeClass">{{ t('deposits.candidates.badge') }}</span>
             </div>
             <div v-else-if="isCapitalDepositMovement(tx)" class="min-w-0 max-w-full">
-                <span :class="depositCapitalBadgeClass">{{ t('deposits.badge.capital') }}</span>
+                <DepositBadge variant="capital" size="md" />
             </div>
             <div v-else-if="tx.category" class="flex min-w-0 max-w-full flex-col gap-1">
                 <CategoryBadge :name="tx.category.name" :icon="tx.category.icon" :color="tx.category.color" size="md" />
-                <span v-if="isInterestDepositMovement(tx)" :class="depositInterestBadgeClass">{{ t('deposits.badge.interest') }}</span>
+                <DepositBadge v-if="isInterestDepositMovement(tx)" variant="interest" size="md" />
             </div>
             <span v-else class="text-sm text-muted-foreground">—</span>
         </td>
@@ -529,12 +532,18 @@ const displayDateIso = computed(() => transactionDisplayDateIso(tx.value));
                 <p class="mt-0.5 text-xs text-muted-foreground">
                     {{ tx.date_relative || operationDateRelative(displayDateIso) }}
                 </p>
-                <div v-if="isCapitalDepositMovement(tx)" class="mt-1">
-                    <span :class="depositCapitalBadgeClass">{{ t('deposits.badge.capital') }}</span>
+                <div v-if="tx.transfer_id && tx.pocket" class="mt-1">
+                    <PocketBadge :name="tx.pocket.name" :icon="tx.pocket.icon" :color="tx.pocket.color" size="sm" />
+                </div>
+                <div v-else-if="isDepositCandidate(tx)" class="mt-1">
+                    <span :class="depositCandidateBadgeClass">{{ t('deposits.candidates.badge') }}</span>
+                </div>
+                <div v-else-if="isCapitalDepositMovement(tx)" class="mt-1">
+                    <DepositBadge variant="capital" size="sm" />
                 </div>
                 <div v-else-if="tx.category" class="mt-1 flex flex-col gap-1">
                     <CategoryBadge :name="tx.category.name" :icon="tx.category.icon" :color="tx.category.color" size="sm" />
-                    <span v-if="isInterestDepositMovement(tx)" :class="depositInterestBadgeClass">{{ t('deposits.badge.interest') }}</span>
+                    <DepositBadge v-if="isInterestDepositMovement(tx)" variant="interest" size="sm" />
                 </div>
                 <p class="mt-1 text-xs text-muted-foreground">
                     {{ tx.account?.name ?? t('transactions.index.readOnly.deletedAccount') }}

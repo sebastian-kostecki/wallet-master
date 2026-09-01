@@ -129,6 +129,33 @@
             "capital": "Deposit",
             "interest": "Deposit interest"
         },
+        "candidates": {
+            "bannerTitle": "{count} deposit candidates to review",
+            "subtitle": "We matched transactions that may open or close a deposit. Confirm the deposit or mark that it is not a deposit movement.",
+            "confirm": "Confirm deposit",
+            "reject": "Not a deposit",
+            "kindOpen": "Open deposit",
+            "kindClose": "Return principal",
+            "filter": "Deposit candidates ({count})",
+            "badge": "Deposit candidate",
+            "depositSelect": {
+                "label": "Deposit",
+                "placeholder": "Select deposit"
+            },
+            "table": {
+                "kind": "Kind",
+                "description": "Description",
+                "amount": "Amount",
+                "date": "Date",
+                "deposit": "Deposit",
+                "actions": "Actions"
+            },
+            "a11y": {
+                "toggle": "Deposit candidates, {count} items. Expand or collapse details.",
+                "confirm": "Confirm deposit for {description}",
+                "reject": "Mark as not a deposit for {description}"
+            }
+        },
         "actions": {
             "close": "Close deposit",
             "assign": "Assign to deposit"

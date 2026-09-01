@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DepositCandidatesBanner, { type DepositCandidate } from '@/components/deposits/DepositCandidatesBanner.vue';
 import AssignDepositDialog from '@/components/deposits/modals/AssignDepositDialog.vue';
 import ImportDialog from '@/components/import/ImportDialog.vue';
 import ImportFailedRowsBanner, { type ImportFailedRow } from '@/components/import/ImportFailedRowsBanner.vue';
@@ -76,11 +77,12 @@ type Transaction = {
     category: TransactionCategory | null;
     pocket_id: number | null;
     pocket_movement: 'deposit' | 'withdrawal' | null;
-    pocket: { id: number; name: string } | null;
+    pocket: { id: number; name: string; icon: string; color: string } | null;
     account: Account | null;
     currency: Currency | null;
     deposit_movement: { kind: 'open' | 'close_principal' | 'interest'; deposit_id: number } | null;
     deposit_assignable: boolean;
+    deposit_candidate: { kind: 'open' | 'close_principal' } | null;
 };
 
 type PaginatorLink = {
@@ -134,6 +136,7 @@ type Filters = {
     sort: 'date' | 'amount' | string;
     direction: 'asc' | 'desc' | string;
     per_page?: number;
+    deposit_candidates?: boolean;
 };
 
 const props = defineProps<{
@@ -148,6 +151,7 @@ const props = defineProps<{
     };
     unresolved_import_failed_rows?: ImportFailedRow[];
     pending_transfer_candidates?: TransferCandidatePair[];
+    pending_deposit_candidates?: DepositCandidate[];
     assignable_deposits?: {
         id: number;
         name: string | null;
@@ -208,6 +212,35 @@ function clearFilters() {
     router.get(route('transactions.index'), { sort: 'date', direction: 'desc' }, { preserveScroll: true, replace: true });
 }
 
+function indexQuery(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+        account_id: props.filters.account_id ?? undefined,
+        category_id: props.filters.category_id ?? undefined,
+        from: props.filters.from ?? undefined,
+        to: props.filters.to ?? undefined,
+        sort: props.filters.sort ?? 'date',
+        direction: props.filters.direction ?? 'desc',
+        per_page: props.filters.per_page ?? undefined,
+        deposit_candidates: props.filters.deposit_candidates ? 1 : undefined,
+        ...overrides,
+    };
+}
+
+function toggleDepositCandidatesFilter() {
+    router.get(
+        route('transactions.index'),
+        indexQuery({
+            deposit_candidates: props.filters.deposit_candidates ? undefined : 1,
+            page: undefined,
+        }),
+        {
+            preserveScroll: true,
+            replace: true,
+            preserveState: 'errors',
+        },
+    );
+}
+
 function setSort(sort: 'date' | 'amount') {
     const currentSort = props.filters.sort ?? 'date';
     const currentDirection = props.filters.direction ?? (currentSort === 'date' ? 'desc' : 'asc');
@@ -219,14 +252,10 @@ function setSort(sort: 'date' | 'amount') {
 
     router.get(
         route('transactions.index'),
-        {
-            account_id: props.filters.account_id ?? undefined,
-            category_id: props.filters.category_id ?? undefined,
-            from: props.filters.from ?? undefined,
-            to: props.filters.to ?? undefined,
+        indexQuery({
             sort,
             direction: nextDirection,
-        },
+        }),
         {
             preserveScroll: true,
             replace: true,
@@ -240,9 +269,14 @@ const hasActiveFilters = computed(() => {
         props.filters.account_id !== null ||
             props.filters.category_id !== null ||
             (props.filters.from ?? '').trim() !== '' ||
-            (props.filters.to ?? '').trim() !== '',
+            (props.filters.to ?? '').trim() !== '' ||
+            props.filters.deposit_candidates === true,
     );
 });
+
+const pendingDepositCandidateCount = computed(() => (props.pending_deposit_candidates ?? []).length);
+
+const showDepositCandidatesFilter = computed(() => pendingDepositCandidateCount.value > 0 || props.filters.deposit_candidates === true);
 
 const transactionTotal = computed(() => {
     const paginator = props.transactions as FlattenedPaginator<Transaction> | ResourcePaginator<Transaction>;
@@ -481,6 +515,28 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                 :account-filter-id="filters.account_id"
             />
 
+            <DepositCandidatesBanner
+                v-if="(pending_deposit_candidates ?? []).length > 0"
+                :candidates="pending_deposit_candidates ?? []"
+                :account-filter-id="filters.account_id"
+            />
+
+            <div v-if="showDepositCandidatesFilter" class="flex flex-wrap items-center gap-2">
+                <Button
+                    type="button"
+                    size="sm"
+                    :variant="filters.deposit_candidates ? 'default' : 'outline'"
+                    class="rounded-full"
+                    @click="toggleDepositCandidatesFilter"
+                >
+                    {{
+                        t('deposits.candidates.filter', {
+                            count: pendingDepositCandidateCount,
+                        })
+                    }}
+                </Button>
+            </div>
+
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-2xl border border-transparent bg-card p-6">
                     <p class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
@@ -518,20 +574,7 @@ function sortButtonAriaLabel(column: 'date' | 'amount'): string {
                     </div>
                 </div>
 
-                <TablePage
-                    v-else
-                    :is-empty="isFilteredEmpty || isFirstUseEmpty"
-                    :paginator="transactions"
-                    :query="{
-                        account_id: filters.account_id ?? undefined,
-                        category_id: filters.category_id ?? undefined,
-                        from: filters.from ?? undefined,
-                        to: filters.to ?? undefined,
-                        sort: filters.sort ?? 'date',
-                        direction: filters.direction ?? 'desc',
-                        per_page: filters.per_page ?? undefined,
-                    }"
-                >
+                <TablePage v-else :is-empty="isFilteredEmpty || isFirstUseEmpty" :paginator="transactions" :query="indexQuery()">
                     <template #empty>
                         <section
                             v-if="isFilteredEmpty"
