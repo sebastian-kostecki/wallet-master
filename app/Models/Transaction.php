@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\DepositMatchStatus;
 use App\Enums\PocketMovement;
 use App\Enums\TransactionType;
 use App\Enums\TransferMatchStatus;
@@ -29,6 +30,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $transfer_id
  * @property TransferMatchStatus $transfer_match_status
  * @property int|null $transfer_candidate_for_id
+ * @property DepositMatchStatus $deposit_match_status
+ * @property string|null $deposit_candidate_kind
  * @property TransactionType $type
  * @property Carbon $date
  * @property Carbon|null $booked_at
@@ -59,6 +62,8 @@ final class Transaction extends Model
         'transfer_id',
         'transfer_match_status',
         'transfer_candidate_for_id',
+        'deposit_match_status',
+        'deposit_candidate_kind',
         'created_at',
         'updated_at',
     ];
@@ -76,6 +81,8 @@ final class Transaction extends Model
             'transfer_id' => 'string',
             'transfer_match_status' => TransferMatchStatus::class,
             'transfer_candidate_for_id' => 'integer',
+            'deposit_match_status' => DepositMatchStatus::class,
+            'deposit_candidate_kind' => 'string',
             'import_id' => 'integer',
             'raw_statement_description' => 'string',
             'account_id' => 'integer',
@@ -160,5 +167,13 @@ final class Transaction extends Model
             ->where('transfer_match_status', TransferMatchStatus::Manual)
             ->whereNotNull('transfer_candidate_for_id')
             ->whereColumn('id', '<', 'transfer_candidate_for_id');
+    }
+
+    /**
+     * @param  Builder<Transaction>  $query
+     */
+    public function scopePendingDepositCandidate(Builder $query): void
+    {
+        $query->where('deposit_match_status', DepositMatchStatus::Manual);
     }
 }
