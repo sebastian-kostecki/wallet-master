@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\AccountType;
 use App\Enums\Bank;
+use App\Enums\DepositMatchStatus;
 use App\Enums\DepositMovementKind;
 use App\Enums\DepositStatus;
 use App\Models\Account;
@@ -110,6 +111,45 @@ test('transaction summary excludes deposit capital and includes interest', funct
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('summary.total_income', 150)
+            ->where('summary.total_expense', 0)
+        );
+});
+
+test('transaction summary excludes pending deposit import candidates', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'ROR',
+        'bank' => Bank::BnpParibas,
+        'type' => AccountType::Checking,
+        'opening_balance' => '0.00',
+        'current_balance' => '0.00',
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-08-10',
+        'booked_at' => '2026-08-10',
+        'amount' => '-5000.00',
+        'type' => 'expense',
+        'description' => 'OTWARCIE LOKATY candidate',
+        'normalized_description' => TransactionDedupe::normalizeDescription('OTWARCIE LOKATY candidate'),
+        'dedupe_hash' => TransactionDedupe::manualDedupeHash('2026-08-10', '-5000.00', 'deposit-open-candidate'),
+        'category_id' => null,
+        'deposit_match_status' => DepositMatchStatus::Manual,
+        'deposit_candidate_kind' => 'open',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('transactions.index', ['from' => '01-08-2026', 'to' => '31-08-2026'], absolute: false))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('summary.total_income', 0)
             ->where('summary.total_expense', 0)
         );
 });

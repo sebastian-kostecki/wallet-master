@@ -174,6 +174,8 @@ final class Transaction extends Model
      */
     public function scopePendingDepositCandidate(Builder $query): void
     {
-        $query->where('deposit_match_status', DepositMatchStatus::Manual);
+        $query
+            ->where('deposit_match_status', DepositMatchStatus::Manual)
+            ->whereNotNull('deposit_candidate_kind');
     }
 }

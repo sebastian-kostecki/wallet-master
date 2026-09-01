@@ -99,3 +99,42 @@ test('transactions index includes pending deposit candidates with matching depos
             ->where('transactions.data.0.deposit_candidate.kind', 'close_principal')
         );
 });
+
+test('confirmed deposit candidates are removed from pending banner list', function () {
+    $plnId = (int) Currency::query()->where('code', 'PLN')->value('id');
+    $user = User::factory()->create();
+
+    $account = Account::query()->create([
+        'user_id' => $user->id,
+        'currency_id' => $plnId,
+        'name' => 'ROR',
+        'bank' => Bank::MBank,
+        'type' => AccountType::Checking,
+        'opening_balance' => '0.00',
+        'current_balance' => '0.00',
+    ]);
+
+    Transaction::query()->create([
+        'user_id' => $user->id,
+        'account_id' => $account->id,
+        'currency_id' => $plnId,
+        'date' => '2026-08-10',
+        'booked_at' => '2026-08-10',
+        'amount' => '-3000.00',
+        'type' => TransactionType::Expense,
+        'description' => 'Confirmed deposit open',
+        'subject' => null,
+        'normalized_description' => TransactionDedupe::normalizeDescription('Confirmed deposit open'),
+        'dedupe_hash' => TransactionDedupe::manualDedupeHash('2026-08-10', '-3000.00', 'confirmed-deposit-open'),
+        'category_id' => null,
+        'deposit_match_status' => DepositMatchStatus::Manual,
+        'deposit_candidate_kind' => null,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('transactions.index', absolute: false))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('pending_deposit_candidates', 0)
+        );
+});
