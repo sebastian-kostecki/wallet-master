@@ -520,5 +520,5 @@ Cel: zrealizować zakres z `.docs/prd.md` (terminologia: **Konto** / **Transakcj
 - [x] Encje `deposits` / `deposit_movements`; kapitał poza P&L; odsetki w P&L
 - [x] Ręczne otwarcie, zamknięcie (± odsetki), przypisanie transakcji
 - [x] Kafelek dashboardu Lokaty (PLN)
-- [ ] Auto-klasyfikacja importu CSV (poza v1)
+- [x] Import lokat BNP/mBank (FR-D2) — auto open/close, kandydaci, baner + filtr; odsetki bez zmian
 

@@ -88,6 +88,7 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 ### 3.1b Lokaty (Should / plan)
 
 1. Lokaty terminowe — trzecia zakładka Konta, kapitał poza P&L, odsetki w P&L, ręczne otwarcie/zamknięcie i przypisanie transakcji (FR-D1)
+2. Import lokat BNP/mBank — auto-detekcja kapitału przy imporcie CSV, kandydaci przy niejednoznaczności (FR-D2)
 
 ### 3.2 Poza zakresem (Out of scope)
 
@@ -145,6 +146,13 @@ Webowa aplikacja do budżetu domowego: konta, transakcje, import wyciągów CSV/
 | `deposit_closed` | Zamknięcie lokaty | FR-D1 |
 | `deposit_updated` | Edycja metadanych lokaty | FR-D1 |
 | `deposit_transaction_assigned` | Przypisanie transakcji do lokaty | FR-D1 |
+| `deposit_import_open_auto` | Auto-otwarcie lokaty przy imporcie | FR-D2 |
+| `deposit_import_close_auto` | Auto-zamknięcie lokaty przy imporcie (jedno dopasowanie) | FR-D2 |
+| `deposit_import_open_candidate` | Kandydat otwarcia wstawiony przy imporcie | FR-D2 |
+| `deposit_import_close_candidate` | Kandydat zamknięcia wstawiony przy imporcie (brak / wieloznaczne dopasowanie) | FR-D2 |
+| `deposit_import_open_confirmed` | Użytkownik potwierdził kandydata otwarcia | FR-D2 |
+| `deposit_import_close_confirmed` | Użytkownik potwierdził kandydata zamknięcia | FR-D2 |
+| `deposit_import_candidate_rejected` | Użytkownik odrzucił kandydata lokaty | FR-D2 |
 
 Kanał: log `telemetry` (daily, JSON line) — patrz §8.
 
@@ -834,7 +842,7 @@ Lista transakcji wyświetla nazwę kategorii (transakcje P&L); transfer wewnętr
 | **Domena** | Deposits |
 
 **Zachowanie**
-Użytkownik śledzi **lokaty terminowe** jako kapitał zaparkowany poza P&L: trzecia zakładka **Lokaty** na `/konta?kind=deposits` (obok Rachunki / Portfele). Otwarcie to **jedna** transakcja wydatek `−principal` na aktywnym koncie bankowym (`bank !== cash`); zwrot kapitału to przychód `+principal`; odsetki — osobny przychód z kategorią. Wszystkie nogi mają `transfer_id = null` (nie transfer). Kapitał (`open`, `close_principal`) wykluczony z podsumowania listy transakcji, budżetu P&L, cashflow dashboardu i puli matchera transferów; odsetki (`interest`) wliczane do P&L. v1: ręczne otwarcie, zamknięcie (± odsetki), edycja nazwy/`matures_at`, przypisanie istniejącej transakcji (open / close_principal / interest). **Bez** auto-klasyfikacji CSV. Konto `Cash` jako źródło/cel — 422. Dashboard: piąty KPI sumy aktywnych lokat PLN.
+Użytkownik śledzi **lokaty terminowe** jako kapitał zaparkowany poza P&L: trzecia zakładka **Lokaty** na `/konta?kind=deposits` (obok Rachunki / Portfele). Otwarcie to **jedna** transakcja wydatek `−principal` na aktywnym koncie bankowym (`bank !== cash`); zwrot kapitału to przychód `+principal`; odsetki — osobny przychód z kategorią. Wszystkie nogi mają `transfer_id = null` (nie transfer). Kapitał (`open`, `close_principal`) wykluczony z podsumowania listy transakcji, budżetu P&L, cashflow dashboardu i puli matchera transferów; odsetki (`interest`) wliczane do P&L. v1: ręczne otwarcie, zamknięcie (± odsetki), edycja nazwy/`matures_at`, przypisanie istniejącej transakcji (open / close_principal / interest). Auto-klasyfikacja kapitału przy imporcie CSV — **FR-D2** (BNP/mBank); pozostałe banki: ręczne przypisanie. Konto `Cash` jako źródło/cel — 422. Dashboard: piąty KPI sumy aktywnych lokat PLN.
 
 **Kryteria akceptacji**
 1. Given otwarcie lokaty When zapis Then transakcja `−principal` z `category_id = null`, movement `open`, saldo konta źródłowego zmniejszone; podsumowanie listy i budżet **nie** wliczają tej kwoty.
@@ -847,10 +855,39 @@ Użytkownik śledzi **lokaty terminowe** jako kapitał zaparkowany poza P&L: trz
 **Reguły**
 - Jedna lokata = jedno założenie; `principal` zamrożony po otwarciu; zamknięcie zawsze 100%; brak delete w v1.
 - Assign: transakcja bez `transfer_id`, bez istniejącego `deposit_movement`, nie `adjustment`, konto bankowe nieusunięte; co najwyżej jeden movement `interest` na lokatę.
-- Import CSV: wiersze lokaty pozostają P&L do ręcznego przypisania (brak klasyfikatora w v1).
+- Import CSV (banki bez reguł FR-D2): wiersze kapitału lokaty pozostają P&L do ręcznego przypisania; BNP/mBank — patrz FR-D2.
 - Izolacja per `user_id`; write routes `/lokaty`; index na `accounts.index?kind=deposits`.
 
 **Zdarzenia:** `deposit_created`, `deposit_closed`, `deposit_updated`, `deposit_transaction_assigned`
+
+---
+
+### FR-D2 — Import lokat (BNP/mBank)
+
+| Pole | Wartość |
+|------|---------|
+| **Priorytet** | Should |
+| **Domena** | Deposits / Import |
+
+**Zachowanie**
+Przy commicie importu CSV/XLSX system rozpoznaje wiersze **kapitału lokaty** (otwarcie / zwrot kapitału) dla kont **BNP Paribas** i **mBank** według sygnałów bankowych. Pewne przypadki → auto-otwarcie lub auto-zamknięcie lokaty; niejednoznaczne → **kandydat** na liście transakcji (baner + filtr, wzór FR-I6). Wiersze kandydatów i auto-kapitału mają `category_id = null` od razu (kapitał poza P&L). **Odsetki** lokaty pozostają zwykłym przychodem P&L z kategorią — bez auto-linku do lokaty. Matcher transferów (FR-I6) pomija wiersze z `deposit_match_status ≠ none`.
+
+**Kryteria akceptacji**
+1. Given import BNP z `Typ transakcji = OTWARCIE LOKATY` i ujemną kwotą When commit Then auto-otwarcie lokaty, movement `open`, `deposit_match_status = auto`, `category_id = null`; podsumowanie listy i budżet **nie** wliczają kwoty.
+2. Given import BNP z `Typ transakcji = SPŁATA DEPOZYTU` i dodatnią kwotą oraz dokładnie jedna aktywna lokata z tym samym `principal` i walutą When commit Then auto-zamknięcie, movement `close_principal`, lokata `closed`.
+3. Given zwrot kapitału When 0 lub ≥2 aktywne lokaty z pasującym `principal` Then kandydat zamknięcia (`deposit_match_status = manual`, `deposit_candidate_kind = close_principal`); użytkownik wybiera lokatę przy potwierdzeniu.
+4. Given import mBank z `Kategoria = Lokaty i konto oszcz.` When ujemna kwota Then auto-otwarcie; gdy dodatnia — logika zamknięcia jak BNP (1 dopasowanie → auto, inaczej kandydat). Kolumna `Kategoria` **nie** wpływa na `category_id` (FR-C7).
+5. Given kandydat lokaty When potwierdzenie / odrzucenie z banera Then odpowiednio movement + lokata lub `deposit_match_status = rejected`; kapitał nadal poza P&L do ręcznej kategorii po odrzuceniu.
+6. Given wiersz odsetek lokaty When import Then normalna ścieżka P&L z kategorią (bez auto-linku do lokaty).
+
+**Reguły**
+- Klasyfikacja **inline** w `CommitImport` przed przypisaniem kategorii; hook na adapterze banku (domyślnie brak reguł).
+- Auto-zamknięcie: dopasowanie po `user_id`, `currency_id`, `status = active`, `principal = |amount|` (nie wymaga tego samego `source_account_id`).
+- Kandydaci: baner na `/transakcje` + filtr `deposit_candidates=1`; badge „Kandydat lokaty”.
+- Inne banki MVP: brak auto-detekcji — ręczne przypisanie (FR-D1).
+- Spec: `.docs/superpowers/specs/2026-09-01-deposits-import-design.md`.
+
+**Zdarzenia:** `deposit_import_open_auto`, `deposit_import_close_auto`, `deposit_import_open_candidate`, `deposit_import_close_candidate`, `deposit_import_open_confirmed`, `deposit_import_close_confirmed`, `deposit_import_candidate_rejected`
 
 ---
 
@@ -1149,4 +1186,5 @@ AI kategorii, mapowanie kategorii z banku, wykresy, eksport, roczne podsumowanie
 | FR-P3 | Przypisanie kieszeni do transferu | Must | §6.9 |
 | FR-P5 | Widok kieszeni w budżecie miesięcznym | Must | §6.9 |
 | FR-D1 | Lokaty (term deposits) | Should | §6.8 |
+| FR-D2 | Import lokat (BNP/mBank) | Should | §6.8 |
 | FR-UX1 | Plany P&L tylko na budżecie | Must | §6.10 |
