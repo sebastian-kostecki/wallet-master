@@ -5,18 +5,26 @@ declare(strict_types=1);
 namespace App\Imports\Workflow;
 
 use App\Actions\Categories\ResolveCategoryForImportRow;
+use App\Actions\Deposits\CloseDepositFromImport;
+use App\Actions\Deposits\CreateDepositFromImport;
 use App\Enums\Bank;
+use App\Enums\DepositMatchStatus;
 use App\Enums\ImportFailedRowReason;
 use App\Enums\ImportStatus;
 use App\Enums\TransactionType;
 use App\Events\ImportStatusUpdated;
 use App\Exceptions\DomainException;
 use App\Imports\BankAdapters\BankImportAdapter;
+use App\Imports\ParsedImportRow;
 use App\Imports\TransferMatcher;
 use App\Models\Account;
 use App\Models\Import;
 use App\Models\ImportFailedRow;
 use App\Models\Transaction;
+use App\Support\Deposits\DepositClassification;
+use App\Support\Deposits\DepositClassificationIntent;
+use App\Support\Deposits\DepositCloser;
+use App\Support\Deposits\DepositRowClassifier;
 use App\Support\Imports\ImportRowRawSnapshot;
 use App\Support\Transactions\TransactionDedupe;
 use App\Telemetry\Event;
@@ -34,6 +42,10 @@ final class CommitImport
         private EnrichImportRowDescription $enrichImportRowDescription,
         private ResolveCategoryForImportRow $resolveCategoryForImportRow,
         private TransferMatcher $transferMatcher,
+        private DepositRowClassifier $depositRowClassifier,
+        private CreateDepositFromImport $createDepositFromImport,
+        private CloseDepositFromImport $closeDepositFromImport,
+        private DepositCloser $depositCloser,
     ) {}
 
     /**
@@ -158,7 +170,11 @@ final class CommitImport
                 ]);
             }
 
-            $lockedAccount->current_balance = bcadd($lockedAccount->current_balance, $counters->importedAmountSum, 2);
+            $lockedAccount->current_balance = bcadd(
+                $lockedAccount->current_balance,
+                bcsub($counters->importedAmountSum, $counters->inlineBalanceAppliedSum, 2),
+                2,
+            );
             $lockedAccount->save();
 
             $lockedImportFresh->rows_total = $counters->rowsTotal;
@@ -283,9 +299,88 @@ final class CommitImport
             return null;
         }
 
-        $counters->rowsImported++;
-        $counters->inferredTypes[$transactionType->value] = ($counters->inferredTypes[$transactionType->value] ?? 0) + 1;
-        $counters->importedAmountSum = bcadd($counters->importedAmountSum, $parsedRow->amount, 2);
+        $classification = $this->depositRowClassifier->classify(
+            adapter: $adapter,
+            row: $row,
+            mapping: $mapping,
+            parsed: $parsedRow,
+            user: $lockedImport->user,
+        );
+
+        $insertMetadata = $this->buildTransactionInsertMetadata(
+            lockedImport: $lockedImport,
+            account: $account,
+            parsedRow: $parsedRow,
+            enriched: $enriched,
+            normalizedDescription: $normalizedDescription,
+            importFingerprint: $importFingerprint,
+            dedupeHash: $dedupeHash,
+            transactionType: $transactionType,
+            timestamp: $timestamp,
+        );
+
+        if ($classification->isAutoOpen()) {
+            $this->incrementImportedRowCounters($counters, $transactionType, $parsedRow->amount);
+            $counters->inlineBalanceAppliedSum = bcadd($counters->inlineBalanceAppliedSum, $parsedRow->amount, 2);
+
+            $this->createDepositFromImport->handle(
+                user: $lockedImport->user,
+                import: $lockedImport,
+                account: $account,
+                parsed: $parsedRow,
+                insertMetadata: $insertMetadata,
+            );
+
+            Event::record('deposit_import_open_auto', [
+                'import_id' => $lockedImport->id,
+            ], $lockedImport->user_id);
+
+            return null;
+        }
+
+        if ($classification->intent === DepositClassificationIntent::ClosePrincipal) {
+            return $this->buildClosePrincipalInsertRow(
+                lockedImport: $lockedImport,
+                account: $account,
+                parsedRow: $parsedRow,
+                classification: $classification,
+                insertMetadata: $insertMetadata,
+                counters: $counters,
+                transactionType: $transactionType,
+            );
+        }
+
+        if ($classification->isCandidateOpen()) {
+            $this->incrementImportedRowCounters($counters, $transactionType, $parsedRow->amount);
+
+            Event::record('deposit_import_open_candidate', [
+                'import_id' => $lockedImport->id,
+            ], $lockedImport->user_id);
+
+            return [
+                ...$insertMetadata,
+                'category_id' => null,
+                'deposit_match_status' => DepositMatchStatus::Manual->value,
+                'deposit_candidate_kind' => DepositClassificationIntent::Open->value,
+            ];
+        }
+
+        if ($classification->isCandidateClose()) {
+            $this->incrementImportedRowCounters($counters, $transactionType, $parsedRow->amount);
+
+            Event::record('deposit_import_close_candidate', [
+                'import_id' => $lockedImport->id,
+            ], $lockedImport->user_id);
+
+            return [
+                ...$insertMetadata,
+                'category_id' => null,
+                'deposit_match_status' => DepositMatchStatus::Manual->value,
+                'deposit_candidate_kind' => DepositClassificationIntent::ClosePrincipal->value,
+            ];
+        }
+
+        $this->incrementImportedRowCounters($counters, $transactionType, $parsedRow->amount);
 
         $categoryId = $this->resolveCategoryForImportRow->handle(
             user: $lockedImport->user,
@@ -294,6 +389,27 @@ final class CommitImport
             transactionType: $transactionType,
         );
 
+        return [
+            ...$insertMetadata,
+            'category_id' => $categoryId,
+        ];
+    }
+
+    /**
+     * @param  array{description: string, subject: ?string}  $enriched
+     * @return array<string, mixed>
+     */
+    private function buildTransactionInsertMetadata(
+        Import $lockedImport,
+        Account $account,
+        ParsedImportRow $parsedRow,
+        array $enriched,
+        string $normalizedDescription,
+        string $importFingerprint,
+        string $dedupeHash,
+        TransactionType $transactionType,
+        string $timestamp,
+    ): array {
         return [
             'user_id' => $lockedImport->user_id,
             'account_id' => $account->id,
@@ -309,10 +425,72 @@ final class CommitImport
             'normalized_description' => $normalizedDescription,
             'dedupe_hash' => $dedupeHash,
             'import_fingerprint' => $importFingerprint,
-            'category_id' => $categoryId,
+            'category_id' => null,
             'created_at' => $timestamp,
             'updated_at' => $timestamp,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $insertMetadata
+     * @return array<string, mixed>|null
+     */
+    private function buildClosePrincipalInsertRow(
+        Import $lockedImport,
+        Account $account,
+        ParsedImportRow $parsedRow,
+        DepositClassification $classification,
+        array $insertMetadata,
+        ImportCommitCounters $counters,
+        TransactionType $transactionType,
+    ): ?array {
+        $principal = ltrim($parsedRow->amount, '-');
+        $matches = $this->depositCloser->matchingActiveDeposits(
+            $lockedImport->user,
+            $principal,
+            $account->currency_id,
+        );
+
+        if ($matches->count() === 1 && $classification->isAutoClose()) {
+            $this->incrementImportedRowCounters($counters, $transactionType, $parsedRow->amount);
+
+            $transaction = Transaction::query()->create($insertMetadata);
+
+            $this->closeDepositFromImport->handle(
+                $lockedImport->user,
+                $matches->firstOrFail(),
+                $transaction,
+            );
+
+            Event::record('deposit_import_close_auto', [
+                'import_id' => $lockedImport->id,
+            ], $lockedImport->user_id);
+
+            return null;
+        }
+
+        $this->incrementImportedRowCounters($counters, $transactionType, $parsedRow->amount);
+
+        Event::record('deposit_import_close_candidate', [
+            'import_id' => $lockedImport->id,
+        ], $lockedImport->user_id);
+
+        return [
+            ...$insertMetadata,
+            'category_id' => null,
+            'deposit_match_status' => DepositMatchStatus::Manual->value,
+            'deposit_candidate_kind' => DepositClassificationIntent::ClosePrincipal->value,
+        ];
+    }
+
+    private function incrementImportedRowCounters(
+        ImportCommitCounters $counters,
+        TransactionType $transactionType,
+        string $amount,
+    ): void {
+        $counters->rowsImported++;
+        $counters->inferredTypes[$transactionType->value] = ($counters->inferredTypes[$transactionType->value] ?? 0) + 1;
+        $counters->importedAmountSum = bcadd($counters->importedAmountSum, $amount, 2);
     }
 
     /**

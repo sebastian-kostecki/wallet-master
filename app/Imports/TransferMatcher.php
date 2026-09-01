@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Imports;
 
+use App\Enums\DepositMatchStatus;
 use App\Enums\TransactionType;
 use App\Enums\TransferMatchStatus;
 use App\Models\Import;
@@ -85,6 +86,10 @@ final class TransferMatcher
         }
 
         if ($transaction->transfer_id !== null && $transaction->transfer_id !== '') {
+            return true;
+        }
+
+        if ($transaction->deposit_match_status !== DepositMatchStatus::None) {
             return true;
         }
 
