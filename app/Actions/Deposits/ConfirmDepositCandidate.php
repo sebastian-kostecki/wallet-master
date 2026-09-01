@@ -8,6 +8,7 @@ use App\Enums\DepositMatchStatus;
 use App\Models\Deposit;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Telemetry\Event;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -64,6 +65,16 @@ final class ConfirmDepositCandidate
             $anchor->update([
                 'deposit_candidate_kind' => null,
             ]);
+
+            Event::record(match ($candidateKind) {
+                'open' => 'deposit_import_open_confirmed',
+                'close_principal' => 'deposit_import_close_confirmed',
+                default => 'deposit_transaction_assigned',
+            }, [
+                'deposit_id' => $deposit->id,
+                'transaction_id' => $anchor->id,
+                'kind' => $candidateKind,
+            ], $user->id);
 
             return $deposit;
         });

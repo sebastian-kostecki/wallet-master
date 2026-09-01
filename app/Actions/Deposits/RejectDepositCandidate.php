@@ -7,6 +7,7 @@ namespace App\Actions\Deposits;
 use App\Enums\DepositMatchStatus;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Telemetry\Event;
 use Illuminate\Support\Facades\DB;
 
 final class RejectDepositCandidate
@@ -33,6 +34,10 @@ final class RejectDepositCandidate
                 'deposit_match_status' => DepositMatchStatus::Rejected,
                 'deposit_candidate_kind' => null,
             ]);
+
+            Event::record('deposit_import_candidate_rejected', [
+                'transaction_id' => $anchor->id,
+            ], $user->id);
         });
     }
 }
