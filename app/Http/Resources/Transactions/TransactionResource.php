@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources\Transactions;
 
 use App\Enums\Bank;
+use App\Enums\DepositMatchStatus;
 use App\Enums\TransactionType;
 use App\Http\Resources\Accounts\AccountResource;
 use App\Http\Resources\Accounts\CurrencyResource;
@@ -79,6 +80,12 @@ final class TransactionResource extends JsonResource
                     : null,
             ),
             'deposit_assignable' => $this->isDepositAssignable(),
+            'deposit_candidate' => $this->when(
+                $this->deposit_match_status === DepositMatchStatus::Manual && $this->deposit_candidate_kind !== null,
+                fn () => [
+                    'kind' => $this->deposit_candidate_kind,
+                ],
+            ),
         ];
     }
 

@@ -15,6 +15,7 @@ use App\Http\Requests\Transactions\TransactionIndexRequest;
 use App\Http\Requests\Transactions\UpdateTransactionRequest;
 use App\Http\Resources\Accounts\AccountResource;
 use App\Http\Resources\Categories\CategoryResource;
+use App\Http\Resources\Deposits\DepositCandidateResource;
 use App\Http\Resources\Imports\ImportFailedRowResource;
 use App\Http\Resources\Pockets\PocketResource;
 use App\Http\Resources\Transactions\TransactionResource;
@@ -62,6 +63,9 @@ final class TransactionController extends Controller
             )->resolve(),
             'pending_transfer_candidates' => TransferCandidatePairResource::collection(
                 $listTransactions->getPendingTransferCandidates(),
+            )->resolve(),
+            'pending_deposit_candidates' => DepositCandidateResource::collection(
+                $listTransactions->getPendingDepositCandidates(),
             )->resolve(),
             'assignable_deposits' => $listDeposits->getDeposits()
                 ->map(fn ($deposit) => [
