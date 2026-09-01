@@ -116,7 +116,9 @@
             "created": "Lokata została dodana.",
             "updated": "Lokata została zaktualizowana.",
             "closed": "Lokata została zamknięta.",
-            "assigned": "Transakcja przypisana do lokaty."
+            "assigned": "Transakcja przypisana do lokaty.",
+            "candidate_confirmed": "Lokata potwierdzona.",
+            "candidate_rejected": "Transakcja oznaczona jako niebędąca lokatą."
         },
         "status": {
             "active": "Aktywna",

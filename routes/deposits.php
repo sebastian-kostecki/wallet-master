@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Deposits\DepositAssignmentController;
+use App\Http\Controllers\Deposits\DepositCandidateController;
 use App\Http\Controllers\Deposits\DepositController;
 use App\Models\Deposit;
 use Illuminate\Support\Facades\Route;
@@ -14,4 +15,8 @@ Route::middleware('auth')->group(function () {
     Route::patch(route_path('deposits').'/{deposit}', [DepositController::class, 'update'])->name('deposits.update');
     Route::post(route_path('deposits.close'), [DepositController::class, 'close'])->name('deposits.close');
     Route::post(route_path('deposits.assign'), [DepositAssignmentController::class, 'store'])->name('deposits.assign');
+    Route::post(route_path('deposits.candidates.confirm'), [DepositCandidateController::class, 'confirm'])
+        ->name('deposits.candidates.confirm');
+    Route::post(route_path('deposits.candidates.reject'), [DepositCandidateController::class, 'reject'])
+        ->name('deposits.candidates.reject');
 });

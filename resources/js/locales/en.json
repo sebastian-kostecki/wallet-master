@@ -116,7 +116,9 @@
             "created": "Deposit created.",
             "updated": "Deposit updated.",
             "closed": "Deposit closed.",
-            "assigned": "Transaction assigned to deposit."
+            "assigned": "Transaction assigned to deposit.",
+            "candidate_confirmed": "Deposit confirmed.",
+            "candidate_rejected": "Transaction marked as not a deposit."
         },
         "status": {
             "active": "Active",
