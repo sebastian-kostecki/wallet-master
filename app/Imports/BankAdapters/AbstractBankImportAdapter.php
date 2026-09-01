@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Imports\BankAdapters;
 
 use App\Imports\ParsedImportRow;
+use App\Support\Deposits\DepositClassification;
 use App\Support\Imports\AmountParser;
 use App\Support\Imports\DateParser;
 use App\Support\Imports\FileEncodingNormalizer;
@@ -29,6 +30,17 @@ abstract class AbstractBankImportAdapter implements BankImportAdapter
         foreach ($rows['rows'] as $row) {
             yield $row;
         }
+    }
+
+    /**
+     * @param  array<string, string>  $row
+     * @param  array{date: string, amount: string, description: string, subject?: ?string}  $mapping
+     */
+    public function classifyDepositRow(array $row, array $mapping, ParsedImportRow $parsed): DepositClassification
+    {
+        unset($row, $mapping, $parsed);
+
+        return DepositClassification::none();
     }
 
     public function defaultMapping(array $headers): ?array

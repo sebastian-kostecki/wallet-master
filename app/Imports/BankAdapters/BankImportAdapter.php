@@ -6,6 +6,7 @@ namespace App\Imports\BankAdapters;
 
 use App\Enums\Bank;
 use App\Imports\ParsedImportRow;
+use App\Support\Deposits\DepositClassification;
 
 interface BankImportAdapter
 {
@@ -34,4 +35,10 @@ interface BankImportAdapter
      * @return array{date:string, amount:string, description:string, subject?:?string}|null
      */
     public function defaultMapping(array $headers): ?array;
+
+    /**
+     * @param  array<string, string>  $row
+     * @param  array{date: string, amount: string, description: string, subject?: ?string}  $mapping
+     */
+    public function classifyDepositRow(array $row, array $mapping, ParsedImportRow $parsed): DepositClassification;
 }
