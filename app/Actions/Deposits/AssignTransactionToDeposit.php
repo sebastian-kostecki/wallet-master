@@ -14,6 +14,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Telemetry\Event;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -206,7 +207,7 @@ final class AssignTransactionToDeposit
         ]);
 
         $deposit->status = DepositStatus::Closed;
-        $deposit->closed_at = $transaction->date->toDateString();
+        $deposit->closed_at = Carbon::parse($transaction->date);
         $deposit->save();
 
         return $deposit;

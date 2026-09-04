@@ -8,6 +8,7 @@ use App\Enums\Bank;
 use App\Enums\CategoryType;
 use App\Models\Account;
 use App\Models\Deposit;
+use App\Support\Transactions\TransactionDedupe;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -66,12 +67,25 @@ final class CloseDepositRequest extends FormRequest
             'closed_at' => ['required', 'date_format:d-m-Y'],
             'interest' => ['required', 'numeric', 'decimal:0,2', 'gte:0'],
             'category_id' => [
-                Rule::requiredIf(fn () => bccomp((string) $this->input('interest', '0'), '0', 2) === 1),
-                Rule::prohibitedIf(fn () => bccomp((string) $this->input('interest', '0'), '0', 2) !== 1),
+                Rule::requiredIf(fn () => bccomp(TransactionDedupe::amountToDecimalString((string) $this->input('interest', '0')), '0', 2) === 1),
+                Rule::prohibitedIf(fn () => bccomp(TransactionDedupe::amountToDecimalString((string) $this->input('interest', '0')), '0', 2) !== 1),
                 'nullable',
                 'integer',
                 $incomeCategoryRule,
             ],
         ];
+    }
+
+    /**
+     * @return array{
+     *   destination_account_id: int,
+     *   closed_at: string,
+     *   interest: numeric-string|float|int,
+     *   category_id?: int|null,
+     * }
+     */
+    public function validated($key = null, $default = null): array
+    {
+        return parent::validated($key, $default);
     }
 }

@@ -13,6 +13,9 @@ use App\Support\Transactions\TransactionDedupe;
 
 final class PocketMovementTotal
 {
+    /**
+     * @return numeric-string
+     */
     public static function sum(User $user, Pocket $pocket, PocketMovement $movement, ?BudgetPeriod $period = null): string
     {
         $query = BudgetTransactionQuery::forUser($user)

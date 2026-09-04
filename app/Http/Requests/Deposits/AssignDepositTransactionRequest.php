@@ -33,4 +33,17 @@ final class AssignDepositTransactionRequest extends FormRequest
             'matures_at' => ['nullable', 'date_format:d-m-Y'],
         ];
     }
+
+    /**
+     * @return array{
+     *   kind: 'open'|'close_principal'|'interest',
+     *   deposit_id?: int|null,
+     *   name?: ?string,
+     *   matures_at?: ?string,
+     * }
+     */
+    public function validated($key = null, $default = null): array
+    {
+        return parent::validated($key, $default);
+    }
 }

@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
  * @property int $account_id
  * @property int $currency_id
  * @property int $user_id
- * @property int $category_id
+ * @property int|null $category_id
  * @property int|null $pocket_id
  * @property PocketMovement|null $pocket_movement
  * @property int|null $import_id

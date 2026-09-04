@@ -61,12 +61,6 @@ parameters:
 			path: app/Actions/Transactions/ListTransactions.php
 
 		-
-			message: '#^Offset ''category_id'' might not exist on array\{account_id\: int, date\: string, booked_at\?\: string\|null, amount\: float\|int\|numeric\-string, description\: string, subject\?\: string\|null, category_id\?\: int, pocket_id\?\: int\|null\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 2
-			path: app/Actions/Transactions/UpdateTransaction.php
-
-		-
 			message: '#^Property App\\Models\\User\:\:\$email_verified_at \(string\|null\) does not accept Illuminate\\Support\\Carbon\.$#'
 			identifier: assign.propertyType
 			count: 1

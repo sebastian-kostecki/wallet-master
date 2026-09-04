@@ -7,7 +7,7 @@ namespace App\Actions\Deposits;
 use App\Enums\DepositStatus;
 use App\Models\Deposit;
 use App\Telemetry\Event;
-use Carbon\CarbonImmutable;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 final class UpdateDepositDetails
@@ -33,7 +33,7 @@ final class UpdateDepositDetails
 
         if (array_key_exists('matures_at', $validated)) {
             $deposit->matures_at = ! empty($validated['matures_at'])
-                ? CarbonImmutable::createFromFormat('d-m-Y', $validated['matures_at'])->toDateString()
+                ? Carbon::createFromFormat('d-m-Y', $validated['matures_at'])
                 : null;
         }
 

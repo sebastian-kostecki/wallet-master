@@ -36,4 +36,18 @@ final class StoreDepositRequest extends FormRequest
             'matures_at' => ['nullable', 'date_format:d-m-Y', 'after_or_equal:opened_at'],
         ];
     }
+
+    /**
+     * @return array{
+     *   source_account_id: int,
+     *   principal: numeric-string|float|int,
+     *   opened_at: string,
+     *   name?: ?string,
+     *   matures_at?: ?string,
+     * }
+     */
+    public function validated($key = null, $default = null): array
+    {
+        return parent::validated($key, $default);
+    }
 }

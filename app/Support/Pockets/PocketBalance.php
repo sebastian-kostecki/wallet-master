@@ -68,8 +68,8 @@ final class PocketBalance
         $map = [];
 
         foreach ($rows as $row) {
-            $ym = Carbon::parse($row->booked_at)->format('Y-m');
-            $amt = TransactionDedupe::amountToDecimalString((string) $row->amt);
+            $ym = Carbon::parse((string) $row->getAttribute('booked_at'))->format('Y-m');
+            $amt = TransactionDedupe::amountToDecimalString((string) $row->getAttribute('amt'));
             $movement = $row->pocket_movement instanceof PocketMovement
                 ? $row->pocket_movement
                 : PocketMovement::from((string) $row->pocket_movement);

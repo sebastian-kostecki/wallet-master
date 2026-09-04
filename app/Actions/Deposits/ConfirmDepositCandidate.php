@@ -66,11 +66,11 @@ final class ConfirmDepositCandidate
                 'deposit_candidate_kind' => null,
             ]);
 
-            Event::record(match ($candidateKind) {
-                'open' => 'deposit_import_open_confirmed',
-                'close_principal' => 'deposit_import_close_confirmed',
-                default => 'deposit_transaction_assigned',
-            }, [
+            $eventName = $candidateKind === 'open'
+                ? 'deposit_import_open_confirmed'
+                : 'deposit_import_close_confirmed';
+
+            Event::record($eventName, [
                 'deposit_id' => $deposit->id,
                 'transaction_id' => $anchor->id,
                 'kind' => $candidateKind,

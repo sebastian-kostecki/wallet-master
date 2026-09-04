@@ -21,7 +21,8 @@ type Transaction = {
     id: number;
     description: string;
     amount: string | number;
-    currency_id: number;
+    currency_id?: number;
+    currency?: { id: number } | null;
 };
 
 type DepositMovementKind = 'open' | 'close_principal' | 'interest';
@@ -57,7 +58,7 @@ const kindOptions = computed<DropdownOption<DepositMovementKind>[]>(() => [
 ]);
 
 const filteredDeposits = computed(() => {
-    const currencyId = props.transaction?.currency_id;
+    const currencyId = props.transaction?.currency_id ?? props.transaction?.currency?.id;
     const kind = form.kind;
 
     if (currencyId === undefined || kind === null || kind === 'open') {

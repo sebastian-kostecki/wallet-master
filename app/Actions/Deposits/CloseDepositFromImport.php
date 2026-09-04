@@ -13,6 +13,7 @@ use App\Models\DepositMovement;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Telemetry\Event;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -63,7 +64,7 @@ final class CloseDepositFromImport
             ]);
 
             $deposit->status = DepositStatus::Closed;
-            $deposit->closed_at = $transaction->date->toDateString();
+            $deposit->closed_at = Carbon::parse($transaction->date);
             $deposit->save();
 
             return $deposit;

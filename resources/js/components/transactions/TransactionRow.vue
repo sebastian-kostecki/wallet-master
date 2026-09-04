@@ -47,6 +47,7 @@ type Transaction = {
     pocket_movement: 'deposit' | 'withdrawal' | null;
     pocket: { id: number; name: string; icon: string; color: string } | null;
     account: Account | null;
+    currency_id: number;
     currency: { id: number; code: string; symbol: string | null; precision: number } | null;
     deposit_movement: { kind: 'open' | 'close_principal' | 'interest'; deposit_id: number } | null;
     deposit_assignable: boolean;

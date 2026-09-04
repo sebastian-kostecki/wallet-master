@@ -204,9 +204,15 @@ function submit(): void {
 
     form.transform((data) => {
         if (data.pocket_id === null) {
-            const { pocket_movement, ...payload } = data;
-
-            return payload;
+            return {
+                from_account_id: data.from_account_id,
+                to_account_id: data.to_account_id,
+                pocket_id: data.pocket_id,
+                date: data.date,
+                amount: data.amount,
+                subject: data.subject,
+                description: data.description,
+            };
         }
 
         return data;

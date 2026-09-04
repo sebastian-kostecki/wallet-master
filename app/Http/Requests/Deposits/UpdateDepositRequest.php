@@ -19,7 +19,7 @@ final class UpdateDepositRequest extends FormRequest
     {
         $deposit = $this->route('deposit');
 
-        if ($deposit instanceof Deposit && $deposit->opened_at !== null) {
+        if ($deposit instanceof Deposit) {
             $this->merge([
                 'opened_at' => $deposit->opened_at->format('d-m-Y'),
             ]);
@@ -35,5 +35,16 @@ final class UpdateDepositRequest extends FormRequest
             'name' => ['nullable', 'string', 'max:255'],
             'matures_at' => ['nullable', 'date_format:d-m-Y', 'after_or_equal:opened_at'],
         ];
+    }
+
+    /**
+     * @return array{
+     *   name?: ?string,
+     *   matures_at?: ?string,
+     * }
+     */
+    public function validated($key = null, $default = null): array
+    {
+        return parent::validated($key, $default);
     }
 }

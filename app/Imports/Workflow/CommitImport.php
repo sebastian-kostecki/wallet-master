@@ -397,7 +397,27 @@ final class CommitImport
 
     /**
      * @param  array{description: string, subject: ?string}  $enriched
-     * @return array<string, mixed>
+     * @return array{
+     *   user_id: int,
+     *   account_id: int,
+     *   currency_id: int,
+     *   import_id: int,
+     *   date: string,
+     *   booked_at: string,
+     *   amount: numeric-string,
+     *   type: string,
+     *   description: string,
+     *   subject: ?string,
+     *   raw_statement_description: string,
+     *   normalized_description: string,
+     *   dedupe_hash: string,
+     *   import_fingerprint: string,
+     *   category_id: null,
+     *   deposit_match_status: 'none',
+     *   deposit_candidate_kind: null,
+     *   created_at: string,
+     *   updated_at: string,
+     * }
      */
     private function buildTransactionInsertMetadata(
         Import $lockedImport,
@@ -426,6 +446,8 @@ final class CommitImport
             'dedupe_hash' => $dedupeHash,
             'import_fingerprint' => $importFingerprint,
             'category_id' => null,
+            'deposit_match_status' => DepositMatchStatus::None->value,
+            'deposit_candidate_kind' => null,
             'created_at' => $timestamp,
             'updated_at' => $timestamp,
         ];
@@ -490,7 +512,11 @@ final class CommitImport
     ): void {
         $counters->rowsImported++;
         $counters->inferredTypes[$transactionType->value] = ($counters->inferredTypes[$transactionType->value] ?? 0) + 1;
-        $counters->importedAmountSum = bcadd($counters->importedAmountSum, $amount, 2);
+        $counters->importedAmountSum = bcadd(
+            $counters->importedAmountSum,
+            TransactionDedupe::amountToDecimalString($amount),
+            2,
+        );
     }
 
     /**

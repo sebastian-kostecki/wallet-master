@@ -43,7 +43,7 @@ final class BnpDepositRules
     {
         foreach (array_keys($row) as $header) {
             if (mb_strtolower(trim($header)) === 'typ transakcji') {
-                return trim((string) ($row[$header] ?? ''));
+                return trim($row[$header]);
             }
         }
 

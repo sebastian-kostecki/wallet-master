@@ -319,9 +319,15 @@ function submit(): void {
             return data;
         }
 
-        const { pocket_id, pocket_movement, ...payload } = data;
-
-        return payload;
+        return {
+            account_id: data.account_id,
+            date: data.date,
+            booked_at: data.booked_at,
+            amount: data.amount,
+            description: data.description,
+            subject: data.subject,
+            category_id: data.category_id,
+        };
     });
 
     const visit = {

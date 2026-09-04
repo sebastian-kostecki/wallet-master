@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Support\Transactions\TransactionDedupe;
 use App\Telemetry\Event;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -173,7 +174,7 @@ final class CloseDeposit
             $destination->save();
 
             $deposit->status = DepositStatus::Closed;
-            $deposit->closed_at = $closedAt;
+            $deposit->closed_at = Carbon::createFromFormat('d-m-Y', $validated['closed_at']);
             $deposit->save();
 
             return $deposit;

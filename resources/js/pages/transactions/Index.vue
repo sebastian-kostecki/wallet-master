@@ -64,6 +64,7 @@ type TransactionCategory = {
 type Transaction = {
     id: number;
     account_id: number;
+    currency_id: number;
     date: string; // YYYY-MM-DD
     booked_at: string; // YYYY-MM-DD
     date_relative: string;
@@ -212,7 +213,19 @@ function clearFilters() {
     router.get(route('transactions.index'), { sort: 'date', direction: 'desc' }, { preserveScroll: true, replace: true });
 }
 
-function indexQuery(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+type IndexQueryParams = {
+    account_id?: number;
+    category_id?: number;
+    from?: string;
+    to?: string;
+    sort?: string;
+    direction?: string;
+    per_page?: number;
+    deposit_candidates?: number;
+    page?: number;
+};
+
+function indexQuery(overrides: Partial<IndexQueryParams> = {}): IndexQueryParams {
     return {
         account_id: props.filters.account_id ?? undefined,
         category_id: props.filters.category_id ?? undefined,

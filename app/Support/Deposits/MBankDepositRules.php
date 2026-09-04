@@ -43,7 +43,7 @@ final class MBankDepositRules
     {
         foreach (array_keys($row) as $header) {
             if (mb_strtolower(trim($header)) === 'kategoria') {
-                return trim((string) ($row[$header] ?? ''));
+                return trim($row[$header]);
             }
         }
 

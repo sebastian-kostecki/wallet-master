@@ -31,9 +31,7 @@ final class DepositResource extends JsonResource
             'source_account_id' => $this->source_account_id,
             'currency' => $this->whenLoaded(
                 'currency',
-                fn () => $this->currency !== null
-                    ? CurrencyResource::make($this->currency)->resolve($request)
-                    : null,
+                fn () => CurrencyResource::make($this->currency)->resolve($request),
             ),
             'has_interest' => $this->whenLoaded(
                 'movements',

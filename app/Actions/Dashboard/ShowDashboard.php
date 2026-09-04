@@ -70,7 +70,7 @@ final class ShowDashboard
         $savings = '0.00';
 
         foreach ($accounts as $account) {
-            if ($account->currency?->code !== 'PLN') {
+            if ($account->currency->code !== 'PLN') {
                 continue;
             }
 
@@ -109,8 +109,8 @@ final class ShowDashboard
             ->first();
 
         $this->cashflow = [
-            'income' => TransactionDedupe::amountToDecimalString((string) ($row?->income ?? 0)),
-            'expense' => TransactionDedupe::amountToDecimalString((string) ($row?->expense ?? 0)),
+            'income' => TransactionDedupe::amountToDecimalString((string) ($row !== null ? $row->income : 0)),
+            'expense' => TransactionDedupe::amountToDecimalString((string) ($row !== null ? $row->expense : 0)),
         ];
     }
 
@@ -121,6 +121,8 @@ final class ShowDashboard
         $bookedAt = $grammar->wrap($query->qualifyColumn('booked_at'));
         $date = $grammar->wrap($query->qualifyColumn('date'));
 
+        $orderExpression = "COALESCE({$bookedAt}, {$date}) desc";
+
         $this->recentTransactions = $query
             ->with([
                 'account.currency',
@@ -128,7 +130,8 @@ final class ShowDashboard
                 'category',
                 'pocket',
             ])
-            ->orderByRaw("COALESCE({$bookedAt}, {$date}) desc")
+            /** @phpstan-ignore argument.type */
+            ->orderByRaw($orderExpression)
             ->orderByDesc('id')
             ->limit(8)
             ->get();

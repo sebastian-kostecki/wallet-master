@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use App\Http\Middleware\SecurityHeaders;
 use App\Models\User;
+use Database\Seeders\CurrencySeeder;
 use Illuminate\Http\Request;
+
+beforeEach(fn () => $this->seed(CurrencySeeder::class));
 
 test('web responses do not include security headers outside production', function () {
     $response = $this->get(route('login', absolute: false));

@@ -96,7 +96,7 @@ final class UpdateTransaction
                 $transaction->normalized_description = $normalizedDescription;
                 $transaction->dedupe_hash = $dedupeHash;
                 if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
-                    $transaction->category_id = $validated['category_id'];
+                    $transaction->category_id = $validated['category_id'] ?? null;
                 }
                 $transaction->pocket_id = $pocketId;
                 $transaction->pocket_movement = $pocketMovement;
@@ -140,7 +140,7 @@ final class UpdateTransaction
             $transaction->normalized_description = $normalizedDescription;
             $transaction->dedupe_hash = $dedupeHash;
             if ($transaction->transfer_id === null || $transaction->transfer_id === '') {
-                $transaction->category_id = $validated['category_id'];
+                $transaction->category_id = $validated['category_id'] ?? null;
             }
             $transaction->pocket_id = $pocketId;
             $transaction->pocket_movement = $pocketMovement;
