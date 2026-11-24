@@ -5,8 +5,8 @@
 **Personal household budgeting — accounts, bank statement imports, categories and savings envelopes.**
 
 [![Status: pre-release](https://img.shields.io/badge/Status-pre--release-orange?style=for-the-badge)](#project-status)
-[![Tests](https://img.shields.io/github/actions/workflow/status/sebastian-kostecki/wallet-master/tests.yml?branch=master&style=for-the-badge&label=Tests&logo=githubactions&logoColor=white)](../../actions/workflows/tests.yml)
-[![Lint](https://img.shields.io/github/actions/workflow/status/sebastian-kostecki/wallet-master/lint.yml?branch=master&style=for-the-badge&label=Lint&logo=githubactions&logoColor=white)](../../actions/workflows/lint.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/sebastian-kostecki/wallet-master/tests.yml?branch=master&style=for-the-badge&label=Tests&logo=githubactions&logoColor=white)](https://github.com/sebastian-kostecki/wallet-master/actions/workflows/tests.yml)
+[![Lint](https://img.shields.io/github/actions/workflow/status/sebastian-kostecki/wallet-master/lint.yml?branch=master&style=for-the-badge&label=Lint&logo=githubactions&logoColor=white)](https://github.com/sebastian-kostecki/wallet-master/actions/workflows/lint.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 [![PHP 8.5](https://img.shields.io/badge/PHP_8.5-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/)
@@ -18,7 +18,7 @@
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-[Product requirements](.docs/prd.md) · [Tech stack](.docs/tech-stack.md) · [Report a bug](../../issues/new)
+[Product requirements](.docs/prd.md) · [Tech stack](.docs/tech-stack.md) · [Report a bug](https://github.com/sebastian-kostecki/wallet-master/issues/new)
 
 **English** · [Polski](README.pl.md)
 
